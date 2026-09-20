@@ -118,7 +118,7 @@ test("a reported bug becomes an issue on the dashboard", async ({ page }) => {
 
   await page.goto(publicChatUrl);
   await page
-    .getByLabel("Message")
+    .getByRole("textbox", { name: "Message" })
     .fill(
       "Your checkout page throws a 500 error every time I click Pay. I have tried " +
         "three times in Chrome and it fails every time.",
