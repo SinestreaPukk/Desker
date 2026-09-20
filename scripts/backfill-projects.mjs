@@ -68,116 +68,120 @@ async function columnExists(table, column) {
   return Boolean(rows[0]?.present);
 }
 
-async function ensureProjects() {
-  if (!(await tableExists("Project"))) {
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE "Project" (
-        "id" TEXT NOT NULL PRIMARY KEY,
-        "name" TEXT NOT NULL,
-        "slug" TEXT NOT NULL,
-        "createdAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updatedAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )`);
-    await prisma.$executeRawUnsafe(
-      `CREATE UNIQUE INDEX "Project_slug_key" ON "Project"("slug")`,
-    );
-    console.log("[backfill] created Project table.");
-  }
-
-  const existing = await prisma.$queryRawUnsafe(
-    sql(`SELECT id FROM "Project" WHERE slug = $1 LIMIT 1`),
-    DEFAULT_PROJECT_SLUG,
-  );
-  let projectId = existing[0]?.id;
-  if (!projectId) {
-    projectId = newId("prj");
-    await prisma.$executeRawUnsafe(
-      sql(`INSERT INTO "Project" ("id", "name", "slug", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`),
-      projectId,
-      DEFAULT_PROJECT_NAME,
-      DEFAULT_PROJECT_SLUG,
-    );
-    console.log(`[backfill] created default project ${projectId}.`);
-  }
-
-  if (!(await columnExists("Agent", "projectId"))) {
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Agent" ADD COLUMN "projectId" TEXT`);
-    console.log("[backfill] added Agent.projectId.");
-  }
-
-  const updated = await prisma.$executeRawUnsafe(
-    sql(`UPDATE "Agent" SET "projectId" = $1 WHERE "projectId" IS NULL`),
-    projectId,
-  );
-  if (updated > 0) console.log(`[backfill] assigned ${updated} agent(s) to the default project.`);
+async function ensureTable(name, ddl, indexDdl) {
+  if (await tableExists(name)) return;
+  await prisma.$executeRawUnsafe(ddl);
+  await prisma.$executeRawUnsafe(indexDdl);
+  console.log(`[backfill] created ${name} table.`);
 }
 
-async function ensureOrganizations() {
-  if (!(await tableExists("Organization"))) {
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE "Organization" (
-        "id" TEXT NOT NULL PRIMARY KEY,
-        "name" TEXT NOT NULL,
-        "slug" TEXT NOT NULL,
-        "createdAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updatedAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )`);
-    await prisma.$executeRawUnsafe(
-      `CREATE UNIQUE INDEX "Organization_slug_key" ON "Organization"("slug")`,
-    );
-    console.log("[backfill] created Organization table.");
-  }
+async function ensureNullableColumn(table, column) {
+  if (await columnExists(table, column)) return;
+  await prisma.$executeRawUnsafe(`ALTER TABLE "${table}" ADD COLUMN "${column}" TEXT`);
+  console.log(`[backfill] added ${table}.${column}.`);
+}
 
-  if (!(await tableExists("Membership"))) {
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE "Membership" (
-        "id" TEXT NOT NULL PRIMARY KEY,
-        "userId" TEXT NOT NULL,
-        "organizationId" TEXT NOT NULL,
-        "role" TEXT NOT NULL DEFAULT 'member',
-        "createdAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )`);
-    await prisma.$executeRawUnsafe(
-      `CREATE UNIQUE INDEX "Membership_userId_organizationId_key" ON "Membership"("userId", "organizationId")`,
-    );
-    console.log("[backfill] created Membership table.");
-  }
-
-  // Only a database that already has projects without an owner needs a
-  // default organisation. A fresh install gets its first one at sign-up.
-  const hasOrgColumn = await columnExists("Project", "organizationId");
-  const orphaned = hasOrgColumn
-    ? await prisma.$queryRawUnsafe(`SELECT id FROM "Project" WHERE "organizationId" IS NULL`)
-    : await prisma.$queryRawUnsafe(`SELECT id FROM "Project"`);
-  if (orphaned.length === 0) return;
-
+async function findOrCreate(table, slug, name, extraColumns = {}) {
   const existing = await prisma.$queryRawUnsafe(
-    sql(`SELECT id FROM "Organization" WHERE slug = $1 LIMIT 1`),
-    DEFAULT_ORG_SLUG,
+    sql(`SELECT id FROM "${table}" WHERE slug = $1 LIMIT 1`),
+    slug,
   );
-  let organizationId = existing[0]?.id;
-  if (!organizationId) {
-    organizationId = newId("org");
+  if (existing[0]?.id) return existing[0].id;
+
+  const id = newId(table === "Organization" ? "org" : "prj");
+  const columns = ["id", "name", "slug", ...Object.keys(extraColumns)];
+  const values = [id, name, slug, ...Object.values(extraColumns)];
+  await prisma.$executeRawUnsafe(
+    sql(
+      `INSERT INTO "${table}" (${columns.map((c) => `"${c}"`).join(", ")}, "updatedAt")
+       VALUES (${values.map((_, i) => `$${i + 1}`).join(", ")}, CURRENT_TIMESTAMP)`,
+    ),
+    ...values,
+  );
+  console.log(`[backfill] created default ${table.toLowerCase()} ${id}.`);
+  return id;
+}
+
+async function main() {
+  if (!(await tableExists("Agent"))) {
+    console.log("[backfill] fresh database; db push will create everything.");
+    return;
+  }
+
+  await ensureTable(
+    "Project",
+    `CREATE TABLE "Project" (
+       "id" TEXT NOT NULL PRIMARY KEY,
+       "name" TEXT NOT NULL,
+       "slug" TEXT NOT NULL,
+       "createdAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP,
+       "updatedAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP
+     )`,
+    `CREATE UNIQUE INDEX "Project_slug_key" ON "Project"("slug")`,
+  );
+  await ensureTable(
+    "Organization",
+    `CREATE TABLE "Organization" (
+       "id" TEXT NOT NULL PRIMARY KEY,
+       "name" TEXT NOT NULL,
+       "slug" TEXT NOT NULL,
+       "createdAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP,
+       "updatedAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP
+     )`,
+    `CREATE UNIQUE INDEX "Organization_slug_key" ON "Organization"("slug")`,
+  );
+  await ensureTable(
+    "Membership",
+    `CREATE TABLE "Membership" (
+       "id" TEXT NOT NULL PRIMARY KEY,
+       "userId" TEXT NOT NULL,
+       "organizationId" TEXT NOT NULL,
+       "role" TEXT NOT NULL DEFAULT 'member',
+       "createdAt" ${timestamp} NOT NULL DEFAULT CURRENT_TIMESTAMP
+     )`,
+    `CREATE UNIQUE INDEX "Membership_userId_organizationId_key" ON "Membership"("userId", "organizationId")`,
+  );
+
+  // The columns `db push` would otherwise fail to add. Nullable here; the push
+  // that follows tightens them once every row has a value.
+  await ensureNullableColumn("Agent", "projectId");
+  await ensureNullableColumn("Project", "organizationId");
+
+  const orphanAgents = await prisma.$queryRawUnsafe(
+    `SELECT id FROM "Agent" WHERE "projectId" IS NULL`,
+  );
+  const orphanProjects = await prisma.$queryRawUnsafe(
+    `SELECT id FROM "Project" WHERE "organizationId" IS NULL`,
+  );
+
+  // Nothing to attach means nothing to create: a database that already has
+  // the current schema, empty or not, is left exactly as it is.
+  if (orphanAgents.length === 0 && orphanProjects.length === 0) {
+    console.log("[backfill] nothing to do.");
+    return;
+  }
+
+  const organizationId = await findOrCreate("Organization", DEFAULT_ORG_SLUG, DEFAULT_ORG_NAME);
+
+  if (orphanProjects.length > 0) {
     await prisma.$executeRawUnsafe(
-      sql(`INSERT INTO "Organization" ("id", "name", "slug", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`),
+      sql(`UPDATE "Project" SET "organizationId" = $1 WHERE "organizationId" IS NULL`),
       organizationId,
-      DEFAULT_ORG_NAME,
-      DEFAULT_ORG_SLUG,
     );
-    console.log(`[backfill] created default organization ${organizationId}.`);
+    console.log(
+      `[backfill] assigned ${orphanProjects.length} project(s) to the default organization.`,
+    );
   }
 
-  if (!hasOrgColumn) {
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Project" ADD COLUMN "organizationId" TEXT`);
-    console.log("[backfill] added Project.organizationId.");
-  }
-
-  const projects = await prisma.$executeRawUnsafe(
-    sql(`UPDATE "Project" SET "organizationId" = $1 WHERE "organizationId" IS NULL`),
-    organizationId,
-  );
-  if (projects > 0) {
-    console.log(`[backfill] assigned ${projects} project(s) to the default organization.`);
+  if (orphanAgents.length > 0) {
+    const projectId = await findOrCreate("Project", DEFAULT_PROJECT_SLUG, DEFAULT_PROJECT_NAME, {
+      organizationId,
+    });
+    await prisma.$executeRawUnsafe(
+      sql(`UPDATE "Agent" SET "projectId" = $1 WHERE "projectId" IS NULL`),
+      projectId,
+    );
+    console.log(`[backfill] assigned ${orphanAgents.length} agent(s) to the default project.`);
   }
 
   // Everyone who could sign in before tenancy existed shared one workspace, so
@@ -200,15 +204,6 @@ async function ensureOrganizations() {
   if (users.length > 0) {
     console.log(`[backfill] made ${users.length} existing user(s) owners of the default organization.`);
   }
-}
-
-async function main() {
-  if (!(await tableExists("Agent"))) {
-    console.log("[backfill] fresh database; db push will create everything.");
-    return;
-  }
-  await ensureProjects();
-  await ensureOrganizations();
 }
 
 main()
