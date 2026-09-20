@@ -26,7 +26,13 @@ import { hasSearchProvider } from "./research";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
 import { WORK_TOOL_IDS, workToolDefinitions } from "./tools";
 import { executeWorkTool, executePendingAction, type RunContext } from "./execute";
-import { canTransition, type ActionStatus, type AutonomyMode, type PendingAction } from "./types";
+import {
+  canTransition,
+  type ActionStatus,
+  type AutonomyMode,
+  type PendingAction,
+  type ToolAutonomy,
+} from "./types";
 
 export type StepRunner = <T>(id: string, fn: () => Promise<T>) => Promise<T>;
 
@@ -60,6 +66,7 @@ export async function transition(
       ...data,
       status: to,
       ...(to === "in_progress" ? { startedAt: new Date() } : {}),
+      ...(to === "needs_approval" ? { awaitingSince: new Date() } : {}),
       ...(["done", "failed", "rejected"].includes(to) ? { completedAt: new Date() } : {}),
     },
   });
@@ -110,7 +117,9 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
         model: item.agent.model,
       },
       autonomy,
+      toolAutonomy: (scope?.toolAutonomy as ToolAutonomy | null) ?? null,
       documentIds,
+      trigger: item.trigger,
     },
     systemPrompt: buildRunPrompt({
       agent: item.agent,
@@ -149,6 +158,22 @@ async function finishRun(
     outputTokens: { increment: outcome.outputTokens },
     ...(outcome.error ? { error: outcome.error } : {}),
   });
+  // A failed run is something the agent is telling its owner about itself.
+  if (outcome.error) {
+    await prisma.issue
+      .create({
+        data: {
+          agentId: item.agentId,
+          actionItemId,
+          source: "agent",
+          type: "failure",
+          severity: "medium",
+          summary: "A task failed before it could finish",
+          details: outcome.error,
+        },
+      })
+      .catch((error: unknown) => console.error("[work] failure issue not recorded", error));
+  }
   await audit({
     organizationId: item.organizationId,
     actorType: "agent",

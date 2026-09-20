@@ -102,11 +102,27 @@ async function findOrCreate(table, slug, name, extraColumns = {}) {
   return id;
 }
 
+/**
+ * Issue.agentId arrived when agents started raising issues about themselves.
+ * Existing rows all came from conversations, so the agent is the
+ * conversation's agent.
+ */
+async function ensureIssueAgent() {
+  if (!(await tableExists("Issue")) || (await columnExists("Issue", "agentId"))) return;
+  await prisma.$executeRawUnsafe(`ALTER TABLE "Issue" ADD COLUMN "agentId" TEXT`);
+  const updated = await prisma.$executeRawUnsafe(
+    `UPDATE "Issue" SET "agentId" = (SELECT c."agentId" FROM "Conversation" c WHERE c.id = "Issue"."conversationId")
+     WHERE "agentId" IS NULL`,
+  );
+  console.log(`[backfill] added Issue.agentId and filled ${updated} row(s).`);
+}
+
 async function main() {
   if (!(await tableExists("Agent"))) {
     console.log("[backfill] fresh database; db push will create everything.");
     return;
   }
+  await ensureIssueAgent();
 
   await ensureTable(
     "Project",

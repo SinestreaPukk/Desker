@@ -5,14 +5,18 @@ import Link from "next/link";
 import {
   Bug,
   CheckCircle2,
+  ClipboardCheck,
   Inbox as InboxIcon,
   Lightbulb,
   MessageSquare,
   Search,
+  TriangleAlert,
   Undo2,
   UserRound,
   UserRoundCheck,
 } from "lucide-react";
+import { ApprovalCard } from "@/components/work/approval-card";
+import { useActionItems } from "@/hooks/use-work-data";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, SeverityBadge, StatusBadge } from "@/components/ui/badge";
@@ -41,7 +45,9 @@ import { ISSUE_KINDS, issueKind } from "@/lib/issue-kinds";
 import { formatRelativeTime } from "@/lib/utils";
 
 export function InboxView({ project }: { project: string }) {
-  const [tab, setTab] = React.useState<"conversations" | "issues">("conversations");
+  const [tab, setTab] = React.useState<"conversations" | "issues" | "approvals">("conversations");
+  const awaiting = useActionItems({ project, status: "needs_approval" }, { refetchInterval: 10_000 });
+  const awaitingCount = awaiting.data?.length ?? 0;
   const [agentId, setAgentId] = React.useState("all");
   const [status, setStatus] = React.useState("all");
   const [includePreviews, setIncludePreviews] = React.useState(false);
@@ -83,6 +89,15 @@ export function InboxView({ project }: { project: string }) {
             <TabsTrigger value="issues">
               <Bug aria-hidden />
               Issues &amp; suggestions
+            </TabsTrigger>
+            <TabsTrigger value="approvals">
+              <ClipboardCheck aria-hidden />
+              Approvals
+              {awaitingCount > 0 ? (
+                <Badge tone="warning" className="ml-1.5">
+                  {awaitingCount}
+                </Badge>
+              ) : null}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -165,8 +180,10 @@ export function InboxView({ project }: { project: string }) {
       <PageBody>
         {tab === "conversations" ? (
           <ConversationList filters={filters} project={project} />
-        ) : (
+        ) : tab === "issues" ? (
           <IssueList filters={filters} project={project} />
+        ) : (
+          <ApprovalList project={project} agentId={agentId} />
         )}
       </PageBody>
     </Page>
@@ -309,7 +326,7 @@ function IssueList({
       <EmptyState
         icon={CheckCircle2}
         title="Nothing needs you right now"
-        description="When an agent logs a bug, records a suggestion, or escalates a conversation, it shows up here the moment it happens."
+        description="When a client reports a bug or an idea, or an agent escalates, cannot finish a task, or hits its escalation rule, it shows up here the moment it happens."
       />
     );
   }
@@ -348,7 +365,7 @@ function IssueRow({
 }) {
   const resolved = issue.status === "resolved";
   const kind = ISSUE_KINDS[issueKind(issue.type)];
-  const Icon = { bug: Bug, lightbulb: Lightbulb, handoff: UserRoundCheck }[kind.icon];
+  const Icon = { bug: Bug, lightbulb: Lightbulb, handoff: UserRoundCheck, alert: TriangleAlert }[kind.icon];
 
   return (
     <Panel className={resolved ? "opacity-70" : undefined}>
@@ -387,14 +404,25 @@ function IssueRow({
           <p className="mt-2 flex flex-wrap items-center gap-x-2 meta">
             {issue.agent ? <span>{issue.agent.name}</span> : null}
             <span aria-hidden>·</span>
+            <span>{issue.source === "agent" ? "raised by the agent" : "raised by a client"}</span>
+            <span aria-hidden>·</span>
             <span>{formatRelativeTime(issue.createdAt)}</span>
             <span aria-hidden>·</span>
-            <Link
-              href={`/p/${project}/inbox/${issue.conversationId}`}
-              className="text-accent hover:underline"
-            >
-              View conversation
-            </Link>
+            {issue.conversationId ? (
+              <Link
+                href={`/p/${project}/inbox/${issue.conversationId}`}
+                className="text-accent hover:underline"
+              >
+                View conversation
+              </Link>
+            ) : issue.actionItemId ? (
+              <Link
+                href={`/p/${project}/work?item=${issue.actionItemId}`}
+                className="text-accent hover:underline"
+              >
+                View the run
+              </Link>
+            ) : null}
           </p>
         </div>
 
@@ -419,5 +447,36 @@ function IssueRow({
         </Button>
       </div>
     </Panel>
+  );
+}
+
+
+function ApprovalList({ project, agentId }: { project: string; agentId: string }) {
+  const { data, isPending, error, refetch, isRefetching } = useActionItems(
+    { project, status: "needs_approval", agentId: agentId === "all" ? undefined : agentId },
+    { refetchInterval: 5_000 },
+  );
+
+  if (isPending) return <LoadingRows count={3} />;
+  if (error) {
+    return (
+      <ErrorState message={errorMessage(error)} onRetry={() => void refetch()} retrying={isRefetching} />
+    );
+  }
+  if (data!.length === 0) {
+    return (
+      <EmptyState
+        icon={ClipboardCheck}
+        title="Nothing waiting for approval"
+        description="When an agent in draft-only mode is ready to publish a post or send an email, it lands here with the full text for you to approve, edit, or reject."
+      />
+    );
+  }
+  return (
+    <div className="space-y-3">
+      {data!.map((item) => (
+        <ApprovalCard key={item.id} item={item} project={project} />
+      ))}
+    </div>
   );
 }

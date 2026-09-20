@@ -124,6 +124,7 @@ model Agent {
   actionItems         ActionItem[]
   scopeOfWork         ScopeOfWork?
   drafts              Draft[]
+  issues              Issue[]
 
   @@index([status])
   @@index([projectId])
@@ -258,19 +259,32 @@ model RetrievalLog {
   @@index([agentId, hitCount])
 }
 
+/// Something raised for a person's attention. Two sources: a client, via a
+/// conversation (issue, suggestion, escalation), or the agent itself, via an
+/// autonomous run (an escalation rule that fired, a run that failed, a
+/// request it did not know how to handle). `agentId` is denormalised so the
+/// inbox can list both kinds per agent without a join through either parent.
 model Issue {
-  id             String       @id @default(cuid())
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  type           String       // issue | suggestion
+  id             String        @id @default(cuid())
+  agentId        String
+  agent          Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  actionItemId   String?
+  actionItem     ActionItem?   @relation(fields: [actionItemId], references: [id], onDelete: Cascade)
+  /// client | agent
+  source         String        @default("client")
+  type           String        // issue | suggestion | escalation | failure
   summary        String
-  severity       String?      // low | medium | high | critical
+  severity       String?       // low | medium | high | critical
   details        String?
-  status         String       @default("open") // open | resolved
-  createdAt      DateTime     @default(now())
+  status         String        @default("open") // open | resolved
+  createdAt      DateTime      @default(now())
 
   @@index([status])
+  @@index([agentId, status])
   @@index([conversationId])
+  @@index([actionItemId])
 }
 
 // ---------------------------------------------------------------------------
@@ -303,6 +317,9 @@ model ScopeOfWork {
   /// draft_only: external tools (publish, email) stop for approval.
   /// auto: they go straight out. Every agent starts draft_only.
   autonomy       String   @default("draft_only")
+  /// Per-tool overrides: { publish_post?: "draft_only" | "auto", send_email?: ... }.
+  /// A tool not listed inherits `autonomy`.
+  toolAutonomy   Json?
   /// The last cron fire time that produced a run, so a tick is never doubled.
   lastFiredAt    DateTime?
   createdAt      DateTime @default(now())
@@ -349,8 +366,13 @@ model ActionItem {
   followups      ActionItem[] @relation("ActionItemFollowups")
   /// When a follow-up should start. Null means immediately.
   scheduledFor   DateTime?
+  /// When it entered needs_approval; approval turnaround is measured from here.
+  awaitingSince  DateTime?
   approvedById   String?
   approvedAt     DateTime?
+  /// Set when the agent's escalation rule fired during the run.
+  escalatedAt    DateTime?
+  escalationReason String?
   inputTokens    Int          @default(0)
   outputTokens   Int          @default(0)
   createdAt      DateTime     @default(now())
@@ -359,6 +381,7 @@ model ActionItem {
   completedAt    DateTime?
 
   drafts Draft[]
+  issues Issue[]
 
   @@index([organizationId, status])
   @@index([agentId, status])

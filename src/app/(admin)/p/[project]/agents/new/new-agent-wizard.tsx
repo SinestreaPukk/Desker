@@ -169,6 +169,7 @@ export function NewAgentWizard({ project }: { project: string }) {
               timezone: scope.timezone,
               enabled: scope.enabled,
               autonomy: "draft_only",
+              toolAutonomy: null,
             }),
           });
         } catch (caught) {

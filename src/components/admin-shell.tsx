@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   Plus,
+  ScrollText,
   Users,
   X,
 } from "lucide-react";
@@ -45,6 +46,7 @@ const NAV = [
   { segment: "work", label: "Work", icon: Briefcase },
   { segment: "inbox", label: "Inbox", icon: Inbox },
   { segment: "insights", label: "Insights", icon: ChartNoAxesColumn },
+  { segment: "audit", label: "Audit log", icon: ScrollText },
   { segment: "integrations", label: "Integrations", icon: Plug },
 ] as const;
 

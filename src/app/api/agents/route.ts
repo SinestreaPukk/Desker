@@ -36,21 +36,13 @@ export async function GET(request: Request) {
 
     // One grouped query instead of N per-agent counts.
     const openIssues = await prisma.issue.groupBy({
-      by: ["conversationId"],
+      by: ["agentId"],
       where: { status: "open" },
       _count: { _all: true },
     });
-    const conversationAgent = await prisma.conversation.findMany({
-      where: { id: { in: openIssues.map((row) => row.conversationId) } },
-      select: { id: true, agentId: true },
-    });
-    const agentByConversation = new Map(
-      conversationAgent.map((row) => [row.id, row.agentId]),
-    );
     const openIssuesByAgent = new Map<string, number>();
     for (const row of openIssues) {
-      const agentId = agentByConversation.get(row.conversationId);
-      if (!agentId) continue;
+      const agentId = row.agentId;
       openIssuesByAgent.set(
         agentId,
         (openIssuesByAgent.get(agentId) ?? 0) + row._count._all,

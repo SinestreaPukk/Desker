@@ -29,7 +29,10 @@ export interface ActionItemDto {
   inputTokens: number;
   outputTokens: number;
   scheduledFor: string | null;
+  awaitingSince: string | null;
   approvedAt: string | null;
+  escalatedAt: string | null;
+  escalationReason: string | null;
   createdAt: string;
   startedAt: string | null;
   completedAt: string | null;

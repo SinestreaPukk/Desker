@@ -39,6 +39,17 @@ export type TriggerType = (typeof TRIGGER_TYPES)[number];
 export const AUTONOMY_MODES = ["draft_only", "auto"] as const;
 export type AutonomyMode = (typeof AUTONOMY_MODES)[number];
 
+/** Per-tool overrides on top of the agent-level mode. */
+export type ToolAutonomy = Partial<Record<"publish_post" | "send_email", AutonomyMode>>;
+
+export function effectiveAutonomy(
+  agentMode: AutonomyMode,
+  overrides: ToolAutonomy | null | undefined,
+  tool: "publish_post" | "send_email",
+): AutonomyMode {
+  return overrides?.[tool] ?? agentMode;
+}
+
 export const DRAFT_KINDS = ["blog_post", "social_caption", "email"] as const;
 export type DraftKind = (typeof DRAFT_KINDS)[number];
 

@@ -6,13 +6,13 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { CronExpressionParser } from "cron-parser";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { inngest } from "@/lib/jobs/client";
 import { toStringArray } from "@/lib/agent-fields";
 import { transition } from "./runner";
-import type { AutonomyMode, TriggerType } from "./types";
+import type { AutonomyMode, ToolAutonomy, TriggerType } from "./types";
 
 export interface ScopeDto {
   agentId: string;
@@ -25,6 +25,7 @@ export interface ScopeDto {
   webhookToken: string | null;
   enabled: boolean;
   autonomy: AutonomyMode;
+  toolAutonomy: ToolAutonomy | null;
   lastFiredAt: string | null;
   /** The next scheduled fire time, for the editor. Null unless cron. */
   nextFireAt: string | null;
@@ -78,6 +79,7 @@ export function toScopeDto(
     webhookToken: string | null;
     enabled: boolean;
     autonomy: string;
+    toolAutonomy: unknown;
     lastFiredAt: Date | null;
   } | null,
   agentId: string,
@@ -94,6 +96,7 @@ export function toScopeDto(
       webhookToken: null,
       enabled: true,
       autonomy: "draft_only",
+      toolAutonomy: null,
       lastFiredAt: null,
       nextFireAt: null,
     };
@@ -109,6 +112,7 @@ export function toScopeDto(
     webhookToken: scope.webhookToken,
     enabled: scope.enabled,
     autonomy: scope.autonomy as AutonomyMode,
+    toolAutonomy: (scope.toolAutonomy as ToolAutonomy | null) ?? null,
     lastFiredAt: scope.lastFiredAt?.toISOString() ?? null,
     nextFireAt:
       scope.triggerType === "cron" && scope.enabled
@@ -126,6 +130,7 @@ export interface ScopeInput {
   timezone: string;
   enabled: boolean;
   autonomy: AutonomyMode;
+  toolAutonomy: ToolAutonomy | null;
 }
 
 export function newWebhookToken(): string {
@@ -148,6 +153,7 @@ export async function saveScope(agentId: string, input: ScopeInput) {
     webhookToken,
     enabled: input.enabled,
     autonomy: input.autonomy,
+    toolAutonomy: (input.toolAutonomy ?? Prisma.JsonNull) as Prisma.InputJsonValue | typeof Prisma.JsonNull,
   };
   return prisma.scopeOfWork.upsert({
     where: { agentId },

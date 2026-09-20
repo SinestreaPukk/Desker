@@ -185,7 +185,12 @@ export async function* runAgentTurn(
     // `preview:` session prefix and are filtered out of the inbox by default.
     const outcome = await executeToolCall(
       call,
-      { agentId: agent.id, projectId: agent.projectId, conversationId },
+      {
+        agentId: agent.id,
+        projectId: agent.projectId,
+        organizationId: project.organizationId,
+        conversationId,
+      },
       allowedTools,
     );
     effects.set(call.id, outcome.effect);

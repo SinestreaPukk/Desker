@@ -112,3 +112,17 @@ export function useDeleteIntegration(project: string) {
     onSuccess: () => void client.invalidateQueries({ queryKey: workKeys.integrations(project) }),
   });
 }
+
+// --- drafts -----------------------------------------------------------------
+
+export function useUpdateDraft() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: { id: string; title?: string; body?: string; to?: string }) =>
+      api<import("@/lib/work/serialize").DraftDto>(`/api/drafts/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(input),
+      }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ["action-items"] }),
+  });
+}

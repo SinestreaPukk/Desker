@@ -7,7 +7,9 @@
  */
 import "server-only";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { audit } from "@/lib/audit";
 import { publishAdminEvent } from "@/lib/events";
 import { notifyInBackground } from "@/lib/notify";
 import type { ToolCall } from "@/lib/llm/provider";
@@ -19,6 +21,8 @@ export interface ToolContext {
   agentId: string;
   /** Scopes a transfer: the target must be in the same project. */
   projectId?: string;
+  /** The tenant the audit row belongs to. Omitted only in unit tests. */
+  organizationId?: string;
   conversationId: string;
 }
 
@@ -115,6 +119,7 @@ async function logIssue(input: unknown, context: ToolContext): Promise<ToolOutco
 
   const issue = await prisma.issue.create({
     data: {
+      agentId: context.agentId,
       conversationId: context.conversationId,
       type: "issue",
       summary: parsed.data.summary,
@@ -172,6 +177,7 @@ async function logSuggestion(
 
   const issue = await prisma.issue.create({
     data: {
+      agentId: context.agentId,
       conversationId: context.conversationId,
       type: "suggestion",
       summary: parsed.data.summary,
@@ -243,6 +249,7 @@ async function escalateToHuman(
   const { summary, details } = splitReason(parsed.data.reason);
   await prisma.issue.create({
     data: {
+      agentId: context.agentId,
       conversationId: context.conversationId,
       type: "escalation",
       summary,
@@ -359,6 +366,42 @@ const HANDLERS: Record<
 };
 
 export async function executeToolCall(
+  call: ToolCall,
+  context: ToolContext,
+  allowedTools: string[],
+): Promise<ToolOutcome> {
+  const outcome = await dispatch(call, context, allowedTools);
+  // Every tool call is on the record, whether it worked or was refused.
+  if (context.organizationId) {
+    await audit({
+      organizationId: context.organizationId,
+      actorType: "agent",
+      actorId: context.agentId,
+      action: "tool.called",
+      targetType: "conversation",
+      targetId: context.conversationId,
+      metadata: {
+        tool: call.name,
+        ok: !outcome.isError,
+        trigger: "conversation",
+        input: trimForAudit(call.input) as Prisma.InputJsonValue,
+        result: outcome.content.slice(0, 600),
+      },
+    });
+  }
+  return outcome;
+}
+
+function trimForAudit(input: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(input).map(([key, value]) => [
+      key,
+      typeof value === "string" && value.length > 300 ? `${value.slice(0, 300)}…` : value,
+    ]),
+  );
+}
+
+async function dispatch(
   call: ToolCall,
   context: ToolContext,
   allowedTools: string[],

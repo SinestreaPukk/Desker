@@ -23,46 +23,47 @@ export async function GET(request: Request) {
     const type = url.searchParams.get("type");
     const includePreviews = url.searchParams.get("includePreviews") === "true";
 
+    const source = url.searchParams.get("source");
+
+    // Tenancy through the agent, which every issue has; the conversation
+    // filter only exists to hide preview chats, which agent-raised issues
+    // never come from.
     const where: Prisma.IssueWhereInput = {
       ...(status && status !== "all" ? { status } : {}),
       ...(type && type !== "all" ? { type } : {}),
-      ...(agentId || project || !includePreviews
-        ? {
-            conversation: {
-              agent: project ? { projectId: project.id } : { project: projectsVisibleTo(userId) },
-              ...(agentId ? { agentId } : {}),
-              ...(includePreviews
-                ? {}
-                : { NOT: { clientSessionId: { startsWith: "preview:" } } }),
-            },
-          }
-        : {}),
+      ...(source && source !== "all" ? { source } : {}),
+      agent: project ? { projectId: project.id } : { project: projectsVisibleTo(userId) },
+      ...(agentId ? { agentId } : {}),
+      ...(includePreviews
+        ? {}
+        : {
+            OR: [
+              { conversationId: null },
+              { conversation: { NOT: { clientSessionId: { startsWith: "preview:" } } } },
+            ],
+          }),
     };
 
     const issues = await prisma.issue.findMany({
       where,
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       take: 200,
-      include: {
-        conversation: {
-          select: {
-            agent: { select: { id: true, name: true, avatarUrl: true } },
-          },
-        },
-      },
+      include: { agent: { select: { id: true, name: true, avatarUrl: true } } },
     });
 
     return issues.map(
       (issue): IssueDto => ({
         id: issue.id,
         conversationId: issue.conversationId,
+        actionItemId: issue.actionItemId,
+        source: issue.source,
         type: issue.type,
         summary: issue.summary,
         severity: issue.severity,
         details: issue.details,
         status: issue.status,
         createdAt: issue.createdAt.toISOString(),
-        agent: issue.conversation.agent,
+        agent: issue.agent,
       }),
     );
   });

@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Briefcase, Check, ChevronDown, ChevronRight, X } from "lucide-react";
+import { Briefcase, ChevronDown, ChevronRight } from "lucide-react";
+import { ApprovalCard } from "@/components/work/approval-card";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import {
   Select,
@@ -18,11 +18,7 @@ import {
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { ActionStatusBadge } from "@/components/builder/scope-of-work-panel";
 import { useAgents } from "@/hooks/use-admin-data";
-import {
-  useActionItems,
-  useApproveActionItem,
-  useRejectActionItem,
-} from "@/hooks/use-work-data";
+import { useActionItems } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
 import { ACTION_STATUSES, STATUS_LABELS } from "@/lib/work/types";
@@ -44,10 +40,13 @@ export function WorkView({
   project,
   initialAgentId,
   initialStatus,
+  focusItemId,
 }: {
   project: string;
   initialAgentId: string;
   initialStatus: string;
+  /** From a link in the inbox: open this item on arrival. */
+  focusItemId?: string;
 }) {
   const [agentId, setAgentId] = React.useState(initialAgentId);
   const [status, setStatus] = React.useState(initialStatus);
@@ -112,7 +111,7 @@ export function WorkView({
         ) : items.data && items.data.length > 0 ? (
           <Panel className="divide-y divide-line">
             {items.data.map((item) => (
-              <ActionItemRow key={item.id} item={item} project={project} />
+              <ActionItemRow key={item.id} item={item} project={project} initiallyOpen={item.id === focusItemId} />
             ))}
           </Panel>
         ) : (
@@ -127,25 +126,16 @@ export function WorkView({
   );
 }
 
-function ActionItemRow({ item, project }: { item: ActionItemDto; project: string }) {
-  const [open, setOpen] = React.useState(item.status === "needs_approval");
-  const approve = useApproveActionItem();
-  const reject = useRejectActionItem();
-  const [note, setNote] = React.useState<string | null>(null);
-
-  async function decide(verb: "approve" | "reject") {
-    setNote(null);
-    try {
-      if (verb === "approve") await approve.mutateAsync({ id: item.id });
-      else await reject.mutateAsync({ id: item.id });
-    } catch (caught) {
-      setNote(errorMessage(caught));
-    }
-  }
-
-  const pendingDraft = item.pendingAction?.draftId
-    ? item.drafts.find((draft) => draft.id === item.pendingAction!.draftId)
-    : null;
+function ActionItemRow({
+  item,
+  project,
+  initiallyOpen,
+}: {
+  item: ActionItemDto;
+  project: string;
+  initiallyOpen: boolean;
+}) {
+  const [open, setOpen] = React.useState(initiallyOpen || item.status === "needs_approval");
 
   return (
     <div>
@@ -171,48 +161,20 @@ function ActionItemRow({ item, project }: { item: ActionItemDto; project: string
             {item.summary ?? item.error ?? (item.status === "in_progress" ? "Working…" : "Not started")}
           </p>
         </div>
+        {item.escalatedAt ? <Badge tone="danger">Escalated</Badge> : null}
         <ActionStatusBadge status={item.status} />
       </button>
 
       {open ? (
         <div className="space-y-4 border-t border-line bg-surface-2/40 px-4 py-4 text-[0.8125rem]">
           {item.status === "needs_approval" && item.pendingAction ? (
-            <div className="rounded-xl border border-warning-line bg-warning-soft/40 p-4">
-              <p className="font-medium text-ink">
-                Waiting for approval:{" "}
-                {item.pendingAction.tool === "publish_post" ? "publish a post" : "send an email"}
-              </p>
-              {item.pendingAction.note ? (
-                <p className="mt-1 text-ink-muted">{item.pendingAction.note}</p>
-              ) : null}
-              {item.pendingAction.tool === "send_email" ? (
-                <p className="mt-1 text-xs text-ink-muted">
-                  To: {(item.pendingAction.input.to as string[] | undefined)?.join(", ")} · Subject:{" "}
-                  {String(item.pendingAction.input.subject ?? "")}
-                </p>
-              ) : null}
-              {pendingDraft ? (
-                <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-md border border-line bg-surface p-3 font-sans text-[0.8125rem] leading-relaxed text-ink">
-                  {pendingDraft.body}
-                </pre>
-              ) : null}
-              <div className="mt-3 flex items-center gap-2">
-                <Button size="sm" onClick={() => void decide("approve")} disabled={approve.isPending || reject.isPending}>
-                  <Check aria-hidden />
-                  Approve and send
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => void decide("reject")}
-                  disabled={approve.isPending || reject.isPending}
-                >
-                  <X aria-hidden />
-                  Reject
-                </Button>
-                {note ? <span className="text-xs text-danger">{note}</span> : null}
-              </div>
-            </div>
+            <ApprovalCard item={item} project={project} />
+          ) : null}
+
+          {item.escalatedAt && item.status !== "needs_approval" ? (
+            <p className="rounded-md border border-danger-line bg-danger-soft/40 px-3 py-2 text-danger">
+              Escalated by the agent: {item.escalationReason}
+            </p>
           ) : null}
 
           {item.error ? <p className="text-danger">{item.error}</p> : null}

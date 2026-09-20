@@ -12,6 +12,7 @@ export interface RunPromptInput {
     jobTitle: string;
     department: string | null;
     personality: string;
+    escalationRule: string | null;
   };
   scope: { context: string; objectives: string[] };
   autonomy: AutonomyMode;
@@ -41,6 +42,13 @@ export function buildRunPrompt(input: RunPromptInput): string {
     parts.push(
       `Context documents you can search with search_context: ${input.documentNames.join(", ")}. ` +
         "Prefer them over the public web for anything about this organisation.",
+    );
+  }
+
+  if (agent.escalationRule?.trim()) {
+    parts.push(
+      `Escalation rule for this role:\n${agent.escalationRule.trim()}\n\n` +
+        "Judge it from what you actually encounter during the task - the sources you find, the size of an action, the content of an event - not from keywords. When it applies, call escalate_to_human with a plain reason, then carry on with whatever is still safe to do.",
     );
   }
 

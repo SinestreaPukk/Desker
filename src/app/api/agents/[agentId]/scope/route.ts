@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { findAgentFor } from "@/lib/projects";
@@ -63,6 +64,7 @@ export async function PUT(request: Request, { params }: Params) {
         triggerType: scope.triggerType,
         cron: scope.cron,
         autonomy: scope.autonomy,
+        toolAutonomy: (scope.toolAutonomy as Prisma.InputJsonValue | null) ?? null,
         enabled: scope.enabled,
       },
     });

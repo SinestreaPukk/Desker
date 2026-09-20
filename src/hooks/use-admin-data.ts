@@ -293,6 +293,10 @@ export interface AnalyticsResponse {
     agentName: string;
     lastAskedAt: string;
   }[];
+  work: {
+    totals: import("@/app/api/analytics/route").WorkTotals;
+    agents: import("@/app/api/analytics/route").AgentWorkStats[];
+  };
 }
 
 export function useAnalytics(project: string, days = 30) {

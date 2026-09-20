@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { ACTION_STATUSES, TRANSITIONS, canTransition } from "@/lib/work/types";
+import { ACTION_STATUSES, TRANSITIONS, canTransition, effectiveAutonomy } from "@/lib/work/types";
 import { cadenceToCron, cronToCadence, describeCadence } from "@/lib/work/cadence";
-import { WORK_TOOL_IDS, WORK_TOOL_RISK, WORK_TOOLS } from "@/lib/work/tools";
+import { WORK_TOOL_IDS, WORK_TOOL_RISK, workToolDefinitions } from "@/lib/work/tools";
 import { htmlToText } from "@/lib/work/research";
 
 describe("action item state machine", () => {
@@ -25,6 +25,15 @@ describe("action item state machine", () => {
     expect(TRANSITIONS.done).toEqual([]);
     expect(TRANSITIONS.failed).toEqual([]);
     expect(TRANSITIONS.rejected).toEqual([]);
+  });
+});
+
+describe("trust settings", () => {
+  it("a per-tool override wins over the agent mode", () => {
+    expect(effectiveAutonomy("draft_only", null, "publish_post")).toBe("draft_only");
+    expect(effectiveAutonomy("draft_only", { publish_post: "auto" }, "publish_post")).toBe("auto");
+    expect(effectiveAutonomy("draft_only", { publish_post: "auto" }, "send_email")).toBe("draft_only");
+    expect(effectiveAutonomy("auto", { send_email: "draft_only" }, "send_email")).toBe("draft_only");
   });
 });
 
@@ -55,10 +64,12 @@ describe("cadence <-> cron", () => {
 
 describe("work tools", () => {
   it("every tool has a definition and a declared risk level", () => {
-    for (const id of WORK_TOOL_IDS) {
-      expect(WORK_TOOLS[id].name).toBe(id);
+    const definitions = workToolDefinitions(WORK_TOOL_IDS);
+    for (const [index, id] of WORK_TOOL_IDS.entries()) {
+      expect(definitions[index]!.name).toBe(id);
       expect(WORK_TOOL_RISK[id]).toBeDefined();
     }
+    expect(WORK_TOOL_RISK.escalate_to_human).toBe("internal");
     expect(WORK_TOOL_RISK.publish_post).toBe("external");
     expect(WORK_TOOL_RISK.send_email).toBe("external");
     expect(WORK_TOOL_RISK.draft_content).toBe("draft");

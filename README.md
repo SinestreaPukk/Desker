@@ -205,6 +205,7 @@ a risk level that the runner gates on:
 | `web_research` | read | Search (Brave, or Tavily), read the top pages, summarise with numbered sources; saved to the item. Results are cached by query for 6 hours across organisations; each call is metered per organisation |
 | `draft_content` | draft | Writes a blog post, social caption or email into a `Draft`. Never publishes |
 | `schedule_followup` | internal | Queues the next task as its own action item, now or after a delay, with this run's report as context |
+| `escalate_to_human` | internal | Flags the run for a person - an issue in the Inbox - when the escalation rule applies or the work cannot be done safely |
 | `publish_post` | external | Sends a draft to the organisation's publishing webhook |
 | `send_email` | external | Sends through Resend |
 
@@ -220,6 +221,36 @@ Integrations live per organisation under *Integrations*: a generic webhook
 `X-Desker-Signature` when a secret is set) and a Resend email connector. Their
 config is stored in plain text for now and is never returned to the browser,
 logged, or written to an audit row; the credential vault replaces the store.
+
+## Oversight
+
+Nothing an agent does publicly happens without a visible, reviewable trail.
+
+- **Inbox → Approvals** lists every action item in `needs_approval` with the
+  post or email shown in full. An owner can approve, edit the draft and then
+  approve, or reject with a reason; each decision is an audit row. The
+  Approvals tab and the Work page share one card.
+- **Inbox → Issues & suggestions** now carries what agents flag about
+  themselves as well as what clients report: an escalation rule that fired
+  during a run, or a run that failed. Agent-raised issues link to the run.
+- **Trust** lives on the scope of work: an agent-wide mode (draft only /
+  auto) plus a per-tool override for `publish_post` and `send_email`, so posts
+  can flow while emails still wait. Every new agent starts draft-only.
+- **The escalation rule covers action items.** The same plain-language rule
+  written for conversations is given to the run prompt; the model judges it
+  from what it encounters and calls `escalate_to_human`, which creates an
+  issue and marks the run. Nothing is keyword-matched.
+- **Audit log** (`/p/<slug>/audit`, `GET /api/audit`): every tool call an
+  agent makes - in chat or at work - with its inputs, its result, and what
+  triggered it, alongside every approval, rejection, draft edit, trust change
+  and integration change. Filter by agent, actor, action and date; export the
+  same rows as CSV. Rows are never edited or deleted.
+- **Insights** adds task-level numbers next to the conversation ones: runs,
+  completed vs failed vs awaiting approval, escalations, average approval
+  turnaround, and tokens and cost per agent. Cost comes from `lib/pricing.ts`
+  (first-party Anthropic list prices; `MODEL_PRICING_JSON` overrides or adds
+  models) applied to the usage counters. An unpriced model shows as unknown,
+  never as free - the figure is what billing will meter.
 
 ## Background jobs
 

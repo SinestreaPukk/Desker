@@ -25,15 +25,25 @@ import {
   type WebhookConfig,
 } from "./integrations";
 import { WORK_TOOL_RISK, isWorkToolId } from "./tools";
-import { DRAFT_KINDS, type AutonomyMode, type PendingAction, type WorkStep } from "./types";
+import {
+  DRAFT_KINDS,
+  effectiveAutonomy,
+  type AutonomyMode,
+  type PendingAction,
+  type ToolAutonomy,
+  type WorkStep,
+} from "./types";
 
 export interface RunContext {
   actionItemId: string;
   organizationId: string;
   agent: { id: string; name: string; modelProvider: string; model: string | null };
   autonomy: AutonomyMode;
+  toolAutonomy: ToolAutonomy | null;
   /** Empty means every ready document the agent has. */
   documentIds: string[];
+  /** schedule | webhook | manual | followup - recorded on every audit row. */
+  trigger: string;
 }
 
 export interface WorkToolOutcome {
@@ -75,6 +85,10 @@ const emailSchema = z
 const followupSchema = z.object({
   objective: z.string().trim().min(1).max(2000),
   delay_minutes: z.number().int().min(0).max(MAX_FOLLOWUP_DELAY_MINUTES).optional(),
+});
+const escalateSchema = z.object({
+  reason: z.string().trim().min(1).max(2000),
+  summary: z.string().trim().min(1).max(120),
 });
 
 function invalid(tool: string, error: z.ZodError): WorkToolOutcome {
@@ -197,7 +211,7 @@ async function gateOrDeliver(
     };
   }
 
-  if (ctx.autonomy === "draft_only") {
+  if (effectiveAutonomy(ctx.autonomy, ctx.toolAutonomy, action.tool) === "draft_only") {
     await prisma.actionItem.update({
       where: { id: ctx.actionItemId },
       data: { pendingAction: action as unknown as Prisma.InputJsonValue },
@@ -329,6 +343,43 @@ async function scheduleFollowup(input: unknown, ctx: RunContext): Promise<WorkTo
   };
 }
 
+/**
+ * The agent asks for a person. The run keeps going - the point is the flag,
+ * not a halt - and the item is marked so the inbox and the report agree.
+ */
+async function escalateToHuman(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = escalateSchema.safeParse(input);
+  if (!parsed.success) return invalid("escalate_to_human", parsed.error);
+  const existing = await prisma.actionItem.findUniqueOrThrow({
+    where: { id: ctx.actionItemId },
+    select: { escalatedAt: true },
+  });
+  if (existing.escalatedAt) {
+    return { content: "This task is already escalated. Finish your report; a person will review it." };
+  }
+  await prisma.$transaction([
+    prisma.issue.create({
+      data: {
+        agentId: ctx.agent.id,
+        actionItemId: ctx.actionItemId,
+        source: "agent",
+        type: "escalation",
+        severity: "high",
+        summary: parsed.data.summary,
+        details: parsed.data.reason,
+      },
+    }),
+    prisma.actionItem.update({
+      where: { id: ctx.actionItemId },
+      data: { escalatedAt: new Date(), escalationReason: parsed.data.reason },
+    }),
+  ]);
+  return {
+    content:
+      "Escalated: a person will see this in their inbox. Finish what you safely can and put what they need to decide in your report.",
+  };
+}
+
 // --- dispatch ---------------------------------------------------------------
 
 export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<WorkToolOutcome> {
@@ -355,6 +406,9 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
           break;
         case "schedule_followup":
           outcome = await scheduleFollowup(call.input, ctx);
+          break;
+        case "escalate_to_human":
+          outcome = await escalateToHuman(call.input, ctx);
           break;
       }
     } catch (error) {
@@ -385,7 +439,9 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
       risk: isWorkToolId(call.name) ? WORK_TOOL_RISK[call.name] : "unknown",
       ok: step.ok,
       gated: Boolean(outcome.gate),
+      trigger: ctx.trigger,
       input: step.input as Prisma.InputJsonValue,
+      result: step.output,
     },
   });
   return outcome;

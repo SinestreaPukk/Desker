@@ -11,8 +11,22 @@ export const scopeInputSchema = z.object({
   timezone: z.string().trim().min(1).max(64).default("UTC"),
   enabled: z.boolean().default(true),
   autonomy: z.enum(AUTONOMY_MODES).default("draft_only"),
+  toolAutonomy: z
+    .object({
+      publish_post: z.enum(AUTONOMY_MODES).optional(),
+      send_email: z.enum(AUTONOMY_MODES).optional(),
+    })
+    .nullable()
+    .default(null),
 });
 export type ScopeInputPayload = z.infer<typeof scopeInputSchema>;
+
+export const draftPatchSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  body: z.string().trim().min(1).max(60_000).optional(),
+  /** Email only. */
+  to: z.string().trim().max(1000).optional(),
+});
 
 export const integrationInputSchema = z.discriminatedUnion("type", [
   z.object({

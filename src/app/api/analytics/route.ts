@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { findProject, projectsVisibleTo } from "@/lib/projects";
+import { costOf } from "@/lib/pricing";
+import { usagePeriod } from "@/lib/usage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +30,44 @@ export interface AgentStats {
   ratedDown: number;
   /** Share of rated replies the client found helpful. */
   satisfaction: number | null;
+}
+
+/** Task-level numbers for one agent over the window. */
+export interface AgentWorkStats {
+  id: string;
+  name: string;
+  jobTitle: string;
+  avatarUrl: string | null;
+  runs: number;
+  done: number;
+  failed: number;
+  awaiting: number;
+  rejected: number;
+  escalated: number;
+  /** Mean time from needs_approval to a decision, in ms. Null without decisions. */
+  approvalTurnaroundMs: number | null;
+  inputTokens: number;
+  outputTokens: number;
+  /** USD for the covered calendar months; null when any model lacks a price. */
+  costUsd: number | null;
+  searches: number;
+}
+
+export interface WorkTotals {
+  runs: number;
+  done: number;
+  failed: number;
+  awaiting: number;
+  rejected: number;
+  escalated: number;
+  approvalTurnaroundMs: number | null;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number | null;
+  /** The calendar months the token figures cover, e.g. ["2026-09"]. */
+  periods: string[];
+  /** Models seen without a known price, so the cost gap is explained. */
+  unpricedModels: string[];
 }
 
 export interface DislikedReply {
@@ -104,7 +144,7 @@ export async function GET(request: Request) {
             agent: inProject,
           },
         },
-        select: { type: true, conversationId: true },
+        select: { type: true, conversationId: true, agentId: true },
       }),
       prisma.retrievalLog.findMany({
         where: { createdAt: { gte: since }, agent: inProject },
@@ -163,7 +203,9 @@ export async function GET(request: Request) {
     }
 
     for (const issue of issues) {
-      const stats = byAgent.get(ownerOf.get(issue.conversationId) ?? "");
+      const stats = byAgent.get(
+        (issue.conversationId ? ownerOf.get(issue.conversationId) : null) ?? issue.agentId,
+      );
       if (!stats) continue;
       if (issue.type === "suggestion") stats.suggestions += 1;
       else if (issue.type === "issue") stats.issues += 1;
@@ -250,6 +292,116 @@ export async function GET(request: Request) {
       }
     }
 
+    // --- work: action items in the window, tokens for the months it touches --
+    const periods: string[] = [];
+    for (let d = new Date(since); d <= new Date(); d.setUTCMonth(d.getUTCMonth() + 1, 1)) {
+      periods.push(usagePeriod(d));
+    }
+    if (!periods.includes(usagePeriod())) periods.push(usagePeriod());
+
+    const [items, usage] = await Promise.all([
+      prisma.actionItem.findMany({
+        where: { createdAt: { gte: since }, agent: inProject },
+        select: {
+          agentId: true,
+          status: true,
+          awaitingSince: true,
+          approvedAt: true,
+          completedAt: true,
+          escalatedAt: true,
+        },
+      }),
+      prisma.usageCounter.findMany({
+        where: {
+          period: { in: periods },
+          agentId: { in: agents.map((a) => a.id) },
+        },
+        select: { agentId: true, provider: true, model: true, inputTokens: true, outputTokens: true, searches: true },
+      }),
+    ]);
+
+    const work = new Map<string, AgentWorkStats>();
+    for (const agent of agents) {
+      work.set(agent.id, {
+        id: agent.id,
+        name: agent.name,
+        jobTitle: agent.jobTitle,
+        avatarUrl: agent.avatarUrl,
+        runs: 0,
+        done: 0,
+        failed: 0,
+        awaiting: 0,
+        rejected: 0,
+        escalated: 0,
+        approvalTurnaroundMs: null,
+        inputTokens: 0,
+        outputTokens: 0,
+        costUsd: 0,
+        searches: 0,
+      });
+    }
+    const turnarounds = new Map<string, number[]>();
+    for (const item of items) {
+      const stats = work.get(item.agentId);
+      if (!stats) continue;
+      stats.runs += 1;
+      if (item.status === "done") stats.done += 1;
+      else if (item.status === "failed") stats.failed += 1;
+      else if (item.status === "needs_approval") stats.awaiting += 1;
+      else if (item.status === "rejected") stats.rejected += 1;
+      if (item.escalatedAt) stats.escalated += 1;
+      const decidedAt = item.approvedAt ?? (item.status === "rejected" ? item.completedAt : null);
+      if (item.awaitingSince && decidedAt) {
+        const list = turnarounds.get(item.agentId) ?? [];
+        list.push(decidedAt.getTime() - item.awaitingSince.getTime());
+        turnarounds.set(item.agentId, list);
+      }
+    }
+    const unpriced = new Set<string>();
+    for (const row of usage) {
+      const stats = work.get(row.agentId);
+      if (!stats) continue;
+      if (row.provider === "search") {
+        stats.searches += row.searches;
+        continue;
+      }
+      stats.inputTokens += row.inputTokens;
+      stats.outputTokens += row.outputTokens;
+      const cost = costOf(row.model, row.inputTokens, row.outputTokens);
+      if (cost === null) {
+        unpriced.add(row.model);
+        stats.costUsd = null;
+      } else if (stats.costUsd !== null) {
+        stats.costUsd += cost;
+      }
+    }
+    const mean = (values: number[]) =>
+      values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
+    for (const [agentId, list] of turnarounds) {
+      const stats = work.get(agentId);
+      if (stats) stats.approvalTurnaroundMs = mean(list);
+    }
+    const workAgents = [...work.values()].filter(
+      (stats) => stats.runs > 0 || stats.inputTokens + stats.outputTokens > 0,
+    );
+    const allTurnarounds = [...turnarounds.values()].flat();
+    const workTotals: WorkTotals = {
+      runs: workAgents.reduce((n, a) => n + a.runs, 0),
+      done: workAgents.reduce((n, a) => n + a.done, 0),
+      failed: workAgents.reduce((n, a) => n + a.failed, 0),
+      awaiting: workAgents.reduce((n, a) => n + a.awaiting, 0),
+      rejected: workAgents.reduce((n, a) => n + a.rejected, 0),
+      escalated: workAgents.reduce((n, a) => n + a.escalated, 0),
+      approvalTurnaroundMs: mean(allTurnarounds),
+      inputTokens: workAgents.reduce((n, a) => n + a.inputTokens, 0),
+      outputTokens: workAgents.reduce((n, a) => n + a.outputTokens, 0),
+      costUsd: workAgents.some((a) => a.costUsd === null)
+        ? null
+        : workAgents.reduce((n, a) => n + (a.costUsd ?? 0), 0),
+      periods,
+      unpricedModels: [...unpriced],
+    };
+
     const totals = {
       conversations: conversations.length,
       escalated: conversations.filter((c) => c.status === "escalated").length,
@@ -271,6 +423,7 @@ export async function GET(request: Request) {
         .sort((a, b) => b.misses - a.misses || b.lastAskedAt.localeCompare(a.lastAskedAt))
         .slice(0, 25),
       dislikedReplies,
+      work: { totals: workTotals, agents: workAgents },
     };
   });
 }

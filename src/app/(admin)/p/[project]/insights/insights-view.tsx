@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
-import { useAnalytics } from "@/hooks/use-admin-data";
+import { useAnalytics, type AnalyticsResponse } from "@/hooks/use-admin-data";
 import { errorMessage } from "@/lib/api-client";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
@@ -131,6 +131,9 @@ export function InsightsView({ project }: { project: string }) {
                 }
               />
             </dl>
+
+            {/* Work: what the agents did on their own, and what it cost. -------- */}
+            <WorkSection work={data!.work} days={data!.days} />
 
             {/* Content gaps first: it is the only panel here that tells an
                 admin what to actually go and do. */}
@@ -361,6 +364,122 @@ export function InsightsView({ project }: { project: string }) {
         )}
       </PageBody>
     </Page>
+  );
+}
+
+function money(value: number | null): string {
+  if (value === null) return "—";
+  return value < 0.01 && value > 0 ? "<$0.01" : `$${value.toFixed(2)}`;
+}
+
+function duration(ms: number | null): string {
+  if (ms === null) return "—";
+  const minutes = ms / 60_000;
+  if (minutes < 1) return "<1 min";
+  if (minutes < 90) return `${Math.round(minutes)} min`;
+  const hours = minutes / 60;
+  if (hours < 36) return `${hours.toFixed(1)} h`;
+  return `${(hours / 24).toFixed(1)} d`;
+}
+
+function WorkSection({ work, days }: { work: AnalyticsResponse["work"]; days: number }) {
+  const { totals, agents } = work;
+  const periodLabel =
+    totals.periods.length === 1 ? totals.periods[0] : `${totals.periods[0]} to ${totals.periods.at(-1)}`;
+  return (
+    <>
+      <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <Stat label="Tasks run" value={totals.runs} hint={`last ${days} days`} />
+        <Stat
+          label="Completed"
+          value={totals.done}
+          hint={totals.runs > 0 ? `${percent(totals.done / totals.runs)} of runs` : undefined}
+        />
+        <Stat
+          label="Failed"
+          value={totals.failed}
+          hint={totals.escalated > 0 ? `${totals.escalated} escalated by an agent` : undefined}
+        />
+        <Stat
+          label="Awaiting approval"
+          value={totals.awaiting}
+          hint={`avg decision ${duration(totals.approvalTurnaroundMs)}`}
+        />
+        <Panel className="p-4">
+          <dt className="meta">Model cost</dt>
+          <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{money(totals.costUsd)}</dd>
+          <dd className="mt-0.5 text-xs text-ink-muted">
+            {periodLabel} · {(totals.inputTokens + totals.outputTokens).toLocaleString()} tokens
+            {totals.unpricedModels.length > 0
+              ? ` · no price for ${totals.unpricedModels.join(", ")}`
+              : ""}
+          </dd>
+        </Panel>
+      </dl>
+
+      <Panel>
+        <PanelHeader>
+          <div>
+            <PanelTitle>Work per agent</PanelTitle>
+            <PanelDescription>
+              Runs in the last {days} days; tokens and cost for the calendar month{totals.periods.length > 1 ? "s" : ""} they fall in.
+              The cost column is what billing will meter.
+            </PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody>
+          {agents.length === 0 ? (
+            <EmptyState
+              icon={TrendingUp}
+              title="No autonomous work yet"
+              description="Give an agent a scope of work with a schedule or webhook, or run one by hand, and its tasks and cost show up here."
+              className="py-10"
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[48rem] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-line">
+                    <th scope="col" className="pb-2 pr-3 meta font-medium">Agent</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Runs</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Done</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Failed</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Awaiting</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Avg decision</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Tokens</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Searches</th>
+                    <th scope="col" className="pb-2 pl-3 meta font-medium text-right">Cost</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {agents.map((agent) => (
+                    <tr key={agent.id}>
+                      <td className="py-2.5 pr-3">
+                        <span className="font-medium text-ink">{agent.name}</span>
+                        <span className="ml-2 text-xs text-ink-muted">{agent.jobTitle}</span>
+                        {agent.escalated > 0 ? (
+                          <span className="ml-2 text-xs text-danger">{agent.escalated} escalated</span>
+                        ) : null}
+                      </td>
+                      <td className="py-2.5 px-3 text-right tabular-nums">{agent.runs}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums">{agent.done}</td>
+                      <td className={`py-2.5 px-3 text-right tabular-nums ${agent.failed > 0 ? "text-danger" : ""}`}>{agent.failed}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums">{agent.awaiting}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted">{duration(agent.approvalTurnaroundMs)}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted">
+                        {(agent.inputTokens + agent.outputTokens).toLocaleString()}
+                      </td>
+                      <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted">{agent.searches}</td>
+                      <td className="py-2.5 pl-3 text-right tabular-nums font-medium text-ink">{money(agent.costUsd)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </PanelBody>
+      </Panel>
+    </>
   );
 }
 

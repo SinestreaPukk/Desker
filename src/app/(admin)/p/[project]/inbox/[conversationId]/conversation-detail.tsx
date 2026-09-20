@@ -14,6 +14,7 @@ import {
   ThumbsUp,
   Undo2,
   UserRound,
+  TriangleAlert,
   UserRoundCheck,
   Wrench,
 } from "lucide-react";
@@ -284,9 +285,12 @@ export function ConversationDetail({
                   {conversation.issues.map((issue) => {
                     const resolved = issue.status === "resolved";
                     const kind = ISSUE_KINDS[issueKind(issue.type)];
-                    const Icon = { bug: Bug, lightbulb: Lightbulb, handoff: UserRoundCheck }[
-                      kind.icon
-                    ];
+                    const Icon = {
+                      bug: Bug,
+                      lightbulb: Lightbulb,
+                      handoff: UserRoundCheck,
+                      alert: TriangleAlert,
+                    }[kind.icon];
                     return (
                       <li
                         key={issue.id}

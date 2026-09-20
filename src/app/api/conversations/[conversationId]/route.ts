@@ -71,6 +71,8 @@ export async function GET(_request: Request, { params }: Params) {
         (issue): IssueDto => ({
           id: issue.id,
           conversationId: issue.conversationId,
+          actionItemId: issue.actionItemId,
+          source: issue.source,
           type: issue.type,
           summary: issue.summary,
           severity: issue.severity,

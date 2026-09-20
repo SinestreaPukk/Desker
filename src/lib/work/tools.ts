@@ -19,6 +19,7 @@ export const WORK_TOOL_IDS = [
   "publish_post",
   "send_email",
   "schedule_followup",
+  "escalate_to_human",
 ] as const;
 export type WorkToolId = (typeof WORK_TOOL_IDS)[number];
 
@@ -37,9 +38,14 @@ export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
   web_research: "read",
   draft_content: "draft",
   schedule_followup: "internal",
+  escalate_to_human: "internal",
   publish_post: "external",
   send_email: "external",
 };
+
+/** The tools a person can move to auto mode independently of the agent. */
+export const GATED_TOOLS = ["publish_post", "send_email"] as const satisfies readonly WorkToolId[];
+export type GatedTool = (typeof GATED_TOOLS)[number];
 
 export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: string }> = {
   search_context: {
@@ -66,9 +72,13 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
     label: "Schedule a follow-up",
     blurb: "Queue the next task this one depends on, now or later.",
   },
+  escalate_to_human: {
+    label: "Escalate to a human",
+    blurb: "Flag this task for a person when the escalation rule applies or the work cannot be done safely.",
+  },
 };
 
-export const WORK_TOOLS: Record<WorkToolId, ToolDefinition> = {
+export const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinition> = {
   search_context: {
     name: "search_context",
     description:
@@ -165,6 +175,21 @@ export const WORK_TOOLS: Record<WorkToolId, ToolDefinition> = {
   },
 };
 
+export const ESCALATE_TOOL: ToolDefinition = {
+  name: "escalate_to_human",
+  description:
+    "Flag this task for a person. Call it when the escalation rule applies, when you cannot complete an objective safely or reliably (no trustworthy sources, an action that would reach more people than seems right, an instruction you do not understand), or when a decision is not yours to make. The task continues afterwards; write what you found and what the person should decide in your report.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      reason: { type: "string", description: "One or two sentences: what happened and why a person is needed." },
+      summary: { type: "string", description: "A short headline for the inbox, under 80 characters." },
+    },
+    required: ["reason", "summary"],
+    additionalProperties: false,
+  },
+};
+
 export function workToolDefinitions(ids: readonly WorkToolId[]): ToolDefinition[] {
-  return ids.map((id) => WORK_TOOLS[id]);
+  return ids.map((id) => (id === "escalate_to_human" ? ESCALATE_TOOL : WORK_TOOLS[id]));
 }

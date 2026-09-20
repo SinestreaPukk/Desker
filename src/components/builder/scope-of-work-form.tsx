@@ -17,7 +17,8 @@ import {
   describeCadence,
   type Cadence,
 } from "@/lib/work/cadence";
-import type { TriggerType } from "@/lib/work/types";
+import type { AutonomyMode, ToolAutonomy, TriggerType } from "@/lib/work/types";
+import { GATED_TOOLS, WORK_TOOL_METADATA } from "@/lib/work/tools";
 
 /** What the form edits. Objectives are one per line until they are saved. */
 export interface ScopeFormState {
@@ -28,6 +29,8 @@ export interface ScopeFormState {
   cron: string;
   timezone: string;
   enabled: boolean;
+  autonomy: AutonomyMode;
+  toolAutonomy: ToolAutonomy;
 }
 
 export function defaultScopeForm(): ScopeFormState {
@@ -39,7 +42,83 @@ export function defaultScopeForm(): ScopeFormState {
     cron: "0 9 * * 1",
     timezone: browserTimezone(),
     enabled: true,
+    autonomy: "draft_only",
+    toolAutonomy: {},
   };
+}
+
+const MODE_LABEL: Record<AutonomyMode, string> = {
+  draft_only: "Draft only - wait for my approval",
+  auto: "Auto - go straight out",
+};
+
+/**
+ * How much the agent is trusted with the outside world. Agent-wide mode plus
+ * a per-tool override, so an owner can let posts flow while emails still
+ * wait. Shown in the editor only: every new agent starts draft-only.
+ */
+export function TrustSettings({
+  value,
+  onChange,
+  idPrefix = "trust",
+}: {
+  value: Pick<ScopeFormState, "autonomy" | "toolAutonomy">;
+  onChange: (next: Pick<ScopeFormState, "autonomy" | "toolAutonomy">) => void;
+  idPrefix?: string;
+}) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label htmlFor={`${idPrefix}-agent`}>Publishing and email</Label>
+        <Select
+          value={value.autonomy}
+          onValueChange={(next) => onChange({ ...value, autonomy: next as AutonomyMode })}
+        >
+          <SelectTrigger id={`${idPrefix}-agent`} className="mt-1.5">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="draft_only">{MODE_LABEL.draft_only}</SelectItem>
+            <SelectItem value="auto">{MODE_LABEL.auto}</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="mt-1.5 text-xs text-ink-muted">
+          Research, drafting and follow-ups never wait. This only decides whether{" "}
+          <code>publish_post</code> and <code>send_email</code> stop for you.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {GATED_TOOLS.map((tool) => {
+          const override = value.toolAutonomy[tool];
+          return (
+            <div key={tool}>
+              <Label htmlFor={`${idPrefix}-${tool}`} className="text-xs">
+                {WORK_TOOL_METADATA[tool].label}
+              </Label>
+              <Select
+                value={override ?? "inherit"}
+                onValueChange={(next) => {
+                  const toolAutonomy = { ...value.toolAutonomy };
+                  if (next === "inherit") delete toolAutonomy[tool];
+                  else toolAutonomy[tool] = next as AutonomyMode;
+                  onChange({ ...value, toolAutonomy });
+                }}
+              >
+                <SelectTrigger id={`${idPrefix}-${tool}`} className="mt-1.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inherit">Same as agent ({value.autonomy === "auto" ? "auto" : "draft only"})</SelectItem>
+                  <SelectItem value="draft_only">Draft only</SelectItem>
+                  <SelectItem value="auto">Auto</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export function browserTimezone(): string {
@@ -196,6 +275,7 @@ export function ScopeOfWorkForm({
   fieldErrors = {},
   webhookUrl,
   idPrefix = "scope",
+  showModeNote = true,
 }: {
   value: ScopeFormState;
   onChange: (next: ScopeFormState) => void;
@@ -205,6 +285,8 @@ export function ScopeOfWorkForm({
   /** Shown once the agent exists and the trigger is a webhook. */
   webhookUrl?: string | null;
   idPrefix?: string;
+  /** The wizard explains draft-only mode; the editor has the trust controls instead. */
+  showModeNote?: boolean;
 }) {
   const set = <K extends keyof ScopeFormState>(key: K, next: ScopeFormState[K]) =>
     onChange({ ...value, [key]: next });
@@ -358,11 +440,14 @@ export function ScopeOfWorkForm({
         ) : null}
       </div>
 
-      <p className="rounded-xl border border-accent-line bg-accent-soft/40 px-3 py-2 text-xs leading-relaxed text-ink-muted">
-        <strong className="font-medium text-ink">Draft-only mode.</strong> Research and drafts
-        run on their own. Anything that would publish a post or send an email stops and waits
-        for your approval under <em>Work</em>. Every agent starts this way.
-      </p>
+      {showModeNote ? (
+        <p className="rounded-xl border border-accent-line bg-accent-soft/40 px-3 py-2 text-xs leading-relaxed text-ink-muted">
+          <strong className="font-medium text-ink">Draft-only mode.</strong> Research and drafts
+          run on their own. Anything that would publish a post or send an email stops and waits
+          for your approval in the Inbox. Every agent starts this way; you can extend trust in the
+          editor once it has earned it.
+        </p>
+      ) : null}
     </div>
   );
 }

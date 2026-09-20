@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Play, Save } from "lucide-react";
+import { Play, Save, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,6 +23,7 @@ import type { ScopeDto } from "@/lib/work/scope";
 import { formatRelativeTime } from "@/lib/utils";
 import {
   ScopeOfWorkForm,
+  TrustSettings,
   browserTimezone,
   parseObjectives,
   type ScopeFormState,
@@ -37,6 +38,8 @@ function toForm(scope: ScopeDto): ScopeFormState {
     cron: scope.cron ?? "0 9 * * 1",
     timezone: scope.timezone === "UTC" && !scope.cron ? browserTimezone() : scope.timezone,
     enabled: scope.enabled,
+    autonomy: scope.autonomy,
+    toolAutonomy: scope.toolAutonomy ?? {},
   };
 }
 
@@ -114,7 +117,8 @@ function ScopeEditor({
         cron: form.triggerType === "cron" ? form.cron : null,
         timezone: form.timezone.trim() || "UTC",
         enabled: form.enabled,
-        autonomy: scope.autonomy,
+        autonomy: form.autonomy,
+        toolAutonomy: Object.keys(form.toolAutonomy).length > 0 ? form.toolAutonomy : null,
       });
       const next = toForm(result);
       setForm(next);
@@ -170,7 +174,19 @@ function ScopeEditor({
             .map((doc) => ({ id: doc.id, filename: doc.filename }))}
           fieldErrors={fieldErrors}
           webhookUrl={webhookUrl}
+          showModeNote={false}
         />
+
+        <div className="border-t border-line pt-4">
+          <div className="mb-3 flex items-center gap-2">
+            <ShieldCheck className="size-4 text-accent" aria-hidden />
+            <h3 className="text-[0.8125rem] font-medium text-ink">Trust</h3>
+          </div>
+          <TrustSettings
+            value={{ autonomy: form.autonomy, toolAutonomy: form.toolAutonomy }}
+            onChange={(next) => setForm({ ...form, ...next })}
+          />
+        </div>
 
         {scope.triggerType === "cron" && scope.nextFireAt ? (
           <p className="text-xs text-ink-muted">

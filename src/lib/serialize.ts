@@ -126,7 +126,12 @@ export interface DocumentDto {
 
 export interface IssueDto {
   id: string;
-  conversationId: string;
+  /** Set when a client raised it in a conversation. */
+  conversationId: string | null;
+  /** Set when the agent raised it during an autonomous run. */
+  actionItemId: string | null;
+  /** client | agent */
+  source: string;
   type: string;
   summary: string;
   severity: string | null;
