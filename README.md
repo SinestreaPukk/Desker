@@ -106,9 +106,13 @@ grounded answers immediately.
 ## The five-minute path
 
 1. **Sign up** — one workspace, no invitations to wait on.
-2. **The wizard** asks three things: who the agent is, how it behaves, what it
-   may do. A starter template pre-fills real prose so you are editing rather
-   than staring at an empty textarea.
+2. **The wizard** asks three things: who the agent is (name, job title, team,
+   a face), how it behaves (personality, opening message, and a plain-language
+   escalation rule the model judges rather than keyword-matches), and whether
+   it answers from context documents. A starter template pre-fills real prose
+   so you are editing rather than staring at an empty textarea. The other
+   tools - logging issues and suggestions, escalating, transferring - are on by
+   default and adjusted in the editor.
 3. **Upload a document** under *Company context*. It is chunked and indexed on
    the spot; the row shows Processing → Ready with a chunk count, and *Test
    retrieval* shows exactly what the agent will find.

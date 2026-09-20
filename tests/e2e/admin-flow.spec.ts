@@ -34,12 +34,13 @@ test("the wizard creates an agent in three steps", async ({ page }) => {
   await expect(page.getByLabel("Name")).toHaveValue("Mia");
   await page.getByRole("button", { name: "Continue" }).click();
 
-  // Step 2 - personality is required and pre-filled by the starter.
+  // Step 2 - personality is required; the starter also brings an escalation rule.
   await expect(page.getByLabel("Personality and tone")).not.toHaveValue("");
+  await expect(page.getByLabel("Escalation rule")).not.toHaveValue("");
   await page.getByRole("button", { name: "Continue" }).click();
 
-  // Step 3 - all four tools are on by default.
-  await expect(page.getByLabel("Search company context")).toBeChecked();
+  // Step 3 - answering from context documents is on by default.
+  await expect(page.getByLabel("Answer from context documents")).toBeChecked();
   await page.getByRole("button", { name: "Create agent" }).click();
 
   await expect(page).toHaveURL(/\/p\/[^/]+\/agents\/[^/]+\?onboarding=1/, {

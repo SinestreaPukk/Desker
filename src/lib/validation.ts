@@ -3,6 +3,7 @@
  * so client-side validation cannot drift from what the server enforces.
  */
 import { z } from "zod";
+import { MAX_AVATAR_DATA_URI_LENGTH } from "@/lib/avatars";
 import { PROVIDER_IDS } from "@/lib/llm/provider";
 import { TOOL_IDS } from "@/lib/tools/registry";
 
@@ -10,7 +11,9 @@ export const agentInputSchema = z.object({
   name: z.string().trim().min(1, "Give your agent a name.").max(80),
   jobTitle: z.string().trim().min(1, "A job title tells the agent what it does.").max(120),
   department: z.string().trim().max(120).optional().or(z.literal("")),
-  avatarUrl: z.string().trim().max(2048).optional().or(z.literal("")),
+  // Built-in avatars are short keys; uploaded ones are data URIs up to
+  // MAX_AVATAR_DATA_URI_LENGTH, which the picker already enforces client-side.
+  avatarUrl: z.string().trim().max(MAX_AVATAR_DATA_URI_LENGTH).optional().or(z.literal("")),
   personality: z
     .string()
     .trim()

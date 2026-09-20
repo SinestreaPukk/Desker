@@ -3,10 +3,11 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Textarea } from "@/components/ui/field";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Field, Input, Label, Textarea } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
+import { AvatarPicker } from "@/components/builder/avatar-picker";
 import {
   Panel,
   PanelBody,
@@ -19,7 +20,7 @@ import { FormError } from "@/components/ui/states";
 import { useCreateAgent } from "@/hooks/use-admin-data";
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { parseLines } from "@/lib/agent-fields";
-import { TOOL_IDS, TOOL_METADATA, type ToolId } from "@/lib/tools/registry";
+import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
 import { cn } from "@/lib/utils";
 
 /**
@@ -70,7 +71,15 @@ const STARTERS = [
   },
 ] as const;
 
-const STEPS = ["Who they are", "How they work", "What they can do"] as const;
+const STEPS = ["Who they are", "How they behave", "What they can do"] as const;
+
+/**
+ * The one capability the wizard exposes. Everything else in the tool set
+ * (logging issues, escalating, transferring) stays on by default and is
+ * adjusted in the editor; this step is reserved for the scope-of-work form
+ * that will replace it once agents can act on their own.
+ */
+const CONTEXT_TOOL: ToolId = "search_company_context";
 
 export function NewAgentWizard({ project }: { project: string }) {
   const router = useRouter();
@@ -85,12 +94,14 @@ export function NewAgentWizard({ project }: { project: string }) {
     name: "",
     jobTitle: "",
     department: "",
+    avatarUrl: null as string | null,
     personality: "",
     responsibilitiesText: "",
     escalationRule: "",
     welcomeMessage: "",
     allowedTools: [...TOOL_IDS] as ToolId[],
   });
+  const answersFromDocuments = form.allowedTools.includes(CONTEXT_TOOL);
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -125,6 +136,7 @@ export function NewAgentWizard({ project }: { project: string }) {
         name: form.name.trim(),
         jobTitle: form.jobTitle.trim(),
         department: form.department.trim(),
+        avatarUrl: form.avatarUrl ?? "",
         personality: form.personality.trim(),
         responsibilities: parseLines(form.responsibilitiesText),
         allowedTools: form.allowedTools,
@@ -139,8 +151,13 @@ export function NewAgentWizard({ project }: { project: string }) {
         setFieldErrors(caught.fieldErrors ?? {});
         // Send the admin back to the step that owns the bad field.
         const fields = Object.keys(caught.fieldErrors ?? {});
-        if (fields.some((field) => ["name", "jobTitle"].includes(field))) setStep(0);
-        else if (fields.includes("personality")) setStep(1);
+        if (fields.some((field) => ["name", "jobTitle", "avatarUrl"].includes(field))) setStep(0);
+        else if (
+          fields.some((field) =>
+            ["personality", "welcomeMessage", "escalationRule"].includes(field),
+          )
+        )
+          setStep(1);
       } else {
         setError(errorMessage(caught));
       }
@@ -210,9 +227,9 @@ export function NewAgentWizard({ project }: { project: string }) {
               <PanelDescription>
                 {
                   [
-                    "Give them a name and a job. Clients see both.",
-                    "Describe how they behave and what falls to them.",
-                    "Pick the actions they may take on a client's behalf.",
+                    "Give them a name, a job and a face. Clients see all three.",
+                    "How they talk, what falls to them, and when they fetch a human.",
+                    "What they can draw on. Real capabilities come later.",
                   ][step]
                 }
               </PanelDescription>
@@ -288,6 +305,19 @@ export function NewAgentWizard({ project }: { project: string }) {
                     placeholder="Customer Experience"
                   />
                 </Field>
+
+                <div className="space-y-2">
+                  <Label>Avatar</Label>
+                  {/* Until a face is picked, the default follows the name - so
+                      remount when it changes and the swatches stay in step
+                      with the preview. */}
+                  <AvatarPicker
+                    key={form.avatarUrl ?? `auto:${form.name}`}
+                    name={form.name}
+                    value={form.avatarUrl}
+                    onChange={(next) => set("avatarUrl", next)}
+                  />
+                </div>
               </>
             ) : null}
 
@@ -336,66 +366,63 @@ export function NewAgentWizard({ project }: { project: string }) {
                     placeholder="Hi, I'm Mia. What can I help with?"
                   />
                 </Field>
+
+                <Field
+                  label="Escalation rule"
+                  htmlFor="escalationRule"
+                  hint="Plain language. The model judges it from the conversation; nothing is keyword-matched."
+                >
+                  <Textarea
+                    value={form.escalationRule}
+                    rows={3}
+                    onChange={(event) => set("escalationRule", event.target.value)}
+                    placeholder="Escalate if the client is angry, asks for a refund over $200, or mentions legal action."
+                  />
+                </Field>
               </>
             ) : null}
 
             {step === 2 ? (
               <>
-                <fieldset className="space-y-2">
-                  <legend className="sr-only">Permitted actions</legend>
-                  {TOOL_IDS.map((tool) => {
-                    const meta = TOOL_METADATA[tool];
-                    const checked = form.allowedTools.includes(tool);
-                    return (
-                      <label
-                        key={tool}
-                        htmlFor={`new-tool-${tool}`}
-                        className={cn(
-                          "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors",
-                          checked
-                            ? "border-accent-line bg-accent-soft/40"
-                            : "border-line hover:bg-surface-2",
-                        )}
-                      >
-                        <Checkbox
-                          id={`new-tool-${tool}`}
-                          checked={checked}
-                          onCheckedChange={(next) =>
-                            set(
-                              "allowedTools",
-                              next
-                                ? [...form.allowedTools, tool]
-                                : form.allowedTools.filter((item) => item !== tool),
-                            )
-                          }
-                          className="mt-0.5"
-                        />
-                        <span>
-                          <span className="block text-[0.8125rem] font-medium text-ink">
-                            {meta.label}
-                          </span>
-                          <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted">
-                            {meta.blurb}
-                          </span>
-                        </span>
-                      </label>
-                    );
-                  })}
-                </fieldset>
-
-                <Field
-                  label="Escalation rule"
-                  htmlFor="escalationRule"
-                  hint="When should this agent stop and fetch a human? Plain language."
+                <div
+                  className={cn(
+                    "flex items-start justify-between gap-4 rounded-xl border p-4 transition-colors",
+                    answersFromDocuments
+                      ? "border-accent-line bg-accent-soft/40"
+                      : "border-line",
+                  )}
                 >
-                  <Textarea
-                    value={form.escalationRule}
-                    rows={3}
-                    disabled={!form.allowedTools.includes("escalate_to_human")}
-                    onChange={(event) => set("escalationRule", event.target.value)}
-                    placeholder="Escalate if the client is angry or asks for a refund over $200."
+                  <div className="flex items-start gap-3">
+                    <FileText className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+                    <div>
+                      <Label htmlFor="answers-from-documents" className="text-[0.8125rem]">
+                        Answer from context documents
+                      </Label>
+                      <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
+                        Upload policies, product sheets or FAQs after this step. The agent
+                        searches them before answering and cites what it found instead of
+                        guessing.
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="answers-from-documents"
+                    checked={answersFromDocuments}
+                    onCheckedChange={(next) =>
+                      set(
+                        "allowedTools",
+                        next
+                          ? [...form.allowedTools, CONTEXT_TOOL]
+                          : form.allowedTools.filter((tool) => tool !== CONTEXT_TOOL),
+                      )
+                    }
                   />
-                </Field>
+                </div>
+
+                <p className="text-xs leading-relaxed text-ink-muted">
+                  Logging issues and suggestions, and escalating to a human, are on by
+                  default. Adjust those in the editor once the agent exists.
+                </p>
               </>
             ) : null}
           </PanelBody>

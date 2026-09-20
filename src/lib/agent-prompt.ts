@@ -41,7 +41,9 @@ const TOOL_GUIDANCE: Record<ToolId, string> = {
     "You have company and client documents available through `search_company_context`. " +
     "Search them before answering anything specific to the company - products, pricing, " +
     "policies, procedures, accounts. Do not answer such questions from memory, and do not " +
-    "guess at a number, a date, or a policy you have not read.",
+    "guess at a number, a date, or a policy you have not read. When an answer comes from a " +
+    "passage, say which document it came from in plain words (\"According to the returns " +
+    "policy...\"), so the client can tell what you looked up from what you inferred.",
   log_issue:
     "When the client reports something broken, call `log_issue` during the conversation, " +
     "then confirm to them that it has been recorded.",
