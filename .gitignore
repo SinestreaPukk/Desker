@@ -48,3 +48,9 @@ next-env.d.ts
 /test-results
 /playwright-report
 /src-tauri/target
+
+# vercel/neon integration artefacts and per-developer Claude Code settings
+.agents/
+.claude/skills/
+.claude/settings.local.json
+skills-lock.json

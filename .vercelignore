@@ -1,0 +1,13 @@
+# Never ship local secrets or state with a CLI deploy. Environment comes from
+# the Vercel project settings, not from these files.
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+storage/
+src-tauri/target/
+.next/
+node_modules/
+playwright-report/
+test-results/
