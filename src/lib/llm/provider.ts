@@ -99,11 +99,43 @@ export interface StreamChatRequest {
   signal?: AbortSignal;
 }
 
+/**
+ * One model call, no loop. The autonomous work runner owns its own loop so
+ * every model turn and tool call can be a separate durable step; the chat
+ * path keeps using streamChat, where the provider owns the loop instead.
+ */
+export interface CompleteRequest {
+  billing: BillingContext;
+  systemPrompt: string;
+  messages: ChatMessage[];
+  tools: ToolDefinition[];
+  model?: string | null;
+  maxTokens?: number;
+}
+
+export interface CompleteResult {
+  message: AssistantMessage;
+  stopReason: string | null;
+  usage: TokenUsage;
+}
+
+/** Thrown by complete(); carries whether a retry could reasonably succeed. */
+export class ModelError extends Error {
+  constructor(
+    message: string,
+    readonly retryable: boolean,
+  ) {
+    super(message);
+    this.name = "ModelError";
+  }
+}
+
 export interface LlmProvider {
   readonly id: string;
   readonly defaultModel: string;
   /** Requirement from the build brief §8: streamChat -> AsyncIterable<ChatEvent>. */
   streamChat(request: StreamChatRequest): AsyncIterable<ChatEvent>;
+  complete(request: CompleteRequest): Promise<CompleteResult>;
 }
 
 /** Guard against a model that loops on tool calls forever and burns credits. */

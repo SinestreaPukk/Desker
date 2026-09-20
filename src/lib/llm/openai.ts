@@ -14,9 +14,12 @@ import { recordTokenUsage } from "@/lib/usage";
 import {
   DEFAULT_MAX_TOKENS,
   MAX_TOOL_ITERATIONS,
+  ModelError,
   type AssistantMessage,
   type ChatEvent,
   type ChatMessage,
+  type CompleteRequest,
+  type CompleteResult,
   type LlmProvider,
   type StreamChatRequest,
   type ToolCall,
@@ -272,10 +275,60 @@ async function* streamChat(request: StreamChatRequest): AsyncIterable<ChatEvent>
   }
 }
 
+/** A single non-streaming turn. Tool calls come back for the caller to run. */
+async function complete(request: CompleteRequest): Promise<CompleteResult> {
+  const resolvedModel = request.model || env.openaiDefaultModel;
+  const openAiTools = toOpenAiTools(request.tools);
+
+  let completion: OpenAI.ChatCompletion;
+  try {
+    completion = await getClient().chat.completions.create({
+      model: resolvedModel,
+      max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+      messages: toOpenAiMessages(request.systemPrompt, request.messages),
+      ...(openAiTools.length > 0 ? { tools: openAiTools } : {}),
+    });
+  } catch (error) {
+    const described = describeError(error);
+    throw new ModelError(described.message, described.retryable);
+  }
+
+  const usage = {
+    inputTokens: completion.usage?.prompt_tokens ?? 0,
+    outputTokens: completion.usage?.completion_tokens ?? 0,
+  };
+  await recordTokenUsage({
+    ...request.billing,
+    provider: "openai",
+    model: resolvedModel,
+    ...usage,
+  });
+
+  const choice = completion.choices[0];
+  const toolCalls: ToolCall[] = (choice?.message.tool_calls ?? [])
+    .filter((call) => call.type === "function")
+    .map((call) => ({
+      id: call.id,
+      name: call.function.name,
+      input: safeParseArguments(call.function.arguments),
+    }));
+
+  return {
+    message: {
+      role: "assistant",
+      content: choice?.message.content ?? "",
+      ...(toolCalls.length > 0 ? { toolCalls } : {}),
+    },
+    stopReason: choice?.finish_reason ?? null,
+    usage,
+  };
+}
+
 export const openaiProvider: LlmProvider = {
   id: "openai",
   get defaultModel() {
     return env.openaiDefaultModel;
   },
   streamChat,
+  complete,
 };

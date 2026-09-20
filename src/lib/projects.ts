@@ -84,3 +84,19 @@ export async function defaultProject(userId: string) {
     },
   });
 }
+
+/** Agents in projects the user can see - the tenancy filter for agent routes. */
+export function agentsVisibleTo(userId: string): Prisma.AgentWhereInput {
+  return { project: projectsVisibleTo(userId) };
+}
+
+/**
+ * An agent the user may act on, with the organisation it bills to. Null when
+ * it does not exist or belongs to a tenant the user is not part of.
+ */
+export async function findAgentFor(agentId: string, userId: string) {
+  return prisma.agent.findFirst({
+    where: { AND: [agentsVisibleTo(userId), { id: agentId }] },
+    include: { project: { select: { id: true, slug: true, organizationId: true } } },
+  });
+}

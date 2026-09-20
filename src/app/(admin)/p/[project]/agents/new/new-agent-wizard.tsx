@@ -9,6 +9,12 @@ import { Field, Input, Label, Textarea } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { AvatarPicker } from "@/components/builder/avatar-picker";
 import {
+  ScopeOfWorkForm,
+  defaultScopeForm,
+  parseObjectives,
+  type ScopeFormState,
+} from "@/components/builder/scope-of-work-form";
+import {
   Panel,
   PanelBody,
   PanelDescription,
@@ -18,7 +24,7 @@ import {
 } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { useCreateAgent } from "@/hooks/use-admin-data";
-import { ApiError, errorMessage } from "@/lib/api-client";
+import { api, ApiError, errorMessage } from "@/lib/api-client";
 import { parseLines } from "@/lib/agent-fields";
 import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
 import { cn } from "@/lib/utils";
@@ -74,10 +80,10 @@ const STARTERS = [
 const STEPS = ["Who they are", "How they behave", "What they can do"] as const;
 
 /**
- * The one capability the wizard exposes. Everything else in the tool set
- * (logging issues, escalating, transferring) stays on by default and is
- * adjusted in the editor; this step is reserved for the scope-of-work form
- * that will replace it once agents can act on their own.
+ * The one chat capability the wizard exposes. Everything else in the chat
+ * tool set (logging issues, escalating, transferring) stays on by default and
+ * is adjusted in the editor. The rest of this step is the scope of work: what
+ * the agent does when nobody is talking to it.
  */
 const CONTEXT_TOOL: ToolId = "search_company_context";
 
@@ -102,6 +108,11 @@ export function NewAgentWizard({ project }: { project: string }) {
     allowedTools: [...TOOL_IDS] as ToolId[],
   });
   const answersFromDocuments = form.allowedTools.includes(CONTEXT_TOOL);
+  const [scope, setScope] = React.useState<ScopeFormState>(defaultScopeForm);
+  const scopeTouched =
+    scope.context.trim() !== "" ||
+    scope.objectivesText.trim() !== "" ||
+    scope.triggerType !== "manual";
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -144,6 +155,31 @@ export function NewAgentWizard({ project }: { project: string }) {
         welcomeMessage: form.welcomeMessage.trim(),
         status: "draft",
       });
+      // The scope of work is its own record; an empty one is not worth saving.
+      if (scopeTouched) {
+        try {
+          await api(`/api/agents/${agent.id}/scope`, {
+            method: "PUT",
+            body: JSON.stringify({
+              context: scope.context.trim(),
+              objectives: parseObjectives(scope.objectivesText),
+              documentIds: [],
+              triggerType: scope.triggerType,
+              cron: scope.triggerType === "cron" ? scope.cron : null,
+              timezone: scope.timezone,
+              enabled: scope.enabled,
+              autonomy: "draft_only",
+            }),
+          });
+        } catch (caught) {
+          // The agent exists; the editor shows the same form to fix it there.
+          if (caught instanceof ApiError) {
+            setError(`${caught.message} The agent was created - finish its scope of work in the editor.`);
+            setFieldErrors(caught.fieldErrors ?? {});
+            return;
+          }
+        }
+      }
       router.push(`/p/${project}/agents/${agent.id}?onboarding=1`);
     } catch (caught) {
       if (caught instanceof ApiError) {
@@ -229,7 +265,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                   [
                     "Give them a name, a job and a face. Clients see all three.",
                     "How they talk, what falls to them, and when they fetch a human.",
-                    "What they can draw on. Real capabilities come later.",
+                    "What they can draw on, and what they do on their own.",
                   ][step]
                 }
               </PanelDescription>
@@ -423,6 +459,16 @@ export function NewAgentWizard({ project }: { project: string }) {
                   Logging issues and suggestions, and escalating to a human, are on by
                   default. Adjust those in the editor once the agent exists.
                 </p>
+
+                <div className="border-t border-line pt-5">
+                  <h3 className="text-[0.9375rem] font-semibold text-ink">Scope of work</h3>
+                  <p className="mb-4 mt-0.5 text-xs leading-relaxed text-ink-muted">
+                    Optional now, editable later. What this agent does on its own - on a
+                    schedule, or when an event arrives - and what it should know while doing
+                    it.
+                  </p>
+                  <ScopeOfWorkForm value={scope} onChange={setScope} idPrefix="new-scope" />
+                </div>
               </>
             ) : null}
           </PanelBody>

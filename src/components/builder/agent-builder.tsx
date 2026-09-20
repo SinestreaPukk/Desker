@@ -58,6 +58,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatSurface } from "@/components/chat/chat-surface";
 import type { ChatBubble } from "@/hooks/use-chat-stream";
 import { AvatarPicker } from "./avatar-picker";
+import { ScopeOfWorkPanel } from "./scope-of-work-panel";
 import { PromptPreviewDialog } from "./prompt-preview-dialog";
 import { DuplicateAgentDialog } from "./duplicate-agent-dialog";
 import { DocumentsPanel } from "./documents-panel";
@@ -562,6 +563,9 @@ export function AgentBuilder({
                 </Field>
               </PanelBody>
             </Panel>
+
+            {/* Scope of work -------------------------------------------- */}
+            <ScopeOfWorkPanel agentId={agent.id} project={project} />
 
             {/* Model ---------------------------------------------------- */}
             <Panel>

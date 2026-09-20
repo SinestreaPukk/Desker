@@ -8,7 +8,9 @@ import {
   ChartNoAxesColumn,
   Check,
   ChevronsUpDown,
+  Briefcase,
   Inbox,
+  Plug,
   LogOut,
   Menu,
   Plus,
@@ -40,8 +42,10 @@ export interface ProjectRef {
 /** Section, not page: every nav item is a tab of the same workspace. */
 const NAV = [
   { segment: "roster", label: "Roster", icon: Users },
+  { segment: "work", label: "Work", icon: Briefcase },
   { segment: "inbox", label: "Inbox", icon: Inbox },
   { segment: "insights", label: "Insights", icon: ChartNoAxesColumn },
+  { segment: "integrations", label: "Integrations", icon: Plug },
 ] as const;
 
 export function AdminShell({

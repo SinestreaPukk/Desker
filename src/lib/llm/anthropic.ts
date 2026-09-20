@@ -13,9 +13,12 @@ import { recordTokenUsage } from "@/lib/usage";
 import {
   DEFAULT_MAX_TOKENS,
   MAX_TOOL_ITERATIONS,
+  ModelError,
   type AssistantMessage,
   type ChatEvent,
   type ChatMessage,
+  type CompleteRequest,
+  type CompleteResult,
   type LlmProvider,
   type StreamChatRequest,
   type ToolCall,
@@ -271,10 +274,74 @@ async function* streamChat(request: StreamChatRequest): AsyncIterable<ChatEvent>
   }
 }
 
+/** A single non-streaming turn. Tool calls come back for the caller to run. */
+async function complete(request: CompleteRequest): Promise<CompleteResult> {
+  const resolvedModel = request.model || env.anthropicDefaultModel;
+  const anthropicTools = toAnthropicTools(request.tools);
+
+  let final: Anthropic.Message;
+  try {
+    final = await getClient().messages.create({
+      model: resolvedModel,
+      max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+      system: request.systemPrompt,
+      messages: toAnthropicMessages(request.messages),
+      ...(anthropicTools.length > 0 ? { tools: anthropicTools } : {}),
+    });
+  } catch (error) {
+    const described = describeError(error);
+    throw new ModelError(described.message, described.retryable);
+  }
+
+  const usage = {
+    inputTokens: final.usage.input_tokens ?? 0,
+    outputTokens: final.usage.output_tokens ?? 0,
+  };
+  await recordTokenUsage({
+    ...request.billing,
+    provider: "anthropic",
+    model: final.model || resolvedModel,
+    ...usage,
+  });
+
+  if (final.stop_reason === "refusal") {
+    throw new ModelError("The model declined to carry out this request.", false);
+  }
+
+  const text = final.content
+    .filter((block): block is Anthropic.TextBlock => block.type === "text")
+    .map((block) => block.text)
+    .join("");
+  const toolUses = final.content.filter(
+    (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
+  );
+
+  return {
+    message: {
+      role: "assistant",
+      content: text,
+      ...(toolUses.length > 0
+        ? {
+            toolCalls: toolUses.map(
+              (block): ToolCall => ({
+                id: block.id,
+                name: block.name,
+                input: (block.input ?? {}) as Record<string, unknown>,
+              }),
+            ),
+          }
+        : {}),
+    },
+    stopReason: final.stop_reason,
+    usage,
+  };
+}
+
 export const anthropicProvider: LlmProvider = {
   id: "anthropic",
   get defaultModel() {
     return env.anthropicDefaultModel;
   },
   streamChat,
+  complete,
 };

@@ -56,6 +56,8 @@ model Organization {
   actionItems   ActionItem[]
   auditLogs     AuditLog[]
   usageCounters UsageCounter[]
+  drafts        Draft[]
+  integrations  Integration[]
 }
 
 /// user <-> organisation, with a role. A user may belong to several.
@@ -123,6 +125,8 @@ model Agent {
   activeConversations Conversation[] @relation("ConversationActive")
   retrievalLogs       RetrievalLog[]
   actionItems         ActionItem[]
+  scopeOfWork         ScopeOfWork?
+  drafts              Draft[]
 
   @@index([status])
   @@index([projectId])
@@ -282,32 +286,138 @@ model Issue {
 // lands; the shapes exist now so nothing above them has to be re-plumbed.
 // ---------------------------------------------------------------------------
 
+/// What an agent is for when nobody is talking to it: the standing brief the
+/// autonomous work loop runs against. One per agent. The trigger decides when
+/// a run starts - a cron cadence, an inbound webhook, or only by hand.
+model ScopeOfWork {
+  id             String   @id @default(cuid())
+  agentId        String   @unique
+  agent          Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  /// Free-text project context the agent reads before every run.
+  context        String   @default("")
+  /// string[] - what a run should achieve. Injected into the prompt verbatim.
+  objectives     Json
+  /// string[] of Document ids the agent may search during a run. Empty means
+  /// every ready document the agent has.
+  documentIds    Json
+  /// manual | cron | webhook
+  triggerType    String   @default("manual")
+  /// Five-field cron expression, evaluated in `timezone`. Set when triggerType is cron.
+  cron           String?
+  timezone       String   @default("UTC")
+  /// Secret path segment of the inbound webhook URL. Set when triggerType is webhook.
+  webhookToken   String?  @unique
+  enabled        Boolean  @default(true)
+  /// draft_only: external tools (publish, email) stop for approval.
+  /// auto: they go straight out. Every agent starts draft_only.
+  autonomy       String   @default("draft_only")
+  /// The last cron fire time that produced a run, so a tick is never doubled.
+  lastFiredAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([triggerType, enabled])
+}
+
 /// One unit of work an agent performs on its own - a research run, a draft, a
-/// send. Deliberately minimal: the state machine, tools and approval flow fill
-/// in `status`, `type`, `payload` and `result` later. `organizationId` is
-/// denormalised so approvals and billing can be listed per tenant without a
-/// join through the agent.
+/// send. The state machine:
+///
+///   queued -> in_progress -> done | failed | needs_approval
+///   needs_approval -> approved -> executing_external -> done | failed
+///   needs_approval -> rejected
+///
+/// `organizationId` is denormalised so approvals and billing can be listed per
+/// tenant without a join through the agent.
 model ActionItem {
   id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   agentId        String
   agent          Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  // queued | in_progress | needs_approval | approved | executing_external | done | failed
   status         String       @default("queued")
-  // Which tool or job this is, e.g. web_research, draft_content.
+  /// What kind of run this is: scope_run (the agent's brief), followup (queued
+  /// by an earlier run), or the name of the external tool awaiting approval.
   type           String
+  /// schedule | webhook | manual | followup
+  trigger        String       @default("manual")
+  /// What started it: the webhook body, the follow-up objective, the cron tick.
   payload        Json
+  /// What it produced: findings, a summary, ids of drafts written.
   result         Json?
+  /// The external call waiting for a human: { tool, input, draftId? }.
+  pendingAction  Json?
+  /// Every tool call in order, truncated, for the audit view and debugging.
+  steps          Json?
   error          String?
+  /// `${scopeId}:${fireTime}` for scheduled runs, so a tick never doubles.
+  dedupeKey      String?      @unique
+  /// A follow-up's parent run.
+  parentId       String?
+  parent         ActionItem?  @relation("ActionItemFollowups", fields: [parentId], references: [id], onDelete: SetNull)
+  followups      ActionItem[] @relation("ActionItemFollowups")
+  /// When a follow-up should start. Null means immediately.
+  scheduledFor   DateTime?
+  approvedById   String?
+  approvedAt     DateTime?
+  inputTokens    Int          @default(0)
+  outputTokens   Int          @default(0)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   startedAt      DateTime?
   completedAt    DateTime?
 
+  drafts Draft[]
+
   @@index([organizationId, status])
   @@index([agentId, status])
   @@index([createdAt])
+}
+
+/// Something an agent wrote but did not send: a blog post, a social caption,
+/// an email. `draft_content` only ever writes these; `publish_post` and
+/// `send_email` are what move one out of the door, and those wait for a human.
+model Draft {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentId        String
+  agent          Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  actionItemId   String?
+  actionItem     ActionItem?  @relation(fields: [actionItemId], references: [id], onDelete: SetNull)
+  /// blog_post | social_caption | email
+  kind           String
+  title          String
+  body           String
+  /// kind-specific: { subject, to } for email, { platform } for a caption.
+  metadata       Json?
+  /// draft | published | sent
+  status         String       @default("draft")
+  publishedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, createdAt])
+  @@index([agentId])
+}
+
+/// An outside system an organisation has connected. `webhook` is the generic
+/// Zapier-style connector `publish_post` sends drafts to; `email` is the
+/// provider `send_email` uses. `config` holds the endpoint and any key in
+/// plain text for now - the encrypted credential vault replaces that store,
+/// and nothing may ever write `config` to a log or an audit row.
+model Integration {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// webhook | email
+  type           String
+  name           String
+  config         Json
+  enabled        Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, type])
 }
 
 /// Who did what to which thing. Written for every side-effecting action an

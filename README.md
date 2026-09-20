@@ -173,24 +173,78 @@ and a default organisation, assigns existing rows to them, and makes every
 pre-existing user an owner of that organisation - because before tenancy they
 all shared one workspace. On a fresh database every step is a no-op.
 
+## Autonomous work
+
+An agent with a **scope of work** does things when nobody is talking to it.
+The scope is a standing brief per agent - project context, objectives, the
+documents it may search - plus a trigger: a cadence ("every Monday at 09:00,
+Asia/Bangkok"), an inbound webhook (`POST /api/hooks/<token>` with any JSON),
+or only by hand. The wizard's third step and the editor's *Scope of work*
+panel edit the same record.
+
+A run is an **action item** moving through a fixed state machine:
+
+    queued -> in_progress -> done | failed | needs_approval
+    needs_approval -> approved -> executing_external -> done | failed
+    needs_approval -> rejected
+
+`lib/work/runner.ts` owns the loop: it hands the model the tool set and
+alternates model turns with tool calls until the model stops or the
+iteration cap is hit. Every turn and every tool call is a durable Inngest
+step, so a crash or a platform timeout resumes from the last completed step
+instead of re-running (and re-billing) the whole task. The final assistant
+message is the run's report; findings, draft ids and every tool call are
+kept on the item.
+
+The tool set (`lib/work/tools.ts`) is small and closed, and each tool declares
+a risk level that the runner gates on:
+
+| Tool | Risk | What it does |
+|---|---|---|
+| `search_context` | read | Retrieval over the scope's linked documents |
+| `web_research` | read | Search (Tavily or Brave), read the top pages, summarise with numbered sources; saved to the item |
+| `draft_content` | draft | Writes a blog post, social caption or email into a `Draft`. Never publishes |
+| `schedule_followup` | internal | Queues the next task as its own action item, now or after a delay, with this run's report as context |
+| `publish_post` | external | Sends a draft to the organisation's publishing webhook |
+| `send_email` | external | Sends through Resend |
+
+Every agent starts in **draft-only** mode: `external` tools do not reach their
+integration. The call is recorded as the item's `pendingAction`, the run ends
+in `needs_approval`, and nothing goes out until a person approves it under
+*Work*. Approval releases exactly that one action; rejection closes the item.
+Moving an agent to auto mode is a field on the scope (`autonomy`), exposed in
+the UI once the oversight layer exists.
+
+Integrations live per organisation under *Integrations*: a generic webhook
+(point Zapier, Make, or your own endpoint at it; deliveries are signed with
+`X-Desker-Signature` when a secret is set) and a Resend email connector. Their
+config is stored in plain text for now and is never returned to the browser,
+logged, or written to an audit row; the credential vault replaces the store.
+
 ## Background jobs
 
 Work that must happen without a browser tab open runs as
 [Inngest](https://www.inngest.com) functions, registered in `lib/jobs/` and
 served from `/api/inngest`. Nothing else talks to a scheduler or a queue.
 
-There is one function today, `heartbeat`: a cron that writes a `Heartbeat` row
-every minute in development (every five in production) and prunes rows older
-than a day. It exists to prove the primitive end-to-end and to make a dead
-scheduler visible: `/api/health` reports the newest tick under `jobs`, with
-`alive: false` once two intervals have passed without one. Point an uptime
-monitor at that field specifically - an agent that silently never runs is the
-worst failure this product can have.
+- `heartbeat` - a cron that writes a `Heartbeat` row every minute in
+  development (every five in production) and prunes rows older than a day.
+  `/api/health` reports the newest tick under `jobs`, with `alive: false` once
+  two intervals have passed without one. Point an uptime monitor at that field
+  specifically - an agent that silently never runs is the worst failure this
+  product can have.
+- `scope-scheduler` - every minute, finds cron scopes whose latest fire time
+  has not run and starts exactly one run each, deduplicated by
+  `ActionItem.dedupeKey`. A missed minute is caught up on the next tick; an
+  outage never replays every tick it missed.
+- `action-item-run` - executes one action item as durable steps, waiting
+  first if it is a follow-up scheduled for later.
+- `action-item-execute-approved` - sends what a person approved.
 
 Locally, `INNGEST_DEV=1` and `npm run inngest:dev`. In the compose stack an
 `inngest` service does the same. In production, leave `INNGEST_DEV` unset and
 set `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` from Inngest Cloud; the same
-route serves both.
+route serves both, and it registers itself under `NEXT_PUBLIC_APP_URL`.
 
 ## Metering and audit
 
@@ -208,8 +262,10 @@ secret. `audit()` in `lib/audit.ts` writes it and never throws. Sign-up and
 project changes are recorded now; tool calls join them when agents start
 acting on their own.
 
-`ActionItem` is the unit of autonomous work (queued → in progress → needs
-approval → done / failed). It is modelled and empty.
+Every tool call an agent makes during a run is an `AuditLog` row
+(`tool.called`, with the tool, its risk level, trimmed inputs and whether it
+was gated), alongside `action_item.*` events for creation, completion,
+approval and rejection.
 
 ## Architecture
 
@@ -587,7 +643,7 @@ attached to the run.
 
 ## Not built (deliberately)
 
-Billing, multi-tenancy beyond a single workspace, voice channels, native mobile
-apps, an agent marketplace, fine-tuning, and a drag-and-drop workflow builder.
-Agents call a fixed set of four tools; letting admins define arbitrary tools is
-a different product.
+Billing, invites and roles, voice channels, native mobile apps, an agent
+marketplace, fine-tuning, and a drag-and-drop workflow builder. Agents call a
+fixed set of tools - five in chat, six at work; letting admins define arbitrary
+tools, or run code, is a different product.

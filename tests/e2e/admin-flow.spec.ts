@@ -67,7 +67,7 @@ test("uploading a document indexes it and retrieval finds it", async ({ page }) 
   });
 
   // Ingestion is asynchronous; the row polls from Processing to Ready.
-  await expect(page.getByText("returns-policy.md")).toBeVisible();
+  await expect(page.getByText("returns-policy.md").first()).toBeVisible();
   await expect(page.getByText("Ready")).toBeVisible({ timeout: 30_000 });
 
   // The retrieval inspector must find the passage the agent will search for.

@@ -55,6 +55,7 @@
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cron-parser": "^5.10.1",
     "inngest": "^4.20.0",
     "lucide-react": "^0.545.0",
     "mammoth": "^1.11.0",

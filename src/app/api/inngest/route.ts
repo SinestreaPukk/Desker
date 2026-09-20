@@ -6,6 +6,9 @@ import { env } from "@/lib/env";
 // route to discover functions (PUT) and to execute them (POST).
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// A single step - one model turn, one web research pass - can take a while.
+// Each step is its own request, so this bounds a step, not a whole run.
+export const maxDuration = 300;
 
 export const { GET, POST, PUT } = serve({
   client: inngest,

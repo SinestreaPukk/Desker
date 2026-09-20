@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { toAgentDetail } from "@/lib/serialize";
+import { findAgentFor } from "@/lib/projects";
 import { AgentBuilder } from "@/components/builder/agent-builder";
 
 export const dynamic = "force-dynamic";
@@ -29,12 +30,11 @@ export default async function AgentPage({ params, searchParams }: Props) {
   const { project, agentId } = await params;
   const { onboarding } = await searchParams;
 
-  const agent = await prisma.agent.findUnique({ where: { id: agentId } });
-  // Scoped lookup: an agent id from another project must not resolve here, or
-  // the URL would quietly cross a workspace boundary.
+  // Scoped lookup: an agent from another project - or another organisation -
+  // must not resolve here, or the URL would quietly cross a tenant boundary.
+  const agent = await findAgentFor(agentId, user.id);
   if (!agent) notFound();
-  const owner = await prisma.project.findUnique({ where: { id: agent.projectId } });
-  if (!owner || (owner.slug !== project && owner.id !== project)) notFound();
+  if (agent.project.slug !== project && agent.project.id !== project) notFound();
 
   return (
     <AgentBuilder
