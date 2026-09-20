@@ -1,0 +1,263 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* next-themes writes .dark on <html>; Tailwind v4 needs to be told. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   The look is a staff record, not a chat toy: warm paper neutrals, ink-black
+   text, one clay accent, and a mono face reserved for identifiers and metadata.
+   Every colour is defined here in both themes - nothing may be declared only
+   inside a dark block, or the light theme inherits a hole.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* surfaces - a hint of the brand hue keeps the neutrals from going muddy
+     next to the indigo */
+  --paper: oklch(0.985 0.003 270);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.968 0.004 270);
+  --surface-3: oklch(0.941 0.006 270);
+
+  /* text */
+  --ink: oklch(0.215 0.018 270);
+  --ink-muted: oklch(0.470 0.016 270);
+  --ink-subtle: oklch(0.600 0.014 270);
+
+  /* lines */
+  --line: oklch(0.905 0.006 270);
+  /* Interactive component borders must clear 3:1 (WCAG 1.4.11). */
+  --line-strong: oklch(0.640 0.012 270);
+
+  /* accent - the Desker indigo, #1800AD, taken from the logo artwork */
+  --accent: oklch(0.345 0.229 268.5);
+  --accent-hover: oklch(0.290 0.205 268.5);
+  --accent-fg: oklch(0.995 0.002 270);
+  --accent-soft: oklch(0.953 0.032 270);
+  --accent-soft-fg: oklch(0.330 0.200 268.5);
+  --accent-line: oklch(0.875 0.060 270);
+
+  /* semantic */
+  --positive: oklch(0.44 0.085 172);
+  --positive-soft: oklch(0.955 0.028 172);
+  --positive-line: oklch(0.865 0.055 172);
+  --warning: oklch(0.48 0.105 75);
+  --warning-soft: oklch(0.960 0.045 85);
+  --warning-line: oklch(0.875 0.075 85);
+  --danger: oklch(0.475 0.175 27);
+  --danger-soft: oklch(0.958 0.028 27);
+  --danger-line: oklch(0.880 0.055 27);
+
+  --focus: oklch(0.345 0.229 268.5);
+  --shadow-color: 268 18% 12%;
+
+  /* Agent avatar tones. Six hues so a roster reads as distinct people at a
+     glance; each pair is tile + figure and is contrast-checked in both themes
+     by scripts/check-contrast.mjs. */
+  --av-1-bg: oklch(0.930 0.045 268);
+  --av-1-fg: oklch(0.430 0.170 268);
+  --av-2-bg: oklch(0.935 0.045 196);
+  --av-2-fg: oklch(0.430 0.105 202);
+  --av-3-bg: oklch(0.935 0.048 158);
+  --av-3-fg: oklch(0.425 0.095 162);
+  --av-4-bg: oklch(0.940 0.050 62);
+  --av-4-fg: oklch(0.450 0.115 55);
+  --av-5-bg: oklch(0.935 0.042 348);
+  --av-5-fg: oklch(0.445 0.150 352);
+  --av-6-bg: oklch(0.932 0.040 306);
+  --av-6-fg: oklch(0.435 0.155 305);
+
+  color-scheme: light;
+}
+
+:root.dark {
+  --paper: oklch(0.165 0.014 270);
+  --surface: oklch(0.207 0.015 270);
+  --surface-2: oklch(0.245 0.016 270);
+  --surface-3: oklch(0.288 0.017 270);
+
+  --ink: oklch(0.958 0.006 270);
+  --ink-muted: oklch(0.745 0.011 270);
+  --ink-subtle: oklch(0.618 0.013 270);
+
+  --line: oklch(0.302 0.015 270);
+  --line-strong: oklch(0.530 0.016 270);
+
+  /* The logo indigo is far too dark to read on a dark ground, so the dark
+     theme lifts it to a periwinkle at the same hue - recognisably the same
+     brand colour, legible on near-black. */
+  --accent: oklch(0.720 0.170 268.5);
+  --accent-hover: oklch(0.790 0.145 268.5);
+  --accent-fg: oklch(0.180 0.045 268.5);
+  --accent-soft: oklch(0.292 0.072 268.5);
+  --accent-soft-fg: oklch(0.845 0.110 268.5);
+  --accent-line: oklch(0.402 0.090 268.5);
+
+  --positive: oklch(0.775 0.105 172);
+  --positive-soft: oklch(0.275 0.045 172);
+  --positive-line: oklch(0.375 0.060 172);
+  --warning: oklch(0.815 0.115 85);
+  --warning-soft: oklch(0.295 0.045 80);
+  --warning-line: oklch(0.395 0.065 80);
+  --danger: oklch(0.735 0.155 27);
+  --danger-soft: oklch(0.295 0.055 27);
+  --danger-line: oklch(0.400 0.080 27);
+
+  --focus: oklch(0.760 0.150 268.5);
+  --shadow-color: 268 40% 2%;
+
+  /* Avatars invert in dark: a deep tile with a luminous figure, so they sit on
+     near-black without glowing like stickers. */
+  --av-1-bg: oklch(0.310 0.075 268);
+  --av-1-fg: oklch(0.800 0.130 268);
+  --av-2-bg: oklch(0.305 0.055 202);
+  --av-2-fg: oklch(0.810 0.095 199);
+  --av-3-bg: oklch(0.303 0.050 162);
+  --av-3-fg: oklch(0.808 0.090 162);
+  --av-4-bg: oklch(0.312 0.058 55);
+  --av-4-fg: oklch(0.822 0.105 62);
+  --av-5-bg: oklch(0.308 0.070 352);
+  --av-5-fg: oklch(0.808 0.115 350);
+  --av-6-bg: oklch(0.306 0.072 305);
+  --av-6-fg: oklch(0.805 0.120 306);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-fg: var(--accent-soft-fg);
+  --color-accent-line: var(--accent-line);
+
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-positive-line: var(--positive-line);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+
+  --color-av-1-bg: var(--av-1-bg);
+  --color-av-1-fg: var(--av-1-fg);
+  --color-av-2-bg: var(--av-2-bg);
+  --color-av-2-fg: var(--av-2-fg);
+  --color-av-3-bg: var(--av-3-bg);
+  --color-av-3-fg: var(--av-3-fg);
+  --color-av-4-bg: var(--av-4-bg);
+  --color-av-4-fg: var(--av-4-fg);
+  --color-av-5-bg: var(--av-5-bg);
+  --color-av-5-fg: var(--av-5-fg);
+  --color-av-6-bg: var(--av-6-bg);
+  --color-av-6-fg: var(--av-6-fg);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  --radius-panel: 0.875rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    /* Slightly tightened default; the type is dense and editorial. */
+    letter-spacing: -0.006em;
+  }
+
+  /* A single visible focus treatment everywhere, never removed. */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--accent-soft-fg);
+  }
+
+  /* Headings get tighter tracking as they get larger. */
+  h1 { letter-spacing: -0.028em; }
+  h2 { letter-spacing: -0.022em; }
+  h3 { letter-spacing: -0.016em; }
+
+  /* Respect a reduced-motion preference for every animation we add. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* The hairline rule that separates records in a list. */
+  .rule {
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Metadata: ids, counts, timestamps, model names. */
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink-subtle);
+  }
+
+  /* Subtle paper texture behind full-page surfaces. */
+  .paper-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in oklch, var(--line) 55%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--line) 55%, transparent) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: -1px -1px;
+  }
+}
+
+/* The streaming caret shown while a reply is still arriving. */
+@keyframes caret-blink {
+  0%, 45% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+
+.stream-caret::after {
+  content: "";
+  display: inline-block;
+  width: 0.45em;
+  height: 1.05em;
+  margin-left: 0.12em;
+  vertical-align: text-bottom;
+  background: var(--accent);
+  animation: caret-blink 1.05s steps(1) infinite;
+}

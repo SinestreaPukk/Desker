@@ -1,0 +1,360 @@
+// AUTO-GENERATED from prisma/schema.template.prisma for provider "sqlite".
+// Run `npm run db:schema` to regenerate. Do not edit by hand.
+
+// ---------------------------------------------------------------------------
+// SOURCE OF TRUTH for the Prisma schema.
+//
+// Do not edit prisma/schema.prisma directly - it is generated from this file by
+// scripts/gen-schema.mjs so that the same model set can target either
+// PostgreSQL + pgvector (server / cloud) or SQLite (single-user desktop demo).
+//
+// Blocks between `//#IF <provider>` and `//#ENDIF` are kept only for that
+// provider and stripped for every other one.
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+
+  memberships Membership[]
+}
+
+// ---------------------------------------------------------------------------
+// Tenancy. Every row an admin can see hangs off an Organization, either
+// directly or through its Project. A user reaches an organisation only through
+// a Membership, so "which org am I in" is always a join, never a cookie.
+// ---------------------------------------------------------------------------
+
+/// The billing and access boundary. One is created for every new account at
+/// sign-up; invites and the org switcher arrive later, the model does not
+/// change for them.
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  /// URL-safe handle, reserved for when organisations get their own segment.
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships   Membership[]
+  projects      Project[]
+  actionItems   ActionItem[]
+  auditLogs     AuditLog[]
+  usageCounters UsageCounter[]
+}
+
+/// user <-> organisation, with a role. A user may belong to several.
+model Membership {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           String       @default("member") // owner | admin | member
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+/// A workspace inside an organisation, with its own roster, inbox and
+/// insights. Everything an admin sees is scoped to exactly one of these.
+model Project {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  /// URL segment. Stable, so bookmarks survive a rename of the display name.
+  /// Globally unique for now because the URL carries no organisation segment;
+  /// uniqueSlug() appends a counter across organisations.
+  slug           String       @unique
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  agents Agent[]
+
+  @@index([organizationId])
+}
+
+model Agent {
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  name             String
+  jobTitle         String
+  department       String?
+  avatarUrl        String?
+  // Free text, injected verbatim into the system prompt.
+  personality      String
+  // string[] - see lib/agent-fields.ts for the (de)serialisation helpers.
+  responsibilities Json
+  // string[] - subset of the fixed tool set in lib/tools/registry.ts.
+  allowedTools     Json
+  escalationRule   String?
+  welcomeMessage   String?
+  status           String   @default("draft") // draft | published
+  modelProvider    String   @default("anthropic")
+  model            String?  // null -> provider default
+  publicPasscode   String?  // optional gate on the public chat link
+  // Embedded-widget appearance. Baked into the snippet the share panel emits.
+  widgetLabel      String?
+  widgetColor      String?  // CSS colour; null -> brand default
+  widgetSide       String?  // right | left
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  documents           Document[]
+  conversations       Conversation[] @relation("ConversationOwner")
+  activeConversations Conversation[] @relation("ConversationActive")
+  retrievalLogs       RetrievalLog[]
+  actionItems         ActionItem[]
+
+  @@index([status])
+  @@index([projectId])
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  agentId    String
+  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  filename   String
+  mimeType   String
+  storageKey String
+  sizeBytes  Int      @default(0)
+  status     String   @default("pending") // pending | ready | failed
+  error      String?
+  chunkCount Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  chunks DocumentChunk[]
+
+  @@index([agentId])
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  // Denormalised so retrieval can filter by agent without a join.
+  agentId    String
+  content    String
+  chunkIndex Int
+  // Canonical embedding storage: JSON array of floats. Works on every provider
+  // and is what the in-process cosine retriever reads.
+  embeddingJson String?
+
+  @@index([documentId])
+  @@index([agentId])
+}
+
+model Conversation {
+  id              String   @id @default(cuid())
+  agentId         String
+  agent           Agent    @relation("ConversationOwner", fields: [agentId], references: [id], onDelete: Cascade)
+  clientSessionId String
+  status          String   @default("open") // open | escalated | resolved
+  // agent: the AI answers. human: a colleague has taken over and the AI stays
+  // quiet until they hand it back.
+  //
+  // Not called `mode`: that is the name of a Postgres ordered-set aggregate, and
+  // a query referencing it fails with "WITHIN GROUP is required".
+  replyMode       String   @default("agent") // agent | human
+  takenOverBy     String?
+  takenOverAt     DateTime?
+  // Rolling summary, refreshed in the background. Powers the inbox preview and
+  // the recall a returning client gets.
+  summary         String?
+  summarizedAt    DateTime?
+  // Who is handling the conversation now. `agentId` stays the agent the client
+  // actually contacted - it is half the unique key, and the client's chat link
+  // points at it - so a transfer moves this instead. Null means nobody has
+  // transferred and the original agent is still answering.
+  activeAgentId   String?
+  // SetNull rather than Cascade: deleting the colleague a conversation was
+  // transferred to must not delete the conversation, it must hand it back.
+  activeAgent     Agent?   @relation("ConversationActive", fields: [activeAgentId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  lastMessageAt   DateTime @default(now())
+
+  messages Message[]
+  issues   Issue[]
+  notes    ConversationNote[]
+
+  @@unique([agentId, clientSessionId])
+  @@index([agentId])
+  @@index([status])
+  @@index([lastMessageAt])
+  @@index([clientSessionId])
+  @@index([activeAgentId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  // human is a colleague typing from the inbox; it reaches the client's chat
+  // exactly like an assistant turn, and is never replayed to the model as one.
+  role           String       // user | assistant | tool | human
+  // Display name for a human turn, so the transcript says who answered.
+  authorName     String?
+  // Plain-text rendering, safe to show in the admin transcript.
+  content        String
+  // Raw provider content blocks, kept so a conversation can be replayed to the
+  // model with tool_use / tool_result pairs intact.
+  blocks         Json?
+  // Client feedback on an assistant or human reply: 1 (helpful) or -1 (not).
+  // The dislikes are the useful half - they are the answers to go and fix.
+  rating         Int?
+  ratedAt        DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([rating])
+}
+
+/// A private note an admin leaves on a conversation. Never shown to the
+/// client, never replayed to the model - context for the next person who
+/// opens it.
+model ConversationNote {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  authorName     String
+  body           String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+/// One `search_company_context` call. Kept so an admin can see which questions
+/// the uploaded documents fail to answer - the list of things worth writing
+/// down next.
+model RetrievalLog {
+  id             String   @id @default(cuid())
+  agentId        String
+  agent          Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  conversationId String?
+  query          String
+  hitCount       Int
+  createdAt      DateTime @default(now())
+
+  @@index([agentId, createdAt])
+  @@index([agentId, hitCount])
+}
+
+model Issue {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  type           String       // issue | suggestion
+  summary        String
+  severity       String?      // low | medium | high | critical
+  details        String?
+  status         String       @default("open") // open | resolved
+  createdAt      DateTime     @default(now())
+
+  @@index([status])
+  @@index([conversationId])
+}
+
+// ---------------------------------------------------------------------------
+// Autonomous work, oversight and metering. Mostly empty until the work engine
+// lands; the shapes exist now so nothing above them has to be re-plumbed.
+// ---------------------------------------------------------------------------
+
+/// One unit of work an agent performs on its own - a research run, a draft, a
+/// send. Deliberately minimal: the state machine, tools and approval flow fill
+/// in `status`, `type`, `payload` and `result` later. `organizationId` is
+/// denormalised so approvals and billing can be listed per tenant without a
+/// join through the agent.
+model ActionItem {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentId        String
+  agent          Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  // queued | in_progress | needs_approval | approved | executing_external | done | failed
+  status         String       @default("queued")
+  // Which tool or job this is, e.g. web_research, draft_content.
+  type           String
+  payload        Json
+  result         Json?
+  error          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  @@index([organizationId, status])
+  @@index([agentId, status])
+  @@index([createdAt])
+}
+
+/// Who did what to which thing. Written for every side-effecting action an
+/// agent or a person takes; queryable per organisation and per target.
+/// `organizationId` is nullable only for events with no tenant yet (sign-up).
+model AuditLog {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // user | agent | system | schedule
+  actorType      String
+  actorId        String?
+  // Dotted verb, e.g. organization.created, agent.published, tool.called.
+  action         String
+  targetType     String?
+  targetId       String?
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([targetType, targetId])
+  @@index([actorType, actorId])
+}
+
+/// Per-organisation token usage, bucketed by calendar month, provider, model
+/// and agent. Incremented on every model call; billing reads from it.
+/// `agentId` and `model` are "" rather than null so they can take part in the
+/// unique key (NULLs are never equal in a unique index on Postgres).
+model UsageCounter {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// YYYY-MM, UTC.
+  period         String
+  provider       String
+  model          String       @default("")
+  agentId        String       @default("")
+  inputTokens    Int          @default(0)
+  outputTokens   Int          @default(0)
+  calls          Int          @default(0)
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, period, provider, model, agentId])
+  @@index([organizationId, period])
+}
+
+/// Proof that the background job runtime is alive. The scheduled heartbeat
+/// function writes one row per tick; the health check reads the newest. A
+/// silently dead scheduler is the worst failure this product can have, so it
+/// is measured from day one.
+model Heartbeat {
+  id        String   @id @default(cuid())
+  source    String   // inngest function id
+  runId     String?
+  createdAt DateTime @default(now())
+
+  @@index([source, createdAt])
+}

@@ -1,0 +1,87 @@
+services:
+  db:
+    # pgvector/pgvector ships Postgres with the `vector` extension preinstalled.
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: roster
+      POSTGRES_PASSWORD: roster
+      POSTGRES_DB: roster
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roster -d roster"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Applies the database schema, then exits. `app` waits for it to succeed.
+  #
+  # It carries its own copy of prisma/, so after a schema change rebuild BOTH
+  # services (`docker compose build`, not `build app`). A stale migrate image
+  # runs `db push --accept-data-loss` against the new schema's database and
+  # silently drops the columns you just added.
+  # Runs from the build stage because it needs the Prisma CLI and its
+  # dependencies, which the slim runtime image deliberately does not carry.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://roster:roster@db:5432/roster?schema=public"
+      DATABASE_PROVIDER: postgresql
+    command: >
+      sh -c "node scripts/gen-schema.mjs &&
+             node scripts/backfill-projects.mjs &&
+             npx prisma db push --skip-generate --accept-data-loss"
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: "postgresql://roster:roster@db:5432/roster?schema=public"
+      DATABASE_PROVIDER: postgresql
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      ANTHROPIC_WORKSPACE_ID: "${ANTHROPIC_WORKSPACE_ID:-}"
+      AUTH_SECRET: "${AUTH_SECRET:-}"
+      AUTH_TRUST_HOST: "true"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      EMBEDDING_PROVIDER: "${EMBEDDING_PROVIDER:-local}"
+      ANTHROPIC_DEFAULT_MODEL: "${ANTHROPIC_DEFAULT_MODEL:-claude-sonnet-4-6}"
+      NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+      STORAGE_DIR: /data/storage
+      # The compose stack runs its own Inngest dev server (below) rather than
+      # Inngest Cloud, so the SDK stays in dev mode and needs no signing key.
+      INNGEST_DEV: "1"
+      INNGEST_BASE_URL: http://inngest:8288
+    ports:
+      - "3000:3000"
+    volumes:
+      - storage-data:/data/storage
+
+  # The background job runtime. Discovers the app's functions at /api/inngest
+  # and fires their schedules; without it nothing runs unattended. Dashboard at
+  # http://localhost:8288.
+  inngest:
+    image: inngest/inngest:latest
+    command: "inngest dev -u http://app:3000/api/inngest --no-discovery"
+    depends_on:
+      - app
+    ports:
+      - "8288:8288"
+
+volumes:
+  db-data:
+  storage-data:
