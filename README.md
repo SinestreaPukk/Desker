@@ -202,7 +202,7 @@ a risk level that the runner gates on:
 | Tool | Risk | What it does |
 |---|---|---|
 | `search_context` | read | Retrieval over the scope's linked documents |
-| `web_research` | read | Search (Tavily or Brave), read the top pages, summarise with numbered sources; saved to the item |
+| `web_research` | read | Search (Brave, or Tavily), read the top pages, summarise with numbered sources; saved to the item. Results are cached by query for 6 hours across organisations; each call is metered per organisation |
 | `draft_content` | draft | Writes a blog post, social caption or email into a `Draft`. Never publishes |
 | `schedule_followup` | internal | Queues the next task as its own action item, now or after a delay, with this run's report as context |
 | `publish_post` | external | Sends a draft to the organisation's publishing webhook |
@@ -254,7 +254,9 @@ requires rather than accepts; a call with no tenant to bill does not typecheck.
 After each API request the provider increments a `UsageCounter` row keyed by
 organisation, UTC month, provider, model and agent, so a month total per
 organisation and a per-agent breakdown come from the same table
-(`usageForOrganization()` in `lib/usage.ts`). Recording never fails a reply.
+(`usageForOrganization()` in `lib/usage.ts`). Web research is metered in the
+same table under provider `search` (searches and pages read), so a plan quota
+can cover both. Recording never fails a reply.
 
 `AuditLog` records who did what to which thing: actor (`user | agent | system |
 schedule`), a dotted action, a target, and metadata that must never contain a

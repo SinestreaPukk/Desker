@@ -1,7 +1,12 @@
 /**
  * web_research: search, read, summarise.
  *
- * Search goes through whichever provider has a key - Tavily, then Brave.
+ * Search goes through whichever provider has a key - Brave first (its own
+ * index, the lowest cost per query), then Tavily. Results are cached by
+ * query for a few hours and shared across organisations: they are public
+ * data, and two agents asking the same question should cost one API call.
+ * Every call is metered per organisation next to token usage.
+ *
  * There is deliberately no keyless fallback: the public engines block
  * non-browser traffic or forbid this use in their terms, and a scrape that
  * works today is an outage tomorrow. Without a key the tool fails with a
@@ -12,8 +17,10 @@
  * summariser as material, never followed as an instruction.
  */
 import "server-only";
+import type { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { getProvider } from "@/lib/llm/provider";
-import type { BillingContext } from "@/lib/usage";
+import { recordResearchUsage, type BillingContext } from "@/lib/usage";
 
 export interface SearchHit {
   title: string;
@@ -98,15 +105,60 @@ export class NoSearchProvider extends Error {
 }
 
 export function hasSearchProvider(): boolean {
-  return Boolean(process.env.TAVILY_API_KEY?.trim() || process.env.BRAVE_SEARCH_API_KEY?.trim());
+  return Boolean(process.env.BRAVE_SEARCH_API_KEY?.trim() || process.env.TAVILY_API_KEY?.trim());
 }
 
-export async function webSearch(query: string): Promise<{ provider: string; hits: SearchHit[] }> {
-  const tavily = process.env.TAVILY_API_KEY?.trim();
-  if (tavily) return { provider: "tavily", hits: await searchTavily(query, tavily) };
+/** How long a set of results stays good enough to reuse. */
+const SEARCH_CACHE_TTL_MS = 6 * 60 * 60_000;
+
+function cacheKey(provider: string, query: string): string {
+  return `${provider}:${query.toLowerCase().replace(/\s+/g, " ").trim()}`;
+}
+
+async function searchUncached(query: string): Promise<{ provider: string; hits: SearchHit[] }> {
   const brave = process.env.BRAVE_SEARCH_API_KEY?.trim();
   if (brave) return { provider: "brave", hits: await searchBrave(query, brave) };
+  const tavily = process.env.TAVILY_API_KEY?.trim();
+  if (tavily) return { provider: "tavily", hits: await searchTavily(query, tavily) };
   throw new NoSearchProvider();
+}
+
+export async function webSearch(
+  query: string,
+): Promise<{ provider: string; hits: SearchHit[]; cached: boolean }> {
+  const provider = process.env.BRAVE_SEARCH_API_KEY?.trim()
+    ? "brave"
+    : process.env.TAVILY_API_KEY?.trim()
+      ? "tavily"
+      : null;
+  if (!provider) throw new NoSearchProvider();
+
+  const key = cacheKey(provider, query);
+  const hit = await prisma.searchCache
+    .findUnique({ where: { key } })
+    .catch(() => null);
+  if (hit && hit.expiresAt > new Date()) {
+    return { provider, hits: hit.hits as unknown as SearchHit[], cached: true };
+  }
+
+  const fresh = await searchUncached(query);
+  await prisma.searchCache
+    .upsert({
+      where: { key },
+      create: {
+        key,
+        provider: fresh.provider,
+        query,
+        hits: fresh.hits as unknown as Prisma.InputJsonValue,
+        expiresAt: new Date(Date.now() + SEARCH_CACHE_TTL_MS),
+      },
+      update: {
+        hits: fresh.hits as unknown as Prisma.InputJsonValue,
+        expiresAt: new Date(Date.now() + SEARCH_CACHE_TTL_MS),
+      },
+    })
+    .catch((error: unknown) => console.error("[research] cache write failed", error));
+  return { ...fresh, cached: false };
 }
 
 // --- reading pages ----------------------------------------------------------
@@ -158,7 +210,16 @@ export async function researchTheWeb(input: {
   modelProvider: string;
   model: string | null;
 }): Promise<ResearchFindings> {
-  const { provider: searchProvider, hits } = await webSearch(input.query);
+  const { provider: searchProvider, hits, cached } = await webSearch(input.query);
+  // A cache hit still counts as a search for the organisation's quota: the
+  // quota is about what the agent asked for, not what the API billed.
+  await recordResearchUsage({
+    organizationId: input.billing.organizationId,
+    agentId: input.billing.agentId,
+    searchProvider: cached ? `${searchProvider}-cached` : searchProvider,
+    searches: 1,
+    pagesRead: Math.min(hits.length, MAX_PAGES),
+  });
   if (hits.length === 0) {
     return {
       query: input.query,

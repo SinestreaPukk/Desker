@@ -458,10 +458,31 @@ model UsageCounter {
   inputTokens    Int          @default(0)
   outputTokens   Int          @default(0)
   calls          Int          @default(0)
+  /// Web searches and pages read, recorded under provider "search" so plan
+  /// quotas can meter research alongside tokens.
+  searches       Int          @default(0)
+  pagesRead      Int          @default(0)
   updatedAt      DateTime     @updatedAt
 
   @@unique([organizationId, period, provider, model, agentId])
   @@index([organizationId, period])
+}
+
+/// Web search results by normalised query, shared across organisations: the
+/// results are public data, the summaries written from them are not. Keeps
+/// two agents asking the same question in the same hour to one API call.
+model SearchCache {
+  id        String   @id @default(cuid())
+  /// provider + normalised query.
+  key       String   @unique
+  provider  String
+  query     String
+  /// SearchHit[]
+  hits      Json
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }
 
 /// Proof that the background job runtime is alive. The scheduled heartbeat

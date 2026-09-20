@@ -71,16 +71,65 @@ export async function recordTokenUsage(sample: UsageSample): Promise<void> {
   }
 }
 
+/**
+ * One web research call: searches made and pages read, keyed like token usage
+ * under provider "search" and model = the search backend. Never throws.
+ */
+export async function recordResearchUsage(sample: {
+  organizationId: string;
+  agentId?: string | null;
+  searchProvider: string;
+  searches: number;
+  pagesRead: number;
+}): Promise<void> {
+  const key = {
+    organizationId: sample.organizationId,
+    period: usagePeriod(),
+    provider: "search",
+    model: sample.searchProvider,
+    agentId: sample.agentId ?? "",
+  };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await prisma.usageCounter.upsert({
+        where: { organizationId_period_provider_model_agentId: key },
+        create: { ...key, searches: sample.searches, pagesRead: sample.pagesRead, calls: 1 },
+        update: {
+          searches: { increment: sample.searches },
+          pagesRead: { increment: sample.pagesRead },
+          calls: { increment: 1 },
+        },
+      });
+      return;
+    } catch (error) {
+      const conflict =
+        error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+      if (!conflict || attempt === 1) {
+        console.error("[usage] failed to record research usage", error);
+        return;
+      }
+    }
+  }
+}
+
 /** Month-to-date totals for one organisation, for billing and the health of a plan. */
 export async function usageForOrganization(organizationId: string, period = usagePeriod()) {
-  const totals = await prisma.usageCounter.aggregate({
-    where: { organizationId, period },
-    _sum: { inputTokens: true, outputTokens: true, calls: true },
-  });
+  const [model, research] = await Promise.all([
+    prisma.usageCounter.aggregate({
+      where: { organizationId, period, provider: { not: "search" } },
+      _sum: { inputTokens: true, outputTokens: true, calls: true },
+    }),
+    prisma.usageCounter.aggregate({
+      where: { organizationId, period, provider: "search" },
+      _sum: { searches: true, pagesRead: true },
+    }),
+  ]);
   return {
     period,
-    inputTokens: totals._sum.inputTokens ?? 0,
-    outputTokens: totals._sum.outputTokens ?? 0,
-    calls: totals._sum.calls ?? 0,
+    inputTokens: model._sum.inputTokens ?? 0,
+    outputTokens: model._sum.outputTokens ?? 0,
+    calls: model._sum.calls ?? 0,
+    searches: research._sum.searches ?? 0,
+    pagesRead: research._sum.pagesRead ?? 0,
   };
 }

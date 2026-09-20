@@ -196,5 +196,14 @@ const hasSearch = Boolean(process.env.TAVILY_API_KEY?.trim() || process.env.BRAV
     expect(findings.sources.length).toBeGreaterThan(0);
     expect(findings.findings.length).toBeGreaterThan(50);
     expect(findings.findings).toMatch(/\[\d\]/);
+
+    // The same query again is served from the cache and still metered.
+    const { webSearch } = await import("@/lib/work/research");
+    const again = await webSearch("pgvector Postgres extension");
+    expect(again.cached).toBe(true);
+    const { usageForOrganization } = await import("@/lib/usage");
+    const usage = await usageForOrganization(organizationId);
+    expect(usage.searches).toBeGreaterThanOrEqual(1);
+    expect(usage.pagesRead).toBeGreaterThan(0);
   }, 120_000);
 });
