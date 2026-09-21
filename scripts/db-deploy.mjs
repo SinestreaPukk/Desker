@@ -9,6 +9,11 @@
  * So: compute the SQL Prisma would run, refuse if it drops a table or a
  * column (unless ALLOW_DESTRUCTIVE_MIGRATION=1 says that was intended), and
  * otherwise push with the flag. Every refusal prints the exact statements.
+ *
+ * Written for the Postgres deployments, where a dropped column is an
+ * explicit DROP COLUMN. On SQLite Prisma rebuilds the whole table for any
+ * change, so a dropped column is invisible in the SQL - the guard cannot
+ * protect a SQLite database and does not claim to.
  */
 import { execFileSync } from "node:child_process";
 
@@ -43,17 +48,36 @@ try {
   process.exit(1);
 }
 
+// Prisma prefixes each statement with a comment ("-- AlterTable"); strip
+// comment lines first, then split, or a statement that starts with one
+// would look like a comment and be dropped - which is how an empty-looking
+// diff once shipped a build that could not create organisations.
 const statements = sql
+  .split("\n")
+  .filter((line) => !line.trim().startsWith("--"))
+  .join("\n")
   .split(/;\s*\n/)
   .map((s) => s.trim())
-  .filter((s) => s && !s.startsWith("--"));
+  .filter(Boolean);
 
 if (statements.length === 0) {
   console.log("[db-deploy] database already matches the schema.");
   process.exit(0);
 }
 
-const destructive = statements.filter((s) => /\bDROP\s+(TABLE|COLUMN)\b/i.test(s));
+// SQLite cannot alter a table in place, so Prisma rebuilds it: create
+// "new_X", copy the rows, drop "X", rename. That drop is not data loss.
+const rebuilt = new Set(
+  statements
+    .map((s) => /ALTER\s+TABLE\s+"new_([^"]+)"\s+RENAME\s+TO\s+"\1"/i.exec(s)?.[1])
+    .filter(Boolean),
+);
+const destructive = statements.filter((s) => {
+  const drop = /\bDROP\s+(TABLE|COLUMN)\b\s*(?:IF\s+EXISTS\s+)?"?([^"\s;]+)"?/i.exec(s);
+  if (!drop) return false;
+  if (drop[1].toUpperCase() === "TABLE" && rebuilt.has(drop[2])) return false;
+  return true;
+});
 if (destructive.length > 0 && process.env.ALLOW_DESTRUCTIVE_MIGRATION !== "1") {
   console.error("[db-deploy] refusing: this change drops data.\n");
   for (const s of destructive) console.error(`  ${s};`);
