@@ -21,21 +21,20 @@ test.describe("the landing page without JavaScript", () => {
   test("still shows every section, fully visible", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    for (const step of landing.howItWorks.steps) {
-      await expect(page.getByRole("heading", { name: step.title })).toBeVisible();
+    for (const item of landing.features.items) {
+      await expect(page.getByRole("heading", { name: item.title })).toBeVisible();
     }
-    for (const card of landing.bento.cards) {
-      await expect(page.getByRole("heading", { name: card.title })).toBeVisible();
+    for (const item of landing.faq.items) {
+      await expect(page.getByText(item.q)).toBeVisible();
     }
     await expect(page.getByRole("heading", { name: landing.cta.heading })).toBeVisible();
     // Motion's initial states are applied only after the library loads; the
     // HTML a crawler reads must never hide anything.
     const hidden = await page.locator('[style*="opacity: 0"], [style*="opacity:0"]').count();
     expect(hidden).toBe(0);
-    // The stats render their final numbers, not the zero a count-up starts from.
-    for (const stat of landing.stats) {
-      await expect(page.getByText(`${stat.value}${stat.suffix}`, { exact: true })).toBeVisible();
-    }
+    // The FAQ opens without a script: native disclosure.
+    await page.getByText(landing.faq.items[1]!.q).click();
+    await expect(page.getByText(landing.faq.items[1]!.a)).toBeVisible();
   });
 });
 

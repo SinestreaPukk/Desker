@@ -4,107 +4,72 @@
     "description": "Hire an AI employee with a role, a voice and your company's context. It answers clients, researches and drafts on a schedule, and nothing goes out without your approval."
   },
   "hero": {
-    "eyebrow": "For teams with more work than people",
-    "headline": "Hire an AI employee. Keep the final say.",
-    "highlight": "final say.",
-    "subhead": "It answers clients, researches, drafts and follows up. Nothing ships without your approval.",
+    "headline": "AI employees that do real work",
+    "subhead": "Desker answers your clients, researches and drafts on a schedule, and asks you before anything goes out.",
     "primaryCta": { "label": "Hire your first agent", "href": "/signup" },
     "secondaryCta": { "label": "See the roles", "href": "/showcase" },
     "note": "Free to start. Five minutes to a working agent."
   },
-  "stats": [
-    { "value": 8, "suffix": "", "label": "roles ready to hire" },
-    { "value": 5, "suffix": " min", "label": "to a working agent" },
-    { "value": 100, "suffix": "%", "label": "of posts and emails wait for your approval" }
-  ],
-  "ticker": {
-    "label": "A week on Desker looks like",
+  "features": {
+    "heading": "How Desker helps, all day",
     "items": [
-      "Mia answered a returns question from the policy",
-      "Nova drafted Monday's LinkedIn post",
-      "Ravi walked a new client through setup",
-      "Iris escalated a refund over $200 to a person",
-      "Sol researched three competitors and cited every source",
-      "Ada logged a bug with steps to reproduce",
-      "Kai qualified a lead and booked the call",
-      "June answered a leave question from the handbook"
-    ]
-  },
-  "howItWorks": {
-    "heading": "Three steps. Then it works.",
-    "intro": "No prompt engineering. A job description and your documents.",
-    "steps": [
       {
-        "title": "Describe the role",
-        "body": "Pick a template. Name it. Give it a voice and one plain rule for when to fetch a human."
+        "title": "It answers your clients from your own documents",
+        "body": "Upload the policies, price lists and FAQs. Every answer comes from those, with the source named.",
+        "demo": "chat"
       },
       {
-        "title": "Hand it your context",
-        "body": "Upload the policies, price lists and FAQs. It answers from those and cites them."
+        "title": "It works on a schedule while you sleep",
+        "body": "Give it a scope of work and a cadence. It researches, drafts and follows up, then reports in the morning.",
+        "demo": "roster"
       },
       {
-        "title": "Publish and delegate",
-        "body": "Put it on your site. Give it a schedule. Review everything it produces from one inbox."
-      }
-    ]
-  },
-  "bento": {
-    "heading": "Everything a good hire needs.",
-    "intro": "The roles, and the platform underneath them.",
-    "cards": [
-      {
-        "size": "lg",
-        "icon": "inbox",
-        "title": "One inbox for approvals",
-        "body": "Every post and email an agent wants to send lands here with the full text. Approve, edit or reject. From your phone, if that's where you are.",
+        "title": "You approve anything that leaves the building",
+        "body": "Posts and emails wait in one inbox with the full text. Approve, edit or reject from your phone.",
         "demo": "approval"
-      },
-      {
-        "size": "tall",
-        "icon": "users",
-        "title": "Eight roles. One click.",
-        "body": "Each one is a job, a voice and a rule for when to stop.",
-        "demo": "roles"
-      },
-      {
-        "size": "wide",
-        "icon": "calendar",
-        "title": "Works on a schedule",
-        "body": "A scope of work, a cadence or a webhook. It runs overnight and reports in the morning."
-      },
-      {
-        "size": "sm",
-        "icon": "file-text",
-        "title": "Answers with sources",
-        "body": "From your documents and cited research. When it doesn't know, it says so."
-      },
-      {
-        "size": "sm",
-        "icon": "scroll",
-        "title": "A complete trail",
-        "body": "Every tool call, approval and schedule. Queryable. Exportable."
-      },
-      {
-        "size": "sm",
-        "icon": "code",
-        "title": "A widget for your site",
-        "body": "One script tag, or a chat link. A passcode if you want one."
-      },
-      {
-        "size": "sm",
-        "icon": "lock",
-        "title": "Yours stays yours",
-        "body": "Credentials encrypted at rest. Nothing you upload trains a model."
       }
     ]
+  },
+  "roles": {
+    "heading": "Eight roles, ready to hire",
+    "intro": "Each one is a job, a voice and a rule for when to fetch a human. Pick one and change anything."
   },
   "pricing": {
-    "heading": "Pricing that follows the work.",
+    "heading": "Pricing that follows the work",
     "intro": "Pay for agents that are live and the work they do. Start free. Upgrade when one is earning its keep.",
     "footnote": "Every plan includes every role, unlimited teammates, the audit log and email support."
   },
+  "faq": {
+    "heading": "Frequently asked questions",
+    "items": [
+      {
+        "q": "What can an agent actually do?",
+        "a": "Answer clients on a chat link or a widget on your site, log bugs and requests, research the web with sources, draft posts and emails, schedule its own follow-ups, and escalate to a person when its rule says so."
+      },
+      {
+        "q": "Will it send something I haven't seen?",
+        "a": "No. Every agent starts in draft-only mode: publishing a post or sending an email waits for your approval in the Inbox. You can loosen that per agent, per tool, once it has earned it."
+      },
+      {
+        "q": "Where do its answers come from?",
+        "a": "From the documents you upload and from cited web research. When it doesn't know, it says so rather than guessing."
+      },
+      {
+        "q": "Is Desker free?",
+        "a": "Yes to start: one live agent with enough runs and conversations to see it work. Paid plans add agents, runs and a larger model budget."
+      },
+      {
+        "q": "How long does setup take?",
+        "a": "About five minutes. Pick a role, name it, upload a document, test it live, publish."
+      },
+      {
+        "q": "Does my data train anyone's model?",
+        "a": "No. Integration credentials are encrypted at rest, and nothing you upload is used for training."
+      }
+    ]
+  },
   "cta": {
-    "heading": "Put an agent to work today.",
+    "heading": "Put an agent to work today",
     "body": "Five minutes. Free to start.",
     "button": { "label": "Hire your first agent", "href": "/signup" }
   }

@@ -6,9 +6,16 @@ import { currentUser } from "@/lib/auth";
 import { defaultProject } from "@/lib/projects";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
-import { Aurora, Bento, Marquee } from "@/components/marketing/landing-blocks";
-import { HeroStage } from "@/components/marketing/hero-stage";
-import { CountUp, Parallax, Reveal } from "@/components/marketing/reveal";
+import { Faq, Horizon, RoleGrid } from "@/components/marketing/landing-blocks";
+import { GLASS_BUTTON } from "@/components/marketing/glass-button";
+import {
+  ApprovalScene,
+  ChatScene,
+  Frame,
+  HeroStage,
+  RosterScene,
+} from "@/components/marketing/hero-stage";
+import { Parallax, Reveal } from "@/components/marketing/reveal";
 import { LANDING, SITE, pageMetadata, templateById } from "@/lib/content";
 import { PLANS } from "@/lib/billing/plans";
 import { cn } from "@/lib/utils";
@@ -20,34 +27,16 @@ export const metadata: Metadata = pageMetadata({
   absoluteTitle: true,
 });
 
-/** Splits the headline around the words that get the gradient. */
-function headlineParts(headline: string, highlight: string) {
-  const at = highlight ? headline.indexOf(highlight) : -1;
-  if (at === -1) return { before: headline, mark: "", after: "" };
-  return {
-    before: headline.slice(0, at),
-    mark: highlight,
-    after: headline.slice(at + highlight.length),
-  };
-}
-
-/** The primary call to action on the dark stage: white, with the glow behind it. */
-const STAGE_BUTTON = cn(
-  "lift inline-flex h-12 items-center justify-center gap-2 rounded-md px-6 text-base font-semibold",
-  "bg-[var(--stage-ink)] text-[var(--stage)] shadow-[0_0_48px_-10px_var(--glow)]",
-  "hover:shadow-[0_0_64px_-8px_var(--glow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--glow-text-a)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--stage)]",
-  "[&_svg]:size-[1.125rem]",
-);
-const STAGE_BUTTON_SECONDARY = cn(
-  "lift inline-flex h-12 items-center justify-center gap-2 rounded-md px-6 text-base font-medium",
-  "border border-[var(--stage-line)] text-[var(--stage-ink)] hover:border-[var(--stage-muted)] hover:bg-[var(--stage-surface)]",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--glow-text-a)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--stage)]",
-);
+const DEMOS = {
+  chat: { title: "Inbox · Conversations", scene: <ChatScene beat={2} /> },
+  roster: { title: "Roster", scene: <RosterScene beat={2} /> },
+  approval: { title: "Inbox · Approvals", scene: <ApprovalScene beat={2} /> },
+} as const;
 
 /**
  * The front door. A signed-in person has already been convinced; they go to
- * their workspace. Everyone else gets the pitch: one headline, one line, the
- * product moving, and the rest of the page revealing itself as they scroll.
+ * their workspace. Everyone else gets a clear morning: one serif headline in
+ * the sky, one line, one button, and the product floating over the horizon.
  */
 export default async function LandingPage({
   searchParams,
@@ -65,91 +54,81 @@ export default async function LandingPage({
     redirect(`/p/${project.slug}/roster`);
   }
 
-  const { hero, stats, ticker, howItWorks, bento, pricing, cta } = LANDING;
-  const { before, mark, after } = headlineParts(hero.headline, hero.highlight);
+  const { hero, features, roles, pricing, faq, cta } = LANDING;
 
   return (
     <>
       {/* Hero ---------------------------------------------------------- */}
-      <section className="stage relative overflow-hidden">
-        <Parallax className="absolute inset-0" distance={160}>
-          <Aurora />
+      <section className="sky relative -mt-14 overflow-hidden pt-14">
+        <div className="sun right-[12%] top-[46%] hidden sm:block" aria-hidden />
+        <Parallax className="absolute inset-x-0 bottom-0 h-[58%]" distance={-60}>
+          <Horizon />
         </Parallax>
-        <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-20 sm:px-6 sm:pt-28 lg:pt-32">
-          <p className="font-mono text-xs uppercase tracking-wider text-[var(--glow-text-a)]">{hero.eyebrow}</p>
-          <h1 className="mt-5 max-w-5xl font-display text-hero text-balance text-[var(--stage-ink)]">
-            {before}
-            {mark ? <span className="glow-text">{mark}</span> : null}
-            {after}
+        {/* The foot of the mountains dissolves into the page. */}
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-paper" aria-hidden />
+
+        <div className="relative mx-auto max-w-6xl px-4 pt-20 text-center sm:px-6 sm:pt-28">
+          <h1 className="mx-auto max-w-4xl font-display text-hero text-balance text-[var(--sky-ink)]">
+            {hero.headline}
           </h1>
-          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-[var(--stage-muted)] sm:text-xl sm:leading-snug">
+          <p className="mx-auto mt-6 max-w-2xl text-lg font-medium leading-relaxed text-[var(--sky-ink)] sm:text-xl sm:leading-snug">
             {hero.subhead}
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Link href={hero.primaryCta.href} className={STAGE_BUTTON}>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link href={hero.primaryCta.href} className={GLASS_BUTTON}>
               {hero.primaryCta.label}
               <ArrowRight aria-hidden />
             </Link>
-            <Link href={hero.secondaryCta.href} className={STAGE_BUTTON_SECONDARY}>
+            <Link
+              href={hero.secondaryCta.href}
+              className="inline-flex h-11 items-center gap-1.5 rounded-lg px-3 text-base font-medium text-[var(--sky-ink)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sky-ink)]"
+            >
               {hero.secondaryCta.label}
             </Link>
           </div>
-          <p className="mt-4 text-sm text-[var(--stage-muted)]">{hero.note}</p>
+          <p className="mt-4 text-sm text-[var(--sky-ink)]">{hero.note}</p>
 
-          <div className="mt-16 grid gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:items-start">
-            <dl className="flex flex-wrap gap-x-12 gap-y-6 lg:flex-col lg:gap-y-8">
-              {stats.map((item) => (
-                <div key={item.label} className="min-w-[8rem]">
-                  <dd className="whitespace-nowrap font-display text-display font-semibold tracking-tight text-[var(--stage-ink)]">
-                    <CountUp value={item.value} suffix={item.suffix} />
-                  </dd>
-                  <dt className="mt-1 text-sm text-[var(--stage-muted)]">{item.label}</dt>
-                </div>
-              ))}
-            </dl>
-            <HeroStage />
+          {/* The product, floating over the horizon and down into the page. */}
+          <HeroStage className="relative z-10 mx-auto -mb-24 mt-16 max-w-4xl text-left sm:-mb-32 sm:mt-24" />
+        </div>
+      </section>
+
+      {/* Features ------------------------------------------------------ */}
+      <section id="how-it-works" className="scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-4 pb-20 pt-44 sm:px-6 sm:pb-28 sm:pt-56">
+          <Reveal>
+            <h2 className="mx-auto max-w-3xl text-center text-title text-balance text-ink">{features.heading}</h2>
+          </Reveal>
+          <div className="mt-16 space-y-24 sm:mt-24 sm:space-y-32">
+            {features.items.map((item) => {
+              const demo = DEMOS[item.demo];
+              return (
+                <Reveal key={item.title}>
+                  <div className="mx-auto max-w-2xl text-center">
+                    <h3 className="text-xl font-medium tracking-tight text-balance text-ink">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 text-lg leading-relaxed text-ink-muted">{item.body}</p>
+                  </div>
+                  <div className="mx-auto mt-10 max-w-4xl rounded-panel bg-sky-pale/60 p-3 dark:bg-surface-2 sm:p-6" aria-hidden>
+                    <Frame title={demo.title}>{demo.scene}</Frame>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <Marquee label={ticker.label} items={ticker.items} />
-
-      {/* How it works -------------------------------------------------- */}
-      <section id="how-it-works" className="scroll-mt-20">
+      {/* Roles --------------------------------------------------------- */}
+      <section id="roles" className="scroll-mt-20 border-t border-line bg-surface-2/40">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
           <Reveal>
-            <h2 className="max-w-2xl font-display text-display font-semibold tracking-tight text-ink">
-              {howItWorks.heading}
-            </h2>
-            <p className="mt-3 text-lg text-ink-muted">{howItWorks.intro}</p>
-          </Reveal>
-          <ol className="mt-12 grid gap-4 md:grid-cols-3">
-            {howItWorks.steps.map((step, index) => (
-              <li key={step.title}>
-                <Reveal delay={index * 0.12} className="h-full">
-                  <div className="lift h-full rounded-panel border border-line bg-surface p-6 hover:border-accent-line hover:shadow-md">
-                    <span className="font-display text-xl font-semibold text-accent">0{index + 1}</span>
-                    <h3 className="mt-5 text-lg font-semibold tracking-tight text-ink">{step.title}</h3>
-                    <p className="mt-2 text-base leading-relaxed text-ink-muted">{step.body}</p>
-                  </div>
-                </Reveal>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* Bento --------------------------------------------------------- */}
-      <section className="border-t border-line bg-surface-2/40">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-          <Reveal>
-            <h2 className="max-w-2xl font-display text-display font-semibold tracking-tight text-ink">
-              {bento.heading}
-            </h2>
-            <p className="mt-3 text-lg text-ink-muted">{bento.intro}</p>
+            <h2 className="mx-auto max-w-3xl text-center text-title text-balance text-ink">{roles.heading}</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-ink-muted">{roles.intro}</p>
           </Reveal>
           <Reveal className="mt-12" delay={0.1}>
-            <Bento cards={bento.cards} />
+            <RoleGrid />
           </Reveal>
         </div>
       </section>
@@ -158,14 +137,12 @@ export default async function LandingPage({
       <section id="pricing" className="scroll-mt-20 border-t border-line">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
           <Reveal>
-            <h2 className="max-w-2xl font-display text-display font-semibold tracking-tight text-ink">
-              {pricing.heading}
-            </h2>
-            <p className="mt-3 max-w-2xl text-lg text-ink-muted">{pricing.intro}</p>
+            <h2 className="mx-auto max-w-3xl text-center text-title text-balance text-ink">{pricing.heading}</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-ink-muted">{pricing.intro}</p>
           </Reveal>
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
+          <div className="mx-auto mt-12 grid max-w-5xl gap-4 md:grid-cols-3">
             {Object.values(PLANS).map((plan, index) => (
-              <Reveal key={plan.id} delay={index * 0.12} className="h-full">
+              <Reveal key={plan.id} delay={index * 0.1} className="h-full">
                 <Panel
                   className={cn(
                     "lift flex h-full flex-col p-6 hover:shadow-md",
@@ -174,9 +151,9 @@ export default async function LandingPage({
                 >
                   <h3 className="text-lg font-semibold tracking-tight text-ink">{plan.name}</h3>
                   <p className="mt-1 text-sm text-ink-muted">{plan.blurb}</p>
-                  <p className="mt-5 font-display text-display font-semibold tracking-tight text-ink">
+                  <p className="mt-5 text-display font-medium tracking-tight text-ink">
                     ${plan.priceUsd}
-                    <span className="font-sans text-sm font-normal tracking-normal text-ink-muted"> / month</span>
+                    <span className="text-sm font-normal tracking-normal text-ink-muted"> / month</span>
                   </p>
                   <ul className="mt-5 space-y-2 text-sm text-ink-muted">
                     <li>{plan.limits.publishedAgents} published agent{plan.limits.publishedAgents === 1 ? "" : "s"}</li>
@@ -184,27 +161,41 @@ export default async function LandingPage({
                     <li>{plan.limits.conversationsPerMonth.toLocaleString()} client conversations a month</li>
                     <li>${plan.limits.modelCostUsdPerMonth} model budget included</li>
                   </ul>
-                  <Button asChild className="lift mt-6 w-full" variant={plan.id === "starter" ? "primary" : "secondary"}>
+                  <Button asChild className="mt-6 w-full" variant={plan.id === "starter" ? "primary" : "secondary"}>
                     <Link href="/signup">{plan.priceUsd === 0 ? "Start free" : `Start with ${plan.name}`}</Link>
                   </Button>
                 </Panel>
               </Reveal>
             ))}
           </div>
-          <p className="mt-5 text-sm text-ink-subtle">{pricing.footnote}</p>
+          <p className="mt-6 text-center text-sm text-ink-subtle">{pricing.footnote}</p>
+        </div>
+      </section>
+
+      {/* FAQ ----------------------------------------------------------- */}
+      <section id="faq" className="scroll-mt-20 border-t border-line">
+        <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 sm:py-28">
+          <Reveal>
+            <h2 className="text-center text-title text-balance text-ink">{faq.heading}</h2>
+          </Reveal>
+          <Reveal className="mt-12" delay={0.1}>
+            <Faq items={faq.items} />
+          </Reveal>
         </div>
       </section>
 
       {/* CTA ----------------------------------------------------------- */}
-      <section className="stage relative overflow-hidden">
-        <Aurora />
-        <div className="relative mx-auto max-w-6xl px-4 py-24 text-center sm:px-6 sm:py-32">
+      <section className="sky relative overflow-hidden">
+        <div className="sun left-[10%] top-[30%] hidden sm:block" aria-hidden />
+        <div className="absolute inset-x-0 bottom-0 h-[55%]" aria-hidden>
+          <Horizon />
+        </div>
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-paper" aria-hidden />
+        <div className="relative mx-auto max-w-6xl px-4 pb-40 pt-24 text-center sm:px-6 sm:pb-56 sm:pt-32">
           <Reveal>
-            <h2 className="mx-auto max-w-3xl font-display text-hero text-balance text-[var(--stage-ink)]">
-              {cta.heading}
-            </h2>
-            <p className="mt-5 text-lg text-[var(--stage-muted)]">{cta.body}</p>
-            <Link href={cta.button.href} className={cn(STAGE_BUTTON, "mt-9")}>
+            <h2 className="mx-auto max-w-3xl font-display text-hero text-balance text-[var(--sky-ink)]">{cta.heading}</h2>
+            <p className="mt-5 text-lg font-medium text-[var(--sky-ink)]">{cta.body}</p>
+            <Link href={cta.button.href} className={cn(GLASS_BUTTON, "mt-8")}>
               {cta.button.label}
               <ArrowRight aria-hidden />
             </Link>

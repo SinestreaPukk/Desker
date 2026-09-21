@@ -8,7 +8,7 @@
  * is never on the critical path and never in the HTML a crawler reads.
  */
 import * as React from "react";
-import { animate, motion, useInView, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
@@ -37,33 +37,6 @@ export function MotionReveal({
       {children}
     </motion.div>
   );
-}
-
-/** Counts from zero to `value` the first time it scrolls into view. */
-export function MotionCount({
-  value,
-  startHidden,
-  format,
-}: {
-  value: number;
-  startHidden: boolean;
-  format: (n: number) => string;
-}) {
-  const ref = React.useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  const [shown, setShown] = React.useState(startHidden ? 0 : value);
-
-  React.useEffect(() => {
-    if (!inView || !startHidden) return;
-    const controls = animate(0, value, {
-      duration: 1.4,
-      ease: EASE,
-      onUpdate: (latest) => setShown(Math.round(latest)),
-    });
-    return () => controls.stop();
-  }, [inView, startHidden, value]);
-
-  return <span ref={ref}>{format(shown)}</span>;
 }
 
 /** Drifts its children by `distance` px over the first screen of scrolling. */

@@ -11,7 +11,6 @@
  * With JavaScript off, or motion reduced, the page is simply the static one.
  */
 import * as React from "react";
-import { cn } from "@/lib/utils";
 
 type MotionModule = typeof import("./motion-lazy");
 
@@ -79,26 +78,6 @@ export function Reveal({
     <ready.mod.MotionReveal startHidden={ready.startHidden} delay={delay} y={y} className={className}>
       {children}
     </ready.mod.MotionReveal>
-  );
-}
-
-export function CountUp({
-  value,
-  suffix = "",
-  className,
-}: {
-  value: number;
-  suffix?: string;
-  className?: string;
-}) {
-  const ref = React.useRef<HTMLSpanElement>(null);
-  const ready = useMotion(ref);
-  const format = (n: number) => `${n.toLocaleString()}${suffix}`;
-
-  return (
-    <span ref={ref} className={cn("tabular-nums", className)}>
-      {ready ? <ready.mod.MotionCount value={value} startHidden={ready.startHidden} format={format} /> : format(value)}
-    </span>
   );
 }
 

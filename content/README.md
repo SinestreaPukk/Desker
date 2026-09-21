@@ -18,11 +18,10 @@ Rules that keep this safe to edit:
   named, rather than rendering a blank.
 - Text is plain text. Line breaks in a string become paragraph breaks where
   the page supports them; there is no HTML.
-- `landing.json`: `hero.highlight` must appear verbatim in `hero.headline` -
-  it is the part that gets the gradient. `stats` are numbers because they
-  count up on screen; keep them true. `ticker.items` are sample activity lines,
-  not customer claims. `bento.cards[].size` is one of `lg` (2x2), `tall`,
-  `wide` or `sm`; the two `demo` cards render a live piece of the product.
+- `landing.json`: `hero.headline` is the serif line in the sky (keep it under
+  60 characters, it is set very large); `features.items[].demo` picks which
+  piece of the product the frame under that heading shows (`chat`, `roster`
+  or `approval`); `faq.items` are plain question/answer pairs.
 - `templates.json` fields that the wizard uses (`jobTitle`, `team`,
   `personality`, `welcomeMessage`, `escalationRule`, `responsibilities`,
   `allowedTools`, `workTools`) are written in the same plain language an owner

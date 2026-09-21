@@ -313,24 +313,25 @@ decision at a time with the live preview alongside.
 
 ## The landing page
 
-The one screen allowed to be loud. Its tokens sit beside the product's in
-`globals.css` (`--stage-*`, `--glow-*`, the `hero` type size, the display
-face loaded through `next/font`) and are documented on `/design-system`
-under "Landing stage". Three rules keep it honest:
+The one screen allowed to be a picture. Its tokens sit beside the product's
+in `globals.css` (`--sky-*`, the `hero` and `title` type sizes, the serif
+loaded through `next/font`) and are documented on `/design-system` under
+"Landing sky". Three rules keep it honest:
 
 - **It reads without JavaScript.** The server renders every section visible;
   `components/marketing/reveal.tsx` swaps in Motion only after hydration,
   only for elements still below the fold, and never under
   `prefers-reduced-motion`. An e2e loads the page with scripts off and asserts
-  nothing is hidden.
+  nothing is hidden and the FAQ still opens.
 - **Motion is not on the critical path.** The library lives in one lazy chunk
   fetched after `load` (another e2e checks that), the browser Sentry SDK is
-  deferred the same way, and the aurora, marquee and gradient word are CSS.
+  deferred the same way, and the sky, sun and glass button are CSS.
 - **The moving picture is the product.** `hero-stage.tsx` loops an agent
   joining the roster, a client message being answered and a draft being
-  approved, built from the app's own components - it cannot go stale.
+  approved, built from the app's own components - it cannot go stale. The
+  same scenes, at rest, are the frames under each feature heading.
 
-Copy, stats, ticker lines and the bento cards all come from
+Copy, features, FAQ and the calls to action all come from
 `content/landing.json`; the icons are generated from the brand mark by
 `scripts/make-app-icons.mjs`.
 

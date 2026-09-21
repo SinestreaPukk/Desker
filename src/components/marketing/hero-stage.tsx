@@ -71,7 +71,7 @@ export function HeroStage({ className }: { className?: string }) {
             key={i}
             className={cn(
               "h-1 w-6 rounded-full transition-colors duration-500",
-              i === scene ? "bg-[var(--glow-text-a)]" : "bg-[var(--stage-line)]",
+              i === scene ? "bg-accent" : "bg-line",
             )}
           />
         ))}
@@ -80,29 +80,34 @@ export function HeroStage({ className }: { className?: string }) {
   );
 }
 
-/** A product window: the app's surface tokens on the dark stage. */
-function Frame({ title, children }: { title: string; children: React.ReactNode }) {
+/** A product window: the app's own surface, floating over the page. */
+export function Frame({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-panel border border-[var(--stage-line)] bg-[var(--stage-surface)] shadow-md">
-      <div className="flex items-center gap-2 border-b border-[var(--stage-line)] px-4 py-2.5">
+    <div className={cn("window overflow-hidden", className)}>
+      <div className="flex items-center gap-2 border-b border-line bg-surface-2/60 px-4 py-2.5">
         <span className="flex gap-1.5">
-          <i className="size-2.5 rounded-full bg-[var(--stage-line)]" />
-          <i className="size-2.5 rounded-full bg-[var(--stage-line)]" />
-          <i className="size-2.5 rounded-full bg-[var(--stage-line)]" />
+          <i className="size-2.5 rounded-full bg-line-strong/40" />
+          <i className="size-2.5 rounded-full bg-line-strong/40" />
+          <i className="size-2.5 rounded-full bg-line-strong/40" />
         </span>
-        <span className="font-mono text-xs uppercase tracking-wider text-[var(--stage-muted)]">{title}</span>
+        <span className="font-mono text-xs uppercase tracking-wider text-ink-subtle">{title}</span>
       </div>
-      {/* The app's own page surface inside the window, in whichever theme the
-          visitor is using, so the components render exactly as they do in the
-          product. */}
-      <div className="min-h-[15rem] rounded-b-panel bg-paper p-4 text-ink">
-        {children}
-      </div>
+      {/* The app's own page surface, in whichever theme the visitor is using,
+          so the components render exactly as they do in the product. */}
+      <div className="min-h-[15rem] bg-paper p-4 text-ink sm:p-5">{children}</div>
     </div>
   );
 }
 
-function RosterScene({ beat }: { beat: number }) {
+export function RosterScene({ beat }: { beat: number }) {
   return (
     <ul className="grid gap-3 sm:grid-cols-2">
       {ROSTER.map((agent) => (
@@ -155,7 +160,7 @@ function AgentCard({
 const REPLY =
   "Power tools carry a 24-month warranty, so this is a warranty claim rather than a return. Reply to your order email with the order number and we'll arrange a replacement.";
 
-function ChatScene({ beat }: { beat: number }) {
+export function ChatScene({ beat }: { beat: number }) {
   const shown = beat === 0 ? 0 : beat === 1 ? Math.round(REPLY.length * 0.45) : REPLY.length;
   return (
     <div className="space-y-3">
@@ -185,7 +190,7 @@ function ChatScene({ beat }: { beat: number }) {
   );
 }
 
-function ApprovalScene({ beat }: { beat: number }) {
+export function ApprovalScene({ beat }: { beat: number }) {
   const done = beat === 2;
   return (
     <div className="rounded-panel border border-line bg-surface p-4">
@@ -233,13 +238,10 @@ function ApprovalScene({ beat }: { beat: number }) {
   );
 }
 
-/** Reduced motion: all three moments at once, nothing moving. */
+/** Reduced motion: one finished moment, nothing moving. */
 function StillStage({ className }: { className?: string }) {
   return (
-    <div className={cn("space-y-3", className)} aria-hidden>
-      <Frame title="Roster">
-        <RosterScene beat={2} />
-      </Frame>
+    <div className={className} aria-hidden>
       <Frame title="Inbox · Approvals">
         <ApprovalScene beat={2} />
       </Frame>

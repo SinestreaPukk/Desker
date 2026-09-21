@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-logo";
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SITE } from "@/lib/content";
+import { GLASS_BUTTON_SM } from "@/components/marketing/glass-button";
+import { SiteHeader } from "@/components/marketing/site-header";
 
 /**
  * The public shell: what a stranger sees. Same tokens and components as the
@@ -18,30 +19,37 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       >
         Skip to content
       </a>
-      <header className="sticky top-0 z-40 border-b border-line/80 bg-paper/85 backdrop-blur">
+      <SiteHeader>
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="inline-flex items-center gap-2 font-display text-lg font-bold tracking-tight text-ink">
-            <BrandMark />
+          <Link href="/" className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-current">
+            <BrandMark className="[[data-clear]_&]:bg-current" />
             {SITE.company.name}
           </Link>
           <nav aria-label="Site" className="hidden items-center gap-6 md:flex">
             {SITE.nav.map((item) => (
-              <Link key={item.href} href={item.href} className="text-sm text-ink-muted transition-colors hover:text-ink">
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-sm text-current/80 transition-colors hover:text-current"
+              >
                 {item.label}
               </Link>
             ))}
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/signup">Get started</Link>
-            </Button>
+            <Link
+              href="/login"
+              className="hidden h-9 items-center rounded-md px-3 text-sm font-medium text-current/90 hover:text-current sm:inline-flex"
+            >
+              Sign in
+            </Link>
+            <Link href="/signup" className={GLASS_BUTTON_SM}>
+              Get started
+            </Link>
           </div>
         </div>
-      </header>
+      </SiteHeader>
 
       <main id="site-main" className="flex-1">
         {children}
@@ -50,7 +58,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr]">
           <div>
-            <Link href="/" className="inline-flex items-center gap-2 font-display text-lg font-bold tracking-tight text-ink">
+            <Link href="/" className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-ink">
               <BrandMark />
               {SITE.company.name}
             </Link>

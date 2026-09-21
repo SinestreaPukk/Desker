@@ -94,14 +94,10 @@ const TEXT_PAIRS = [
   ["danger", "paper", 4.5, "inline error message"],
   ["accent", "paper", 4.5, "accent link on the page"],
   ["accent", "surface", 4.5, "accent link on a card"],
-  // The landing page's dark stage, the same in both themes.
-  ["stage-ink", "stage", 4.5, "hero headline and body on the stage"],
-  ["stage-muted", "stage", 4.5, "hero sub-line and stats labels"],
-  ["stage-muted", "stage-surface", 4.5, "marquee items and window chrome"],
-  ["stage", "stage-ink", 4.5, "stage button label (dark on white)"],
-  ["glow-text-a", "stage", 3.0, "gradient headline word, lightest stop (72px+)"],
-  ["glow-text-b", "stage", 3.0, "gradient headline word, darkest stop (72px+)"],
-  ["glow-text-a", "stage", 4.5, "eyebrow in the glow colour"],
+  // The landing page's sky, the same in both themes. White copy sits only
+  // over the deep band of the gradient.
+  ["sky-ink", "sky-deep", 4.5, "hero headline, sub-line and note on the deep sky"],
+  ["sky-glass-fg", "sky-glass", 4.5, "glass button label"],
 ];
 
 // Avatar figure against its own tile. Decorative (the agent's name is always
