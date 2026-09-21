@@ -74,7 +74,7 @@ export function DocumentsPanel({ agentId }: { agentId: string }) {
             if (event.dataTransfer.files.length) void handleFiles(event.dataTransfer.files);
           }}
           className={cn(
-            "rounded-xl border border-dashed p-6 text-center transition-colors",
+            "rounded-lg border border-dashed p-6 text-center transition-colors",
             dragging
               ? "border-accent bg-accent-soft"
               : "border-line-strong bg-surface-2/50",
@@ -108,7 +108,7 @@ export function DocumentsPanel({ agentId }: { agentId: string }) {
         </div>
 
         {upload.isPending ? (
-          <p className="flex items-center gap-2 text-[0.8125rem] text-ink-muted">
+          <p className="flex items-center gap-2 text-sm text-ink-muted">
             <Loader2 className="size-3.5 animate-spin" aria-hidden />
             Uploading…
           </p>
@@ -131,7 +131,7 @@ export function DocumentsPanel({ agentId }: { agentId: string }) {
             className="py-10"
           />
         ) : (
-          <ul className="divide-y divide-line rounded-xl border border-line">
+          <ul className="divide-y divide-line rounded-lg border border-line">
             {documents!.map((document) => (
               <li
                 key={document.id}
@@ -142,7 +142,7 @@ export function DocumentsPanel({ agentId }: { agentId: string }) {
                   aria-hidden
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[0.8125rem] font-medium text-ink">
+                  <p className="truncate text-sm font-medium text-ink">
                     {document.filename}
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -231,8 +231,8 @@ function RetrievalTester({
   }
 
   return (
-    <div className="rounded-xl border border-line bg-surface-2/50 p-4">
-      <h3 className="text-[0.8125rem] font-semibold text-ink">Test retrieval</h3>
+    <div className="rounded-lg border border-line bg-surface-2/50 p-4">
+      <h3 className="text-sm font-semibold text-ink">Test retrieval</h3>
       <p className="mt-1 text-xs leading-relaxed text-ink-muted">
         Search the indexed documents the way the agent will.
       </p>
@@ -265,7 +265,7 @@ function RetrievalTester({
             {response.results.length} result(s) · {response.backend} embeddings
           </p>
           {response.results.length === 0 ? (
-            <p className="text-[0.8125rem] text-ink-muted">
+            <p className="text-sm text-ink-muted">
               Nothing matched. The agent would tell the client it doesn&apos;t have that
               information.
             </p>
@@ -274,7 +274,7 @@ function RetrievalTester({
               {response.results.map((result) => (
                 <li
                   key={result.id}
-                  className="rounded-lg border border-line bg-surface p-2.5"
+                  className="rounded-md border border-line bg-surface p-2.5"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate text-xs font-medium text-ink">

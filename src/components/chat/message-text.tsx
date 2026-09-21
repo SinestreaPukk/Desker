@@ -64,7 +64,7 @@ function Inline({ text }: { text: string }) {
         part.startsWith("`") && part.endsWith("`") && part.length > 2 ? (
           <code
             key={index}
-            className="rounded bg-surface-3 px-1 py-0.5 font-mono text-[0.85em]"
+            className="rounded-sm bg-surface-3 px-1 py-0.5 font-mono text-[0.85em]"
           >
             {part.slice(1, -1)}
           </code>

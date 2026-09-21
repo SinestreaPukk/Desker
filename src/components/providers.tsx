@@ -42,7 +42,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             toastOptions={{
               classNames: {
                 toast:
-                  "!bg-surface !border-line !text-ink !rounded-lg !shadow-lg !font-sans",
+                  "!bg-surface !border-line !text-ink !rounded-md !shadow-md !font-sans",
                 description: "!text-ink-muted",
                 actionButton: "!bg-accent !text-accent-fg",
               },

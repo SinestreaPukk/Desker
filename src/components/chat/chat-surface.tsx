@@ -141,11 +141,11 @@ export function ChatSurface({
                 name as the page h1, and repeating it as an h2 gives the
                 document two headings with identical text. */}
             <p className="mt-4 text-base font-semibold text-ink">{agent.name}</p>
-            <p className="text-[0.8125rem] text-ink-muted">
+            <p className="text-sm text-ink-muted">
               {agent.jobTitle}
               {agent.department ? ` · ${agent.department}` : ""}
             </p>
-            <p className="mt-3 flex items-center justify-center gap-1.5 text-[0.8125rem] leading-relaxed text-ink-muted">
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-sm leading-relaxed text-ink-muted">
               <MessageSquareText className="size-3.5 shrink-0" aria-hidden />
               Ask a question to get started.
             </p>
@@ -156,9 +156,9 @@ export function ChatSurface({
       {chat.error ? (
         <div
           role="alert"
-          className="mx-3 mb-2 flex items-start justify-between gap-3 rounded-lg border border-danger-line bg-danger-soft px-3 py-2.5"
+          className="mx-3 mb-2 flex items-start justify-between gap-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2.5"
         >
-          <p className="text-[0.8125rem] leading-relaxed text-danger">{chat.error}</p>
+          <p className="text-sm leading-relaxed text-danger">{chat.error}</p>
           {chat.retryable ? (
             <Button
               type="button"
@@ -176,7 +176,7 @@ export function ChatSurface({
 
       {handedToHuman ? (
         <p
-          className="mx-3 mb-2 rounded-lg border border-accent-line bg-accent-soft px-3 py-2 text-xs leading-relaxed text-accent-soft-fg"
+          className="mx-3 mb-2 rounded-md border border-accent-line bg-accent-soft px-3 py-2 text-xs leading-relaxed text-accent-soft-fg"
           role="status"
         >
           A colleague has joined and is answering you directly.

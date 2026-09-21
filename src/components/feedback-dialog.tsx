@@ -88,7 +88,7 @@ function FeedbackDialog({
           </div>
           <FormError message={error} />
           <div>
-            <label htmlFor="feedback-kind" className="text-[0.8125rem] font-medium text-ink">
+            <label htmlFor="feedback-kind" className="text-sm font-medium text-ink">
               This is
             </label>
             <Select value={kind} onValueChange={setKind}>

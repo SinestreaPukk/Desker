@@ -172,7 +172,7 @@ export function ClientChat({
         >
           <AgentAvatar name={agent.name} src={agent.avatarUrl} seed={agent.id} size="md" />
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[0.875rem] font-semibold text-ink">
+            <h1 className="truncate text-sm font-semibold text-ink">
               {agent.name}
             </h1>
             <p className="truncate text-xs text-ink-muted">
@@ -261,7 +261,7 @@ function PasscodeGate({
         />
         <div>
           <h1 className="text-base font-semibold text-ink">{agent.name}</h1>
-          <p className="text-[0.8125rem] text-ink-muted">{agent.jobTitle}</p>
+          <p className="text-sm text-ink-muted">{agent.jobTitle}</p>
         </div>
 
         <div className="text-left">

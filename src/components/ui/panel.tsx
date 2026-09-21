@@ -38,7 +38,7 @@ export function PanelDescription({
 }: React.ComponentProps<"p">) {
   return (
     <p
-      className={cn("text-[0.8125rem] text-ink-muted leading-relaxed mt-1", className)}
+      className={cn("text-sm text-ink-muted leading-relaxed mt-1", className)}
       {...props}
     />
   );

@@ -68,7 +68,7 @@ export function useActionItems(
   });
 }
 
-function useDecision(verb: "approve" | "reject") {
+function useDecision(verb: "approve" | "reject" | "reopen") {
   const client = useQueryClient();
   return useMutation({
     mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
@@ -81,6 +81,7 @@ function useDecision(verb: "approve" | "reject") {
 }
 export const useApproveActionItem = () => useDecision("approve");
 export const useRejectActionItem = () => useDecision("reject");
+export const useReopenActionItem = () => useDecision("reopen" as "approve");
 
 // --- integrations -----------------------------------------------------------
 

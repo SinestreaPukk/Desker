@@ -33,7 +33,7 @@ export function ToolTrace({
           <li
             key={item.id}
             className={cn(
-              "flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs",
+              "flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs",
               running
                 ? "border-line bg-surface-2 text-ink-muted"
                 : "border-accent-line bg-accent-soft text-accent-soft-fg",

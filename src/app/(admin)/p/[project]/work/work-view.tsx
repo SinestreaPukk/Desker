@@ -6,7 +6,7 @@ import { Briefcase, ChevronDown, ChevronRight } from "lucide-react";
 import { ApprovalCard } from "@/components/work/approval-card";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import {
   Select,
@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
-import { ActionStatusBadge } from "@/components/builder/scope-of-work-panel";
 import { useAgents } from "@/hooks/use-admin-data";
 import { useActionItems } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
@@ -152,7 +151,7 @@ function ActionItemRow({
         )}
         <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.8125rem]">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
             <span className="font-medium text-ink">{item.agent.name}</span>
             <span className="text-ink-muted">{TRIGGER_LABEL[item.trigger] ?? item.trigger}</span>
             <span className="text-xs text-ink-subtle">{formatRelativeTime(item.createdAt)}</span>
@@ -162,17 +161,17 @@ function ActionItemRow({
           </p>
         </div>
         {item.escalatedAt ? <Badge tone="danger">Escalated</Badge> : null}
-        <ActionStatusBadge status={item.status} />
+        <StatusBadge status={item.status} />
       </button>
 
       {open ? (
-        <div className="space-y-4 border-t border-line bg-surface-2/40 px-4 py-4 text-[0.8125rem]">
+        <div className="space-y-4 border-t border-line bg-surface-2/40 px-4 py-4 text-sm">
           {item.status === "needs_approval" && item.pendingAction ? (
             <ApprovalCard item={item} project={project} />
           ) : null}
 
           {item.escalatedAt && item.status !== "needs_approval" ? (
-            <p className="rounded-md border border-danger-line bg-danger-soft/40 px-3 py-2 text-danger">
+            <p className="rounded-sm border border-danger-line bg-danger-soft/40 px-3 py-2 text-danger">
               Escalated by the agent: {item.escalationReason}
             </p>
           ) : null}
@@ -190,7 +189,7 @@ function ActionItemRow({
             <section>
               <h4 className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-subtle">Findings</h4>
               {item.findings.map((finding, index) => (
-                <details key={index} className="mb-2 rounded-md border border-line bg-surface p-3">
+                <details key={index} className="mb-2 rounded-sm border border-line bg-surface p-3">
                   <summary className="cursor-pointer text-ink">{finding.query}</summary>
                   <pre className="mt-2 whitespace-pre-wrap font-sans leading-relaxed text-ink-muted">
                     {finding.findings}
@@ -222,11 +221,9 @@ function ActionItemRow({
             <section>
               <h4 className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-subtle">Drafts</h4>
               {item.drafts.map((draft) => (
-                <details key={draft.id} className="mb-2 rounded-md border border-line bg-surface p-3">
+                <details key={draft.id} className="mb-2 rounded-sm border border-line bg-surface p-3">
                   <summary className="cursor-pointer text-ink">
-                    <Badge tone={draft.status === "draft" ? "neutral" : "positive"} className="mr-2">
-                      {draft.status}
-                    </Badge>
+                    <StatusBadge status={draft.status} className="mr-2" />
                     {draft.title}
                     <span className="ml-2 text-xs text-ink-subtle">{draft.kind.replace("_", " ")}</span>
                   </summary>
@@ -249,12 +246,12 @@ function ActionItemRow({
               </summary>
               <ol className="mt-2 space-y-1.5">
                 {item.steps.map((step, index) => (
-                  <li key={index} className="rounded-md border border-line bg-surface p-2 text-xs">
+                  <li key={index} className="rounded-sm border border-line bg-surface p-2 text-xs">
                     <span className={step.ok ? "text-ink" : "text-danger"}>
                       <code className="font-mono">{step.tool}</code>
                     </span>
                     <span className="ml-2 text-ink-subtle">{formatRelativeTime(step.at)}</span>
-                    <pre className="mt-1 whitespace-pre-wrap font-mono text-[0.6875rem] text-ink-muted">
+                    <pre className="mt-1 whitespace-pre-wrap font-mono text-xs text-ink-muted">
                       {JSON.stringify(step.input)}
                     </pre>
                     <p className="mt-1 whitespace-pre-wrap text-ink-muted">{step.output}</p>

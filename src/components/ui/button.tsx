@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const button = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium " +
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium " +
     "transition-[background-color,border-color,color,box-shadow] duration-150 " +
     "disabled:pointer-events-none disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
@@ -25,9 +25,9 @@ const button = cva(
         link: "text-accent underline underline-offset-4 hover:text-accent-hover",
       },
       size: {
-        sm: "h-8 px-3 text-[0.8125rem] [&_svg]:size-3.5",
+        sm: "h-8 px-3 text-sm [&_svg]:size-3.5",
         md: "h-10 px-4 text-sm [&_svg]:size-4",
-        lg: "h-12 px-6 text-[0.9375rem] [&_svg]:size-[1.125rem]",
+        lg: "h-12 px-6 text-base [&_svg]:size-[1.125rem]",
         icon: "size-9 [&_svg]:size-4",
         "icon-sm": "size-7 [&_svg]:size-3.5",
       },

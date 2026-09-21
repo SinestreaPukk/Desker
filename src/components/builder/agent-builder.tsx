@@ -60,6 +60,8 @@ import type { ChatBubble } from "@/hooks/use-chat-stream";
 import { AvatarPicker } from "./avatar-picker";
 import { ScopeOfWorkPanel } from "./scope-of-work-panel";
 import { PromptPreviewDialog } from "./prompt-preview-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EscalationRuleHelper } from "./live-example";
 import { DuplicateAgentDialog } from "./duplicate-agent-dialog";
 import { DocumentsPanel } from "./documents-panel";
 import { SharePanel } from "./share-panel";
@@ -139,6 +141,70 @@ function toPayload(form: FormState) {
   };
 }
 
+export type EditorSection =
+  | "identity"
+  | "behaviour"
+  | "capabilities"
+  | "work"
+  | "knowledge"
+  | "publishing"
+  | "model";
+
+const SECTIONS: { id: EditorSection; label: string; hint: string }[] = [
+  { id: "identity", label: "Identity", hint: "Name, job, face, opening line" },
+  { id: "behaviour", label: "Behaviour", hint: "Tone, responsibilities, escalation" },
+  { id: "capabilities", label: "Capabilities", hint: "What it may do in chat" },
+  { id: "knowledge", label: "Knowledge", hint: "Context documents" },
+  { id: "work", label: "Scope of work", hint: "Autonomous runs and trust" },
+  { id: "publishing", label: "Publishing", hint: "Link, widget, passcode" },
+  { id: "model", label: "Model", hint: "Provider and model" },
+];
+
+/** Fields the server can reject, and the section that owns each. */
+const FIELD_SECTION: Record<string, EditorSection> = {
+  name: "identity",
+  jobTitle: "identity",
+  department: "identity",
+  avatarUrl: "identity",
+  welcomeMessage: "identity",
+  personality: "behaviour",
+  responsibilities: "behaviour",
+  escalationRule: "behaviour",
+  allowedTools: "capabilities",
+  widgetColor: "publishing",
+  publicPasscode: "publishing",
+  model: "model",
+  modelProvider: "model",
+};
+
+function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next: EditorSection) => void }) {
+  return (
+    <nav aria-label="Editor sections" className="-mx-1 overflow-x-auto pb-1">
+      <ul className="flex min-w-max gap-1 px-1">
+        {SECTIONS.map((item) => {
+          const active = item.id === value;
+          return (
+            <li key={item.id}>
+              <button
+                type="button"
+                aria-current={active ? "page" : undefined}
+                onClick={() => onChange(item.id)}
+                title={item.hint}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-sm transition-colors",
+                  active ? "bg-accent-soft font-medium text-accent-soft-fg" : "text-ink-muted hover:bg-surface-2 hover:text-ink",
+                )}
+              >
+                {item.label}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
 export function AgentBuilder({
   agent,
   project,
@@ -202,6 +268,9 @@ export function AgentBuilder({
       if (caught instanceof ApiError) {
         setSaveError(caught.message);
         setFieldErrors(caught.fieldErrors ?? {});
+        // Land on the section that owns the first rejected field.
+        const first = Object.keys(caught.fieldErrors ?? {}).find((field) => FIELD_SECTION[field]);
+        if (first) setSection(FIELD_SECTION[first]!);
       } else {
         setSaveError(errorMessage(caught));
       }
@@ -214,16 +283,42 @@ export function AgentBuilder({
     if (result) toast.success("Changes saved");
   }
 
+  const [confirmUnpublish, setConfirmUnpublish] = React.useState(false);
+  // One decision at a time: the form is grouped into sections and only the
+  // current one is on screen. Edits in every section persist until saved.
+  const [section, setSection] = React.useState<EditorSection>("identity");
+
   async function togglePublish() {
-    const next = agent.status === "published" ? "draft" : "published";
-    const result = await save({ status: next });
+    if (agent.status === "published") {
+      setConfirmUnpublish(true);
+      return;
+    }
+    const result = await save({ status: "published" });
     if (!result) return;
-    toast.success(
-      next === "published"
-        ? `${result.name} is live — clients can reach them now.`
-        : `${result.name} is back to draft. Client links now return 404.`,
-    );
+    toast.success(`${result.name} is live`, {
+      description: "Clients can reach them at the public link and the widget now.",
+    });
     router.refresh();
+  }
+
+  async function unpublish() {
+    const result = await save({ status: "draft" });
+    if (!result) return;
+    router.refresh();
+    toast(`${result.name} is unpublished`, {
+      description: "The public link and widget stop working immediately.",
+      action: {
+        label: "Undo",
+        onClick: () => {
+          void save({ status: "published" }).then((again) => {
+            if (again) {
+              toast.success(`${again.name} is live again`);
+              router.refresh();
+            }
+          });
+        },
+      },
+    });
   }
 
   const escalationEnabled = form.allowedTools.includes("escalate_to_human");
@@ -250,7 +345,7 @@ export function AgentBuilder({
           />
 
           <div className="min-w-0 flex-1 basis-24">
-            <h1 className="truncate text-[0.9375rem] font-semibold text-ink">
+            <h1 className="truncate text-base font-semibold text-ink">
               {form.name || "Untitled agent"}
             </h1>
             <p className="truncate text-xs text-ink-muted">
@@ -332,6 +427,14 @@ export function AgentBuilder({
         </div>
       </header>
 
+      <ConfirmDialog
+        open={confirmUnpublish}
+        onOpenChange={setConfirmUnpublish}
+        title={`Unpublish ${agent.name}?`}
+        description="Anyone using the public link or the widget gets a 404 from the moment you confirm. Conversations and documents are kept, and you can undo right after."
+        confirmLabel="Unpublish"
+        onConfirm={unpublish}
+      />
       <PromptPreviewDialog
         agentId={agent.id}
         open={showPrompt}
@@ -359,7 +462,10 @@ export function AgentBuilder({
           <div className="mx-auto max-w-3xl space-y-5 pb-16">
             <FormError message={saveError} />
 
+            <SectionNav value={section} onChange={setSection} />
+
             {/* Identity ------------------------------------------------- */}
+            {section === "identity" ? (
             <Panel>
               <PanelHeader>
                 <div>
@@ -430,8 +536,10 @@ export function AgentBuilder({
                 </Field>
               </PanelBody>
             </Panel>
+            ) : null}
 
             {/* Character ------------------------------------------------ */}
+            {section === "behaviour" ? (
             <Panel>
               <PanelHeader>
                 <div>
@@ -482,10 +590,34 @@ export function AgentBuilder({
                     }
                   />
                 </Field>
+
+                <Field
+                  label="Escalation rule"
+                  htmlFor="escalationRule"
+                  hint={
+                    escalationEnabled
+                      ? "Plain language. The agent judges it from the meaning of the conversation, not by keyword matching."
+                      : "Turn on “Escalate to a human” under Capabilities for this rule to take effect."
+                  }
+                >
+                  <Textarea
+                    value={form.escalationRule}
+                    disabled={!escalationEnabled}
+                    onChange={(event) => set("escalationRule", event.target.value)}
+                    rows={3}
+                    placeholder="Escalate if the client is angry, asks for a refund over $200, or mentions legal action."
+                  />
+                </Field>
+                <EscalationRuleHelper
+                  value={form.escalationRule}
+                  onPick={(text) => set("escalationRule", text)}
+                />
               </PanelBody>
             </Panel>
+            ) : null}
 
             {/* Permissions ---------------------------------------------- */}
+            {section === "capabilities" ? (
             <Panel>
               <PanelHeader>
                 <div>
@@ -508,7 +640,7 @@ export function AgentBuilder({
                         key={tool}
                         htmlFor={`tool-${tool}`}
                         className={cn(
-                          "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors",
+                          "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors",
                           checked
                             ? "border-accent-line bg-accent-soft/40"
                             : "border-line hover:bg-surface-2",
@@ -532,7 +664,7 @@ export function AgentBuilder({
                           aria-hidden
                         />
                         <span className="min-w-0">
-                          <span className="block text-[0.8125rem] font-medium text-ink">
+                          <span className="block text-sm font-medium text-ink">
                             {meta.label}
                           </span>
                           <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted">
@@ -544,30 +676,17 @@ export function AgentBuilder({
                   })}
                 </fieldset>
 
-                <Field
-                  label="Escalation rule"
-                  htmlFor="escalationRule"
-                  hint={
-                    escalationEnabled
-                      ? "Written in plain language. The agent judges it from the meaning of the conversation, not by keyword matching."
-                      : "Enable “Escalate to a human” above to use an escalation rule."
-                  }
-                >
-                  <Textarea
-                    value={form.escalationRule}
-                    disabled={!escalationEnabled}
-                    onChange={(event) => set("escalationRule", event.target.value)}
-                    rows={3}
-                    placeholder="Escalate if the client is angry, asks for a refund over $200, or mentions legal action."
-                  />
-                </Field>
               </PanelBody>
             </Panel>
+            ) : null}
 
             {/* Scope of work -------------------------------------------- */}
+            {section === "work" ? (
             <ScopeOfWorkPanel agentId={agent.id} project={project} />
+            ) : null}
 
             {/* Model ---------------------------------------------------- */}
+            {section === "model" ? (
             <Panel>
               <PanelHeader>
                 <div>
@@ -611,9 +730,13 @@ export function AgentBuilder({
                 </Field>
               </PanelBody>
             </Panel>
+            ) : null}
 
+            {section === "knowledge" ? (
             <DocumentsPanel agentId={agent.id} />
+            ) : null}
 
+            {section === "publishing" ? (
             <SharePanel
               agentId={agent.id}
               published={agent.status === "published"}
@@ -631,6 +754,7 @@ export function AgentBuilder({
               }}
               widgetFieldError={fieldErrors.widgetColor?.[0]}
             />
+            ) : null}
           </div>
         </div>
 
@@ -644,7 +768,7 @@ export function AgentBuilder({
         >
           <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
             <div className="min-w-0">
-              <h2 className="text-[0.8125rem] font-semibold text-ink">Live preview</h2>
+              <h2 className="text-sm font-semibold text-ink">Live preview</h2>
               <p className="truncate text-xs text-ink-muted">
                 {dirty
                   ? "Save to test your latest edits"
@@ -722,7 +846,7 @@ function DeleteAgentItem({
 function OnboardingChecklist({ agent }: { agent: AgentDetailDto }) {
   return (
     <div className="border-b border-accent-line bg-accent-soft px-4 py-3 sm:px-6">
-      <p className="text-[0.8125rem] font-medium text-accent-soft-fg">
+      <p className="text-sm font-medium text-accent-soft-fg">
         {agent.name} is created. Two steps left:
       </p>
       <ol className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-accent-soft-fg/90">

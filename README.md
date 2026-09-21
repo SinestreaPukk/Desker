@@ -292,6 +292,25 @@ Nothing an agent does publicly happens without a visible, reviewable trail.
   models) applied to the usage counters. An unpriced model shows as unknown,
   never as free - the figure is what billing will meter.
 
+## Design system
+
+Everything is built from tokens defined once in `app/globals.css` and
+documented with live examples at `/design-system` (signed in): one accent
+and a few neutrals with three semantic tones, a five-step type scale plus a
+display size for the marketing hero, an 8px spacing grid, four radii and
+three shadows. Tailwind's default type, radius and shadow steps are reset, so
+an unlisted size is an absence rather than a quiet exception, and
+`npm run check:contrast` verifies every colour pair in both themes; the
+design-system page computes the same ratios live for whichever theme is on.
+
+The usability rules the screens follow: every action answers (a toast for
+publish, approve, reject, run, save, invite); destructive actions confirm and
+offer undo (unpublish, reject); fields that take plain language show a live
+reading and clickable examples (escalation rule, objectives, context); one
+`StatusBadge` for every status anywhere; one `ListRow` for every list item;
+one primary action per screen; the editor is sectioned so editing is one
+decision at a time with the live preview alongside.
+
 ## The public site
 
 The unauthenticated pages - `/` (landing), `/showcase` (every agent role,

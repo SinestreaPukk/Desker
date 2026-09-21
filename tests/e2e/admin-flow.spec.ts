@@ -55,6 +55,8 @@ test("the wizard creates an agent in three steps", async ({ page }) => {
 
 test("uploading a document indexes it and retrieval finds it", async ({ page }) => {
   await page.goto(agentUrl);
+  // The editor is sectioned; documents live under Knowledge.
+  await page.getByRole("button", { name: "Knowledge" }).click();
 
   await page.setInputFiles('input[type="file"][accept*=".pdf"]', {
     name: "returns-policy.md",
@@ -85,7 +87,7 @@ test("an unpublished agent is not reachable by a client", async ({ page }) => {
 
 test("publishing makes the public chat link work", async ({ page }) => {
   await page.goto(agentUrl);
-  await page.getByRole("button", { name: "Publish" }).click();
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
   await expect(page.getByText(/is live/)).toBeVisible({ timeout: 20_000 });
 
   const response = await page.goto(publicChatUrl);

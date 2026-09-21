@@ -58,7 +58,7 @@ function CopyField({
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-3">
-        <label htmlFor={id} className="text-[0.8125rem] font-medium text-ink">
+        <label htmlFor={id} className="text-sm font-medium text-ink">
           {label}
         </label>
         <Button type="button" variant="ghost" size="sm" onClick={copy}>
@@ -73,7 +73,7 @@ function CopyField({
         value={value}
         onFocus={(event) => event.currentTarget.select()}
         className={cn(
-          "w-full resize-none rounded-lg border border-line bg-surface-2 px-3 py-2",
+          "w-full resize-none rounded-md border border-line bg-surface-2 px-3 py-2",
           "font-mono text-xs leading-relaxed text-ink",
           !multiline && "whitespace-nowrap overflow-x-auto",
         )}
@@ -159,8 +159,8 @@ export function SharePanel({
           hint="Paste before the closing </body> tag of any page. Adds a floating chat bubble."
         />
 
-        <fieldset className="space-y-3 rounded-xl border border-line bg-surface-2/50 p-4">
-          <legend className="px-1 text-[0.8125rem] font-medium text-ink">
+        <fieldset className="space-y-3 rounded-lg border border-line bg-surface-2/50 p-4">
+          <legend className="px-1 text-sm font-medium text-ink">
             Widget appearance
           </legend>
           <p className="text-xs leading-relaxed text-ink-muted">
@@ -188,7 +188,7 @@ export function SharePanel({
                   aria-label="Pick a launcher colour"
                   value={/^#[0-9a-fA-F]{6}$/.test(widget.color) ? widget.color : BRAND.color}
                   onChange={(event) => onWidgetChange({ color: event.target.value })}
-                  className="size-10 shrink-0 cursor-pointer rounded-lg border border-line-strong bg-surface p-1"
+                  className="size-10 shrink-0 cursor-pointer rounded-md border border-line-strong bg-surface p-1"
                 />
                 <Input
                   value={widget.color}
@@ -200,7 +200,7 @@ export function SharePanel({
             </Field>
 
             <div className="space-y-2">
-              <label htmlFor="widgetSide" className="text-[0.8125rem] font-medium leading-none text-ink">
+              <label htmlFor="widgetSide" className="text-sm font-medium leading-none text-ink">
                 Position
               </label>
               <Select

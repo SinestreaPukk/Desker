@@ -24,7 +24,8 @@ export const TRANSITIONS: Record<ActionStatus, readonly ActionStatus[]> = {
   executing_external: ["done", "failed"],
   done: [],
   failed: [],
-  rejected: [],
+  // A rejection can be undone; the item simply waits for a decision again.
+  rejected: ["needs_approval"],
 };
 
 export function canTransition(from: string, to: ActionStatus): boolean {

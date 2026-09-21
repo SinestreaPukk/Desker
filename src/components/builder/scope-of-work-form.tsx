@@ -18,6 +18,7 @@ import {
   type Cadence,
 } from "@/lib/work/cadence";
 import type { AutonomyMode, ToolAutonomy, TriggerType } from "@/lib/work/types";
+import { ContextHelper, ObjectivesHelper } from "./live-example";
 import { GATED_TOOLS, WORK_TOOL_METADATA } from "@/lib/work/tools";
 
 /** What the form edits. Objectives are one per line until they are saved. */
@@ -307,6 +308,7 @@ export function ScopeOfWorkForm({
           placeholder="We sell hand tools to professional tradespeople. This month we're pushing the lifetime warranty. Tone: plain, confident, no hype."
         />
       </Field>
+      <ContextHelper value={value.context} />
 
       <Field
         label="Objectives"
@@ -324,10 +326,14 @@ export function ScopeOfWorkForm({
           }
         />
       </Field>
+      <ObjectivesHelper
+        objectives={parseObjectives(value.objectivesText)}
+        onPick={(text) => set("objectivesText", value.objectivesText ? `${value.objectivesText}\n${text}` : text)}
+      />
 
       {documents.length > 0 ? (
         <fieldset className="space-y-2">
-          <legend className="text-[0.8125rem] font-medium text-ink">Context documents</legend>
+          <legend className="text-sm font-medium text-ink">Context documents</legend>
           <p className="text-xs text-ink-muted">
             Leave all unticked to let the agent search every document it has.
           </p>
@@ -338,7 +344,7 @@ export function ScopeOfWorkForm({
                 <label
                   key={doc.id}
                   htmlFor={`${idPrefix}-doc-${doc.id}`}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-line px-3 py-2 text-[0.8125rem] text-ink hover:bg-surface-2"
+                  className="flex cursor-pointer items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink hover:bg-surface-2"
                 >
                   <Checkbox
                     id={`${idPrefix}-doc-${doc.id}`}
@@ -382,7 +388,7 @@ export function ScopeOfWorkForm({
         </div>
 
         {value.triggerType === "cron" ? (
-          <div className="space-y-3 rounded-xl border border-line bg-surface-2/60 p-4">
+          <div className="space-y-3 rounded-lg border border-line bg-surface-2/60 p-4">
             <CadencePicker
               cron={value.cron}
               timezone={value.timezone}
@@ -404,11 +410,11 @@ export function ScopeOfWorkForm({
         ) : null}
 
         {value.triggerType === "webhook" ? (
-          <div className="space-y-2 rounded-xl border border-line bg-surface-2/60 p-4 text-[0.8125rem]">
+          <div className="space-y-2 rounded-lg border border-line bg-surface-2/60 p-4 text-sm">
             {webhookUrl ? (
               <>
                 <p className="text-ink">POST JSON to this URL to start a run:</p>
-                <code className="block overflow-x-auto rounded-md border border-line bg-surface px-2 py-1.5 font-mono text-xs text-ink">
+                <code className="block overflow-x-auto rounded-sm border border-line bg-surface px-2 py-1.5 font-mono text-xs text-ink">
                   {webhookUrl}
                 </code>
                 <p className="text-xs text-ink-muted">
@@ -428,7 +434,7 @@ export function ScopeOfWorkForm({
         {value.triggerType !== "manual" ? (
           <label
             htmlFor={`${idPrefix}-enabled`}
-            className="flex cursor-pointer items-center gap-2 text-[0.8125rem] text-ink"
+            className="flex cursor-pointer items-center gap-2 text-sm text-ink"
           >
             <Checkbox
               id={`${idPrefix}-enabled`}
@@ -441,7 +447,7 @@ export function ScopeOfWorkForm({
       </div>
 
       {showModeNote ? (
-        <p className="rounded-xl border border-accent-line bg-accent-soft/40 px-3 py-2 text-xs leading-relaxed text-ink-muted">
+        <p className="rounded-lg border border-accent-line bg-accent-soft/40 px-3 py-2 text-xs leading-relaxed text-ink-muted">
           <strong className="font-medium text-ink">Draft-only mode.</strong> Research and drafts
           run on their own. Anything that would publish a post or send an email stops and waits
           for your approval in the Inbox. Every agent starts this way; you can extend trust in the

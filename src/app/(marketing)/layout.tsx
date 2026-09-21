@@ -14,19 +14,19 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-dvh flex-col bg-paper text-ink">
       <a
         href="#site-main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:shadow-md"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-surface focus:px-3 focus:py-2 focus:shadow-md"
       >
         Skip to content
       </a>
       <header className="sticky top-0 z-40 border-b border-line/80 bg-paper/85 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-[0.9375rem] font-semibold tracking-tight text-ink">
+          <Link href="/" className="inline-flex items-center gap-2 text-base font-semibold tracking-tight text-ink">
             <BrandMark />
             {SITE.company.name}
           </Link>
           <nav aria-label="Site" className="hidden items-center gap-6 md:flex">
             {SITE.nav.map((item) => (
-              <Link key={item.href} href={item.href} className="text-[0.875rem] text-ink-muted transition-colors hover:text-ink">
+              <Link key={item.href} href={item.href} className="text-sm text-ink-muted transition-colors hover:text-ink">
                 {item.label}
               </Link>
             ))}
@@ -54,8 +54,8 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               <BrandMark />
               {SITE.company.name}
             </Link>
-            <p className="mt-3 max-w-md text-[0.875rem] leading-relaxed text-ink-muted">{SITE.footer.blurb}</p>
-            <p className="mt-3 text-[0.8125rem] text-ink-subtle">
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-muted">{SITE.footer.blurb}</p>
+            <p className="mt-3 text-sm text-ink-subtle">
               {SITE.company.location} ·{" "}
               <a href={`mailto:${SITE.company.email}`} className="hover:text-ink">
                 {SITE.company.email}
@@ -64,11 +64,11 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </div>
           {SITE.footer.columns.map((column) => (
             <div key={column.heading}>
-              <h2 className="text-[0.75rem] font-semibold uppercase tracking-wide text-ink-subtle">{column.heading}</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">{column.heading}</h2>
               <ul className="mt-3 space-y-2">
                 {column.links.map((item) => (
                   <li key={item.href}>
-                    <Link href={item.href} className="text-[0.875rem] text-ink-muted hover:text-ink">
+                    <Link href={item.href} className="text-sm text-ink-muted hover:text-ink">
                       {item.label}
                     </Link>
                   </li>
@@ -78,7 +78,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           ))}
         </div>
         <div className="border-t border-line">
-          <p className="mx-auto max-w-6xl px-4 py-4 text-[0.75rem] text-ink-subtle sm:px-6">
+          <p className="mx-auto max-w-6xl px-4 py-4 text-xs text-ink-subtle sm:px-6">
             {SITE.footer.legal.replace("{year}", String(year)).replace("{company}", SITE.company.legalName)}
           </p>
         </div>

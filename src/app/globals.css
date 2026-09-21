@@ -172,7 +172,39 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
 
+  /* Type scale: five sizes for the product, plus one display size the
+     marketing hero alone may use. Tailwind's default steps are reset so an
+     unlisted size (text-2xl, text-[0.8125rem]) is a build-time absence, not a
+     quiet exception. Documented with live examples at /design-system. */
+  --text-*: initial;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.875rem;
+  --text-display: 2.75rem;
+  --text-display--line-height: 1.1;
+
+  /* Radius scale: sm for controls inside things, md for buttons and inputs,
+     lg for inner blocks, panel for cards and dialogs. */
+  --radius-*: initial;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
   --radius-panel: 0.875rem;
+  --radius-full: 9999px;
+
+  /* Shadow scale: xs for resting cards, sm for hover and popovers, md for
+     dialogs. Tinted with the brand hue via --shadow-color. */
+  --shadow-*: initial;
+  --shadow-xs: 0 1px 2px hsl(var(--shadow-color) / 0.06);
+  --shadow-sm: 0 2px 8px -2px hsl(var(--shadow-color) / 0.12), 0 1px 2px hsl(var(--shadow-color) / 0.06);
+  --shadow-md: 0 12px 32px -12px hsl(var(--shadow-color) / 0.24), 0 2px 6px hsl(var(--shadow-color) / 0.08);
 }
 
 @layer base {

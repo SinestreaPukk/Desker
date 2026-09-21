@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { Mail, Plug, Trash2, Webhook } from "lucide-react";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -31,6 +33,7 @@ import { formatRelativeTime } from "@/lib/utils";
 export function IntegrationsView({ project }: { project: string }) {
   const list = useIntegrations(project);
   const remove = useDeleteIntegration(project);
+  const [removing, setRemoving] = React.useState<{ id: string; name: string } | null>(null);
 
   return (
     <Page>
@@ -59,7 +62,7 @@ export function IntegrationsView({ project }: { project: string }) {
             ) : list.data && list.data.length > 0 ? (
               <ul className="divide-y divide-line">
                 {list.data.map((row) => (
-                  <li key={row.id} className="flex items-center gap-3 py-3 text-[0.8125rem]">
+                  <li key={row.id} className="flex items-center gap-3 py-3 text-sm">
                     {row.type === "webhook" ? (
                       <Webhook className="size-4 text-accent" aria-hidden />
                     ) : (
@@ -75,7 +78,7 @@ export function IntegrationsView({ project }: { project: string }) {
                       variant="ghost"
                       size="sm"
                       aria-label={`Remove ${row.name}`}
-                      onClick={() => remove.mutate(row.id)}
+                      onClick={() => setRemoving({ id: row.id, name: row.name })}
                       disabled={remove.isPending}
                     >
                       <Trash2 aria-hidden />
@@ -93,6 +96,19 @@ export function IntegrationsView({ project }: { project: string }) {
           </PanelBody>
         </Panel>
       </PageBody>
+      <ConfirmDialog
+        open={removing !== null}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        title={`Remove ${removing?.name ?? "this integration"}?`}
+        description="Agents lose the ability to use it immediately. Any post or email already waiting for approval will fail to send until a replacement is connected."
+        confirmLabel="Remove"
+        onConfirm={async () => {
+          if (!removing) return;
+          await remove.mutateAsync(removing.id);
+          toast.success(`${removing.name} removed`);
+          setRemoving(null);
+        }}
+      />
     </Page>
   );
 }
@@ -110,6 +126,7 @@ function WebhookForm({ project }: { project: string }) {
     try {
       await create.mutateAsync({ type: "webhook", ...form });
       setForm({ name: "Publishing webhook", url: "", secret: "" });
+      toast.success("Publishing webhook connected", { description: "Agents can publish_post through it once you approve a draft." });
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(caught.message);
@@ -183,6 +200,7 @@ function EmailForm({ project }: { project: string }) {
     try {
       await create.mutateAsync({ type: "email", ...form });
       setForm({ name: "Resend", from: "", apiKey: "" });
+      toast.success("Email connected", { description: "Agents can send_email once you approve a draft." });
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(caught.message);

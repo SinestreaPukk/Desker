@@ -70,7 +70,7 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
     <div className="space-y-6">
       <div>
         <BrandLockup />
-        <h1 className="mt-5 text-2xl font-semibold text-ink">Create your account</h1>
+        <h1 className="mt-5 text-xl font-semibold text-ink">Create your account</h1>
         <p className="mt-1.5 text-sm text-ink-muted">
           One workspace, as many AI employees as you need.
         </p>
@@ -119,7 +119,7 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
             </Field>
 
             <div>
-              <label htmlFor="accept-terms" className="flex cursor-pointer items-start gap-2.5 text-[0.8125rem] text-ink">
+              <label htmlFor="accept-terms" className="flex cursor-pointer items-start gap-2.5 text-sm text-ink">
                 <Checkbox
                   id="accept-terms"
                   checked={accepted}

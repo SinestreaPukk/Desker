@@ -141,7 +141,7 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
           />
         ) : (
           <Panel className="overflow-x-auto">
-            <table className="w-full min-w-[56rem] table-fixed text-left text-[0.8125rem]">
+            <table className="w-full min-w-[56rem] table-fixed text-left text-sm">
               <thead>
                 <tr className="border-b border-line">
                   <th scope="col" className="w-20 px-3 py-2 meta font-medium">When</th>
@@ -205,7 +205,7 @@ function AuditRow({ entry }: { entry: AuditEntryDto }) {
       </td>
       <td className="max-w-md px-3 py-2">
         {meta.input && typeof meta.input === "object" ? (
-          <pre className="mb-1 whitespace-pre-wrap break-all font-mono text-[0.6875rem] text-ink-muted">
+          <pre className="mb-1 whitespace-pre-wrap break-all font-mono text-xs text-ink-muted">
             {JSON.stringify(meta.input)}
           </pre>
         ) : null}

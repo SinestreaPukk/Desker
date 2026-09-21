@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-surface-3", className)}
+      className={cn("animate-pulse rounded-sm bg-surface-3", className)}
       aria-hidden
       {...props}
     />
@@ -40,10 +40,10 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="mb-4 flex size-12 items-center justify-center rounded-xl border border-accent-line bg-accent-soft">
+      <div className="mb-4 flex size-12 items-center justify-center rounded-lg border border-accent-line bg-accent-soft">
         <Icon className="size-5 text-accent-soft-fg" />
       </div>
-      <h3 className="text-[0.9375rem] font-semibold text-ink">{title}</h3>
+      <h3 className="text-base font-semibold text-ink">{title}</h3>
       <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-ink-muted">
         {description}
       </p>
@@ -82,7 +82,7 @@ export function ErrorState({
         <AlertTriangle className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden />
         <div>
           <p className="text-sm font-medium text-danger">{title}</p>
-          <p className="mt-0.5 text-[0.8125rem] leading-relaxed text-danger/90">
+          <p className="mt-0.5 text-sm leading-relaxed text-danger/90">
             {message}
           </p>
         </div>
@@ -109,7 +109,7 @@ export function FormError({ message }: { message: string | null }) {
   return (
     <p
       role="alert"
-      className="flex items-start gap-2 rounded-lg border border-danger-line bg-danger-soft px-3 py-2.5 text-[0.8125rem] leading-relaxed text-danger"
+      className="flex items-start gap-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2.5 text-sm leading-relaxed text-danger"
     >
       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
       {message}

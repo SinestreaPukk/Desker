@@ -114,7 +114,7 @@ export function ConversationDetail({
               <h1 className="text-lg font-semibold text-ink">
                 {conversation.agent.name}
               </h1>
-              <p className="text-[0.8125rem] text-ink-muted">
+              <p className="text-sm text-ink-muted">
                 {conversation.agent.jobTitle}
               </p>
               <p className="mt-1 flex flex-wrap items-center gap-2 meta">
@@ -176,7 +176,7 @@ export function ConversationDetail({
             <Panel className="border-accent-line bg-accent-soft/30">
               <PanelBody className="pt-5">
                 <p className="meta mb-1.5">Summary</p>
-                <p className="text-[0.8125rem] leading-relaxed text-ink">
+                <p className="text-sm leading-relaxed text-ink">
                   {conversation.summary}
                 </p>
               </PanelBody>
@@ -228,12 +228,12 @@ export function ConversationDetail({
                         {formatRelativeTime(message.createdAt)}
                       </span>
                       {message.rating === 1 ? (
-                        <span className="inline-flex items-center gap-1 text-[0.6875rem] text-positive">
+                        <span className="inline-flex items-center gap-1 text-xs text-positive">
                           <ThumbsUp className="size-3" aria-hidden />
                           Client found this helpful
                         </span>
                       ) : message.rating === -1 ? (
-                        <span className="inline-flex items-center gap-1 text-[0.6875rem] text-danger">
+                        <span className="inline-flex items-center gap-1 text-xs text-danger">
                           <ThumbsDown className="size-3" aria-hidden />
                           Client marked this unhelpful
                         </span>
@@ -241,7 +241,7 @@ export function ConversationDetail({
                     </div>
                     <div
                       className={cn(
-                        "space-y-2 rounded-xl border px-3.5 py-2.5 text-sm leading-relaxed",
+                        "space-y-2 rounded-lg border px-3.5 py-2.5 text-sm leading-relaxed",
                         message.role === "user" && "border-line bg-surface-2 text-ink",
                         message.role === "assistant" &&
                           "border-accent-line bg-accent-soft/30 text-ink",
@@ -295,7 +295,7 @@ export function ConversationDetail({
                       <li
                         key={issue.id}
                         className={cn(
-                          "rounded-xl border border-line p-3",
+                          "rounded-lg border border-line p-3",
                           resolved && "opacity-70",
                         )}
                       >
@@ -308,7 +308,7 @@ export function ConversationDetail({
                             <SeverityBadge severity={issue.severity} />
                           )}
                         </div>
-                        <p className="mt-2 text-[0.8125rem] font-medium text-ink">
+                        <p className="mt-2 text-sm font-medium text-ink">
                           {issue.summary}
                         </p>
                         {issue.details ? (
@@ -397,7 +397,7 @@ function ReplyBox({ conversation }: { conversation: ConversationDetail }) {
   return (
     <div className="border-t border-line bg-surface-2/40 p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[0.8125rem] font-medium text-ink">
+        <p className="text-sm font-medium text-ink">
           {human ? "You are answering this client" : "Reply as a human"}
         </p>
         {human ? (
@@ -496,15 +496,15 @@ function NotesPanel({ conversationId }: { conversationId: string }) {
         {isPending ? (
           <p className="text-xs text-ink-muted">Loading…</p>
         ) : notes!.length === 0 ? (
-          <p className="text-[0.8125rem] leading-relaxed text-ink-muted">
+          <p className="text-sm leading-relaxed text-ink-muted">
             Nothing yet. Leave context for whoever picks this up next — the
             client never sees it.
           </p>
         ) : (
           <ul className="space-y-2.5">
             {notes!.map((note) => (
-              <li key={note.id} className="rounded-lg border border-line bg-surface-2/50 p-3">
-                <p className="whitespace-pre-wrap text-[0.8125rem] leading-relaxed text-ink">
+              <li key={note.id} className="rounded-md border border-line bg-surface-2/50 p-3">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">
                   {note.body}
                 </p>
                 <p className="mt-1.5 meta">
@@ -561,7 +561,7 @@ function ToolTurn({ content }: { content: string }) {
         return (
           <div key={index} className={index > 0 ? "mt-2 border-t border-line pt-2" : ""}>
             {name ? (
-              <p className="mb-1 font-sans text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">
+              <p className="mb-1 font-sans text-xs font-semibold uppercase tracking-wide text-ink-subtle">
                 {toolLabel(name)}
               </p>
             ) : null}

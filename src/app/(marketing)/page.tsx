@@ -43,8 +43,8 @@ export default async function LandingPage() {
       <section className="paper-grid">
         <div className="mx-auto max-w-6xl px-4 pb-16 pt-16 sm:px-6 sm:pt-24">
           <div className="max-w-3xl">
-            <p className="text-[0.8125rem] font-medium uppercase tracking-wide text-accent">{hero.eyebrow}</p>
-            <h1 className="mt-3 text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
+            <p className="text-sm font-medium uppercase tracking-wide text-accent">{hero.eyebrow}</p>
+            <h1 className="mt-3 text-display font-semibold leading-[1.1] tracking-tight text-ink sm:text-display">
               {hero.headline}
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-muted">{hero.subhead}</p>
@@ -59,12 +59,12 @@ export default async function LandingPage() {
                 <Link href={hero.secondaryCta.href}>{hero.secondaryCta.label}</Link>
               </Button>
             </div>
-            <p className="mt-4 text-[0.8125rem] text-ink-subtle">{hero.note}</p>
+            <p className="mt-4 text-sm text-ink-subtle">{hero.note}</p>
           </div>
           <dl className="mt-14 grid gap-4 sm:grid-cols-3">
             {proof.map((item) => (
               <div key={item.label} className="rounded-panel border border-line bg-surface px-5 py-4">
-                <dt className="text-[0.8125rem] text-ink-muted">{item.label}</dt>
+                <dt className="text-sm text-ink-muted">{item.label}</dt>
                 <dd className="mt-1 text-xl font-semibold text-ink">{item.value}</dd>
               </div>
             ))}
@@ -75,16 +75,16 @@ export default async function LandingPage() {
       {/* How it works -------------------------------------------------- */}
       <section id="how-it-works" className="scroll-mt-20 border-t border-line">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">{howItWorks.heading}</h2>
+          <h2 className="text-xl font-semibold tracking-tight text-ink">{howItWorks.heading}</h2>
           <p className="mt-2 text-ink-muted">{howItWorks.intro}</p>
           <ol className="mt-8 grid gap-6 md:grid-cols-3">
             {howItWorks.steps.map((step, index) => (
               <li key={step.title} className="rounded-panel border border-line bg-surface p-6">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-accent-soft text-[0.8125rem] font-semibold text-accent-soft-fg">
+                <span className="flex size-8 items-center justify-center rounded-md bg-accent-soft text-sm font-semibold text-accent-soft-fg">
                   {index + 1}
                 </span>
-                <h3 className="mt-4 text-[1.0625rem] font-semibold text-ink">{step.title}</h3>
-                <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-muted">{step.body}</p>
+                <h3 className="mt-4 text-base font-semibold text-ink">{step.title}</h3>
+                <p className="mt-2 text-base leading-relaxed text-ink-muted">{step.body}</p>
               </li>
             ))}
           </ol>
@@ -96,7 +96,7 @@ export default async function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-ink">Roles you can hire</h2>
+              <h2 className="text-xl font-semibold tracking-tight text-ink">Roles you can hire</h2>
               <p className="mt-2 text-ink-muted">Each one is a template: a job, a voice, a rule for when to fetch a human.</p>
             </div>
             <Button asChild variant="secondary">
@@ -113,11 +113,11 @@ export default async function LandingPage() {
                   href={`/showcase#${role.id}`}
                   className="flex h-full flex-col rounded-panel border border-line bg-paper p-5 transition-colors hover:border-accent-line hover:bg-accent-soft/20"
                 >
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-fg">
+                  <span className="flex size-9 items-center justify-center rounded-md bg-accent-soft text-accent-soft-fg">
                     <TemplateIcon icon={role.icon} className="size-4" />
                   </span>
-                  <span className="mt-4 text-[1rem] font-semibold text-ink">{role.name}</span>
-                  <span className="mt-1.5 text-[0.875rem] leading-relaxed text-ink-muted">{role.pitch}</span>
+                  <span className="mt-4 text-base font-semibold text-ink">{role.name}</span>
+                  <span className="mt-1.5 text-sm leading-relaxed text-ink-muted">{role.pitch}</span>
                 </Link>
               </li>
             ))}
@@ -128,7 +128,7 @@ export default async function LandingPage() {
       {/* Trust --------------------------------------------------------- */}
       <section className="border-t border-line">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">{trust.heading}</h2>
+          <h2 className="text-xl font-semibold tracking-tight text-ink">{trust.heading}</h2>
           <ul className="mt-8 grid gap-6 sm:grid-cols-2">
             {trust.points.map((point) => (
               <li key={point.title} className="flex gap-3">
@@ -137,7 +137,7 @@ export default async function LandingPage() {
                 </span>
                 <div>
                   <h3 className="font-semibold text-ink">{point.title}</h3>
-                  <p className="mt-1 text-[0.9375rem] leading-relaxed text-ink-muted">{point.body}</p>
+                  <p className="mt-1 text-base leading-relaxed text-ink-muted">{point.body}</p>
                 </div>
               </li>
             ))}
@@ -148,18 +148,18 @@ export default async function LandingPage() {
       {/* Pricing ------------------------------------------------------- */}
       <section id="pricing" className="scroll-mt-20 border-t border-line bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">{pricing.heading}</h2>
+          <h2 className="text-xl font-semibold tracking-tight text-ink">{pricing.heading}</h2>
           <p className="mt-2 max-w-2xl text-ink-muted">{pricing.intro}</p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {Object.values(PLANS).map((plan) => (
               <Panel key={plan.id} className={`p-6 ${plan.id === "starter" ? "border-accent-line ring-1 ring-accent-line" : ""}`}>
-                <h3 className="text-[1.0625rem] font-semibold text-ink">{plan.name}</h3>
-                <p className="mt-1 text-[0.875rem] text-ink-muted">{plan.blurb}</p>
-                <p className="mt-4 text-3xl font-semibold tracking-tight text-ink">
+                <h3 className="text-base font-semibold text-ink">{plan.name}</h3>
+                <p className="mt-1 text-sm text-ink-muted">{plan.blurb}</p>
+                <p className="mt-4 text-xl font-semibold tracking-tight text-ink">
                   ${plan.priceUsd}
-                  <span className="text-[0.875rem] font-normal text-ink-muted"> / month</span>
+                  <span className="text-sm font-normal text-ink-muted"> / month</span>
                 </p>
-                <ul className="mt-5 space-y-2 text-[0.875rem] text-ink-muted">
+                <ul className="mt-5 space-y-2 text-sm text-ink-muted">
                   <li>{plan.limits.publishedAgents} published agent{plan.limits.publishedAgents === 1 ? "" : "s"}</li>
                   <li>{plan.limits.actionItemsPerMonth.toLocaleString()} autonomous runs a month</li>
                   <li>{plan.limits.conversationsPerMonth.toLocaleString()} client conversations a month</li>
@@ -171,14 +171,14 @@ export default async function LandingPage() {
               </Panel>
             ))}
           </div>
-          <p className="mt-4 text-[0.8125rem] text-ink-subtle">{pricing.footnote}</p>
+          <p className="mt-4 text-sm text-ink-subtle">{pricing.footnote}</p>
         </div>
       </section>
 
       {/* CTA ----------------------------------------------------------- */}
       <section className="border-t border-line">
         <div className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6">
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">{cta.heading}</h2>
+          <h2 className="text-xl font-semibold tracking-tight text-ink">{cta.heading}</h2>
           <p className="mt-2 text-ink-muted">{cta.body}</p>
           <Button asChild size="lg" className="mt-6">
             <Link href={cta.button.href}>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Label, Textarea } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { AvatarPicker } from "@/components/builder/avatar-picker";
+import { EscalationRuleHelper } from "@/components/builder/live-example";
 import {
   ScopeOfWorkForm,
   defaultScopeForm,
@@ -211,7 +212,7 @@ export function NewAgentWizard({ project }: { project: string }) {
           </Link>
         </Button>
 
-        <h1 className="text-2xl font-semibold text-ink">Hire an AI employee</h1>
+        <h1 className="text-xl font-semibold text-ink">Hire an AI employee</h1>
         <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
           Three short steps, then you&apos;ll add a document and publish. About five
           minutes end to end.
@@ -227,7 +228,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                 <span
                   aria-current={current ? "step" : undefined}
                   className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-semibold",
+                    "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                     done && "bg-accent text-accent-fg",
                     current && "border-2 border-accent text-accent",
                     !done && !current && "border border-line-strong text-ink-subtle",
@@ -279,7 +280,7 @@ export function NewAgentWizard({ project }: { project: string }) {
             {step === 0 ? (
               <>
                 <fieldset className="space-y-2">
-                  <legend className="text-[0.8125rem] font-medium text-ink">
+                  <legend className="text-sm font-medium text-ink">
                     Start from
                   </legend>
                   <div className="grid gap-2 sm:grid-cols-3">
@@ -290,13 +291,13 @@ export function NewAgentWizard({ project }: { project: string }) {
                         aria-pressed={starter === preset.id}
                         onClick={() => applyStarter(preset.id)}
                         className={cn(
-                          "rounded-xl border p-3 text-left transition-colors",
+                          "rounded-lg border p-3 text-left transition-colors",
                           starter === preset.id
                             ? "border-accent bg-accent-soft"
                             : "border-line hover:bg-surface-2",
                         )}
                       >
-                        <span className="flex items-center gap-1.5 text-[0.8125rem] font-medium text-ink">
+                        <span className="flex items-center gap-1.5 text-sm font-medium text-ink">
                           {preset.id !== "blank" ? (
                             <Sparkles className="size-3.5 text-accent" aria-hidden />
                           ) : null}
@@ -416,6 +417,10 @@ export function NewAgentWizard({ project }: { project: string }) {
                     placeholder="Escalate if the client is angry, asks for a refund over $200, or mentions legal action."
                   />
                 </Field>
+                <EscalationRuleHelper
+                  value={form.escalationRule}
+                  onPick={(text) => set("escalationRule", text)}
+                />
               </>
             ) : null}
 
@@ -423,7 +428,7 @@ export function NewAgentWizard({ project }: { project: string }) {
               <>
                 <div
                   className={cn(
-                    "flex items-start justify-between gap-4 rounded-xl border p-4 transition-colors",
+                    "flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors",
                     answersFromDocuments
                       ? "border-accent-line bg-accent-soft/40"
                       : "border-line",
@@ -432,7 +437,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                   <div className="flex items-start gap-3">
                     <FileText className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
                     <div>
-                      <Label htmlFor="answers-from-documents" className="text-[0.8125rem]">
+                      <Label htmlFor="answers-from-documents" className="text-sm">
                         Answer from context documents
                       </Label>
                       <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
@@ -462,7 +467,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                 </p>
 
                 <div className="border-t border-line pt-5">
-                  <h3 className="text-[0.9375rem] font-semibold text-ink">Scope of work</h3>
+                  <h3 className="text-base font-semibold text-ink">Scope of work</h3>
                   <p className="mb-4 mt-0.5 text-xs leading-relaxed text-ink-muted">
                     Optional now, editable later. What this agent does on its own - on a
                     schedule, or when an event arrives - and what it should know while doing

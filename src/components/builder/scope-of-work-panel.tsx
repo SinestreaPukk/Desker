@@ -3,8 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { Play, Save, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/badge";
 import {
   Panel,
   PanelBody,
@@ -18,7 +19,6 @@ import { useDocuments } from "@/hooks/use-admin-data";
 import { useActionItems, useRunScope, useSaveScope, useScope } from "@/hooks/use-work-data";
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { describeCadence } from "@/lib/work/cadence";
-import { STATUS_LABELS, type ActionStatus } from "@/lib/work/types";
 import type { ScopeDto } from "@/lib/work/scope";
 import { formatRelativeTime } from "@/lib/utils";
 import {
@@ -41,21 +41,6 @@ function toForm(scope: ScopeDto): ScopeFormState {
     autonomy: scope.autonomy,
     toolAutonomy: scope.toolAutonomy ?? {},
   };
-}
-
-const STATUS_TONE: Record<ActionStatus, "neutral" | "accent" | "positive" | "warning" | "danger"> = {
-  queued: "neutral",
-  in_progress: "accent",
-  needs_approval: "warning",
-  approved: "accent",
-  executing_external: "accent",
-  done: "positive",
-  failed: "danger",
-  rejected: "neutral",
-};
-
-export function ActionStatusBadge({ status }: { status: ActionStatus }) {
-  return <Badge tone={STATUS_TONE[status] ?? "neutral"}>{STATUS_LABELS[status] ?? status}</Badge>;
 }
 
 /** Loads the scope, then hands a fully-known initial state to the editor below. */
@@ -123,6 +108,14 @@ function ScopeEditor({
       const next = toForm(result);
       setForm(next);
       setSaved(next);
+      toast.success("Scope of work saved", {
+        description:
+          result.triggerType === "cron"
+            ? `Runs ${describeCadence(result.cron, result.timezone).toLowerCase()}.`
+            : result.triggerType === "webhook"
+              ? "Runs whenever the webhook receives an event."
+              : "Runs only when you press Run now.",
+      });
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(caught.message);
@@ -137,13 +130,16 @@ function ScopeEditor({
     setRunNote(null);
     try {
       const item = await run.mutateAsync();
-      setRunNote(
-        item.error
-          ? `The run could not start: ${item.error}`
-          : "Run started. Progress shows below and under Work.",
-      );
+      if (item.error) {
+        setRunNote(`The run could not start: ${item.error}`);
+        toast.error("The run could not start", { description: item.error });
+      } else {
+        setRunNote("Run started. Progress shows below and under Work.");
+        toast.success("Run started", { description: "Progress shows in Recent runs and under Work." });
+      }
     } catch (caught) {
       setRunNote(errorMessage(caught));
+      toast.error(errorMessage(caught));
     }
   }
 
@@ -180,7 +176,7 @@ function ScopeEditor({
         <div className="border-t border-line pt-4">
           <div className="mb-3 flex items-center gap-2">
             <ShieldCheck className="size-4 text-accent" aria-hidden />
-            <h3 className="text-[0.8125rem] font-medium text-ink">Trust</h3>
+            <h3 className="text-sm font-medium text-ink">Trust</h3>
           </div>
           <TrustSettings
             value={{ autonomy: form.autonomy, toolAutonomy: form.toolAutonomy }}
@@ -197,7 +193,7 @@ function ScopeEditor({
         ) : null}
         <div className="border-t border-line pt-4">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-[0.8125rem] font-medium text-ink">Recent runs</h3>
+            <h3 className="text-sm font-medium text-ink">Recent runs</h3>
             <Link
               href={`/p/${project}/work?agentId=${agentId}`}
               className="text-xs text-accent hover:underline"
@@ -206,9 +202,9 @@ function ScopeEditor({
             </Link>
           </div>
           {recent.data && recent.data.length > 0 ? (
-            <ul className="divide-y divide-line rounded-xl border border-line">
+            <ul className="divide-y divide-line rounded-lg border border-line">
               {recent.data.slice(0, 5).map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-3 px-3 py-2 text-[0.8125rem]">
+                <li key={item.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                   <div className="min-w-0">
                     <span className="text-ink">
                       {item.trigger === "schedule"
@@ -228,7 +224,7 @@ function ScopeEditor({
                       <p className="mt-0.5 truncate text-xs text-danger">{item.error}</p>
                     ) : null}
                   </div>
-                  <ActionStatusBadge status={item.status} />
+                  <StatusBadge status={item.status} />
                 </li>
               ))}
             </ul>

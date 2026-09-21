@@ -45,7 +45,7 @@ export function ContactForm() {
 
   if (state === "sent") {
     return (
-      <p role="status" className="rounded-panel border border-positive-line bg-positive-soft/50 px-4 py-3 text-[0.9375rem] text-ink">
+      <p role="status" className="rounded-panel border border-positive-line bg-positive-soft/50 px-4 py-3 text-base text-ink">
         {form.success}
       </p>
     );

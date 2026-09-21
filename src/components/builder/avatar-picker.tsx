@@ -112,7 +112,7 @@ export function AvatarPicker({
         </p>
       ) : null}
 
-      <div className="space-y-3 rounded-xl border border-line bg-surface-2/50 p-3">
+      <div className="space-y-3 rounded-lg border border-line bg-surface-2/50 p-3">
         <fieldset>
           <legend className="meta mb-2">Colour</legend>
           <div className="flex flex-wrap gap-2">

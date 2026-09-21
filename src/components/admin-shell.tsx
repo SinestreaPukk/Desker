@@ -105,7 +105,7 @@ export function AdminShell({
             aria-current={active ? "page" : undefined}
             onClick={() => setMobileNavOpen(false)}
             className={cn(
-              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
               active
                 ? "bg-accent-soft text-accent-soft-fg"
                 : "text-ink-muted hover:bg-surface-2 hover:text-ink",
@@ -115,7 +115,7 @@ export function AdminShell({
             {item.label}
             {item.segment === "inbox" && openCount > 0 ? (
               <span
-                className="ml-auto rounded-full bg-danger px-1.5 py-0.5 text-[0.625rem] font-semibold text-white tabular-nums"
+                className="ml-auto rounded-full bg-danger px-1.5 py-0.5 text-xs font-semibold text-white tabular-nums"
                 aria-label={`${openCount} open items`}
               >
                 {openCount > 99 ? "99+" : openCount}
@@ -143,7 +143,7 @@ export function AdminShell({
         href="#admin-main"
         className={cn(
           "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50",
-          "focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:text-accent-fg",
+          "focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:text-accent-fg",
         )}
       >
         Skip to content
@@ -181,7 +181,7 @@ export function AdminShell({
       <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-surface p-4 lg:flex">
         <Link
           href={`${base}/roster`}
-          className="mb-4 flex items-center gap-2 px-1 text-[0.9375rem] font-semibold tracking-tight text-ink"
+          className="mb-4 flex items-center gap-2 px-1 text-base font-semibold tracking-tight text-ink"
         >
           <BrandMark />
           {BRAND.name}
@@ -198,17 +198,17 @@ export function AdminShell({
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(
-                  "flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors",
+                  "flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors",
                   "hover:bg-surface-2",
                 )}
               >
                 <span
                   aria-hidden
-                  className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-surface-3 text-[0.625rem] font-semibold text-ink-muted"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-md bg-surface-3 text-xs font-semibold text-ink-muted"
                 >
                   {initialsOf(name || email) || "?"}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[0.8125rem] text-ink">
+                <span className="min-w-0 flex-1 truncate text-sm text-ink">
                   {name || email}
                 </span>
               </button>
@@ -281,13 +281,13 @@ function ProjectSwitcher({
           <button
             aria-label={`Switch project or organisation (${organization?.name ?? ""}: ${project.name})`}
             className={cn(
-              "flex w-full items-center gap-2 rounded-lg border border-line bg-surface-2 px-2.5 py-2",
+              "flex w-full items-center gap-2 rounded-md border border-line bg-surface-2 px-2.5 py-2",
               "text-left transition-colors hover:bg-surface-3",
             )}
           >
             <span className="min-w-0 flex-1">
               <span className="meta block truncate">{organization?.name ?? "Project"}</span>
-              <span className="block truncate text-[0.8125rem] font-medium text-ink">
+              <span className="block truncate text-sm font-medium text-ink">
                 {project.name}
               </span>
             </span>

@@ -2,8 +2,10 @@
 
 import * as React from "react";
 import { Copy, CreditCard, Mail, Trash2, UserPlus, Users } from "lucide-react";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
+import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import {
@@ -94,6 +96,7 @@ function MembersPanel({
   const setRole = useSetMemberRole(organizationId);
   const remove = useRemoveMember(organizationId);
   const [note, setNote] = React.useState<string | null>(null);
+  const [removing, setRemoving] = React.useState<{ userId: string; label: string; self: boolean } | null>(null);
 
   async function act(fn: () => Promise<unknown>) {
     setNote(null);
@@ -126,7 +129,7 @@ function MembersPanel({
             {members.data.map((member) => {
               const isSelf = member.userId === currentUserId;
               return (
-                <li key={member.userId} className="flex flex-wrap items-center gap-3 py-3 text-[0.8125rem]">
+                <li key={member.userId} className="flex flex-wrap items-center gap-3 py-3 text-sm">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-ink">
                       {member.name ?? member.email}
@@ -139,7 +142,12 @@ function MembersPanel({
                   {isOwner ? (
                     <Select
                       value={member.role}
-                      onValueChange={(next) => void act(() => setRole.mutateAsync({ userId: member.userId, role: next }))}
+                      onValueChange={(next) =>
+                        void act(async () => {
+                          await setRole.mutateAsync({ userId: member.userId, role: next });
+                          toast.success(`${member.name ?? member.email} is now ${next}`);
+                        })
+                      }
                     >
                       <SelectTrigger aria-label={`Role for ${member.email}`} className="w-32">
                         <SelectValue />
@@ -153,14 +161,16 @@ function MembersPanel({
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge tone={member.role === "owner" ? "accent" : "neutral"}>{member.role}</Badge>
+                    <StatusBadge status={member.role} />
                   )}
                   {isOwner || isSelf ? (
                     <Button
                       variant="ghost"
                       size="sm"
                       aria-label={isSelf ? "Leave organisation" : `Remove ${member.email}`}
-                      onClick={() => void act(() => remove.mutateAsync(member.userId))}
+                      onClick={() =>
+                        setRemoving({ userId: member.userId, label: member.name ?? member.email, self: isSelf })
+                      }
                       disabled={remove.isPending}
                     >
                       <Trash2 aria-hidden />
@@ -172,6 +182,23 @@ function MembersPanel({
           </ul>
         )}
       </PanelBody>
+      <ConfirmDialog
+        open={removing !== null}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        title={removing?.self ? "Leave this organisation?" : `Remove ${removing?.label ?? "this member"}?`}
+        description={
+          removing?.self
+            ? "You lose access to every project here immediately. An owner can invite you back."
+            : "They lose access to every project here immediately. You can invite them again later."
+        }
+        confirmLabel={removing?.self ? "Leave" : "Remove"}
+        onConfirm={async () => {
+          if (!removing) return;
+          await remove.mutateAsync(removing.userId);
+          toast.success(removing.self ? "You left the organisation" : `${removing.label} removed`);
+          setRemoving(null);
+        }}
+      />
     </Panel>
   );
 }
@@ -186,6 +213,7 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
   const [last, setLast] = React.useState<{ url: string; emailed: boolean } | null>(null);
   const [copied, setCopied] = React.useState<string | null>(null);
+  const [revoking, setRevoking] = React.useState<{ id: string; email: string } | null>(null);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -195,6 +223,9 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
       const invite = await create.mutateAsync({ email: email.trim(), role });
       setLast({ url: invite.url, emailed: invite.emailed });
       setEmail("");
+      toast.success(invite.emailed ? `Invitation emailed to ${invite.email}` : "Invitation created", {
+        description: invite.emailed ? undefined : "Copy the link below and send it yourself.",
+      });
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(caught.message);
@@ -238,7 +269,7 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
               />
             </Field>
             <div>
-              <label htmlFor="invite-role" className="text-[0.8125rem] font-medium text-ink">
+              <label htmlFor="invite-role" className="text-sm font-medium text-ink">
                 Role
               </label>
               <Select value={role} onValueChange={setRole}>
@@ -255,12 +286,12 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
             </div>
           </div>
           {last ? (
-            <div className="rounded-xl border border-positive-line bg-positive-soft/40 p-3 text-[0.8125rem]">
+            <div className="rounded-lg border border-positive-line bg-positive-soft/40 p-3 text-sm">
               <p className="text-ink">
                 {last.emailed ? "Invitation emailed. " : "Invitation created - send them this link: "}
               </p>
               <div className="mt-1.5 flex items-center gap-2">
-                <code className="min-w-0 flex-1 truncate rounded-md border border-line bg-surface px-2 py-1 font-mono text-xs">
+                <code className="min-w-0 flex-1 truncate rounded-sm border border-line bg-surface px-2 py-1 font-mono text-xs">
                   {last.url}
                 </code>
                 <Button type="button" size="sm" variant="secondary" onClick={() => void copy(last.url)}>
@@ -274,7 +305,7 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
           {invites.data && invites.data.length > 0 ? (
             <ul className="divide-y divide-line border-t border-line pt-1">
               {invites.data.map((invite) => (
-                <li key={invite.id} className="flex items-center gap-3 py-2.5 text-[0.8125rem]">
+                <li key={invite.id} className="flex items-center gap-3 py-2.5 text-sm">
                   <Mail className="size-4 text-ink-subtle" aria-hidden />
                   <div className="min-w-0 flex-1">
                     <p className="text-ink">{invite.email}</p>
@@ -291,7 +322,7 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
                     size="sm"
                     variant="ghost"
                     aria-label={`Revoke invitation for ${invite.email}`}
-                    onClick={() => revoke.mutate(invite.id)}
+                    onClick={() => setRevoking(invite)}
                     disabled={revoke.isPending}
                   >
                     <Trash2 aria-hidden />
@@ -308,6 +339,19 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
           </Button>
         </PanelFooter>
       </form>
+      <ConfirmDialog
+        open={revoking !== null}
+        onOpenChange={(open) => !open && setRevoking(null)}
+        title={`Revoke the invitation for ${revoking?.email ?? ""}?`}
+        description="The link they were sent stops working. You can invite them again any time."
+        confirmLabel="Revoke"
+        onConfirm={async () => {
+          if (!revoking) return;
+          await revoke.mutateAsync(revoking.id);
+          toast.success("Invitation revoked");
+          setRevoking(null);
+        }}
+      />
     </Panel>
   );
 }
@@ -318,7 +362,7 @@ function Meter({ label, used, limit, money }: { label: string; used: number; lim
   const fmt = (n: number) => (money ? `$${n.toFixed(2)}` : n.toLocaleString());
   if (unlimited) {
     return (
-      <div className="flex items-baseline justify-between text-[0.8125rem]">
+      <div className="flex items-baseline justify-between text-sm">
         <span className="text-ink">{label}</span>
         <span className="tabular-nums text-ink-muted">{fmt(used)} · no limit</span>
       </div>
@@ -326,7 +370,7 @@ function Meter({ label, used, limit, money }: { label: string; used: number; lim
   }
   return (
     <div>
-      <div className="flex items-baseline justify-between text-[0.8125rem]">
+      <div className="flex items-baseline justify-between text-sm">
         <span className="text-ink">{label}</span>
         <span className={`tabular-nums ${ratio >= 1 ? "text-danger" : "text-ink-muted"}`}>
           {fmt(used)} / {fmt(limit)}
@@ -438,8 +482,8 @@ function BillingPanel({
                 {data.plans
                   .filter((p) => p.id !== "free")
                   .map((p) => (
-                    <div key={p.id} className={`rounded-xl border p-3 ${p.id === plan.id ? "border-accent bg-accent-soft/30" : "border-line"}`}>
-                      <p className="text-[0.8125rem] font-medium text-ink">
+                    <div key={p.id} className={`rounded-lg border p-3 ${p.id === plan.id ? "border-accent bg-accent-soft/30" : "border-line"}`}>
+                      <p className="text-sm font-medium text-ink">
                         {p.name} <span className="text-ink-muted">· ${p.priceUsd}/mo</span>
                       </p>
                       <p className="mt-0.5 text-xs text-ink-muted">{p.blurb}</p>

@@ -105,7 +105,7 @@ export function DuplicateAgentDialog({
               className="mt-0.5"
             />
             <span>
-              <span className="block text-[0.8125rem] font-medium text-ink">
+              <span className="block text-sm font-medium text-ink">
                 Copy its documents too
               </span>
               <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted">

@@ -3,6 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { Check, Pencil, X } from "lucide-react";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +13,7 @@ import { Panel } from "@/components/ui/panel";
 import {
   useApproveActionItem,
   useRejectActionItem,
+  useReopenActionItem,
   useUpdateDraft,
 } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
@@ -32,6 +35,7 @@ const TRIGGER_LABEL: Record<string, string> = {
 export function ApprovalCard({ item, project }: { item: ActionItemDto; project: string }) {
   const approve = useApproveActionItem();
   const reject = useRejectActionItem();
+  const reopen = useReopenActionItem();
   const update = useUpdateDraft();
   const [note, setNote] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState(false);
@@ -65,13 +69,35 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
     }
   }
 
+  const what = pending?.tool === "publish_post" ? "post" : "email";
+
   async function decide(verb: "approve" | "reject") {
     setNote(null);
     try {
-      if (verb === "approve") await approve.mutateAsync({ id: item.id });
-      else await reject.mutateAsync({ id: item.id, reason: reason.trim() });
+      if (verb === "approve") {
+        await approve.mutateAsync({ id: item.id });
+        toast.success(`Approved - sending the ${what} now`, {
+          description: `${item.agent.name}'s ${what} is on its way. Delivery shows under Work.`,
+        });
+      } else {
+        await reject.mutateAsync({ id: item.id, reason: reason.trim() });
+        toast("Rejected - nothing was sent", {
+          description: reason.trim() ? `Reason: ${reason.trim()}` : `${item.agent.name}'s ${what} stays a draft.`,
+          action: {
+            label: "Undo",
+            onClick: () => {
+              reopen
+                .mutateAsync({ id: item.id })
+                .then(() => toast.success("Back in the approvals queue"))
+                .catch((caught) => toast.error(errorMessage(caught)));
+            },
+          },
+        });
+      }
     } catch (caught) {
       setNote(errorMessage(caught));
+      toast.error(errorMessage(caught));
+      throw caught;
     }
   }
 
@@ -82,7 +108,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
       <div className="flex items-start gap-3 border-b border-line bg-warning-soft/30 px-4 py-3">
         <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" />
         <div className="min-w-0 flex-1">
-          <p className="text-[0.8125rem] text-ink">
+          <p className="text-sm text-ink">
             <span className="font-medium">{item.agent.name}</span> wants to{" "}
             <span className="font-medium">
               {pending.tool === "publish_post" ? "publish a post" : "send an email"}
@@ -147,14 +173,14 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
                   To: {(pending.input.to as string[] | undefined)?.join(", ")}
                 </p>
               ) : null}
-              <p className="mt-0.5 text-[0.8125rem] font-medium text-ink">{draft.title}</p>
-              <pre className="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap rounded-md border border-line bg-surface-2/60 p-3 font-sans text-[0.8125rem] leading-relaxed text-ink">
+              <p className="mt-0.5 text-sm font-medium text-ink">{draft.title}</p>
+              <pre className="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap rounded-sm border border-line bg-surface-2/60 p-3 font-sans text-sm leading-relaxed text-ink">
                 {draft.body}
               </pre>
             </div>
           )
         ) : (
-          <pre className="whitespace-pre-wrap rounded-md border border-line bg-surface-2/60 p-3 font-mono text-xs text-ink">
+          <pre className="whitespace-pre-wrap rounded-sm border border-line bg-surface-2/60 p-3 font-mono text-xs text-ink">
             {JSON.stringify(pending.input, null, 2)}
           </pre>
         )}
@@ -164,32 +190,31 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
             <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-ink-subtle">
               The agent&apos;s report
             </summary>
-            <pre className="mt-2 whitespace-pre-wrap font-sans text-[0.8125rem] leading-relaxed text-ink-muted">
+            <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-ink-muted">
               {item.summary}
             </pre>
           </details>
         ) : null}
 
-        {rejecting ? (
-          <div className="space-y-2 rounded-md border border-line p-3">
-            <Field label="Why? (optional, the agent sees it in the audit trail)" htmlFor={`reason-${item.id}`}>
-              <Input
-                id={`reason-${item.id}`}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Tone is off for this audience."
-              />
-            </Field>
-            <div className="flex gap-2">
-              <Button size="sm" variant="danger" onClick={() => void decide("reject")} disabled={busy}>
-                Reject
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setRejecting(false)} disabled={busy}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
+        <ConfirmDialog
+          open={rejecting}
+          onOpenChange={setRejecting}
+          title={`Reject this ${what}?`}
+          description={`Nothing is sent. ${item.agent.name} keeps the draft, and you can undo for a moment afterwards.`}
+          confirmLabel="Reject"
+          onConfirm={() => decide("reject")}
+        >
+          <Field label="Why? Optional - it goes in the audit trail" htmlFor={`reason-${item.id}`}>
+            <Input
+              id={`reason-${item.id}`}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Tone is off for this audience."
+              autoFocus
+            />
+          </Field>
+        </ConfirmDialog>
+        {(
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" onClick={() => void decide("approve")} disabled={busy || editing}>
               <Check aria-hidden />

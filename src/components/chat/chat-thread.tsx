@@ -70,7 +70,7 @@ export function ChatThread({
         {messages.map((message) =>
           message.role === "user" ? (
             <li key={message.id} className="flex justify-end">
-              <div className="max-w-[85%] rounded-2xl rounded-br-md bg-accent px-3.5 py-2.5 text-sm leading-relaxed text-accent-fg">
+              <div className="max-w-[85%] rounded-panel rounded-br-md bg-accent px-3.5 py-2.5 text-sm leading-relaxed text-accent-fg">
                 <span className="sr-only">You said: </span>
                 <div className="space-y-2">
                   <MessageText content={message.content} />
@@ -91,7 +91,7 @@ export function ChatThread({
                   {message.authorName ?? agentName} said:{" "}
                 </span>
                 {message.authorName ? (
-                  <p className="text-[0.6875rem] font-medium text-ink-muted">
+                  <p className="text-xs font-medium text-ink-muted">
                     {message.authorName} · a colleague
                   </p>
                 ) : null}
@@ -101,7 +101,7 @@ export function ChatThread({
                 {message.content.trim() ? (
                   <div
                     className={cn(
-                      "space-y-2 rounded-2xl rounded-tl-md border border-line bg-surface px-3.5 py-2.5",
+                      "space-y-2 rounded-panel rounded-tl-md border border-line bg-surface px-3.5 py-2.5",
                       "text-sm leading-relaxed text-ink",
                       message.streaming && "stream-caret",
                     )}
@@ -162,7 +162,7 @@ function RatingControls({
         aria-pressed={rating === 1}
         onClick={() => onRate(rating === 1 ? 0 : 1)}
         className={cn(
-          "rounded-md p-1 transition-colors hover:bg-surface-2",
+          "rounded-sm p-1 transition-colors hover:bg-surface-2",
           rating === 1 ? "text-positive" : "text-ink-subtle hover:text-ink",
         )}
       >
@@ -174,7 +174,7 @@ function RatingControls({
         aria-pressed={rating === -1}
         onClick={() => onRate(rating === -1 ? 0 : -1)}
         className={cn(
-          "rounded-md p-1 transition-colors hover:bg-surface-2",
+          "rounded-sm p-1 transition-colors hover:bg-surface-2",
           rating === -1 ? "text-danger" : "text-ink-subtle hover:text-ink",
         )}
       >
@@ -186,7 +186,7 @@ function RatingControls({
 
 function TypingIndicator({ agentName }: { agentName: string }) {
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-2xl rounded-tl-md border border-line bg-surface px-3.5 py-3">
+    <div className="inline-flex items-center gap-1.5 rounded-panel rounded-tl-md border border-line bg-surface px-3.5 py-3">
       <span className="sr-only">{agentName} is typing…</span>
       {[0, 1, 2].map((index) => (
         <span

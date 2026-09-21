@@ -26,7 +26,7 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Colour theme"
-      className="inline-flex items-center gap-0.5 rounded-lg border border-line bg-surface-2 p-0.5"
+      className="inline-flex items-center gap-0.5 rounded-md border border-line bg-surface-2 p-0.5"
     >
       {OPTIONS.map((option) => {
         const Icon = option.icon;
@@ -40,7 +40,7 @@ export function ThemeToggle() {
             aria-label={option.label}
             onClick={() => setTheme(option.value)}
             className={cn(
-              "rounded-md p-1.5 transition-colors",
+              "rounded-sm p-1.5 transition-colors",
               active
                 ? "bg-surface text-ink shadow-xs"
                 : "text-ink-subtle hover:text-ink",

@@ -17,7 +17,7 @@ export function DropdownMenuContent({
         align={align}
         sideOffset={6}
         className={cn(
-          "z-50 min-w-[11rem] overflow-hidden rounded-lg border border-line bg-surface p-1 shadow-lg",
+          "z-50 min-w-[11rem] overflow-hidden rounded-md border border-line bg-surface p-1 shadow-md",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           className,
         )}
@@ -37,7 +37,7 @@ export function DropdownMenuItem({
   return (
     <DropdownMenuPrimitive.Item
       className={cn(
-        "flex cursor-pointer select-none items-center gap-2 rounded-md px-2.5 py-1.5 text-sm outline-none",
+        "flex cursor-pointer select-none items-center gap-2 rounded-sm px-2.5 py-1.5 text-sm outline-none",
         "[&_svg]:size-3.5 [&_svg]:shrink-0",
         destructive
           ? "text-danger data-[highlighted]:bg-danger-soft"

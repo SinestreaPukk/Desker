@@ -84,7 +84,7 @@ export function PromptPreviewDialog({
                 </Button>
               </div>
 
-              <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-xl border border-line bg-surface-2 p-4 font-mono text-xs leading-relaxed text-ink">
+              <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-lg border border-line bg-surface-2 p-4 font-mono text-xs leading-relaxed text-ink">
                 {data!.prompt}
               </pre>
             </>

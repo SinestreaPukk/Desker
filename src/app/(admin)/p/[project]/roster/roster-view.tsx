@@ -166,7 +166,7 @@ export function RosterView({ project }: { project: string }) {
                 }
               />
             ) : (
-              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {filtered.map((agent) => (
                   <li key={agent.id}>
                     <AgentCard agent={agent} project={project} />
@@ -182,63 +182,69 @@ export function RosterView({ project }: { project: string }) {
 }
 
 function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string }) {
+  const live = agent.status === "published";
   // `relative` is load-bearing: the title below uses a stretched link
   // (`after:absolute inset-0`) to make the whole card clickable, and without a
   // positioned ancestor that hit area escapes the card and covers unrelated
   // controls elsewhere on the page.
   return (
-    <Panel className="group relative h-full transition-shadow hover:shadow-md focus-within:shadow-md">
-      <div className="flex h-full flex-col p-4">
-        <div className="flex items-start gap-3">
-          <AgentAvatar name={agent.name} src={agent.avatarUrl} seed={agent.id} size="lg" />
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-[0.9375rem] font-semibold text-ink">
-              {/* Stretched link: the whole card is the click target, but the
-                  accessible name stays the agent's name. */}
-              <Link
-                href={`/p/${project}/agents/${agent.id}`}
-                className="after:absolute after:inset-0 after:content-['']"
-              >
-                {agent.name}
-              </Link>
-            </h2>
-            <p className="truncate text-[0.8125rem] text-ink-muted">{agent.jobTitle}</p>
-            {agent.department ? (
-              <p className="mt-0.5 truncate text-xs text-ink-subtle">
-                {agent.department}
-              </p>
-            ) : null}
-          </div>
-          <StatusBadge status={agent.status} />
+    <Panel className="group relative flex h-full flex-col transition-shadow hover:shadow-sm focus-within:shadow-sm">
+      {/* Name and role carry the hierarchy; status sits apart, top right. */}
+      <div className="flex items-start gap-3 p-4 pb-3">
+        <AgentAvatar name={agent.name} src={agent.avatarUrl} seed={agent.id} size="lg" />
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-lg font-semibold leading-tight text-ink">
+            <Link
+              href={`/p/${project}/agents/${agent.id}`}
+              className="after:absolute after:inset-0 after:content-['']"
+            >
+              {agent.name}
+            </Link>
+          </h2>
+          <p className="mt-0.5 truncate text-sm text-ink-muted">
+            {agent.jobTitle}
+            {agent.department ? <span className="text-ink-subtle"> · {agent.department}</span> : null}
+          </p>
         </div>
+        <StatusBadge status={agent.status} />
+      </div>
 
-        <dl className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink-muted">
+      {/* What it has done, in words, not icons. */}
+      <dl className="mx-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-line py-3 text-xs text-ink-muted">
+        <div className="flex items-center gap-1.5">
+          <MessageSquare className="size-3.5 text-ink-subtle" aria-hidden />
+          <dt className="sr-only">Conversations</dt>
+          <dd>
+            <span className="font-medium tabular-nums text-ink">{agent.conversationCount}</span>{" "}
+            conversation{agent.conversationCount === 1 ? "" : "s"}
+          </dd>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <FileText className="size-3.5 text-ink-subtle" aria-hidden />
+          <dt className="sr-only">Context documents</dt>
+          <dd>
+            <span className="font-medium tabular-nums text-ink">{agent.documentCount}</span>{" "}
+            document{agent.documentCount === 1 ? "" : "s"}
+          </dd>
+        </div>
+        {agent.openIssueCount > 0 ? (
           <div className="flex items-center gap-1.5">
-            <MessageSquare className="size-3.5 text-ink-subtle" aria-hidden />
-            <dt className="sr-only">Conversations</dt>
-            <dd className="tabular-nums">{agent.conversationCount}</dd>
+            <dt className="sr-only">Open issues</dt>
+            <dd>
+              <Badge tone="danger">
+                <Bug aria-hidden />
+                {agent.openIssueCount} open
+              </Badge>
+            </dd>
           </div>
-          <div className="flex items-center gap-1.5">
-            <FileText className="size-3.5 text-ink-subtle" aria-hidden />
-            <dt className="sr-only">Context documents</dt>
-            <dd className="tabular-nums">{agent.documentCount}</dd>
-          </div>
-          {agent.openIssueCount > 0 ? (
-            <div className="flex items-center gap-1.5">
-              <dt className="sr-only">Open issues</dt>
-              <dd>
-                <Badge tone="danger">
-                  <Bug aria-hidden />
-                  {agent.openIssueCount} open
-                </Badge>
-              </dd>
-            </div>
-          ) : null}
-        </dl>
+        ) : null}
+      </dl>
 
-        <p className="mt-auto pt-3 meta">
-          Updated {formatRelativeTime(agent.updatedAt)}
-        </p>
+      <div className="mt-auto flex items-center justify-between px-4 pb-3">
+        <p className="meta">Updated {formatRelativeTime(agent.updatedAt)}</p>
+        <span className="text-xs text-ink-subtle opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          {live ? "Open editor →" : "Finish setting up →"}
+        </span>
       </div>
     </Panel>
   );

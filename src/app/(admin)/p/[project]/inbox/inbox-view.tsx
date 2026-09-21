@@ -22,7 +22,7 @@ import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, SeverityBadge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
-import { Panel } from "@/components/ui/panel";
+import { ListRow, RowIcon } from "@/components/ui/list-row";
 import {
   Select,
   SelectContent,
@@ -44,10 +44,27 @@ import type { ConversationSummaryDto, IssueDto } from "@/lib/serialize";
 import { ISSUE_KINDS, issueKind } from "@/lib/issue-kinds";
 import { formatRelativeTime } from "@/lib/utils";
 
+function TabCount({ value, tone, label }: { value: number; tone: "accent" | "danger" | "warning"; label: string }) {
+  if (value === 0) return null;
+  return (
+    <Badge tone={tone} className="ml-1.5" aria-label={`${value} ${label}`}>
+      {value}
+    </Badge>
+  );
+}
+
 export function InboxView({ project }: { project: string }) {
   const [tab, setTab] = React.useState<"conversations" | "issues" | "approvals">("conversations");
+  // Every tab carries the count that matters for it - what is open, what is
+  // waiting - so the tab bar is a status line, not just navigation.
   const awaiting = useActionItems({ project, status: "needs_approval" }, { refetchInterval: 10_000 });
-  const awaitingCount = awaiting.data?.length ?? 0;
+  const openConversations = useConversations({ project, status: "open" });
+  const openIssues = useIssues({ project, status: "open" });
+  const counts = {
+    conversations: openConversations.data?.length ?? 0,
+    issues: openIssues.data?.length ?? 0,
+    approvals: awaiting.data?.length ?? 0,
+  };
   const [agentId, setAgentId] = React.useState("all");
   const [status, setStatus] = React.useState("all");
   const [includePreviews, setIncludePreviews] = React.useState(false);
@@ -85,19 +102,17 @@ export function InboxView({ project }: { project: string }) {
             <TabsTrigger value="conversations">
               <MessageSquare aria-hidden />
               Conversations
+              <TabCount value={counts.conversations} tone="accent" label="open" />
             </TabsTrigger>
             <TabsTrigger value="issues">
               <Bug aria-hidden />
-              Issues &amp; suggestions
+              Issues
+              <TabCount value={counts.issues} tone="danger" label="open" />
             </TabsTrigger>
             <TabsTrigger value="approvals">
               <ClipboardCheck aria-hidden />
               Approvals
-              {awaitingCount > 0 ? (
-                <Badge tone="warning" className="ml-1.5">
-                  {awaitingCount}
-                </Badge>
-              ) : null}
+              <TabCount value={counts.approvals} tone="warning" label="waiting" />
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -244,60 +259,57 @@ function ConversationRow({
   project: string;
 }) {
   return (
-    <Panel className="relative transition-shadow hover:shadow-md focus-within:shadow-md">
-      <div className="flex items-start gap-3 p-4">
+    <ListRow
+      leading={
         <AgentAvatar
           name={conversation.agent.name}
           src={conversation.agent.avatarUrl}
           seed={conversation.agent.id}
           size="md"
         />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[0.8125rem] font-semibold text-ink">
-              <Link
-                href={`/p/${project}/inbox/${conversation.id}`}
-                className="after:absolute after:inset-0 after:content-['']"
-              >
-                {conversation.agent.name}
-              </Link>
-            </h2>
-            <StatusBadge status={conversation.status} />
-            {conversation.mode === "human" ? (
-              <Badge tone="warning">
-                <UserRound aria-hidden />
-                {conversation.takenOverBy
-                  ? `${conversation.takenOverBy} replying`
-                  : "Human replying"}
-              </Badge>
-            ) : null}
-            {conversation.openIssueCount > 0 ? (
-              <Badge tone="danger">
-                <Bug aria-hidden />
-                {conversation.openIssueCount} open
-              </Badge>
-            ) : conversation.issueCount > 0 ? (
-              <Badge tone="neutral">{conversation.issueCount} logged</Badge>
-            ) : null}
-          </div>
-
-          {conversation.summary ? (
-            <p className="mt-1 line-clamp-2 text-[0.8125rem] leading-relaxed text-ink">
-              {conversation.summary}
-            </p>
-          ) : (
-            <p className="mt-1 line-clamp-2 text-[0.8125rem] leading-relaxed text-ink-muted">
-              {conversation.preview || "No client message yet."}
-            </p>
-          )}
-
-          <p className="mt-2 meta">
-            {conversation.messageCount} messages ·{" "}
-            {formatRelativeTime(conversation.lastMessageAt)}
-          </p>
-        </div>
-      </div>
-    </Panel>
+      }
+      title={
+        <Link
+          href={`/p/${project}/inbox/${conversation.id}`}
+          className="after:absolute after:inset-0 after:content-['']"
+        >
+          {conversation.agent.name}
+        </Link>
+      }
+      badges={
+        <>
+          <StatusBadge status={conversation.status} />
+          {conversation.mode === "human" ? (
+            <Badge tone="warning">
+              <UserRound aria-hidden />
+              {conversation.takenOverBy ? `${conversation.takenOverBy} replying` : "Human replying"}
+            </Badge>
+          ) : null}
+          {conversation.openIssueCount > 0 ? (
+            <Badge tone="danger">
+              <Bug aria-hidden />
+              {conversation.openIssueCount} open
+            </Badge>
+          ) : conversation.issueCount > 0 ? (
+            <Badge tone="neutral">{conversation.issueCount} logged</Badge>
+          ) : null}
+        </>
+      }
+      body={
+        conversation.summary ? (
+          <p className="line-clamp-2 text-ink">{conversation.summary}</p>
+        ) : (
+          <p className="line-clamp-2 text-ink-muted">{conversation.preview || "No client message yet."}</p>
+        )
+      }
+      meta={
+        <>
+          <span>{conversation.messageCount} messages</span>
+          <span aria-hidden>·</span>
+          <span>{formatRelativeTime(conversation.lastMessageAt)}</span>
+        </>
+      }
+    />
   );
 }
 
@@ -368,71 +380,50 @@ function IssueRow({
   const Icon = { bug: Bug, lightbulb: Lightbulb, handoff: UserRoundCheck, alert: TriangleAlert }[kind.icon];
 
   return (
-    <Panel className={resolved ? "opacity-70" : undefined}>
-      <div className="flex items-start gap-3 p-4">
-        <span
-          aria-hidden
-          className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2"
-        >
-          <Icon className="size-4 text-ink-muted" />
-        </span>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={kind.tone}>
-              <Icon aria-hidden />
-              {kind.label}
-            </Badge>
-            {/* An escalation is high-severity by construction; the badge would
-                just repeat what "Escalated" already says. */}
-            {issue.type === "escalation" ? null : (
-              <SeverityBadge severity={issue.severity} />
-            )}
-            {resolved ? <StatusBadge status="resolved" /> : null}
-          </div>
-
-          <h2 className="mt-1.5 text-[0.8125rem] font-semibold text-ink">
-            {issue.summary}
-          </h2>
-
-          {issue.details ? (
-            <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-[0.8125rem] leading-relaxed text-ink-muted">
-              {issue.details}
-            </p>
+    <ListRow
+      muted={resolved}
+      leading={
+        <RowIcon>
+          <Icon />
+        </RowIcon>
+      }
+      title={issue.summary}
+      badges={
+        <>
+          <Badge tone={kind.tone}>
+            <Icon aria-hidden />
+            {kind.label}
+          </Badge>
+          {/* An escalation is high-severity by construction; the badge would
+              just repeat what "Escalated" already says. */}
+          {issue.type === "escalation" ? null : <SeverityBadge severity={issue.severity} />}
+          {resolved ? <StatusBadge status="resolved" /> : null}
+        </>
+      }
+      body={
+        issue.details ? <p className="line-clamp-3 whitespace-pre-wrap text-ink-muted">{issue.details}</p> : null
+      }
+      meta={
+        <>
+          {issue.agent ? <span>{issue.agent.name}</span> : null}
+          <span aria-hidden>·</span>
+          <span>{issue.source === "agent" ? "raised by the agent" : "raised by a client"}</span>
+          <span aria-hidden>·</span>
+          <span>{formatRelativeTime(issue.createdAt)}</span>
+          <span aria-hidden>·</span>
+          {issue.conversationId ? (
+            <Link href={`/p/${project}/inbox/${issue.conversationId}`} className="text-accent hover:underline">
+              View conversation
+            </Link>
+          ) : issue.actionItemId ? (
+            <Link href={`/p/${project}/work?item=${issue.actionItemId}`} className="text-accent hover:underline">
+              View the run
+            </Link>
           ) : null}
-
-          <p className="mt-2 flex flex-wrap items-center gap-x-2 meta">
-            {issue.agent ? <span>{issue.agent.name}</span> : null}
-            <span aria-hidden>·</span>
-            <span>{issue.source === "agent" ? "raised by the agent" : "raised by a client"}</span>
-            <span aria-hidden>·</span>
-            <span>{formatRelativeTime(issue.createdAt)}</span>
-            <span aria-hidden>·</span>
-            {issue.conversationId ? (
-              <Link
-                href={`/p/${project}/inbox/${issue.conversationId}`}
-                className="text-accent hover:underline"
-              >
-                View conversation
-              </Link>
-            ) : issue.actionItemId ? (
-              <Link
-                href={`/p/${project}/work?item=${issue.actionItemId}`}
-                className="text-accent hover:underline"
-              >
-                View the run
-              </Link>
-            ) : null}
-          </p>
-        </div>
-
-        <Button
-          variant={resolved ? "ghost" : "secondary"}
-          size="sm"
-          loading={pending}
-          onClick={onToggle}
-          className="shrink-0"
-        >
+        </>
+      }
+      trailing={
+        <Button variant={resolved ? "ghost" : "secondary"} size="sm" loading={pending} onClick={onToggle}>
           {resolved ? (
             <>
               <Undo2 aria-hidden />
@@ -445,11 +436,10 @@ function IssueRow({
             </>
           )}
         </Button>
-      </div>
-    </Panel>
+      }
+    />
   );
 }
-
 
 function ApprovalList({ project, agentId }: { project: string; agentId: string }) {
   const { data, isPending, error, refetch, isRefetching } = useActionItems(

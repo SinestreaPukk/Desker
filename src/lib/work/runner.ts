@@ -68,7 +68,7 @@ export async function transition(
       ...data,
       status: to,
       ...(to === "in_progress" ? { startedAt: new Date() } : {}),
-      ...(to === "needs_approval" ? { awaitingSince: new Date() } : {}),
+      ...(to === "needs_approval" ? { awaitingSince: new Date(), completedAt: null } : {}),
       ...(["done", "failed", "rejected"].includes(to) ? { completedAt: new Date() } : {}),
     },
   });

@@ -60,7 +60,7 @@ export function InsightsView({ project }: { project: string }) {
       {/* The range picker lives in the toolbar rather than the header, so this
           tab has the same two-row chrome as the roster and the inbox. */}
       <PageToolbar>
-        <p className="text-[0.8125rem] text-ink-muted">
+        <p className="text-sm text-ink-muted">
           Figures cover real client conversations only; builder previews are
           excluded.
         </p>
@@ -103,46 +103,43 @@ export function InsightsView({ project }: { project: string }) {
           />
         ) : (
           <>
-            <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <Stat label="Conversations" value={data!.totals.conversations} />
-              <Stat
-                label="Escalated"
-                value={data!.totals.escalated}
-                hint={
-                  data!.totals.conversations > 0
-                    ? percent(data!.totals.escalated / data!.totals.conversations)
-                    : undefined
-                }
-              />
-              <Stat
-                label="Issues logged"
-                value={data!.totals.issues}
-                hint={`${data!.totals.suggestions} suggestions`}
-              />
-              <Stat
-                label="Rated helpful"
-                value={data!.totals.ratedUp}
-                hint={
-                  data!.totals.ratedUp + data!.totals.ratedDown > 0
-                    ? `${percent(
-                        data!.totals.ratedUp /
-                          (data!.totals.ratedUp + data!.totals.ratedDown),
-                      )} of ${data!.totals.ratedUp + data!.totals.ratedDown} rated`
-                    : "no ratings yet"
-                }
-              />
-              <Stat
-                label="Searches"
-                value={data!.totals.searches}
-                hint={
-                  data!.totals.searches > 0
-                    ? `${percent(
-                        1 - data!.totals.searchMisses / data!.totals.searches,
-                      )} found something`
-                    : undefined
-                }
-              />
-            </dl>
+            <KpiRow
+              lead={{
+                label: "Client conversations",
+                value: data!.totals.conversations,
+                hint: `last ${data!.days} days`,
+              }}
+              stats={[
+                {
+                  label: "Escalated to a person",
+                  value: data!.totals.escalated,
+                  ratio: data!.totals.conversations > 0 ? data!.totals.escalated / data!.totals.conversations : null,
+                  tone: "danger",
+                },
+                {
+                  label: "Rated helpful",
+                  value: data!.totals.ratedUp,
+                  ratio:
+                    data!.totals.ratedUp + data!.totals.ratedDown > 0
+                      ? data!.totals.ratedUp / (data!.totals.ratedUp + data!.totals.ratedDown)
+                      : null,
+                  tone: "positive",
+                  hint: data!.totals.ratedUp + data!.totals.ratedDown > 0 ? `of ${data!.totals.ratedUp + data!.totals.ratedDown} rated` : "no ratings yet",
+                },
+                {
+                  label: "Issues logged",
+                  value: data!.totals.issues,
+                  hint: `${data!.totals.suggestions} suggestions`,
+                },
+                {
+                  label: "Document searches",
+                  value: data!.totals.searches,
+                  ratio: data!.totals.searches > 0 ? 1 - data!.totals.searchMisses / data!.totals.searches : null,
+                  tone: "accent",
+                  hint: data!.totals.searches > 0 ? "found something" : undefined,
+                },
+              ]}
+            />
 
             {/* Work: what the agents did on their own, and what it cost. -------- */}
             <WorkSection work={data!.work} days={data!.days} />
@@ -168,7 +165,7 @@ export function InsightsView({ project }: { project: string }) {
                     className="py-10"
                   />
                 ) : (
-                  <ul className="divide-y divide-line rounded-xl border border-line">
+                  <ul className="divide-y divide-line rounded-lg border border-line">
                     {data!.contentGaps.map((gap) => (
                       <li
                         key={`${gap.agentName}:${gap.query}`}
@@ -179,7 +176,7 @@ export function InsightsView({ project }: { project: string }) {
                           aria-hidden
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-[0.8125rem] text-ink">
+                          <p className="text-sm text-ink">
                             &ldquo;{gap.query}&rdquo;
                           </p>
                           <p className="mt-1 meta">
@@ -208,7 +205,7 @@ export function InsightsView({ project }: { project: string }) {
                   </div>
                 </PanelHeader>
                 <PanelBody>
-                  <ul className="divide-y divide-line rounded-xl border border-line">
+                  <ul className="divide-y divide-line rounded-lg border border-line">
                     {data!.dislikedReplies.map((item) => (
                       <li key={item.messageId} className="flex items-start gap-3 p-3">
                         <ThumbsDown
@@ -217,11 +214,11 @@ export function InsightsView({ project }: { project: string }) {
                         />
                         <div className="min-w-0 flex-1 space-y-1">
                           {item.question ? (
-                            <p className="text-[0.8125rem] font-medium text-ink">
+                            <p className="text-sm font-medium text-ink">
                               &ldquo;{item.question}&rdquo;
                             </p>
                           ) : null}
-                          <p className="line-clamp-2 text-[0.8125rem] leading-relaxed text-ink-muted">
+                          <p className="line-clamp-2 text-sm leading-relaxed text-ink-muted">
                             {item.reply}
                           </p>
                           <p className="meta">
@@ -302,7 +299,7 @@ export function InsightsView({ project }: { project: string }) {
                                   size="sm"
                                 />
                                 <span className="min-w-0">
-                                  <span className="block truncate text-[0.8125rem] font-medium text-ink">
+                                  <span className="block truncate text-sm font-medium text-ink">
                                     {agent.name}
                                   </span>
                                   <span className="block truncate text-xs text-ink-muted">
@@ -400,34 +397,36 @@ function WorkSection({ work, days }: { work: AnalyticsResponse["work"]; days: nu
     totals.periods.length === 1 ? totals.periods[0] : `${totals.periods[0]} to ${totals.periods.at(-1)}`;
   return (
     <>
-      <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <Stat label="Tasks run" value={totals.runs} hint={`last ${days} days`} />
-        <Stat
-          label="Completed"
-          value={totals.done}
-          hint={totals.runs > 0 ? `${percent(totals.done / totals.runs)} of runs` : undefined}
-        />
-        <Stat
-          label="Failed"
-          value={totals.failed}
-          hint={totals.escalated > 0 ? `${totals.escalated} escalated by an agent` : undefined}
-        />
-        <Stat
-          label="Awaiting approval"
-          value={totals.awaiting}
-          hint={`avg decision ${duration(totals.approvalTurnaroundMs)}`}
-        />
-        <Panel className="p-4">
-          <dt className="meta">Model cost</dt>
-          <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{money(totals.costUsd)}</dd>
-          <dd className="mt-0.5 text-xs text-ink-muted">
-            {periodLabel} · {(totals.inputTokens + totals.outputTokens).toLocaleString()} tokens
-            {totals.unpricedModels.length > 0
-              ? ` · no price for ${totals.unpricedModels.join(", ")}`
-              : ""}
-          </dd>
-        </Panel>
-      </dl>
+      <KpiRow
+        lead={{
+          label: "Model cost",
+          value: money(totals.costUsd),
+          hint: `${periodLabel} · ${(totals.inputTokens + totals.outputTokens).toLocaleString()} tokens${
+            totals.unpricedModels.length > 0 ? ` · no price for ${totals.unpricedModels.join(", ")}` : ""
+          }`,
+        }}
+        stats={[
+          { label: "Tasks run", value: totals.runs, hint: `last ${days} days` },
+          {
+            label: "Completed",
+            value: totals.done,
+            ratio: totals.runs > 0 ? totals.done / totals.runs : null,
+            tone: "positive",
+          },
+          {
+            label: "Failed",
+            value: totals.failed,
+            ratio: totals.runs > 0 ? totals.failed / totals.runs : null,
+            tone: "danger",
+            hint: totals.escalated > 0 ? `${totals.escalated} escalated by an agent` : undefined,
+          },
+          {
+            label: "Awaiting approval",
+            value: totals.awaiting,
+            hint: `avg decision ${duration(totals.approvalTurnaroundMs)}`,
+          },
+        ]}
+      />
 
       <Panel>
         <PanelHeader>
@@ -495,20 +494,69 @@ function WorkSection({ work, days }: { work: AnalyticsResponse["work"]; days: nu
   );
 }
 
-function Stat({
-  label,
-  value,
-  hint,
+/**
+ * One KPI style for the whole dashboard: a lead card with the number that
+ * matters most, and the numbers that explain it beside it - each with the
+ * same slim ratio bar where a share is the point. No equally-sized tiles.
+ */
+function KpiRow({
+  lead,
+  stats,
 }: {
-  label: string;
-  value: number;
-  hint?: string;
+  lead: { label: string; value: number | string; hint?: string };
+  stats: {
+    label: string;
+    value: number | string;
+    hint?: string;
+    ratio?: number | null;
+    tone?: "accent" | "positive" | "warning" | "danger";
+  }[];
 }) {
   return (
-    <Panel className="p-4">
-      <dt className="meta">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{value}</dd>
-      {hint ? <dd className="mt-0.5 text-xs text-ink-muted">{hint}</dd> : null}
-    </Panel>
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <Panel className="flex flex-col justify-between p-5">
+        <p className="meta">{lead.label}</p>
+        <p className="mt-2 text-display font-semibold leading-none tracking-tight text-ink tabular-nums">
+          {typeof lead.value === "number" ? lead.value.toLocaleString() : lead.value}
+        </p>
+        {lead.hint ? <p className="mt-3 text-sm text-ink-muted">{lead.hint}</p> : null}
+      </Panel>
+      <dl className="grid gap-3 sm:grid-cols-2">
+        {stats.map((stat) => (
+          <Panel key={stat.label} className="p-4">
+            <dt className="meta">{stat.label}</dt>
+            <dd className="mt-1 flex items-baseline gap-2">
+              <span className="text-xl font-semibold tabular-nums text-ink">
+                {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
+              </span>
+              {stat.ratio !== null && stat.ratio !== undefined ? (
+                <span className="text-sm text-ink-muted">{percent(stat.ratio)}</span>
+              ) : null}
+            </dd>
+            {stat.ratio !== null && stat.ratio !== undefined ? (
+              <RatioBar value={stat.ratio} tone={stat.tone ?? "accent"} />
+            ) : null}
+            {stat.hint ? <dd className="mt-1 text-xs text-ink-muted">{stat.hint}</dd> : null}
+          </Panel>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+const BAR_TONE = {
+  accent: "bg-accent",
+  positive: "bg-positive",
+  warning: "bg-warning",
+  danger: "bg-danger",
+} as const;
+
+/** The one chart shape here: a share of a whole, as a bar. */
+function RatioBar({ value, tone }: { value: number; tone: keyof typeof BAR_TONE }) {
+  const width = Math.max(0, Math.min(1, value)) * 100;
+  return (
+    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3" aria-hidden>
+      <div className={`h-full rounded-full ${BAR_TONE[tone]}`} style={{ width: `${width}%` }} />
+    </div>
   );
 }

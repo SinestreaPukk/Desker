@@ -33,7 +33,7 @@ export function FirstRun({ project }: { project: string }) {
     <Panel className="mx-auto max-w-2xl p-6 sm:p-8">
       <p className="meta">Welcome</p>
       <h2 className="mt-1 text-xl font-semibold text-ink">Nobody on the roster yet</h2>
-      <p className="mt-1.5 text-[0.9375rem] text-ink-muted">
+      <p className="mt-1.5 text-base text-ink-muted">
         An AI employee answers your clients and, once you trust it, does work on its own. Here is
         how the first one comes to life - about five minutes end to end.
       </p>
@@ -44,16 +44,16 @@ export function FirstRun({ project }: { project: string }) {
             <li key={step.title} className="flex gap-3">
               <span
                 aria-hidden
-                className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-accent-line bg-accent-soft text-accent"
+                className="flex size-8 shrink-0 items-center justify-center rounded-md border border-accent-line bg-accent-soft text-accent"
               >
                 <Icon className="size-4" />
               </span>
               <div>
-                <p className="text-[0.9375rem] font-medium text-ink">
+                <p className="text-base font-medium text-ink">
                   <span className="mr-1.5 text-ink-subtle">{index + 1}.</span>
                   {step.title}
                 </p>
-                <p className="text-[0.8125rem] text-ink-muted">{step.body}</p>
+                <p className="text-sm text-ink-muted">{step.body}</p>
               </div>
             </li>
           );

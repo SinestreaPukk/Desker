@@ -22,7 +22,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (!invitation) {
     return (
       <Shell title="This invitation is no longer valid">
-        <p className="text-[0.8125rem] text-ink-muted">
+        <p className="text-sm text-ink-muted">
           It may have expired, been revoked, or already been used. Ask whoever invited you to send a
           new one.
         </p>
@@ -41,7 +41,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
       if (error instanceof InviteMismatch) {
         return (
           <Shell title={`Join ${invitation.organization.name}`}>
-            <p className="text-[0.8125rem] text-ink-muted">{error.message}</p>
+            <p className="text-sm text-ink-muted">{error.message}</p>
             <p className="mt-1 text-xs text-ink-subtle">You are signed in as {user.email}.</p>
             <Button asChild className="mt-4" variant="secondary">
               <Link href={`/api/auth/signout?callbackUrl=${encodeURIComponent(`/login?invite=${token}`)}`}>
@@ -63,7 +63,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
   return (
     <Shell title={`Join ${invitation.organization.name}`}>
-      <p className="text-[0.8125rem] text-ink-muted">
+      <p className="text-sm text-ink-muted">
         You have been invited as <strong className="text-ink">{invitation.role}</strong>, at{" "}
         <strong className="text-ink">{invitation.email}</strong>. Sign in with that address, or
         create an account with it, to accept.

@@ -43,7 +43,7 @@ export function LoginForm() {
     <div className="space-y-6">
       <div>
         <BrandLockup />
-        <h1 className="mt-5 text-2xl font-semibold text-ink">Sign in</h1>
+        <h1 className="mt-5 text-xl font-semibold text-ink">Sign in</h1>
         <p className="mt-1.5 text-sm text-ink-muted">
           Manage your roster of AI employees.
         </p>

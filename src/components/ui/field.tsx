@@ -12,7 +12,7 @@ export function Label({
   return (
     <LabelPrimitive.Root
       className={cn(
-        "text-[0.8125rem] font-medium text-ink leading-none",
+        "text-sm font-medium text-ink leading-none",
         "peer-disabled:cursor-not-allowed peer-disabled:opacity-60",
         className,
       )}
@@ -22,7 +22,7 @@ export function Label({
 }
 
 const fieldStyles =
-  "w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink " +
+  "w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink " +
   "placeholder:text-ink-subtle shadow-xs transition-colors " +
   "hover:border-ink-subtle " +
   "focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent " +
