@@ -84,7 +84,7 @@ export default function ShowcasePage() {
                   {/* The same cushion the landing page's product frames sit on. */}
                   <div className="mat rounded-panel p-3 sm:p-4">
                     <div className="h-full rounded-lg border border-line bg-surface p-4 sm:p-5">
-                      <p className="meta">{SHOWCASE.exampleLabel}</p>
+                      <p className="eyebrow">{SHOWCASE.exampleLabel}</p>
                       <div className="mt-3 space-y-3 text-base leading-relaxed">
                         <p className="ml-auto max-w-[85%] rounded-panel rounded-br-md bg-accent px-4 py-2.5 text-accent-fg">
                           {role.example.prompt}

@@ -61,7 +61,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </div>
           {SITE.footer.columns.map((column) => (
             <div key={column.heading}>
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{column.heading}</h2>
+              <h2 className="eyebrow">{column.heading}</h2>
               <ul className="mt-3 space-y-2">
                 {column.links.map((item) => (
                   <li key={item.href}>
