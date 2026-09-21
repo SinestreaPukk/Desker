@@ -9,8 +9,12 @@ import * as React from "react";
  * children, so keeping everything as text children is what makes stored XSS
  * structurally impossible here rather than a sanitiser we have to trust.
  *
- * Paragraphs, list-ish lines and inline `code` spans are recognised because
- * models produce them constantly and a wall of text reads badly.
+ * Paragraphs, list-ish lines, inline `code` spans and **bold** runs are
+ * recognised because models produce them constantly and a wall of text reads
+ * badly. Bold is the one models reach for most, and without it a transcript
+ * shows a client the literal asterisks - so it is recognised the same way the
+ * code spans are: split the string, wrap the piece in an element, and keep the
+ * text a text child. Nothing here ever becomes markup from the string itself.
  */
 export function MessageText({ content }: { content: string }) {
   const blocks = React.useMemo(
@@ -55,23 +59,36 @@ export function MessageText({ content }: { content: string }) {
   );
 }
 
-/** Splits on inline code spans. Everything stays a React text child. */
+/**
+ * Splits on inline code spans and bold runs. Everything stays a React text
+ * child: the delimiters choose which element wraps the piece, they never
+ * become markup themselves. Code is first in the alternation so a bold run
+ * inside backticks stays code.
+ */
 function Inline({ text }: { text: string }) {
-  const parts = text.split(/(`[^`\n]+`)/g);
+  const parts = text.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*)/g);
   return (
     <>
-      {parts.map((part, index) =>
-        part.startsWith("`") && part.endsWith("`") && part.length > 2 ? (
-          <code
-            key={index}
-            className="rounded-sm bg-surface-3 px-1 py-0.5 font-mono text-[0.85em]"
-          >
-            {part.slice(1, -1)}
-          </code>
-        ) : (
-          <React.Fragment key={index}>{part}</React.Fragment>
-        ),
-      )}
+      {parts.map((part, index) => {
+        if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
+          return (
+            <code
+              key={index}
+              className="rounded-sm bg-surface-3 px-1 py-0.5 font-mono text-[0.85em]"
+            >
+              {part.slice(1, -1)}
+            </code>
+          );
+        }
+        if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+          return (
+            <strong key={index} className="font-semibold text-ink">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return <React.Fragment key={index}>{part}</React.Fragment>;
+      })}
     </>
   );
 }

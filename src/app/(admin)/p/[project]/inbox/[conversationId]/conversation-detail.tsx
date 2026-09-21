@@ -88,8 +88,12 @@ export function ConversationDetail({
   }
 
   const conversation = data!;
+  // A turn where the agent only called tools carries no text, and rendering it
+  // anyway put an empty bubble under a name and a timestamp, which reads as a
+  // message that failed to load. The tool rows say what happened.
   const visible = conversation.messages.filter(
-    (message) => showToolTurns || message.role !== "tool",
+    (message) =>
+      (showToolTurns || message.role !== "tool") && message.content.trim() !== "",
   );
 
   return (
