@@ -28,6 +28,7 @@ import {
   parseObjectives,
   type ScopeFormState,
 } from "./scope-of-work-form";
+import { WORK_TOOL_IDS } from "@/lib/work/tools";
 
 function toForm(scope: ScopeDto): ScopeFormState {
   return {
@@ -40,6 +41,7 @@ function toForm(scope: ScopeDto): ScopeFormState {
     enabled: scope.enabled,
     autonomy: scope.autonomy,
     toolAutonomy: scope.toolAutonomy ?? {},
+    tools: scope.tools ?? [...WORK_TOOL_IDS],
   };
 }
 
@@ -104,6 +106,7 @@ function ScopeEditor({
         enabled: form.enabled,
         autonomy: form.autonomy,
         toolAutonomy: Object.keys(form.toolAutonomy).length > 0 ? form.toolAutonomy : null,
+        tools: form.tools,
       });
       const next = toForm(result);
       setForm(next);

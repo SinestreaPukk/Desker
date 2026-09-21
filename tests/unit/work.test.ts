@@ -24,7 +24,10 @@ describe("action item state machine", () => {
     for (const status of ACTION_STATUSES) expect(TRANSITIONS[status]).toBeDefined();
     expect(TRANSITIONS.done).toEqual([]);
     expect(TRANSITIONS.failed).toEqual([]);
-    expect(TRANSITIONS.rejected).toEqual([]);
+    // A rejection can be undone from the toast, and only back to the queue
+    // it came from - never straight to approved.
+    expect(TRANSITIONS.rejected).toEqual(["needs_approval"]);
+    expect(canTransition("rejected", "approved")).toBe(false);
   });
 });
 

@@ -12,7 +12,9 @@ import { BrandLockup } from "@/components/brand-logo";
 
 export function LoginForm() {
   const router = useRouter();
-  const inviteToken = useSearchParams().get("invite");
+  const search = useSearchParams();
+  const inviteToken = search.get("invite");
+  const template = search.get("template");
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -35,7 +37,13 @@ export function LoginForm() {
       return;
     }
 
-    router.push(inviteToken ? `/invite/${inviteToken}` : "/");
+    router.push(
+      inviteToken
+        ? `/invite/${inviteToken}`
+        : template
+          ? `/?template=${encodeURIComponent(template)}`
+          : "/",
+    );
     router.refresh();
   }
 

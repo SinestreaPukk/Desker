@@ -27,6 +27,12 @@ export function isWorkToolId(value: string): value is WorkToolId {
   return (WORK_TOOL_IDS as readonly string[]).includes(value);
 }
 
+/** A scope's stored allowlist, dropping anything that is no longer a tool. Null = every tool. */
+export function scopeTools(value: unknown): WorkToolId[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.filter((entry): entry is WorkToolId => typeof entry === "string" && isWorkToolId(entry));
+}
+
 /**
  * read: touches nothing. draft: writes only inside this product.
  * internal: changes what the agent will do next. external: leaves the building.

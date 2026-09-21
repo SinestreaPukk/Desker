@@ -24,7 +24,7 @@ import {
   type DeliveryResult,
   type WebhookConfig,
 } from "./integrations";
-import { WORK_TOOL_RISK, isWorkToolId } from "./tools";
+import { WORK_TOOL_RISK, isWorkToolId, type WorkToolId } from "./tools";
 import {
   DRAFT_KINDS,
   effectiveAutonomy,
@@ -40,6 +40,8 @@ export interface RunContext {
   agent: { id: string; name: string; modelProvider: string; model: string | null };
   autonomy: AutonomyMode;
   toolAutonomy: ToolAutonomy | null;
+  /** The tools this run may call; the role template sets the default. */
+  tools: readonly WorkToolId[];
   /** Empty means every ready document the agent has. */
   documentIds: string[];
   /** schedule | webhook | manual | followup - recorded on every audit row. */

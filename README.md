@@ -319,8 +319,10 @@ with an example of each at work), `/contact`, `/terms`, `/privacy` - live in
 
 **Every word comes from `/content`.** `site.json` (company, nav, footer),
 `landing.json`, `showcase.json`, `contact.json`, and `templates.json` - the
-role templates, which are both the hire wizard's starting points and the
-showcase's cards. `lib/content.ts` validates the files at build; a missing
+role templates, which are both the hire wizard's first step (eight roles plus
+"start from scratch", each pre-filling job, team, opening message,
+personality, escalation rule, chat tools and work tools) and the showcase's
+cards. `lib/content.ts` validates the files at build; a missing
 field fails typecheck with the file and field named. A copy change is a text
 edit and a redeploy. See `content/README.md`.
 

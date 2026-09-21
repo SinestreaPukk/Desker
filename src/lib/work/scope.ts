@@ -3,6 +3,7 @@
  * its triggers. The cron scheduler and the webhook route both end up in
  * `startRun`, which is the only place an action item is born.
  */
+import { scopeTools, type WorkToolId } from "./tools";
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { CronExpressionParser } from "cron-parser";
@@ -37,6 +38,8 @@ export interface ScopeDto {
   enabled: boolean;
   autonomy: AutonomyMode;
   toolAutonomy: ToolAutonomy | null;
+  /** Null means every work tool. */
+  tools: WorkToolId[] | null;
   lastFiredAt: string | null;
   /** The next scheduled fire time, for the editor. Null unless cron. */
   nextFireAt: string | null;
@@ -91,6 +94,7 @@ export function toScopeDto(
     enabled: boolean;
     autonomy: string;
     toolAutonomy: unknown;
+    tools: unknown;
     lastFiredAt: Date | null;
   } | null,
   agentId: string,
@@ -108,6 +112,7 @@ export function toScopeDto(
       enabled: true,
       autonomy: "draft_only",
       toolAutonomy: null,
+      tools: null,
       lastFiredAt: null,
       nextFireAt: null,
     };
@@ -124,6 +129,7 @@ export function toScopeDto(
     enabled: scope.enabled,
     autonomy: scope.autonomy as AutonomyMode,
     toolAutonomy: (scope.toolAutonomy as ToolAutonomy | null) ?? null,
+    tools: scopeTools(scope.tools),
     lastFiredAt: scope.lastFiredAt?.toISOString() ?? null,
     nextFireAt:
       scope.triggerType === "cron" && scope.enabled
@@ -142,6 +148,7 @@ export interface ScopeInput {
   enabled: boolean;
   autonomy: AutonomyMode;
   toolAutonomy: ToolAutonomy | null;
+  tools: WorkToolId[] | null;
 }
 
 export function newWebhookToken(): string {
@@ -165,6 +172,7 @@ export async function saveScope(agentId: string, input: ScopeInput) {
     enabled: input.enabled,
     autonomy: input.autonomy,
     toolAutonomy: (input.toolAutonomy ?? Prisma.JsonNull) as Prisma.InputJsonValue | typeof Prisma.JsonNull,
+    tools: (input.tools ?? Prisma.JsonNull) as Prisma.InputJsonValue | typeof Prisma.JsonNull,
   };
   return prisma.scopeOfWork.upsert({
     where: { agentId },

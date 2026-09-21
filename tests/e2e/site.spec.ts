@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ANONYMOUS } from "./helpers";
+import { ANONYMOUS, signUp, uniqueAdmin } from "./helpers";
 import landing from "../../content/landing.json";
 import templates from "../../content/templates.json";
 
@@ -38,4 +38,19 @@ test("sitemap and robots are served", async ({ request }) => {
   expect(await sitemap.text()).toContain("/showcase");
   const robots = await request.get("/robots.txt");
   expect(await robots.text()).toContain("Disallow: /p/");
+});
+
+test.describe("a role chosen on the showcase", () => {
+  test.use({ storageState: ANONYMOUS });
+
+  test("rides through signup into the hire wizard", async ({ page }) => {
+    await page.goto("/showcase");
+    await page.locator("#researcher").getByRole("link", { name: "Hire this role" }).click();
+    await expect(page).toHaveURL(/\/signup\?template=researcher/);
+
+    await signUp(page, uniqueAdmin(), page.url());
+    await expect(page).toHaveURL(/\/agents\/new\?template=researcher/);
+    // The wizard opens past the picker with the role's job filled in.
+    await expect(page.getByLabel("Job title")).toHaveValue(/Research/);
+  });
 });

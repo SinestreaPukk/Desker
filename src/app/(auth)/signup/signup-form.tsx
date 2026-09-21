@@ -16,6 +16,9 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
   const router = useRouter();
   const search = useSearchParams();
   const inviteToken = invite?.token ?? search.get("invite") ?? undefined;
+  // From the showcase: the chosen role rides along into the hire wizard.
+  const template = search.get("template");
+  const next = template ? `/?template=${encodeURIComponent(template)}` : "/";
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
@@ -62,7 +65,7 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
     }
 
     // The root resolves the project and forwards into its wizard.
-    router.push("/");
+    router.push(next);
     router.refresh();
   }
 
@@ -152,7 +155,16 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
 
       <p className="text-center text-sm text-ink-muted">
         Already have an account?{" "}
-        <Link href={inviteToken ? `/login?invite=${encodeURIComponent(inviteToken)}` : "/login"} className="font-medium text-accent hover:underline">
+        <Link
+          href={
+            inviteToken
+              ? `/login?invite=${encodeURIComponent(inviteToken)}`
+              : template
+                ? `/login?template=${encodeURIComponent(template)}`
+                : "/login"
+          }
+          className="font-medium text-accent hover:underline"
+        >
           Sign in
         </Link>
       </p>

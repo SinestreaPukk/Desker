@@ -26,22 +26,31 @@ test.describe("signing up", () => {
   });
 });
 
-test("the wizard creates an agent in three steps", async ({ page }) => {
+test("the wizard creates an agent from a role template", async ({ page }) => {
   project = await currentProjectSlug(page);
   await page.goto(`/p/${project}/agents/new`);
 
-  // Step 1 - a starter pre-fills the form.
+  // Step 1 - pick a role. Nothing else is possible until one is chosen.
+  await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
   await page.getByRole("button", { name: /Customer support/ }).click();
-  await expect(page.getByLabel("Name")).toHaveValue("Mia");
   await page.getByRole("button", { name: "Continue" }).click();
 
-  // Step 2 - personality is required; the starter also brings an escalation rule.
+  // Step 2 - the role brings the job and team; the name is the admin's own.
+  await expect(page.getByLabel("Job title")).toHaveValue("Customer Support Lead");
+  await expect(page.getByLabel("Team")).toHaveValue("Customer Experience");
+  await page.getByLabel("Name").fill("Mia");
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  // Step 3 - personality is required; the role also brings an escalation rule.
   await expect(page.getByLabel("Personality and tone")).not.toHaveValue("");
   await expect(page.getByLabel("Escalation rule")).not.toHaveValue("");
   await page.getByRole("button", { name: "Continue" }).click();
 
-  // Step 3 - answering from context documents is on by default.
+  // Step 4 - answering from context documents is on by default, and the
+  // role's work tools are ticked.
   await expect(page.getByLabel("Answer from context documents")).toBeChecked();
+  await expect(page.getByLabel("Search context documents")).toBeChecked();
+  await expect(page.getByLabel("Send an email")).not.toBeChecked();
   await page.getByRole("button", { name: "Create agent" }).click();
 
   await expect(page).toHaveURL(/\/p\/[^/]+\/agents\/[^/]+\?onboarding=1/, {

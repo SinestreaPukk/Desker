@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, FileText, Sparkles } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, ArrowRight, Check, FileText, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label, Textarea } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
@@ -28,57 +28,19 @@ import { useCreateAgent } from "@/hooks/use-admin-data";
 import { api, ApiError, errorMessage } from "@/lib/api-client";
 import { parseLines } from "@/lib/agent-fields";
 import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
+import { TEMPLATES, templateById, type AgentTemplate } from "@/lib/content";
+import { TemplateIcon } from "@/components/marketing/template-icon";
+import { WORK_TOOL_IDS } from "@/lib/work/tools";
 import { cn } from "@/lib/utils";
 
 /**
- * Starting points, not templates to maintain: each one just pre-fills the form
- * so a first-time admin is editing prose rather than facing an empty textarea.
+ * The role templates come from content/templates.json - the same records the
+ * public showcase renders - plus one blank card. Picking one pre-fills every
+ * field; nothing is locked, the admin edits whatever they like afterwards.
  */
-const STARTERS = [
-  {
-    id: "support",
-    label: "Customer support",
-    name: "Mia",
-    jobTitle: "Customer Support Lead",
-    department: "Customer Experience",
-    personality:
-      "Warm but efficient. Answers in two or three sentences, never uses corporate filler, and says plainly when something isn't possible rather than hedging. Takes a reported problem seriously the first time it is mentioned.",
-    responsibilities:
-      "Answer questions about orders, shipping and returns\nHelp clients find the right product\nCollect enough detail on a bug for engineering to reproduce it\nRecord feature requests clients raise",
-    escalationRule:
-      "Escalate if the client is angry or upset, asks for a refund over $200, mentions legal action, or asks for something that needs a manager's approval.",
-    welcomeMessage:
-      "Hi, I'm Mia. Ask me anything about your order, a return, or how something works.",
-  },
-  {
-    id: "onboarding",
-    label: "Client onboarding",
-    name: "Ravi",
-    jobTitle: "Onboarding Specialist",
-    department: "Customer Success",
-    personality:
-      "Patient and methodical. Explains one step at a time and checks the client is with you before moving on. Never assumes technical knowledge, never talks down.",
-    responsibilities:
-      "Walk new clients through setup, one step at a time\nAnswer questions about plans, limits and configuration\nFlag anything that blocks a client from getting started",
-    escalationRule:
-      "Escalate if the client is blocked by something you cannot fix, asks about custom contract terms, or has been stuck on the same step twice.",
-    welcomeMessage:
-      "Welcome aboard. I'm Ravi — I'll get you set up. What would you like to start with?",
-  },
-  {
-    id: "blank",
-    label: "Start from scratch",
-    name: "",
-    jobTitle: "",
-    department: "",
-    personality: "",
-    responsibilities: "",
-    escalationRule: "",
-    welcomeMessage: "",
-  },
-] as const;
+const SCRATCH = "scratch";
 
-const STEPS = ["Who they are", "How they behave", "What they can do"] as const;
+const STEPS = ["Pick a role", "Who they are", "How they behave", "What they can do"] as const;
 
 /**
  * The one chat capability the wizard exposes. Everything else in the chat
@@ -90,51 +52,42 @@ const CONTEXT_TOOL: ToolId = "search_company_context";
 
 export function NewAgentWizard({ project }: { project: string }) {
   const router = useRouter();
+  const search = useSearchParams();
   const create = useCreateAgent(project);
 
-  const [step, setStep] = React.useState(0);
-  const [starter, setStarter] = React.useState<string | null>(null);
+  // A showcase link (/signup?template=x) arrives here with the role chosen.
+  const preselected = search.get("template");
+  const initial = preselected ? templateById(preselected) : undefined;
+
+  const [step, setStep] = React.useState(initial ? 1 : 0);
+  const [template, setTemplate] = React.useState<string | null>(initial ? initial.id : null);
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
 
-  const [form, setForm] = React.useState({
-    name: "",
-    jobTitle: "",
-    department: "",
-    avatarUrl: null as string | null,
-    personality: "",
-    responsibilitiesText: "",
-    escalationRule: "",
-    welcomeMessage: "",
-    allowedTools: [...TOOL_IDS] as ToolId[],
-  });
+  const [form, setForm] = React.useState(() => formFromTemplate(initial));
   const answersFromDocuments = form.allowedTools.includes(CONTEXT_TOOL);
-  const [scope, setScope] = React.useState<ScopeFormState>(defaultScopeForm);
+  const [scope, setScope] = React.useState<ScopeFormState>(() => scopeFromTemplate(initial));
+  // The scope of work is its own record; an untouched default one is not
+  // worth saving, but a template's tool set is.
   const scopeTouched =
     scope.context.trim() !== "" ||
     scope.objectivesText.trim() !== "" ||
-    scope.triggerType !== "manual";
+    scope.triggerType !== "manual" ||
+    scope.tools.length !== WORK_TOOL_IDS.length;
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
 
-  function applyStarter(id: string) {
-    const preset = STARTERS.find((entry) => entry.id === id);
-    if (!preset) return;
-    setStarter(id);
-    setForm((current) => ({
-      ...current,
-      name: preset.name,
-      jobTitle: preset.jobTitle,
-      department: preset.department,
-      personality: preset.personality,
-      responsibilitiesText: preset.responsibilities,
-      escalationRule: preset.escalationRule,
-      welcomeMessage: preset.welcomeMessage,
-    }));
+  function pickTemplate(id: string) {
+    const preset = id === SCRATCH ? undefined : templateById(id);
+    setTemplate(id);
+    // Name and avatar are the admin's own; a new role swaps everything else.
+    setForm((current) => ({ ...formFromTemplate(preset), name: current.name, avatarUrl: current.avatarUrl }));
+    setScope((current) => ({ ...scopeFromTemplate(preset), context: current.context, objectivesText: current.objectivesText }));
   }
 
   const stepValid = [
+    template !== null,
     form.name.trim() && form.jobTitle.trim(),
     form.personality.trim().length >= 10,
     true,
@@ -156,7 +109,6 @@ export function NewAgentWizard({ project }: { project: string }) {
         welcomeMessage: form.welcomeMessage.trim(),
         status: "draft",
       });
-      // The scope of work is its own record; an empty one is not worth saving.
       if (scopeTouched) {
         try {
           await api(`/api/agents/${agent.id}/scope`, {
@@ -171,6 +123,7 @@ export function NewAgentWizard({ project }: { project: string }) {
               enabled: scope.enabled,
               autonomy: "draft_only",
               toolAutonomy: null,
+              tools: scope.tools,
             }),
           });
         } catch (caught) {
@@ -189,13 +142,13 @@ export function NewAgentWizard({ project }: { project: string }) {
         setFieldErrors(caught.fieldErrors ?? {});
         // Send the admin back to the step that owns the bad field.
         const fields = Object.keys(caught.fieldErrors ?? {});
-        if (fields.some((field) => ["name", "jobTitle", "avatarUrl"].includes(field))) setStep(0);
+        if (fields.some((field) => ["name", "jobTitle", "avatarUrl"].includes(field))) setStep(1);
         else if (
           fields.some((field) =>
             ["personality", "welcomeMessage", "escalationRule"].includes(field),
           )
         )
-          setStep(1);
+          setStep(2);
       } else {
         setError(errorMessage(caught));
       }
@@ -214,8 +167,8 @@ export function NewAgentWizard({ project }: { project: string }) {
 
         <h1 className="text-xl font-semibold text-ink">Hire an AI employee</h1>
         <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
-          Three short steps, then you&apos;ll add a document and publish. About five
-          minutes end to end.
+          Pick a role, give them a name, check how they behave. About five minutes,
+          then you&apos;ll add a document and publish.
         </p>
 
         {/* Progress */}
@@ -265,6 +218,7 @@ export function NewAgentWizard({ project }: { project: string }) {
               <PanelDescription>
                 {
                   [
+                    "Every field below is pre-filled from the role you pick. Change anything.",
                     "Give them a name, a job and a face. Clients see all three.",
                     "How they talk, what falls to them, and when they fetch a human.",
                     "What they can draw on, and what they do on their own.",
@@ -278,36 +232,31 @@ export function NewAgentWizard({ project }: { project: string }) {
             <FormError message={error} />
 
             {step === 0 ? (
-              <>
-                <fieldset className="space-y-2">
-                  <legend className="text-sm font-medium text-ink">
-                    Start from
-                  </legend>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    {STARTERS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        aria-pressed={starter === preset.id}
-                        onClick={() => applyStarter(preset.id)}
-                        className={cn(
-                          "rounded-lg border p-3 text-left transition-colors",
-                          starter === preset.id
-                            ? "border-accent bg-accent-soft"
-                            : "border-line hover:bg-surface-2",
-                        )}
-                      >
-                        <span className="flex items-center gap-1.5 text-sm font-medium text-ink">
-                          {preset.id !== "blank" ? (
-                            <Sparkles className="size-3.5 text-accent" aria-hidden />
-                          ) : null}
-                          {preset.label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {TEMPLATES.map((role) => (
+                  <TemplateCard
+                    key={role.id}
+                    selected={template === role.id}
+                    onSelect={() => pickTemplate(role.id)}
+                    icon={<TemplateIcon icon={role.icon} className="size-4" />}
+                    title={role.name}
+                    subtitle={role.jobTitle}
+                    body={role.pitch}
+                  />
+                ))}
+                <TemplateCard
+                  selected={template === SCRATCH}
+                  onSelect={() => pickTemplate(SCRATCH)}
+                  icon={<PenLine className="size-4" />}
+                  title="Start from scratch"
+                  subtitle="Blank"
+                  body="Every field empty. Best when none of the roles is close to the job."
+                />
+              </div>
+            ) : null}
 
+            {step === 1 ? (
+              <>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field
                     label="Name"
@@ -359,7 +308,7 @@ export function NewAgentWizard({ project }: { project: string }) {
               </>
             ) : null}
 
-            {step === 1 ? (
+            {step === 2 ? (
               <>
                 <Field
                   label="Personality and tone"
@@ -424,7 +373,7 @@ export function NewAgentWizard({ project }: { project: string }) {
               </>
             ) : null}
 
-            {step === 2 ? (
+            {step === 3 ? (
               <>
                 <div
                   className={cn(
@@ -509,5 +458,65 @@ export function NewAgentWizard({ project }: { project: string }) {
         </Panel>
       </div>
     </div>
+  );
+}
+
+function formFromTemplate(preset: AgentTemplate | undefined) {
+  return {
+    name: "",
+    jobTitle: preset?.jobTitle ?? "",
+    department: preset?.team ?? "",
+    avatarUrl: null as string | null,
+    personality: preset?.personality ?? "",
+    responsibilitiesText: preset?.responsibilities.join("\n") ?? "",
+    escalationRule: preset?.escalationRule ?? "",
+    welcomeMessage: preset?.welcomeMessage ?? "",
+    allowedTools: (preset ? [...preset.allowedTools] : [...TOOL_IDS]) as ToolId[],
+  };
+}
+
+function scopeFromTemplate(preset: AgentTemplate | undefined): ScopeFormState {
+  return { ...defaultScopeForm(), tools: preset ? [...preset.workTools] : [...WORK_TOOL_IDS] };
+}
+
+function TemplateCard({
+  selected,
+  onSelect,
+  icon,
+  title,
+  subtitle,
+  body,
+}: {
+  selected: boolean;
+  onSelect: () => void;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  body: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+      className={cn(
+        "flex items-start gap-3 rounded-lg border p-3 text-left transition-colors",
+        selected ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-2",
+      )}
+    >
+      <span
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-md",
+          selected ? "bg-accent text-accent-fg" : "bg-surface-2 text-accent",
+        )}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-medium text-ink">{title}</span>
+        <span className="block text-xs text-ink-muted">{subtitle}</span>
+        <span className="mt-1 block text-xs leading-relaxed text-ink-muted">{body}</span>
+      </span>
+    </button>
   );
 }

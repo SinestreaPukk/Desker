@@ -1,6 +1,7 @@
 /** Request schemas for scope-of-work and integration routes. Shared with the forms. */
 import { z } from "zod";
 import { AUTONOMY_MODES, INTEGRATION_TYPES, TRIGGER_TYPES } from "./types";
+import { WORK_TOOL_IDS } from "./tools";
 
 export const scopeInputSchema = z.object({
   context: z.string().trim().max(20_000).default(""),
@@ -18,6 +19,8 @@ export const scopeInputSchema = z.object({
     })
     .nullable()
     .default(null),
+  /** Null means every tool; an array is the allowlist, empty included. */
+  tools: z.array(z.enum(WORK_TOOL_IDS)).max(WORK_TOOL_IDS.length).nullable().default(null),
 });
 export type ScopeInputPayload = z.infer<typeof scopeInputSchema>;
 

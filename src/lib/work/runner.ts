@@ -26,7 +26,7 @@ import { hasSearchProvider } from "./research";
 import { captureMessage } from "@/lib/monitoring";
 import { notifyInBackground } from "@/lib/notify";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
-import { WORK_TOOL_IDS, workToolDefinitions } from "./tools";
+import { WORK_TOOL_IDS, scopeTools, workToolDefinitions } from "./tools";
 import { executeWorkTool, executePendingAction, type RunContext } from "./execute";
 import {
   canTransition,
@@ -120,6 +120,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       },
       autonomy,
       toolAutonomy: (scope?.toolAutonomy as ToolAutonomy | null) ?? null,
+      tools: scopeTools(scope?.tools) ?? [...WORK_TOOL_IDS],
       documentIds,
       trigger: item.trigger,
     },
@@ -218,7 +219,7 @@ export async function runActionItem(
   const { ctx, systemPrompt, kickoff } = loaded;
 
   const provider = await getProvider(ctx.agent.modelProvider);
-  const tools = workToolDefinitions(WORK_TOOL_IDS);
+  const tools = workToolDefinitions(ctx.tools);
   const messages: ChatMessage[] = [{ role: "user", content: kickoff }];
   const usage = { inputTokens: 0, outputTokens: 0 };
   let summary = "";

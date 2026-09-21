@@ -387,6 +387,9 @@ model ScopeOfWork {
   /// Per-tool overrides: { publish_post?: "draft_only" | "auto", send_email?: ... }.
   /// A tool not listed inherits `autonomy`.
   toolAutonomy   Json?
+  /// string[] of work tool ids the agent may use during a run. Null means
+  /// every tool. Set by the role template, trimmed in the editor.
+  tools          Json?
   /// The last cron fire time that produced a run, so a tick is never doubled.
   lastFiredAt    DateTime?
   createdAt      DateTime @default(now())

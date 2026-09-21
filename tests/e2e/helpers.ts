@@ -33,8 +33,10 @@ export async function currentProjectSlug(page: Page): Promise<string> {
 export async function signUp(
   page: Page,
   admin: { email: string; password: string },
+  /** A signup URL with query parameters to carry through, e.g. a role template. */
+  path = "/signup",
 ) {
-  await page.goto("/signup");
+  await page.goto(path);
   await page.getByLabel("Email").fill(admin.email);
   await page.getByLabel("Password").fill(admin.password);
   await page.getByLabel(/I agree to the/).check();

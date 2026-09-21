@@ -18,6 +18,14 @@ Rules that keep this safe to edit:
   named, rather than rendering a blank.
 - Text is plain text. Line breaks in a string become paragraph breaks where
   the page supports them; there is no HTML.
-- `templates.json` fields that the wizard uses (`personality`, `welcomeMessage`,
-  `escalationRule`, `responsibilities`, `allowedTools`, `workTools`) are
-  written in the same plain language an owner would type into the form.
+- `templates.json` fields that the wizard uses (`jobTitle`, `team`,
+  `personality`, `welcomeMessage`, `escalationRule`, `responsibilities`,
+  `allowedTools`, `workTools`) are written in the same plain language an owner
+  would type into the form. Adding a record here adds a card to the wizard's
+  first step and to the showcase; nothing else needs to change. The name and
+  avatar are never in a template - those are the owner's.
+- `workTools` becomes the agent's scope-of-work allowlist: the tools it may
+  call during a run, trimmed later in the editor. `allowedTools` are the chat
+  tools.
+- A showcase card links to `/signup?template=<id>`; the id survives signup or
+  login and opens the wizard with that role already chosen.

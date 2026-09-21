@@ -7,7 +7,7 @@ import { defaultProject } from "@/lib/projects";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import { TemplateIcon } from "@/components/marketing/template-icon";
-import { LANDING, SITE, TEMPLATES, absoluteUrl } from "@/lib/content";
+import { LANDING, SITE, TEMPLATES, absoluteUrl, templateById } from "@/lib/content";
 import { PLANS } from "@/lib/billing/plans";
 
 export const metadata: Metadata = {
@@ -27,10 +27,19 @@ export const metadata: Metadata = {
  * The front door. A signed-in person has already been convinced; they go to
  * their workspace. Everyone else gets the pitch.
  */
-export default async function LandingPage() {
+export default async function LandingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ template?: string }>;
+}) {
   const user = await currentUser();
   if (user) {
     const project = await defaultProject(user.id);
+    // A role chosen on the showcase goes straight into the hire wizard.
+    const { template } = await searchParams;
+    if (template && templateById(template)) {
+      redirect(`/p/${project.slug}/agents/new?template=${encodeURIComponent(template)}`);
+    }
     redirect(`/p/${project.slug}/roster`);
   }
 

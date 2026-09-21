@@ -85,6 +85,7 @@ describe("scheduling", () => {
       enabled: true,
       autonomy: "draft_only",
       toolAutonomy: null,
+    tools: null,
     });
     // Pretend the scope has existed since yesterday so a past tick is due.
     await prisma.scopeOfWork.update({
@@ -125,6 +126,7 @@ describeLive("a live autonomous run", () => {
       enabled: true,
       autonomy: "draft_only",
       toolAutonomy: null,
+    tools: null,
     });
     const item = await prisma.actionItem.create({
       data: { organizationId, agentId, type: "scope_run", trigger: "manual", payload: {} },
@@ -233,6 +235,7 @@ describeLive("oversight", () => {
       autonomy: "draft_only",
       // Posts are trusted; emails still wait.
       toolAutonomy: { publish_post: "auto" },
+    tools: null,
     });
     await prisma.integration.create({
       data: {

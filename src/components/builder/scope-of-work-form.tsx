@@ -19,7 +19,12 @@ import {
 } from "@/lib/work/cadence";
 import type { AutonomyMode, ToolAutonomy, TriggerType } from "@/lib/work/types";
 import { ContextHelper, ObjectivesHelper } from "./live-example";
-import { GATED_TOOLS, WORK_TOOL_METADATA } from "@/lib/work/tools";
+import {
+  GATED_TOOLS,
+  WORK_TOOL_IDS,
+  WORK_TOOL_METADATA,
+  type WorkToolId,
+} from "@/lib/work/tools";
 
 /** What the form edits. Objectives are one per line until they are saved. */
 export interface ScopeFormState {
@@ -32,6 +37,8 @@ export interface ScopeFormState {
   enabled: boolean;
   autonomy: AutonomyMode;
   toolAutonomy: ToolAutonomy;
+  /** The work tools the agent may use during a run. The role template sets it. */
+  tools: WorkToolId[];
 }
 
 export function defaultScopeForm(): ScopeFormState {
@@ -45,6 +52,7 @@ export function defaultScopeForm(): ScopeFormState {
     enabled: true,
     autonomy: "draft_only",
     toolAutonomy: {},
+    tools: [...WORK_TOOL_IDS],
   };
 }
 
@@ -365,6 +373,49 @@ export function ScopeOfWorkForm({
           </div>
         </fieldset>
       ) : null}
+
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-ink">Work tools</legend>
+        <p className="text-xs text-ink-muted">
+          What the agent can do during a run. Publishing and email still wait for approval
+          unless you say otherwise.
+        </p>
+        <div className="grid gap-1.5 sm:grid-cols-2">
+          {WORK_TOOL_IDS.map((tool) => {
+            const checked = value.tools.includes(tool);
+            return (
+              <label
+                key={tool}
+                htmlFor={`${idPrefix}-tool-${tool}`}
+                className="flex cursor-pointer items-start gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink hover:bg-surface-2"
+              >
+                <Checkbox
+                  id={`${idPrefix}-tool-${tool}`}
+                  checked={checked}
+                  className="mt-0.5"
+                  onCheckedChange={(next) =>
+                    set(
+                      "tools",
+                      next
+                        ? WORK_TOOL_IDS.filter((id) => id === tool || value.tools.includes(id))
+                        : value.tools.filter((id) => id !== tool),
+                    )
+                  }
+                />
+                <span className="min-w-0">
+                  <span className="block font-medium">{WORK_TOOL_METADATA[tool].label}</span>
+                  <span className="block text-xs text-ink-muted">{WORK_TOOL_METADATA[tool].blurb}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+        {value.tools.length === 0 ? (
+          <p className="text-xs text-warning">
+            With no tools the agent can only write a summary. Tick at least one.
+          </p>
+        ) : null}
+      </fieldset>
 
       <div className="space-y-3">
         <div>
