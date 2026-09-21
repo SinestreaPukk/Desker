@@ -213,7 +213,9 @@ export default async function LandingPage({
               );
             })}
           </div>
-          <p className="mt-6 text-center text-sm text-ink-subtle">{pricing.footnote}</p>
+          {/* ink-subtle is the metadata tone and is only held to 3:1; what
+              every plan includes is not metadata. */}
+          <p className="mt-6 text-center text-sm text-ink-muted">{pricing.footnote}</p>
         </div>
       </section>
 
@@ -235,7 +237,11 @@ export default async function LandingPage({
         <Clouds />
         <div className="relative mx-auto max-w-6xl px-4 pb-40 pt-24 text-center sm:px-6 sm:pb-56 sm:pt-32">
           <Reveal>
-            <h2 className="mx-auto max-w-3xl font-display text-hero text-balance text-[var(--sky-ink)]">{cta.heading}</h2>
+            {/* A bookend, not a second hero: the page has one headline at
+                hero size and this is not it. Same serif, section scale. */}
+            <h2 className="mx-auto max-w-3xl font-display text-title text-balance text-[var(--sky-ink)]">
+              {cta.heading}
+            </h2>
             <p className="mt-5 text-lg font-medium text-[var(--sky-ink)]">{cta.body}</p>
             <Link href={cta.button.href} className={cn(GLASS_BUTTON, "mt-8")}>
               {cta.button.label}
