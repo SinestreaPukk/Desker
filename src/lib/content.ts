@@ -145,6 +145,41 @@ export function templateById(id: string): AgentTemplate | undefined {
   return TEMPLATES.find((t) => t.id === id);
 }
 
+/**
+ * Page metadata for a public page, from its content file. One place, so every
+ * page carries the same Open Graph card: a page that spells out its own
+ * `openGraph` object replaces the root's wholesale and silently loses the
+ * image the shared link needs.
+ */
+export function pageMetadata({
+  title,
+  description,
+  path,
+  absoluteTitle = false,
+}: {
+  title: string;
+  description: string;
+  path: string;
+  /** The landing page owns the whole title; other pages get the site suffix. */
+  absoluteTitle?: boolean;
+}) {
+  const ogTitle = absoluteTitle ? title : `${title} · ${SITE.company.name}`;
+  return {
+    title: absoluteTitle ? { absolute: title } : title,
+    description,
+    alternates: { canonical: absoluteUrl(path) },
+    openGraph: {
+      title: ogTitle,
+      description,
+      url: absoluteUrl(path),
+      siteName: SITE.company.name,
+      type: "website" as const,
+      images: [{ url: absoluteUrl("/opengraph-image"), width: 1200, height: 630, alt: ogTitle }],
+    },
+    twitter: { card: "summary_large_image" as const, title: ogTitle, description, images: [absoluteUrl("/opengraph-image")] },
+  };
+}
+
 /** Absolute URL for metadata, from the configured site URL. */
 export function absoluteUrl(path: string): string {
   return new URL(path, SITE.company.siteUrl).toString();

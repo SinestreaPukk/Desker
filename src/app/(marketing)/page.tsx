@@ -7,21 +7,15 @@ import { defaultProject } from "@/lib/projects";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import { TemplateIcon } from "@/components/marketing/template-icon";
-import { LANDING, SITE, TEMPLATES, absoluteUrl, templateById } from "@/lib/content";
+import { LANDING, SITE, TEMPLATES, pageMetadata, templateById } from "@/lib/content";
 import { PLANS } from "@/lib/billing/plans";
 
-export const metadata: Metadata = {
-  title: { absolute: `${SITE.company.name} — ${LANDING.meta.title}` },
+export const metadata: Metadata = pageMetadata({
+  title: `${SITE.company.name} — ${LANDING.meta.title}`,
   description: LANDING.meta.description,
-  alternates: { canonical: absoluteUrl("/") },
-  openGraph: {
-    title: `${SITE.company.name} — ${LANDING.meta.title}`,
-    description: LANDING.meta.description,
-    url: absoluteUrl("/"),
-    siteName: SITE.company.name,
-    type: "website",
-  },
-};
+  path: "/",
+  absoluteTitle: true,
+});
 
 /**
  * The front door. A signed-in person has already been convinced; they go to

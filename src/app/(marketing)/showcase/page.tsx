@@ -3,20 +3,13 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TemplateIcon } from "@/components/marketing/template-icon";
-import { SHOWCASE, SITE, TEMPLATES, absoluteUrl } from "@/lib/content";
+import { SHOWCASE, TEMPLATES, pageMetadata } from "@/lib/content";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: SHOWCASE.meta.title,
   description: SHOWCASE.meta.description,
-  alternates: { canonical: absoluteUrl("/showcase") },
-  openGraph: {
-    title: `${SHOWCASE.meta.title} · ${SITE.company.name}`,
-    description: SHOWCASE.meta.description,
-    url: absoluteUrl("/showcase"),
-    siteName: SITE.company.name,
-    type: "website",
-  },
-};
+  path: "/showcase",
+});
 
 /**
  * Every role, from the same records the hire wizard starts from. Adding a

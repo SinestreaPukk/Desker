@@ -1,20 +1,13 @@
 import type { Metadata } from "next";
 import { Mail } from "lucide-react";
-import { CONTACT, SITE, absoluteUrl } from "@/lib/content";
+import { CONTACT, SITE, pageMetadata } from "@/lib/content";
 import { ContactForm } from "./contact-form";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: CONTACT.meta.title,
   description: CONTACT.meta.description,
-  alternates: { canonical: absoluteUrl("/contact") },
-  openGraph: {
-    title: `${CONTACT.meta.title} · ${SITE.company.name}`,
-    description: CONTACT.meta.description,
-    url: absoluteUrl("/contact"),
-    siteName: SITE.company.name,
-    type: "website",
-  },
-};
+  path: "/contact",
+});
 
 export default function ContactPage() {
   const { details } = CONTACT;

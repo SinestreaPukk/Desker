@@ -15,6 +15,17 @@ test("the landing page renders the content file and links to sign-up", async ({ 
   await expect(og).toHaveAttribute("content", /Desker/);
 });
 
+test("every public page carries a preview image for shared links", async ({ page, request }) => {
+  for (const path of ["/", "/showcase", "/contact"]) {
+    await page.goto(path);
+    // A page that redefines openGraph loses the root image unless it says so.
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /opengraph-image/);
+  }
+  const image = await request.get("/opengraph-image");
+  expect(image.status()).toBe(200);
+  expect(image.headers()["content-type"]).toContain("image/png");
+});
+
 test("the showcase lists every template with its example", async ({ page }) => {
   await page.goto("/showcase");
   for (const t of templates.templates) {
