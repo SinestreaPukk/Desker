@@ -34,9 +34,9 @@ export async function uniqueOrganizationSlug(
 /** The name a brand-new account's organisation gets before anyone renames it. */
 export function defaultOrganizationName(user: { name?: string | null; email: string }) {
   const first = user.name?.trim().split(/\s+/)[0];
-  if (first) return `${first}'s organization`;
+  if (first) return `${first}'s organisation`;
   const local = user.email.split("@")[0] ?? "";
-  return local ? `${local}'s organization` : "My organization";
+  return local ? `${local}'s organisation` : "My organisation";
 }
 
 /**

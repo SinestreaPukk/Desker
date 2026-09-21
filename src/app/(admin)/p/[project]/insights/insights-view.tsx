@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
+import { EmptyState, ErrorState, LoadingKpis, LoadingRows } from "@/components/ui/states";
 import { useAnalytics, type AnalyticsResponse } from "@/hooks/use-admin-data";
 import { errorMessage } from "@/lib/api-client";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -83,7 +83,10 @@ export function InsightsView({ project }: { project: string }) {
 
       <PageBody className="space-y-5">
         {isPending ? (
-          <LoadingRows count={3} />
+          <>
+            <LoadingKpis />
+            <LoadingRows count={2} />
+          </>
         ) : error ? (
           <ErrorState
             message={errorMessage(error)}

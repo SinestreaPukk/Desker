@@ -35,7 +35,7 @@ export async function canPublishAgent(organizationId: string, agentId: string): 
   if (published.length >= plan.limits.publishedAgents) {
     return {
       allowed: false,
-      reason: `The ${plan.name} plan allows ${plan.limits.publishedAgents} published agent${plan.limits.publishedAgents === 1 ? "" : "s"}. Unpublish one, or upgrade under Organization → Billing.`,
+      reason: `The ${plan.name} plan allows ${plan.limits.publishedAgents} published agent${plan.limits.publishedAgents === 1 ? "" : "s"}. Unpublish one, or upgrade under Organisation → Billing.`,
     };
   }
   return ok;

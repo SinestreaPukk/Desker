@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     if (agent.publicPasscode && input.passcode !== agent.publicPasscode) {
-      throw new HttpError(401, "That passcode is not correct.");
+      throw new HttpError(401, "That passcode isn't right.");
     }
 
     // Keyed per agent+session: one abusive session cannot exhaust another's quota.

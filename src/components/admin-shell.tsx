@@ -58,7 +58,7 @@ const NAV = [
   { segment: "insights", label: "Insights", icon: ChartNoAxesColumn },
   { segment: "audit", label: "Audit log", icon: ScrollText },
   { segment: "integrations", label: "Integrations", icon: Plug },
-  { segment: "organization", label: "Organization", icon: Building2 },
+  { segment: "organization", label: "Organisation", icon: Building2 },
 ] as const;
 
 export function AdminShell({

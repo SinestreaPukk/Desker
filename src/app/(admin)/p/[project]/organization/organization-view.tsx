@@ -66,7 +66,7 @@ export function OrganizationView({
   return (
     <Page>
       <PageHeader
-        title={org.data?.name ?? "Organization"}
+        title={org.data?.name ?? "Organisation"}
         description="Who is in this organisation, what they may do, and what it pays for. Shared by every project here."
       />
       <PageBody className="grid gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">

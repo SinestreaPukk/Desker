@@ -127,3 +127,47 @@ export function LoadingRows({ count = 3 }: { count?: number }) {
     </div>
   );
 }
+
+/** Card-shaped placeholders for a grid, so the real cards land where the skeletons were. */
+export function LoadingCards({ count = 6 }: { count?: number }) {
+  return (
+    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-busy>
+      <span className="sr-only">Loading…</span>
+      {Array.from({ length: count }, (_, index) => (
+        <li key={index} className="rounded-panel border border-line bg-surface p-4">
+          <div className="flex items-start gap-3">
+            <Skeleton className="size-12 rounded-full" />
+            <div className="flex-1 space-y-2 pt-1">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-3 w-3/4" />
+            </div>
+          </div>
+          <Skeleton className="mt-4 h-3 w-2/3" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** A KPI row placeholder: one lead number beside a 2x2 of secondary stats. */
+export function LoadingKpis() {
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]" aria-busy>
+      <span className="sr-only">Loading…</span>
+      <div className="rounded-panel border border-line bg-surface p-5">
+        <Skeleton className="h-3 w-1/3" />
+        <Skeleton className="mt-4 h-10 w-1/2" />
+        <Skeleton className="mt-3 h-3 w-2/3" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="rounded-panel border border-line bg-surface p-4">
+            <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="mt-3 h-6 w-1/3" />
+            <Skeleton className="mt-3 h-1.5 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

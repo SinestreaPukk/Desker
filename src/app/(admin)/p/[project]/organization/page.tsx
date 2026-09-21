@@ -4,7 +4,7 @@ import { currentUser } from "@/lib/auth";
 import { findProject } from "@/lib/projects";
 import { OrganizationView } from "./organization-view";
 
-export const metadata: Metadata = { title: "Organization" };
+export const metadata: Metadata = { title: "Organisation" };
 
 export default async function OrganizationPage({
   params,

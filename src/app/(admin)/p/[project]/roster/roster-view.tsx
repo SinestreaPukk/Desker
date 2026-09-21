@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
+import { EmptyState, ErrorState, LoadingCards } from "@/components/ui/states";
 import { useAgents } from "@/hooks/use-admin-data";
 import { FirstRun } from "@/components/first-run";
 import { errorMessage } from "@/lib/api-client";
@@ -132,7 +132,7 @@ export function RosterView({ project }: { project: string }) {
 
       <PageBody>
         {isPending ? (
-          <LoadingRows count={3} />
+          <LoadingCards />
         ) : error ? (
           <ErrorState
             message={errorMessage(error)}
