@@ -20,8 +20,9 @@ test.describe("signing up", () => {
     await signUp(page, uniqueAdmin());
     // Asserted on things that exist at every width: the sidebar is behind a
     // menu button on a phone, so it is not the proof to reach for here.
-    await expect(page).toHaveURL(/\/p\/[^/]+\//);
-    await expect(page.locator("#admin-main")).toBeVisible();
+    await expect(page).toHaveURL(/\/p\/[^/]+\/roster/);
+    // A brand-new organisation gets the guided first run, not an empty grid.
+    await expect(page.getByRole("link", { name: "Hire your first agent" })).toBeVisible();
   });
 });
 
