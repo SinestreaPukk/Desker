@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
-import { LEGAL, TERMS_VERSION } from "@/lib/legal";
+import { LegalPage } from "@/components/marketing/legal-page";
+import { pageMetadata } from "@/lib/content";
+import { LEGAL } from "@/lib/legal";
 
-export const metadata: Metadata = { title: "Terms of Service" };
+export const metadata: Metadata = pageMetadata({
+  title: "Terms of Service",
+  description: `The terms that govern your use of ${LEGAL.companyName}: the service, your account, AI output, plans, your data and liability.`,
+  path: "/terms",
+});
 
 /**
  * TEMPLATE TEXT. This is a placeholder so the route, the link and the
@@ -10,13 +16,10 @@ export const metadata: Metadata = { title: "Terms of Service" };
  */
 export default function TermsPage() {
   return (
-    <>
-      <h1>Terms of Service</h1>
-      <p>
-        Version {TERMS_VERSION}. These terms govern your use of {LEGAL.companyName} (the
-        &ldquo;Service&rdquo;). By creating an account you agree to them.
-      </p>
-
+    <LegalPage
+      title="Terms of Service"
+      intro={`These terms govern your use of ${LEGAL.companyName}. By creating an account you agree to them.`}
+    >
       <h2>1. The Service</h2>
       <p>
         {LEGAL.companyName} lets you configure AI agents that answer your clients and carry out
@@ -75,6 +78,6 @@ export default function TermsPage() {
         effect no sooner than 14 days after notice. These terms are governed by the laws of{" "}
         {LEGAL.jurisdiction}. Questions: {LEGAL.contactEmail}.
       </p>
-    </>
+    </LegalPage>
   );
 }

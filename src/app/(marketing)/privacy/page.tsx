@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
-import { LEGAL, TERMS_VERSION } from "@/lib/legal";
+import { LegalPage } from "@/components/marketing/legal-page";
+import { pageMetadata } from "@/lib/content";
+import { LEGAL } from "@/lib/legal";
 
-export const metadata: Metadata = { title: "Privacy Policy" };
+export const metadata: Metadata = pageMetadata({
+  title: "Privacy Policy",
+  description: `What ${LEGAL.companyName} collects, why, who else processes it, how long it is kept, and how to ask for a copy or its deletion.`,
+  path: "/privacy",
+});
 
 /**
  * TEMPLATE TEXT - see terms/page.tsx. The processing described here is what
@@ -9,13 +15,10 @@ export const metadata: Metadata = { title: "Privacy Policy" };
  */
 export default function PrivacyPage() {
   return (
-    <>
-      <h1>Privacy Policy</h1>
-      <p>
-        Version {TERMS_VERSION}. This policy explains what {LEGAL.companyName} collects, why, and
-        who else sees it.
-      </p>
-
+    <LegalPage
+      title="Privacy Policy"
+      intro={`What ${LEGAL.companyName} collects, why, and who else sees it.`}
+    >
       <h2>What we collect</h2>
       <ul>
         <li>Account data: your name, email address and a hash of your password.</li>
@@ -64,6 +67,6 @@ export default function PrivacyPage() {
         We will announce material changes in the Service. Questions about privacy:{" "}
         {LEGAL.contactEmail}.
       </p>
-    </>
+    </LegalPage>
   );
 }
