@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { findProject, projectsFor } from "@/lib/projects";
+import { organizationsFor } from "@/lib/organizations";
 import { AdminShell } from "@/components/admin-shell";
 
 /**
@@ -27,18 +28,29 @@ export default async function ProjectLayout({
   const project = await findProject(handle, user.id);
   if (!project) notFound();
 
-  const projects = (await projectsFor(user.id)).map((item) => ({
+  const [projectRows, organizations] = await Promise.all([
+    projectsFor(user.id),
+    organizationsFor(user.id),
+  ]);
+  const projects = projectRows.map((item) => ({
     id: item.id,
     name: item.name,
     slug: item.slug,
+    organizationId: item.organizationId,
   }));
 
   return (
     <AdminShell
       email={user.email}
       name={user.name}
-      project={{ id: project.id, name: project.name, slug: project.slug }}
+      project={{
+        id: project.id,
+        name: project.name,
+        slug: project.slug,
+        organizationId: project.organizationId,
+      }}
       projects={projects}
+      organizations={organizations.map((org) => ({ id: org.id, name: org.name, role: org.role }))}
     >
       {children}
     </AdminShell>

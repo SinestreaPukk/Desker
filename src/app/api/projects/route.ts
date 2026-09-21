@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin } from "@/lib/api";
-import { uniqueSlug, projectsVisibleTo } from "@/lib/projects";
-import { primaryOrganizationFor } from "@/lib/organizations";
+import { uniqueSlug, projectsVisibleTo, findProject } from "@/lib/projects";
+import { primaryOrganizationFor, requireRole } from "@/lib/organizations";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -56,19 +56,22 @@ export async function POST(request: Request) {
     const { userId } = await requireAdmin();
     const input = await parseJson(request, projectSchema);
 
-    // New projects go in the caller's primary organisation until the org
-    // switcher exists to choose one explicitly.
-    const organization = await primaryOrganizationFor(userId);
+    // The new project joins the organisation of the project it was created
+    // from; with no context, the caller's primary organisation.
+    const fromHandle = new URL(request.url).searchParams.get("project");
+    const from = fromHandle ? await findProject(fromHandle, userId) : null;
+    const organizationId = from ? from.organizationId : (await primaryOrganizationFor(userId)).id;
+    await requireRole(userId, organizationId, "admin");
     const project = await prisma.project.create({
       data: {
         name: input.name,
         slug: await uniqueSlug(input.name),
-        organizationId: organization.id,
+        organizationId,
       },
     });
 
     await audit({
-      organizationId: organization.id,
+      organizationId,
       actorType: "user",
       actorId: userId,
       action: "project.created",

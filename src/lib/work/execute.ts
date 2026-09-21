@@ -334,7 +334,7 @@ async function scheduleFollowup(input: unknown, ctx: RunContext): Promise<WorkTo
   }));
   await inngest.send({
     name: "work/action-item.run",
-    data: { actionItemId: followup.id },
+    data: { actionItemId: followup.id, organizationId: ctx.organizationId },
   });
   return {
     content: `Follow-up queued as task ${followup.id}, ${

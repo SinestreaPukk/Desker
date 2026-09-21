@@ -47,6 +47,8 @@ export const signupSchema = z
       .string()
       .min(8, "Use at least 8 characters.")
       .max(200, "That password is too long."),
+    /** An invitation token; joins that organisation instead of creating one. */
+    invite: z.string().trim().max(200).optional(),
   })
   .strict();
 

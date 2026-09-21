@@ -12,7 +12,18 @@ import { audit } from "@/lib/audit";
 import { inngest } from "@/lib/jobs/client";
 import { toStringArray } from "@/lib/agent-fields";
 import { transition } from "./runner";
+import { canStartRun } from "@/lib/billing/limits";
 import type { AutonomyMode, ToolAutonomy, TriggerType } from "./types";
+
+export class RunRefused extends Error {
+  constructor(
+    message: string,
+    readonly retryAfterSeconds?: number,
+  ) {
+    super(message);
+    this.name = "RunRefused";
+  }
+}
 
 export interface ScopeDto {
   agentId: string;
@@ -183,6 +194,22 @@ export async function startRun(input: StartRunInput) {
   });
   if (!agent) return null;
 
+  // Plan limits are enforced here, where every run is born, so a schedule, a
+  // webhook and a button all hit the same wall. The refusal is on the record.
+  const check = await canStartRun(agent.project.organizationId);
+  if (!check.allowed) {
+    await audit({
+      organizationId: agent.project.organizationId,
+      actorType: input.actor?.type ?? "system",
+      actorId: input.actor?.id ?? null,
+      action: "action_item.refused",
+      targetType: "agent",
+      targetId: agent.id,
+      metadata: { trigger: input.trigger, reason: check.reason },
+    });
+    throw new RunRefused(check.reason!, check.retryAfterSeconds);
+  }
+
   let item;
   try {
     item = await prisma.actionItem.create({
@@ -212,7 +239,10 @@ export async function startRun(input: StartRunInput) {
   });
 
   try {
-    await inngest.send({ name: "work/action-item.run", data: { actionItemId: item.id } });
+    await inngest.send({
+      name: "work/action-item.run",
+      data: { actionItemId: item.id, organizationId: agent.project.organizationId },
+    });
   } catch (error) {
     const reason = `Could not reach the job runtime: ${error instanceof Error ? error.message : "unknown error"}. Is Inngest running?`;
     await transition(item.id, "failed", { error: reason });
@@ -241,13 +271,20 @@ export async function fireDueScopes(now = new Date()): Promise<string[]> {
     const floor = scope.lastFiredAt ?? scope.createdAt;
     if (due <= floor) continue;
 
-    const item = await startRun({
-      agentId: scope.agentId,
-      trigger: "schedule",
-      payload: { firedAt: due.toISOString() },
-      dedupeKey: `${scope.id}:${due.toISOString()}`,
-      actor: { type: "schedule" },
-    });
+    let item = null;
+    try {
+      item = await startRun({
+        agentId: scope.agentId,
+        trigger: "schedule",
+        payload: { firedAt: due.toISOString() },
+        dedupeKey: `${scope.id}:${due.toISOString()}`,
+        actor: { type: "schedule" },
+      });
+    } catch (error) {
+      // Over the plan's quota or rate: the tick is consumed (no catch-up
+      // storm later) and the refusal is already in the audit log.
+      if (!(error instanceof RunRefused)) throw error;
+    }
     await prisma.scopeOfWork.update({ where: { id: scope.id }, data: { lastFiredAt: due } });
     if (item) started.push(item.id);
   }

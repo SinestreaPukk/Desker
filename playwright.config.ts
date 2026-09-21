@@ -18,6 +18,10 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
  */
 const DATABASE_URL =
   process.env.E2E_DATABASE_URL ?? `file:${process.cwd()}/e2e.db`;
+// The spec process opens the same database directly (auth.setup adjusts the
+// shared organisation's plan). Prisma resolves a relative sqlite path against
+// the schema file, so both sides must see the same absolute one.
+process.env.DATABASE_URL = DATABASE_URL;
 // Relative to the project root, which is where Playwright is invoked from.
 const ADMIN_STATE = "tests/e2e/.auth/admin.json";
 
@@ -73,6 +77,10 @@ export default defineConfig({
       // No Inngest server in the e2e run; keep the SDK out of cloud mode so
       // /api/inngest does not demand a signing key.
       INNGEST_DEV: process.env.INNGEST_DEV ?? "1",
+      // Integrations need a vault key; plan limits are exercised by the team
+      // spec, which signs up a fresh organisation for it.
+      VAULT_KEY: process.env.VAULT_KEY ?? "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+      ENFORCE_PLAN_LIMITS: "true",
     },
   },
 });

@@ -6,12 +6,16 @@
  * between an owner and their first published post. `send_email` goes through
  * Resend, keyed either per organisation or by the deployment's own key.
  *
- * Integration config holds endpoints and keys. It is never returned to the
- * browser whole, never logged, and never written to an audit row.
+ * Secrets - endpoints, signing secrets, API keys - are sealed with the vault
+ * key before they are stored and opened only here, at the moment of use.
+ * They are never returned to the browser, never logged, and never written
+ * to an audit row. `config` holds only what is safe to display.
  */
 import "server-only";
 import { createHmac } from "node:crypto";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { open, seal } from "@/lib/vault";
 
 export interface WebhookConfig {
   url: string;
@@ -25,12 +29,63 @@ export interface EmailConfig {
   from: string;
 }
 
+/** Splits what an owner submitted into the displayable part and the sealed part. */
+export function splitIntegrationInput(
+  input:
+    | { type: "webhook"; url: string; secret?: string }
+    | { type: "email"; from: string; apiKey: string },
+): { config: Record<string, string>; secret: string } {
+  if (input.type === "webhook") {
+    let host = "webhook";
+    try {
+      host = new URL(input.url).host;
+    } catch {
+      /* validated upstream */
+    }
+    return {
+      config: { host, ...(input.secret ? { signed: "true" } : {}) },
+      secret: seal({ url: input.url, ...(input.secret ? { secret: input.secret } : {}) }),
+    };
+  }
+  return {
+    config: { provider: "resend", from: input.from },
+    secret: seal({ provider: "resend", from: input.from, apiKey: input.apiKey }),
+  };
+}
+
+/**
+ * Loads the oldest enabled connector of a kind and opens its secrets. A row
+ * written before the vault existed still carries them in `config`; it is
+ * sealed on first use and the plaintext removed, so the migration finishes
+ * itself without a maintenance window.
+ */
 export async function findIntegration<T>(organizationId: string, type: "webhook" | "email") {
   const row = await prisma.integration.findFirst({
     where: { organizationId, type, enabled: true },
     orderBy: { createdAt: "asc" },
   });
-  return row ? { id: row.id, name: row.name, config: row.config as T } : null;
+  if (!row) return null;
+
+  if (row.secret) {
+    return { id: row.id, name: row.name, config: open<T>(row.secret) };
+  }
+
+  const legacy = (row.config as Record<string, string> | null) ?? {};
+  const hasSecrets = type === "webhook" ? Boolean(legacy.url) : Boolean(legacy.apiKey);
+  if (!hasSecrets) return null;
+  const split =
+    type === "webhook"
+      ? splitIntegrationInput({ type: "webhook", url: legacy.url!, secret: legacy.secret })
+      : splitIntegrationInput({
+          type: "email",
+          from: legacy.from ?? "",
+          apiKey: legacy.apiKey!,
+        });
+  await prisma.integration.update({
+    where: { id: row.id },
+    data: { config: split.config as Prisma.InputJsonValue, secret: split.secret },
+  });
+  return { id: row.id, name: row.name, config: open<T>(split.secret) };
 }
 
 /** Email falls back to the deployment's key so a single-tenant install needs no UI. */

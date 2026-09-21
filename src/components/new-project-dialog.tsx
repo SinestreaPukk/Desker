@@ -25,9 +25,12 @@ interface CreatedProject {
 export function NewProjectDialog({
   open,
   onOpenChange,
+  project,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The current project; the new one joins its organisation. */
+  project: string;
 }) {
   const router = useRouter();
   const [name, setName] = React.useState("");
@@ -35,7 +38,7 @@ export function NewProjectDialog({
 
   const create = useMutation({
     mutationFn: (value: string) =>
-      api<CreatedProject>("/api/projects", {
+      api<CreatedProject>(`/api/projects?project=${encodeURIComponent(project)}`, {
         method: "POST",
         body: JSON.stringify({ name: value }),
       }),

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { findAgentFor } from "@/lib/projects";
 import { audit } from "@/lib/audit";
+import { requireRole } from "@/lib/organizations";
 import { saveScope, toScopeDto, validCron, validTimezone } from "@/lib/work/scope";
 import { scopeInputSchema } from "@/lib/work/validation";
 
@@ -51,6 +52,13 @@ export async function PUT(request: Request, { params }: Params) {
         });
       }
     }
+
+    // Extending trust past draft-only is an admin decision.
+    const existingScope = await prisma.scopeOfWork.findUnique({ where: { agentId } });
+    const trustChanged =
+      input.autonomy !== (existingScope?.autonomy ?? "draft_only") ||
+      JSON.stringify(input.toolAutonomy ?? null) !== JSON.stringify(existingScope?.toolAutonomy ?? null);
+    if (trustChanged) await requireRole(userId, agent.project.organizationId, "admin");
 
     const scope = await saveScope(agentId, input);
     await audit({

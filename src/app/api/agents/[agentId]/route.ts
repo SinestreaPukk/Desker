@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { agentInputSchema } from "@/lib/validation";
 import { toAgentDetail } from "@/lib/serialize";
+import { findAgentFor } from "@/lib/projects";
+import { canPublishAgent } from "@/lib/billing/limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,13 +24,19 @@ export async function GET(_request: Request, { params }: Params) {
 
 export async function PATCH(request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { agentId } = await params;
     // Partial so the roster grid can publish/unpublish without resending the form.
     const input = await parseJson(request, agentInputSchema.partial());
 
-    const existing = await prisma.agent.findUnique({ where: { id: agentId } });
+    const existing = await findAgentFor(agentId, userId);
     if (!existing) throw new HttpError(404, "That agent no longer exists.");
+
+    // Going live is where a plan's agent count is enforced.
+    if (input.status === "published" && existing.status !== "published") {
+      const check = await canPublishAgent(existing.project.organizationId, agentId);
+      if (!check.allowed) throw new HttpError(402, check.reason!);
+    }
 
     const agent = await prisma.agent.update({
       where: { id: agentId },

@@ -187,7 +187,7 @@ test("switching project keeps you on the same tab", async ({ page }) => {
   const menu = page.getByRole("button", { name: "Open menu" });
   if (await menu.isVisible()) await menu.click();
 
-  await page.getByRole("button", { name: /Project/ }).click();
+  await page.getByRole("button", { name: /Switch project/ }).click();
   await page.getByRole("menuitem", { name: other.name }).click();
 
   // Comparing the same view across projects is the reason to switch at all,

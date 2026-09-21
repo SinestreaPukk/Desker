@@ -126,3 +126,132 @@ export function useUpdateDraft() {
     onSuccess: () => void client.invalidateQueries({ queryKey: ["action-items"] }),
   });
 }
+
+// --- organisation -----------------------------------------------------------
+
+import type { MemberDto } from "@/app/api/organizations/[orgId]/members/route";
+import type { InviteDto } from "@/app/api/organizations/[orgId]/invites/route";
+
+export const orgKeys = {
+  org: (orgId: string) => ["organization", orgId] as const,
+  members: (orgId: string) => ["organization", orgId, "members"] as const,
+  invites: (orgId: string) => ["organization", orgId, "invites"] as const,
+  billing: (project: string) => ["billing", project] as const,
+};
+
+export function useOrganization(orgId: string) {
+  return useQuery({
+    queryKey: orgKeys.org(orgId),
+    queryFn: () =>
+      api<{ id: string; name: string; slug: string; plan: string; role: string; members: number; projects: number }>(
+        `/api/organizations/${orgId}`,
+      ),
+    enabled: Boolean(orgId),
+  });
+}
+
+export function useMembers(orgId: string) {
+  return useQuery({
+    queryKey: orgKeys.members(orgId),
+    queryFn: () => api<MemberDto[]>(`/api/organizations/${orgId}/members`),
+    enabled: Boolean(orgId),
+  });
+}
+
+export function useInvites(orgId: string, enabled = true) {
+  return useQuery({
+    queryKey: orgKeys.invites(orgId),
+    queryFn: () => api<InviteDto[]>(`/api/organizations/${orgId}/invites`),
+    enabled: Boolean(orgId) && enabled,
+  });
+}
+
+export function useCreateInvite(orgId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { email: string; role: string }) =>
+      api<InviteDto>(`/api/organizations/${orgId}/invites`, { method: "POST", body: JSON.stringify(input) }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: orgKeys.invites(orgId) }),
+  });
+}
+
+export function useRevokeInvite(orgId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: string) =>
+      api<{ ok: true }>(`/api/organizations/${orgId}/invites/${inviteId}`, { method: "DELETE" }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: orgKeys.invites(orgId) }),
+  });
+}
+
+export function useSetMemberRole(orgId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: string }) =>
+      api<{ userId: string; role: string }>(`/api/organizations/${orgId}/members/${userId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ role }),
+      }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: orgKeys.members(orgId) }),
+  });
+}
+
+export function useRemoveMember(orgId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      api<{ ok: true }>(`/api/organizations/${orgId}/members/${userId}`, { method: "DELETE" }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: orgKeys.members(orgId) }),
+  });
+}
+
+export function useRenameOrganization(orgId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) =>
+      api<{ id: string; name: string }>(`/api/organizations/${orgId}`, { method: "PATCH", body: JSON.stringify({ name }) }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ["organization", orgId] }),
+  });
+}
+
+export interface BillingSummary {
+  organization: { id: string; name: string };
+  role: string;
+  plan: import("@/lib/billing/plans").Plan;
+  subscriptionStatus: string | null;
+  currentPeriodEnd: string | null;
+  hasPaymentMethod: boolean;
+  usage: {
+    period: string;
+    publishedAgents: number;
+    actionItems: number;
+    conversations: number;
+    modelCostUsd: number;
+    inputTokens: number;
+    outputTokens: number;
+    searches: number;
+  };
+  plans: (import("@/lib/billing/plans").Plan & { purchasable: boolean })[];
+  stripeConfigured: boolean;
+}
+
+export function useBilling(project: string) {
+  return useQuery({
+    queryKey: orgKeys.billing(project),
+    queryFn: () => api<BillingSummary>(`/api/billing?project=${encodeURIComponent(project)}`),
+    enabled: Boolean(project),
+  });
+}
+
+export function useCheckout(project: string) {
+  return useMutation({
+    mutationFn: (plan: "starter" | "growth") =>
+      api<{ url: string }>(`/api/billing/checkout`, { method: "POST", body: JSON.stringify({ project, plan }) }),
+  });
+}
+
+export function useBillingPortal(project: string) {
+  return useMutation({
+    mutationFn: () => api<{ url: string }>(`/api/billing/portal`, { method: "POST", body: JSON.stringify({ project }) }),
+  });
+}

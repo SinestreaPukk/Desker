@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { agentInputSchema } from "@/lib/validation";
 import { findProject, projectsVisibleTo } from "@/lib/projects";
+import { canPublishAgent } from "@/lib/billing/limits";
 import { toAgentDetail, type AgentSummaryDto } from "@/lib/serialize";
 
 export const runtime = "nodejs";
@@ -76,6 +77,12 @@ export async function POST(request: Request) {
     const project = projectHandle ? await findProject(projectHandle, userId) : null;
     if (!project) {
       throw new HttpError(400, "An agent has to belong to a project.");
+    }
+
+    // Born published counts the same as published later.
+    if (input.status === "published") {
+      const check = await canPublishAgent(project.organizationId, "");
+      if (!check.allowed) throw new HttpError(402, check.reason!);
     }
 
     const agent = await prisma.agent.create({

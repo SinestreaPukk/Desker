@@ -1,4 +1,5 @@
 import { expect, test as setup } from "@playwright/test";
+import { PrismaClient } from "@prisma/client";
 import { ADMIN, ADMIN_STATE } from "./helpers";
 
 /**
@@ -28,4 +29,24 @@ setup("authenticate", async ({ page, request }) => {
   await expect(page).toHaveURL(/\/p\/[^/]+\//, { timeout: 30_000 });
 
   await page.context().storageState({ path: ADMIN_STATE });
+
+  // Plan limits are enforced in the e2e run (the team spec proves them on a
+  // fresh organisation). The shared organisation accumulates published agents
+  // across runs, so it gets the roomiest plan straight in the database - the
+  // same thing the Stripe webhook would write.
+  const prisma = new PrismaClient();
+  try {
+    await prisma.organization.updateMany({
+      where: { memberships: { some: { user: { email: ADMIN.email } } } },
+      data: { plan: "growth" },
+    });
+    // Every run publishes agents; over enough runs the accumulated ones would
+    // hit even that plan's cap. Each run starts with all of them unpublished.
+    await prisma.agent.updateMany({
+      where: { project: { organization: { memberships: { some: { user: { email: ADMIN.email } } } } } },
+      data: { status: "draft" },
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
 });

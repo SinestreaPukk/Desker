@@ -38,7 +38,10 @@ export async function POST(_request: Request, { params }: { params: Promise<{ ac
     });
 
     try {
-      await inngest.send({ name: "work/action-item.execute", data: { actionItemId } });
+      await inngest.send({
+        name: "work/action-item.execute",
+        data: { actionItemId, organizationId: item.organizationId },
+      });
     } catch (error) {
       await transition(actionItemId, "failed", {
         error: `Approved, but the job runtime could not be reached: ${error instanceof Error ? error.message : "unknown error"}`,

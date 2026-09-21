@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -12,6 +12,7 @@ import { BrandLockup } from "@/components/brand-logo";
 
 export function LoginForm() {
   const router = useRouter();
+  const inviteToken = useSearchParams().get("invite");
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -34,7 +35,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/");
+    router.push(inviteToken ? `/invite/${inviteToken}` : "/");
     router.refresh();
   }
 
@@ -82,7 +83,7 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-ink-muted">
         No account yet?{" "}
-        <Link href="/signup" className="font-medium text-accent hover:underline">
+        <Link href={inviteToken ? `/signup?invite=${encodeURIComponent(inviteToken)}` : "/signup"} className="font-medium text-accent hover:underline">
           Create one
         </Link>
       </p>

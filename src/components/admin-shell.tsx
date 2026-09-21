@@ -9,6 +9,7 @@ import {
   Check,
   ChevronsUpDown,
   Briefcase,
+  Building2,
   Inbox,
   Plug,
   LogOut,
@@ -38,6 +39,13 @@ export interface ProjectRef {
   id: string;
   name: string;
   slug: string;
+  organizationId: string;
+}
+
+export interface OrganizationRef {
+  id: string;
+  name: string;
+  role: string;
 }
 
 /** Section, not page: every nav item is a tab of the same workspace. */
@@ -48,6 +56,7 @@ const NAV = [
   { segment: "insights", label: "Insights", icon: ChartNoAxesColumn },
   { segment: "audit", label: "Audit log", icon: ScrollText },
   { segment: "integrations", label: "Integrations", icon: Plug },
+  { segment: "organization", label: "Organization", icon: Building2 },
 ] as const;
 
 export function AdminShell({
@@ -55,12 +64,14 @@ export function AdminShell({
   name,
   project,
   projects,
+  organizations,
   children,
 }: {
   email: string;
   name: string | null;
   project: ProjectRef;
   projects: ProjectRef[];
+  organizations: OrganizationRef[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -115,7 +126,12 @@ export function AdminShell({
   );
 
   const projectSwitcher = (
-    <ProjectSwitcher project={project} projects={projects} pathname={pathname} />
+    <ProjectSwitcher
+      project={project}
+      projects={projects}
+      organizations={organizations}
+      pathname={pathname}
+    />
   );
 
   return (
@@ -218,13 +234,24 @@ export function AdminShell({
 function ProjectSwitcher({
   project,
   projects,
+  organizations,
   pathname,
 }: {
   project: ProjectRef;
   projects: ProjectRef[];
+  organizations: OrganizationRef[];
   pathname: string;
 }) {
   const [creating, setCreating] = React.useState(false);
+  const organization = organizations.find((org) => org.id === project.organizationId);
+  // Only this organisation's projects belong in the project list; the other
+  // organisations sit in their own section and switching lands on their
+  // first project.
+  const ownProjects = projects.filter((entry) => entry.organizationId === project.organizationId);
+  const others = organizations
+    .filter((org) => org.id !== project.organizationId)
+    .map((org) => ({ org, first: projects.find((entry) => entry.organizationId === org.id) }))
+    .filter((entry) => entry.first);
 
   /**
    * Switching keeps you on the same tab rather than dumping you on the roster -
@@ -243,13 +270,14 @@ function ProjectSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
+            aria-label={`Switch project or organisation (${organization?.name ?? ""}: ${project.name})`}
             className={cn(
               "flex w-full items-center gap-2 rounded-lg border border-line bg-surface-2 px-2.5 py-2",
               "text-left transition-colors hover:bg-surface-3",
             )}
           >
             <span className="min-w-0 flex-1">
-              <span className="meta block">Project</span>
+              <span className="meta block truncate">{organization?.name ?? "Project"}</span>
               <span className="block truncate text-[0.8125rem] font-medium text-ink">
                 {project.name}
               </span>
@@ -259,7 +287,7 @@ function ProjectSwitcher({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
           <DropdownMenuLabel>Projects</DropdownMenuLabel>
-          {projects.map((entry) => (
+          {ownProjects.map((entry) => (
             <DropdownMenuItem key={entry.id} asChild>
               <Link href={`/p/${entry.slug}/${tab}`}>
                 <Check
@@ -281,10 +309,25 @@ function ProjectSwitcher({
             <Plus aria-hidden />
             New project
           </DropdownMenuItem>
+          {others.length > 0 ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Switch organisation</DropdownMenuLabel>
+              {others.map(({ org, first }) => (
+                <DropdownMenuItem key={org.id} asChild>
+                  <Link href={`/p/${first!.slug}/${tab}`}>
+                    <Building2 className="size-3.5 text-ink-subtle" aria-hidden />
+                    <span className="truncate">{org.name}</span>
+                    <span className="ml-auto text-xs text-ink-subtle">{org.role}</span>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <NewProjectDialog open={creating} onOpenChange={setCreating} />
+      <NewProjectDialog open={creating} onOpenChange={setCreating} project={project.slug} />
     </>
   );
 }

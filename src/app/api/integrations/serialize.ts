@@ -10,15 +10,12 @@ export function toIntegrationDto(row: {
   enabled: boolean;
   createdAt: Date;
 }): IntegrationDto {
+  // `config` is the displayable part only; secrets live sealed in `secret`.
   const config = (row.config as Record<string, string> | null) ?? {};
   let summary = "";
   if (row.type === "webhook") {
-    try {
-      summary = new URL(config.url ?? "").host;
-    } catch {
-      summary = "webhook";
-    }
-    if (config.secret) summary += " · signed";
+    summary = config.host ?? "webhook";
+    if (config.signed === "true" || config.secret) summary += " · signed";
   } else if (row.type === "email") {
     summary = `from ${config.from ?? "?"} · Resend`;
   }

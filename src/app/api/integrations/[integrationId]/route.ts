@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { audit } from "@/lib/audit";
+import { requireRole } from "@/lib/organizations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
       where: { id: integrationId, organization: { memberships: { some: { userId } } } },
     });
     if (!row) throw new HttpError(404, "That integration no longer exists.");
+    await requireRole(userId, row.organizationId, "admin");
     await prisma.integration.delete({ where: { id: row.id } });
     await audit({
       organizationId: row.organizationId,

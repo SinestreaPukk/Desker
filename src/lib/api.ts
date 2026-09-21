@@ -8,6 +8,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
 import { currentUser } from "@/lib/auth";
+import { Forbidden } from "@/lib/organizations";
 
 export class HttpError extends Error {
   constructor(
@@ -48,6 +49,9 @@ export async function handle<T>(fn: () => Promise<T>): Promise<Response> {
   } catch (error) {
     if (error instanceof HttpError) {
       return jsonError(error.status, error.message, error.details);
+    }
+    if (error instanceof Forbidden) {
+      return jsonError(403, error.message);
     }
     if (error instanceof ZodError) {
       return jsonError(422, "Some fields need attention.", {

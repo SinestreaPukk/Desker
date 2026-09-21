@@ -37,8 +37,12 @@ export const runActionItemFn = inngest.createFunction(
     name: "Run an action item",
     triggers: { event: "work/action-item.run" },
     retries: 2,
-    // One run per item at a time; a duplicate event never races itself.
-    concurrency: [{ limit: 1, key: "event.data.actionItemId" }],
+    // One run per item at a time, and a few per organisation: a tenant with
+    // fifty scheduled agents shares the runtime rather than owning it.
+    concurrency: [
+      { limit: 1, key: "event.data.actionItemId" },
+      { limit: 3, key: "event.data.organizationId" },
+    ],
   },
   async ({ event, step }) => {
     const actionItemId = String(event.data.actionItemId);

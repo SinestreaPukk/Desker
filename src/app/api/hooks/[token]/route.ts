@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { startRun } from "@/lib/work/scope";
+import { startRun, RunRefused } from "@/lib/work/scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,12 +34,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     }
   }
 
-  const item = await startRun({
-    agentId: scope.agentId,
-    trigger: "webhook",
-    payload: { body, receivedAt: new Date().toISOString() },
-    actor: { type: "system" },
-  });
+  let item;
+  try {
+    item = await startRun({
+      agentId: scope.agentId,
+      trigger: "webhook",
+      payload: { body, receivedAt: new Date().toISOString() },
+      actor: { type: "system" },
+    });
+  } catch (error) {
+    if (error instanceof RunRefused) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 429, headers: error.retryAfterSeconds ? { "retry-after": String(error.retryAfterSeconds) } : {} },
+      );
+    }
+    throw error;
+  }
   if (!item) return NextResponse.json({ error: "Could not start the run." }, { status: 500 });
   return NextResponse.json({ accepted: true, actionItemId: item.id }, { status: 202 });
 }

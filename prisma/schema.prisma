@@ -45,16 +45,44 @@ model Organization {
   name      String
   /// URL-safe handle, reserved for when organisations get their own segment.
   slug      String   @unique
+  /// free | starter | growth - see lib/billing/plans.ts. Set by the Stripe
+  /// webhook; never trusted from the client.
+  plan                 String    @default("free")
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  /// Stripe's subscription status (active, past_due, canceled...), or null.
+  subscriptionStatus   String?
+  currentPeriodEnd     DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   memberships   Membership[]
+  invitations   Invitation[]
   projects      Project[]
   actionItems   ActionItem[]
   auditLogs     AuditLog[]
   usageCounters UsageCounter[]
   drafts        Draft[]
   integrations  Integration[]
+}
+
+/// An email invited into an organisation with a role. The token in the link
+/// is the credential; accepting it creates the Membership and closes the
+/// invitation. Expired or revoked invitations 404 like unknown ones.
+model Invitation {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String       @default("member")
+  token          String       @unique
+  invitedById    String?
+  createdAt      DateTime     @default(now())
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  acceptedById   String?
+
+  @@index([organizationId, email])
 }
 
 /// user <-> organisation, with a role. A user may belong to several.
@@ -417,9 +445,9 @@ model Draft {
 
 /// An outside system an organisation has connected. `webhook` is the generic
 /// Zapier-style connector `publish_post` sends drafts to; `email` is the
-/// provider `send_email` uses. `config` holds the endpoint and any key in
-/// plain text for now - the encrypted credential vault replaces that store,
-/// and nothing may ever write `config` to a log or an audit row.
+/// provider `send_email` uses. Secrets are encrypted at rest with the vault
+/// key and scoped to the organisation; nothing may ever write them to a log
+/// or an audit row.
 model Integration {
   id             String       @id @default(cuid())
   organizationId String
@@ -427,7 +455,12 @@ model Integration {
   /// webhook | email
   type           String
   name           String
+  /// Non-secret settings only (a from-address, a display host). Anything that
+  /// grants access lives in `secret`.
   config         Json
+  /// The vault ciphertext of the secret settings: endpoint URL, signing
+  /// secret, API key. Decrypted only inside lib/work/integrations.ts.
+  secret         String?
   enabled        Boolean      @default(true)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt

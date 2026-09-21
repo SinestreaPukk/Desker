@@ -102,3 +102,31 @@ export async function membershipOf(userId: string, organizationId: string) {
   });
   return membership ? (membership.role as OrganizationRole) : null;
 }
+
+/** owner > admin > member. */
+const RANK: Record<OrganizationRole, number> = { owner: 3, admin: 2, member: 1 };
+
+export function roleAtLeast(role: OrganizationRole | null, required: OrganizationRole): boolean {
+  return role !== null && RANK[role] >= RANK[required];
+}
+
+export class Forbidden extends Error {
+  constructor(message = "You do not have permission to do that in this organisation.") {
+    super(message);
+    this.name = "Forbidden";
+  }
+}
+
+/**
+ * The gate for organisation-level actions. Members use agents; admins also
+ * manage them, integrations and trust; owners also manage people and billing.
+ */
+export async function requireRole(
+  userId: string,
+  organizationId: string,
+  required: OrganizationRole,
+): Promise<OrganizationRole> {
+  const role = await membershipOf(userId, organizationId);
+  if (!roleAtLeast(role, required)) throw new Forbidden();
+  return role!;
+}

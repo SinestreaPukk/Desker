@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -11,8 +11,10 @@ import { FormError } from "@/components/ui/states";
 import { api, ApiError } from "@/lib/api-client";
 import { BrandLockup } from "@/components/brand-logo";
 
-export function SignupForm() {
+export function SignupForm({ invite }: { invite?: { token: string; email: string; organization: string } | null }) {
   const router = useRouter();
+  const search = useSearchParams();
+  const inviteToken = invite?.token ?? search.get("invite") ?? undefined;
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
@@ -34,6 +36,7 @@ export function SignupForm() {
           name: String(form.get("name") ?? ""),
           email,
           password,
+          ...(inviteToken ? { invite: inviteToken } : {}),
         }),
       });
     } catch (caught) {
@@ -87,6 +90,7 @@ export function SignupForm() {
             >
               <Input
                 name="email"
+                defaultValue={invite?.email ?? ""}
                 type="email"
                 autoComplete="email"
                 required
@@ -120,7 +124,7 @@ export function SignupForm() {
 
       <p className="text-center text-sm text-ink-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-accent hover:underline">
+        <Link href={inviteToken ? `/login?invite=${encodeURIComponent(inviteToken)}` : "/login"} className="font-medium text-accent hover:underline">
           Sign in
         </Link>
       </p>

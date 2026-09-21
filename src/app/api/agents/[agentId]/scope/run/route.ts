@@ -1,6 +1,6 @@
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { findAgentFor } from "@/lib/projects";
-import { startRun } from "@/lib/work/scope";
+import { startRun, RunRefused } from "@/lib/work/scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,12 +13,18 @@ export async function POST(_request: Request, { params }: { params: Promise<{ ag
     const agent = await findAgentFor(agentId, userId);
     if (!agent) throw new HttpError(404, "That agent no longer exists.");
 
-    const item = await startRun({
-      agentId,
-      trigger: "manual",
-      payload: { startedBy: userId },
-      actor: { type: "user", id: userId },
-    });
+    let item;
+    try {
+      item = await startRun({
+        agentId,
+        trigger: "manual",
+        payload: { startedBy: userId },
+        actor: { type: "user", id: userId },
+      });
+    } catch (error) {
+      if (error instanceof RunRefused) throw new HttpError(402, error.message);
+      throw error;
+    }
     if (!item) throw new HttpError(500, "Could not start the run.");
     return { id: item.id, status: item.status, error: item.error };
   });

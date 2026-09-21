@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { findProject } from "@/lib/projects";
-import { primaryOrganizationFor, membershipOf } from "@/lib/organizations";
+import { primaryOrganizationFor, requireRole } from "@/lib/organizations";
 import { audit } from "@/lib/audit";
 import { integrationInputSchema } from "@/lib/work/validation";
+import { splitIntegrationInput } from "@/lib/work/integrations";
+import { vaultConfigured } from "@/lib/vault";
 import { toIntegrationDto } from "./serialize";
 
 export const runtime = "nodejs";
@@ -35,18 +37,22 @@ export async function POST(request: Request) {
   return handle(async () => {
     const { userId } = await requireAdmin();
     const organizationId = await organizationFor(userId, new URL(request.url).searchParams.get("project"));
-    if (!(await membershipOf(userId, organizationId))) {
-      throw new HttpError(403, "You are not a member of that organisation.");
-    }
+    await requireRole(userId, organizationId, "admin");
     const input = await parseJson(request, integrationInputSchema);
+    if (!vaultConfigured()) {
+      throw new HttpError(
+        503,
+        "Integrations cannot be stored until the server has a VAULT_KEY. Ask whoever deploys this to set one.",
+      );
+    }
 
-    const config =
+    const { config, secret } = splitIntegrationInput(
       input.type === "webhook"
-        ? { url: input.url, ...(input.secret ? { secret: input.secret } : {}) }
-        : { provider: "resend", from: input.from, apiKey: input.apiKey };
-
+        ? { type: "webhook", url: input.url, secret: input.secret || undefined }
+        : { type: "email", from: input.from, apiKey: input.apiKey },
+    );
     const row = await prisma.integration.create({
-      data: { organizationId, type: input.type, name: input.name, config },
+      data: { organizationId, type: input.type, name: input.name, config, secret },
     });
     await audit({
       organizationId,

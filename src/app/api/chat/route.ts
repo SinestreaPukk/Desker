@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db";
 import { handle, parseJson, HttpError } from "@/lib/api";
 import { chatRequestSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { canAcceptClientMessage } from "@/lib/billing/limits";
+import { audit } from "@/lib/audit";
 import { runAgentTurn } from "@/lib/agent-runtime";
 import { resolveActiveAgent } from "@/lib/conversation";
 import { publishAdminEvent } from "@/lib/events";
@@ -9,6 +11,15 @@ import { sseResponse } from "@/lib/sse";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
+
+/** One audit row per organisation per hour is enough to tell the owner; more is noise. */
+const refusalNoted = new Map<string, number>();
+function shouldRecordRefusal(organizationId: string): boolean {
+  const last = refusalNoted.get(organizationId) ?? 0;
+  if (Date.now() - last < 60 * 60_000) return false;
+  refusalNoted.set(organizationId, Date.now());
+  return true;
+}
 export const dynamic = "force-dynamic";
 // Tool loops with retrieval can legitimately take a while.
 export const maxDuration = 120;
@@ -48,6 +59,34 @@ export async function POST(request: Request) {
       throw new HttpError(
         429,
         `You are sending messages faster than this chat allows. Try again in ${limit.retryAfterSeconds}s.`,
+      );
+    }
+
+    // The organisation's plan, enforced on the public surface. A client only
+    // ever sees "unavailable"; the reason goes to the owner's audit log.
+    const owner = await prisma.project.findUniqueOrThrow({
+      where: { id: agent.projectId },
+      select: { organizationId: true },
+    });
+    const existingConversation = await prisma.conversation.findUnique({
+      where: { agentId_clientSessionId: { agentId: agent.id, clientSessionId: input.sessionId } },
+      select: { id: true },
+    });
+    const quota = await canAcceptClientMessage(owner.organizationId, !existingConversation);
+    if (!quota.allowed) {
+      if (shouldRecordRefusal(owner.organizationId)) {
+        await audit({
+          organizationId: owner.organizationId,
+          actorType: "system",
+          action: "conversation.refused",
+          targetType: "agent",
+          targetId: agent.id,
+          metadata: { reason: quota.reason },
+        });
+      }
+      throw new HttpError(
+        503,
+        "This assistant is temporarily unavailable. Please try again later.",
       );
     }
 

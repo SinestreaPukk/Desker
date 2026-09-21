@@ -149,18 +149,58 @@ Projects live inside an **organisation**, and an organisation is the security
 and billing boundary between different customers of yours.
 
 - Signing up creates a user, an organisation they own, and a first project, in
-  one transaction. Nobody ever exists without an organisation.
-- Access is a `Membership` row (`owner | admin | member`). Every project lookup
-  is filtered through it, so a slug or id from another organisation is a 404,
-  not a page, and the list endpoints (`/api/agents`, `/api/conversations`,
-  `/api/issues`, `/api/analytics`) are bounded to the caller's organisations
-  even when no project is named.
+  one transaction. Signing up from an invitation link joins that organisation
+  instead. Nobody ever exists without an organisation.
+- Access is a `Membership` row with a role. **Owners** manage people and
+  billing; **admins** also manage agents, integrations and trust settings;
+  **members** use agents and review approvals. `requireRole()` in
+  `lib/organizations.ts` is the gate, and an organisation always keeps at least
+  one owner.
+- **Invitations** (`Organization` page): an owner or admin invites an email
+  with a role; the link works for seven days, for that address only, once.
+  It is emailed when the deployment has `RESEND_API_KEY` + `EMAIL_FROM`, and
+  shown to the inviter to copy either way.
+- Every project lookup is filtered through membership, so a slug or id from
+  another organisation is a 404, not a page. A user in several organisations
+  switches between them from the project menu.
 - A session whose user row is gone (a reset database) is treated as signed out
   rather than as an error - `currentUser()` in `lib/auth.ts` is the one check.
 
-What is not built yet, on purpose: invites, roles beyond the owner who signed
-up, and an organisation switcher. New projects go into the caller's oldest
-organisation until then. The model does not change when those arrive.
+## Billing and limits
+
+Plans (`lib/billing/plans.ts`) are priced around what actually costs money:
+published agents, and runs and conversations per month, with a monthly model
+budget in dollars and a rate (runs per hour, client messages per minute). The
+month-to-date numbers come from the same counters Insights reads.
+
+Limits are enforced **on the server, where the cost is incurred** - not in the
+UI: publishing an agent (402), starting a run from any trigger (a manual run
+answers 402, a webhook 429, a schedule records `action_item.refused` in the
+audit log and consumes the tick), and a client message on a public agent
+(the client sees "temporarily unavailable"; the owner sees why in the audit
+log, once an hour at most). The Inngest runner also caps concurrent runs per
+organisation so one tenant's fifty schedules share the runtime.
+
+Stripe provides the money side: Checkout for a paid plan, the hosted portal
+for cards and invoices, and a webhook (`/api/billing/webhook`) that mirrors
+the subscription onto the organisation - a request never asks Stripe what
+plan someone is on. Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and the
+two `STRIPE_PRICE_*` ids.
+
+**With no Stripe key the deployment is self-hosted and has no limits**: there
+is nothing to upgrade to, so nothing is capped. `ENFORCE_PLAN_LIMITS=true`
+enforces the free tier anyway (the test suites use it).
+
+## Credential vault
+
+Integration secrets - webhook URLs and signing secrets, email API keys - are
+sealed with AES-256-GCM under `VAULT_KEY` before they reach the database
+(`lib/vault.ts`) and opened only inside `lib/work/integrations.ts` at the
+moment of delivery. `Integration.config` holds only what is safe to display
+(a host, a from-address). Nothing writes a secret to a log or an audit row;
+a row from before the vault existed is sealed on its first use. Rotating the
+key means reconnecting integrations, which is the right failure mode for a key
+that guards other people's credentials.
 
 ### Upgrading an existing database
 
