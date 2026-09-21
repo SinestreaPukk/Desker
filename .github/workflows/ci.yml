@@ -38,19 +38,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # The Playwright web server generates the schema, applies it and builds
+      # the app itself; the client just has to exist for the spec process.
       - run: npm run db:generate
         env:
           DATABASE_PROVIDER: sqlite
-          DATABASE_URL: file:./e2e.db
-      - run: npx prisma db push --skip-generate
-        env:
-          DATABASE_PROVIDER: sqlite
-          DATABASE_URL: file:./e2e.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e.db
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
         env:
           DATABASE_PROVIDER: sqlite
-          E2E_DATABASE_URL: file:./e2e.db
+          E2E_DATABASE_URL: file:${{ github.workspace }}/e2e.db
           AUTH_SECRET: ci-secret-not-for-production
           # Chat specs skip themselves when this is absent. Add the secret to
           # the repository to exercise the live model path in CI.

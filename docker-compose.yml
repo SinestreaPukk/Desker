@@ -62,6 +62,13 @@ services:
       ANTHROPIC_DEFAULT_MODEL: "${ANTHROPIC_DEFAULT_MODEL:-claude-sonnet-4-6}"
       NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
       STORAGE_DIR: /data/storage
+      # Integration secrets are sealed with this key; generate one with
+      # `openssl rand -base64 32` and keep it - rotating it means reconnecting.
+      VAULT_KEY: "${VAULT_KEY:-}"
+      BRAVE_SEARCH_API_KEY: "${BRAVE_SEARCH_API_KEY:-}"
+      TAVILY_API_KEY: "${TAVILY_API_KEY:-}"
+      RESEND_API_KEY: "${RESEND_API_KEY:-}"
+      EMAIL_FROM: "${EMAIL_FROM:-}"
       # The compose stack runs its own Inngest dev server (below) rather than
       # Inngest Cloud, so the SDK stays in dev mode and needs no signing key.
       INNGEST_DEV: "1"

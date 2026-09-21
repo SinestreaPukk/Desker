@@ -1,3 +1,4 @@
+import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 /**
@@ -16,8 +17,17 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
  * .next/standalone - a relative sqlite path there resolves to a different
  * (empty) file than the one `prisma db push` creates at the project root.
  */
-const DATABASE_URL =
-  process.env.E2E_DATABASE_URL ?? `file:${process.cwd()}/e2e.db`;
+/**
+ * Always absolute. Prisma resolves a relative sqlite path against the schema
+ * file it was generated from, and the standalone server carries its own copy
+ * of the schema - so `file:./e2e.db` would name one file for `db push` and a
+ * different, empty one for the running app.
+ */
+function absoluteSqlite(url: string): string {
+  const match = /^file:(?!\/)(.+)$/.exec(url);
+  return match ? `file:${path.resolve(process.cwd(), match[1]!)}` : url;
+}
+const DATABASE_URL = absoluteSqlite(process.env.E2E_DATABASE_URL ?? "file:./e2e.db");
 // The spec process opens the same database directly (auth.setup adjusts the
 // shared organisation's plan). Prisma resolves a relative sqlite path against
 // the schema file, so both sides must see the same absolute one.
@@ -61,7 +71,8 @@ export default defineConfig({
     // Self-contained: schema, build, then serve the production artifact.
     command: `npm run db:push && npm run build:standalone && PORT=${PORT} npm run start:standalone`,
     url: `${BASE_URL}/api/health`,
-    timeout: 300_000,
+    // A production build on a two-core CI runner takes a few minutes.
+    timeout: 600_000,
     // Always start a fresh server. Reusing one silently attaches to whatever
     // is already on the port - including a leftover process still holding a
     // deleted database file, which produces failures that look like app bugs.
