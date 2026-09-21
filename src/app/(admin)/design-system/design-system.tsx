@@ -17,7 +17,9 @@ const COLOR_PAIRS: { fg: string; bg: string; use: string; min: number }[] = [
   { fg: "--ink", bg: "--paper", use: "Body text on the page", min: 4.5 },
   { fg: "--ink", bg: "--surface", use: "Body text on a panel", min: 4.5 },
   { fg: "--ink-muted", bg: "--surface", use: "Secondary text", min: 4.5 },
-  { fg: "--ink-subtle", bg: "--surface", use: "Metadata (large / uppercase)", min: 3 },
+  // Not text any more: .meta moved to --ink-muted, and this tone is now only
+  // icons, placeholders, list markers and other things nobody reads.
+  { fg: "--ink-subtle", bg: "--surface", use: "Icon tints and placeholders (non-text)", min: 3 },
   { fg: "--accent-fg", bg: "--accent", use: "Primary button label", min: 4.5 },
   { fg: "--accent-soft-fg", bg: "--accent-soft", use: "Accent badge", min: 4.5 },
   { fg: "--positive", bg: "--positive-soft", use: "Positive badge", min: 4.5 },
@@ -26,7 +28,8 @@ const COLOR_PAIRS: { fg: string; bg: string; use: string; min: number }[] = [
   { fg: "--accent", bg: "--surface", use: "Links", min: 4.5 },
   // The landing page's sky: identical in both themes.
   { fg: "--sky-ink", bg: "--sky-deep", use: "Sky: headline and copy on the deep band", min: 4.5 },
-  { fg: "--sky-glass-fg", bg: "--sky-glass", use: "Sky: glass button label", min: 4.5 },
+  { fg: "--sky-glass-fg", bg: "--sky-glass", use: "Sky: glass button, top of the gradient", min: 4.5 },
+  { fg: "--sky-glass-fg", bg: "--sky-glass-deep", use: "Sky: glass button, foot of the gradient", min: 4.5 },
 ];
 
 const TYPE = [
@@ -38,6 +41,11 @@ const TYPE = [
   { cls: "text-display", name: "display · 44px", use: "Public site section headings" },
   { cls: "text-title", name: "title · 32-56px", use: "Landing section headings" },
   { cls: "font-display text-hero", name: "hero · 44-84px", use: "Landing hero and closing call, the serif" },
+  // The two named labels. Both are small and uppercase and they are not
+  // interchangeable: .eyebrow titles something and is read, so it takes the
+  // body tone; .meta is data about a record and may stay quieter.
+  { cls: "eyebrow", name: ".eyebrow", use: "Label that titles a card, column or panel" },
+  { cls: "meta", name: ".meta", use: "Data about a record: ids, counts, timestamps" },
 ];
 
 const SPACING = [2, 4, 6, 8, 12, 16];
@@ -175,7 +183,7 @@ export function DesignSystem() {
             <div key={t.cls} className="grid gap-2 p-4 sm:grid-cols-[10rem_1fr_14rem] sm:items-baseline">
               <span className="font-mono text-xs text-ink-muted">{t.name}</span>
               <span className={`${t.cls} text-ink`}>The quick brown fox hires a careful agent.</span>
-              <span className="text-xs text-ink-subtle">{t.use}</span>
+              <span className="text-xs text-ink-muted">{t.use}</span>
             </div>
           ))}
         </Panel>
@@ -199,7 +207,7 @@ export function DesignSystem() {
               <div key={r.cls} className="text-center">
                 <div className={`size-16 border border-line-strong bg-surface ${r.cls}`} />
                 <p className="mt-2 font-mono text-xs text-ink-muted">{r.name}</p>
-                <p className="text-xs text-ink-subtle">{r.use}</p>
+                <p className="text-xs text-ink-muted">{r.use}</p>
               </div>
             ))}
           </div>
@@ -210,7 +218,7 @@ export function DesignSystem() {
               <div key={s.cls} className="text-center">
                 <div className={`size-16 rounded-panel bg-surface ${s.cls}`} />
                 <p className="mt-2 font-mono text-xs text-ink-muted">{s.name}</p>
-                <p className="text-xs text-ink-subtle">{s.use}</p>
+                <p className="text-xs text-ink-muted">{s.use}</p>
               </div>
             ))}
           </div>
