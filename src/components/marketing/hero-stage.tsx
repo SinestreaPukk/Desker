@@ -203,7 +203,7 @@ export function HeroStage({ className }: { className?: string }) {
 
       <div className="flex items-center gap-2 border-b border-line px-4 py-2 text-xs">
         <AgentAvatar name={current.agent} seed={current.seed} size="sm" />
-        <span className="hidden shrink-0 font-mono uppercase tracking-wider text-ink-subtle sm:inline">{current.frame}</span>
+        <span className="meta hidden shrink-0 sm:inline">{current.frame}</span>
         <span
           key={`${scene}-${beat}`}
           className="ml-auto truncate text-right text-ink-muted animate-in fade-in duration-500"
@@ -236,7 +236,7 @@ export function Frame({
           <i className="size-2.5 rounded-full bg-line-strong/40" />
           <i className="size-2.5 rounded-full bg-line-strong/40" />
         </span>
-        <span className="font-mono text-xs uppercase tracking-wider text-ink-subtle">{title}</span>
+        <span className="meta">{title}</span>
       </div>
       <div className="min-h-[15rem] bg-paper p-4 text-ink sm:p-5">{children}</div>
     </div>
@@ -424,7 +424,7 @@ export function MarketerScene({ beat }: { beat: number }) {
       </ol>
       <Appear when={beat >= 3}>
         <div className="rounded-lg border border-line bg-surface-2 px-3.5 py-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-subtle">Draft · LinkedIn</p>
+          <p className="meta">Draft · LinkedIn</p>
           <p className="mt-1.5 text-sm leading-relaxed text-ink">
             Every tool we sell now carries a lifetime warranty. Not 24 months. Lifetime. Because a drill that
             quits in year three was never really yours.

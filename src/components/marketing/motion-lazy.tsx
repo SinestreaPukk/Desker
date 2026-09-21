@@ -10,13 +10,22 @@
 import * as React from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 
+/** The same curve as .glass and .lift in globals.css: ease-out, no overshoot. */
 const EASE = [0.2, 0.8, 0.2, 1] as const;
+
+/**
+ * A reveal should be felt, not watched. 280ms and 10px is about the threshold
+ * where the eye registers that something arrived without waiting for it - long
+ * enough to read as deliberate, short enough that scrolling never outruns it.
+ */
+const DURATION = 0.28;
+const DISTANCE = 10;
 
 export function MotionReveal({
   children,
   startHidden,
   delay = 0,
-  y = 24,
+  y = DISTANCE,
   className,
 }: {
   children: React.ReactNode;
@@ -32,7 +41,7 @@ export function MotionReveal({
       initial={startHidden ? { opacity: 0, y } : false}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.7, ease: EASE, delay }}
+      transition={{ duration: DURATION, ease: EASE, delay }}
     >
       {children}
     </motion.div>
