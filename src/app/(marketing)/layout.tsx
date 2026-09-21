@@ -20,7 +20,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       </a>
       <header className="sticky top-0 z-40 border-b border-line/80 bg-paper/85 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-base font-semibold tracking-tight text-ink">
+          <Link href="/" className="inline-flex items-center gap-2 font-display text-lg font-bold tracking-tight text-ink">
             <BrandMark />
             {SITE.company.name}
           </Link>
@@ -50,7 +50,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr]">
           <div>
-            <Link href="/" className="inline-flex items-center gap-2 font-semibold text-ink">
+            <Link href="/" className="inline-flex items-center gap-2 font-display text-lg font-bold tracking-tight text-ink">
               <BrandMark />
               {SITE.company.name}
             </Link>

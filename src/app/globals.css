@@ -69,6 +69,21 @@
   --av-6-bg: oklch(0.932 0.040 306);
   --av-6-fg: oklch(0.435 0.155 305);
 
+  /* The landing page's stage: a near-black section that stays dark in both
+     themes, and the one place the accent is allowed to be loud. The glow is
+     the accent hue pushed to full chroma; text stops are held above 3:1 on
+     the stage for the 72px+ headline and 4.5:1 for anything smaller. */
+  --stage: oklch(0.135 0.022 285);
+  --stage-surface: oklch(0.190 0.026 285);
+  --stage-ink: oklch(0.975 0.006 285);
+  --stage-muted: oklch(0.770 0.024 285);
+  --stage-line: oklch(0.320 0.035 285);
+  --glow: oklch(0.620 0.260 285);
+  --glow-cool: oklch(0.660 0.190 255);
+  --glow-hot: oklch(0.700 0.220 315);
+  --glow-text-a: oklch(0.900 0.090 290);
+  --glow-text-b: oklch(0.740 0.220 285);
+
   color-scheme: light;
 }
 
@@ -171,6 +186,8 @@
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+  /* Headlines on the public site only. The product stays on the sans. */
+  --font-display: var(--font-bricolage), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 
   /* Type scale: five sizes for the product, plus one display size the
      marketing hero alone may use. Tailwind's default steps are reset so an
@@ -189,6 +206,11 @@
   --text-xl--line-height: 1.875rem;
   --text-display: 2.75rem;
   --text-display--line-height: 1.1;
+  /* The landing hero only: 56px on a phone, 120px on a wide desktop. */
+  --text-hero: clamp(3.5rem, 9.5vw, 7.5rem);
+  --text-hero--line-height: 0.96;
+  --text-hero--letter-spacing: -0.035em;
+  --text-hero--font-weight: 700;
 
   /* Radius scale: sm for controls inside things, md for buttons and inputs,
      lg for inner blocks, panel for cards and dialogs. */
@@ -292,4 +314,97 @@
   vertical-align: text-bottom;
   background: var(--accent);
   animation: caret-blink 1.05s steps(1) infinite;
+}
+
+/* --- Landing page ----------------------------------------------------------
+   Aurora, grain, marquee and the gradient word. All CSS: the page reads and
+   moves without JavaScript, and every motion here stops under
+   prefers-reduced-motion (the global rule above zeroes the durations). */
+
+.stage {
+  background: var(--stage);
+  color: var(--stage-ink);
+}
+
+.glow-text {
+  background-image: linear-gradient(100deg, var(--glow-text-a) 0%, var(--glow-text-b) 55%, var(--glow-text-a) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: glow-shift 9s ease-in-out infinite;
+}
+
+@keyframes glow-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora > i {
+  position: absolute;
+  display: block;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+  will-change: transform;
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+}
+
+.aurora > i:nth-child(1) { width: 52vw; height: 52vw; left: -12vw; top: -18vw; background: var(--glow); }
+.aurora > i:nth-child(2) { width: 44vw; height: 44vw; right: -10vw; top: -6vw; background: var(--glow-cool); animation-delay: -9s; animation-duration: 32s; }
+.aurora > i:nth-child(3) { width: 38vw; height: 38vw; left: 30vw; bottom: -22vw; background: var(--glow-hot); animation-delay: -17s; animation-duration: 38s; opacity: 0.42; }
+
+@keyframes aurora-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6vw, 4vw, 0) scale(1.12); }
+  100% { transform: translate3d(-4vw, 7vw, 0) scale(0.94); }
+}
+
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.marquee {
+  display: flex;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.marquee > ul {
+  display: flex;
+  flex: none;
+  gap: 0.75rem;
+  padding-right: 0.75rem;
+  animation: marquee 48s linear infinite;
+}
+
+.marquee:hover > ul { animation-play-state: paused; }
+
+@keyframes marquee {
+  to { transform: translateX(-100%); }
+}
+
+/* Hover lift shared by the landing's buttons and cards. */
+.lift {
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms, border-color 220ms;
+}
+.lift:hover { transform: translateY(-2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee { mask-image: none; }
+  .marquee > ul { animation: none; flex-wrap: wrap; }
+  .marquee > ul + ul { display: none; }
+  .lift:hover { transform: none; }
 }

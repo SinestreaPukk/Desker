@@ -36,25 +36,47 @@ const siteSchema = z.object({
   }),
 });
 
+export const BENTO_ICONS = ["inbox", "users", "calendar", "file-text", "scroll", "code", "lock", "sparkles"] as const;
+
 const landingSchema = z.object({
   meta,
   hero: z.object({
     eyebrow: z.string(),
     headline: z.string().min(1),
-    subhead: z.string(),
+    /** The words of the headline that get the gradient. Must appear in it verbatim. */
+    highlight: z.string(),
+    subhead: z.string().max(160),
     primaryCta: link,
     secondaryCta: link,
     note: z.string(),
+  }).refine((h) => !h.highlight || h.headline.includes(h.highlight), {
+    message: "hero.highlight must be a substring of hero.headline",
+    path: ["highlight"],
   }),
-  proof: z.array(z.object({ value: z.string(), label: z.string() })).max(4),
+  /** Numbers count up when they scroll into view; keep them true. */
+  stats: z.array(z.object({ value: z.number().int().nonnegative(), suffix: z.string(), label: z.string() })).max(4),
+  ticker: z.object({ label: z.string(), items: z.array(z.string().min(1)).min(4).max(12) }),
   howItWorks: z.object({
     heading: z.string(),
     intro: z.string(),
     steps: z.array(z.object({ title: z.string(), body: z.string() })).min(2).max(5),
   }),
-  trust: z.object({
+  bento: z.object({
     heading: z.string(),
-    points: z.array(z.object({ title: z.string(), body: z.string() })).max(6),
+    intro: z.string(),
+    cards: z
+      .array(
+        z.object({
+          size: z.enum(["lg", "tall", "wide", "sm"]),
+          icon: z.enum(BENTO_ICONS),
+          title: z.string().min(1),
+          body: z.string().min(1).max(200),
+          /** A card that renders a live piece of the product instead of an icon alone. */
+          demo: z.enum(["approval", "roles"]).optional(),
+        }),
+      )
+      .min(4)
+      .max(9),
   }),
   pricing: z.object({ heading: z.string(), intro: z.string(), footnote: z.string() }),
   cta: z.object({ heading: z.string(), body: z.string(), button: link }),

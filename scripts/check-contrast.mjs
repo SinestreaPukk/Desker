@@ -72,7 +72,10 @@ function tokensFrom(selector) {
   return tokens;
 }
 
-const themes = { light: tokensFrom(":root"), dark: tokensFrom(":root.dark") };
+// Dark redefines a subset; anything it leaves alone (the landing stage) is
+// inherited from :root, so the dark table is layered on the light one.
+const light = tokensFrom(":root");
+const themes = { light, dark: { ...light, ...tokensFrom(":root.dark") } };
 
 // --- the pairs the UI actually renders -------------------------------------
 
@@ -91,6 +94,14 @@ const TEXT_PAIRS = [
   ["danger", "paper", 4.5, "inline error message"],
   ["accent", "paper", 4.5, "accent link on the page"],
   ["accent", "surface", 4.5, "accent link on a card"],
+  // The landing page's dark stage, the same in both themes.
+  ["stage-ink", "stage", 4.5, "hero headline and body on the stage"],
+  ["stage-muted", "stage", 4.5, "hero sub-line and stats labels"],
+  ["stage-muted", "stage-surface", 4.5, "marquee items and window chrome"],
+  ["stage", "stage-ink", 4.5, "stage button label (dark on white)"],
+  ["glow-text-a", "stage", 3.0, "gradient headline word, lightest stop (72px+)"],
+  ["glow-text-b", "stage", 3.0, "gradient headline word, darkest stop (72px+)"],
+  ["glow-text-a", "stage", 4.5, "eyebrow in the glow colour"],
 ];
 
 // Avatar figure against its own tile. Decorative (the agent's name is always

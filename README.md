@@ -311,6 +311,29 @@ reading and clickable examples (escalation rule, objectives, context); one
 one primary action per screen; the editor is sectioned so editing is one
 decision at a time with the live preview alongside.
 
+## The landing page
+
+The one screen allowed to be loud. Its tokens sit beside the product's in
+`globals.css` (`--stage-*`, `--glow-*`, the `hero` type size, the display
+face loaded through `next/font`) and are documented on `/design-system`
+under "Landing stage". Three rules keep it honest:
+
+- **It reads without JavaScript.** The server renders every section visible;
+  `components/marketing/reveal.tsx` swaps in Motion only after hydration,
+  only for elements still below the fold, and never under
+  `prefers-reduced-motion`. An e2e loads the page with scripts off and asserts
+  nothing is hidden.
+- **Motion is not on the critical path.** The library lives in one lazy chunk
+  fetched after `load` (another e2e checks that), the browser Sentry SDK is
+  deferred the same way, and the aurora, marquee and gradient word are CSS.
+- **The moving picture is the product.** `hero-stage.tsx` loops an agent
+  joining the roster, a client message being answered and a draft being
+  approved, built from the app's own components - it cannot go stale.
+
+Copy, stats, ticker lines and the bento cards all come from
+`content/landing.json`; the icons are generated from the brand mark by
+`scripts/make-app-icons.mjs`.
+
 ## The public site
 
 The unauthenticated pages - `/` (landing), `/showcase` (every agent role,

@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { currentUser } from "@/lib/auth";
 import { defaultProject } from "@/lib/projects";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
-import { TemplateIcon } from "@/components/marketing/template-icon";
-import { LANDING, SITE, TEMPLATES, pageMetadata, templateById } from "@/lib/content";
+import { Aurora, Bento, Marquee } from "@/components/marketing/landing-blocks";
+import { HeroStage } from "@/components/marketing/hero-stage";
+import { CountUp, Parallax, Reveal } from "@/components/marketing/reveal";
+import { LANDING, SITE, pageMetadata, templateById } from "@/lib/content";
 import { PLANS } from "@/lib/billing/plans";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = pageMetadata({
   title: `${SITE.company.name} — ${LANDING.meta.title}`,
@@ -17,9 +20,34 @@ export const metadata: Metadata = pageMetadata({
   absoluteTitle: true,
 });
 
+/** Splits the headline around the words that get the gradient. */
+function headlineParts(headline: string, highlight: string) {
+  const at = highlight ? headline.indexOf(highlight) : -1;
+  if (at === -1) return { before: headline, mark: "", after: "" };
+  return {
+    before: headline.slice(0, at),
+    mark: highlight,
+    after: headline.slice(at + highlight.length),
+  };
+}
+
+/** The primary call to action on the dark stage: white, with the glow behind it. */
+const STAGE_BUTTON = cn(
+  "lift inline-flex h-12 items-center justify-center gap-2 rounded-md px-6 text-base font-semibold",
+  "bg-[var(--stage-ink)] text-[var(--stage)] shadow-[0_0_48px_-10px_var(--glow)]",
+  "hover:shadow-[0_0_64px_-8px_var(--glow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--glow-text-a)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--stage)]",
+  "[&_svg]:size-[1.125rem]",
+);
+const STAGE_BUTTON_SECONDARY = cn(
+  "lift inline-flex h-12 items-center justify-center gap-2 rounded-md px-6 text-base font-medium",
+  "border border-[var(--stage-line)] text-[var(--stage-ink)] hover:border-[var(--stage-muted)] hover:bg-[var(--stage-surface)]",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--glow-text-a)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--stage)]",
+);
+
 /**
  * The front door. A signed-in person has already been convinced; they go to
- * their workspace. Everyone else gets the pitch.
+ * their workspace. Everyone else gets the pitch: one headline, one line, the
+ * product moving, and the rest of the page revealing itself as they scroll.
  */
 export default async function LandingPage({
   searchParams,
@@ -37,158 +65,150 @@ export default async function LandingPage({
     redirect(`/p/${project.slug}/roster`);
   }
 
-  const { hero, proof, howItWorks, trust, pricing, cta } = LANDING;
-  const roles = TEMPLATES.slice(0, 6);
+  const { hero, stats, ticker, howItWorks, bento, pricing, cta } = LANDING;
+  const { before, mark, after } = headlineParts(hero.headline, hero.highlight);
 
   return (
     <>
       {/* Hero ---------------------------------------------------------- */}
-      <section className="paper-grid">
-        <div className="mx-auto max-w-6xl px-4 pb-16 pt-16 sm:px-6 sm:pt-24">
-          <div className="max-w-3xl">
-            <p className="text-sm font-medium uppercase tracking-wide text-accent">{hero.eyebrow}</p>
-            <h1 className="mt-3 text-display font-semibold leading-[1.1] tracking-tight text-ink sm:text-display">
-              {hero.headline}
-            </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-muted">{hero.subhead}</p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg">
-                <Link href={hero.primaryCta.href}>
-                  {hero.primaryCta.label}
-                  <ArrowRight aria-hidden />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="secondary">
-                <Link href={hero.secondaryCta.href}>{hero.secondaryCta.label}</Link>
-              </Button>
-            </div>
-            <p className="mt-4 text-sm text-ink-subtle">{hero.note}</p>
+      <section className="stage relative overflow-hidden">
+        <Parallax className="absolute inset-0" distance={160}>
+          <Aurora />
+        </Parallax>
+        <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-20 sm:px-6 sm:pt-28 lg:pt-32">
+          <p className="font-mono text-xs uppercase tracking-wider text-[var(--glow-text-a)]">{hero.eyebrow}</p>
+          <h1 className="mt-5 max-w-5xl font-display text-hero text-balance text-[var(--stage-ink)]">
+            {before}
+            {mark ? <span className="glow-text">{mark}</span> : null}
+            {after}
+          </h1>
+          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-[var(--stage-muted)] sm:text-xl sm:leading-snug">
+            {hero.subhead}
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <Link href={hero.primaryCta.href} className={STAGE_BUTTON}>
+              {hero.primaryCta.label}
+              <ArrowRight aria-hidden />
+            </Link>
+            <Link href={hero.secondaryCta.href} className={STAGE_BUTTON_SECONDARY}>
+              {hero.secondaryCta.label}
+            </Link>
           </div>
-          <dl className="mt-14 grid gap-4 sm:grid-cols-3">
-            {proof.map((item) => (
-              <div key={item.label} className="rounded-panel border border-line bg-surface px-5 py-4">
-                <dt className="text-sm text-ink-muted">{item.label}</dt>
-                <dd className="mt-1 text-xl font-semibold text-ink">{item.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <p className="mt-4 text-sm text-[var(--stage-muted)]">{hero.note}</p>
+
+          <div className="mt-16 grid gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:items-start">
+            <dl className="flex flex-wrap gap-x-12 gap-y-6 lg:flex-col lg:gap-y-8">
+              {stats.map((item) => (
+                <div key={item.label} className="min-w-[8rem]">
+                  <dd className="whitespace-nowrap font-display text-display font-semibold tracking-tight text-[var(--stage-ink)]">
+                    <CountUp value={item.value} suffix={item.suffix} />
+                  </dd>
+                  <dt className="mt-1 text-sm text-[var(--stage-muted)]">{item.label}</dt>
+                </div>
+              ))}
+            </dl>
+            <HeroStage />
+          </div>
         </div>
       </section>
 
+      <Marquee label={ticker.label} items={ticker.items} />
+
       {/* How it works -------------------------------------------------- */}
-      <section id="how-it-works" className="scroll-mt-20 border-t border-line">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">{howItWorks.heading}</h2>
-          <p className="mt-2 text-ink-muted">{howItWorks.intro}</p>
-          <ol className="mt-8 grid gap-6 md:grid-cols-3">
+      <section id="how-it-works" className="scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+          <Reveal>
+            <h2 className="max-w-2xl font-display text-display font-semibold tracking-tight text-ink">
+              {howItWorks.heading}
+            </h2>
+            <p className="mt-3 text-lg text-ink-muted">{howItWorks.intro}</p>
+          </Reveal>
+          <ol className="mt-12 grid gap-4 md:grid-cols-3">
             {howItWorks.steps.map((step, index) => (
-              <li key={step.title} className="rounded-panel border border-line bg-surface p-6">
-                <span className="flex size-8 items-center justify-center rounded-md bg-accent-soft text-sm font-semibold text-accent-soft-fg">
-                  {index + 1}
-                </span>
-                <h3 className="mt-4 text-base font-semibold text-ink">{step.title}</h3>
-                <p className="mt-2 text-base leading-relaxed text-ink-muted">{step.body}</p>
+              <li key={step.title}>
+                <Reveal delay={index * 0.12} className="h-full">
+                  <div className="lift h-full rounded-panel border border-line bg-surface p-6 hover:border-accent-line hover:shadow-md">
+                    <span className="font-display text-xl font-semibold text-accent">0{index + 1}</span>
+                    <h3 className="mt-5 text-lg font-semibold tracking-tight text-ink">{step.title}</h3>
+                    <p className="mt-2 text-base leading-relaxed text-ink-muted">{step.body}</p>
+                  </div>
+                </Reveal>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      {/* Roles preview ------------------------------------------------- */}
-      <section className="border-t border-line bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight text-ink">Roles you can hire</h2>
-              <p className="mt-2 text-ink-muted">Each one is a template: a job, a voice, a rule for when to fetch a human.</p>
-            </div>
-            <Button asChild variant="secondary">
-              <Link href="/showcase">
-                All roles
-                <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-          </div>
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {roles.map((role) => (
-              <li key={role.id}>
-                <Link
-                  href={`/showcase#${role.id}`}
-                  className="flex h-full flex-col rounded-panel border border-line bg-paper p-5 transition-colors hover:border-accent-line hover:bg-accent-soft/20"
-                >
-                  <span className="flex size-9 items-center justify-center rounded-md bg-accent-soft text-accent-soft-fg">
-                    <TemplateIcon icon={role.icon} className="size-4" />
-                  </span>
-                  <span className="mt-4 text-base font-semibold text-ink">{role.name}</span>
-                  <span className="mt-1.5 text-sm leading-relaxed text-ink-muted">{role.pitch}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* Trust --------------------------------------------------------- */}
-      <section className="border-t border-line">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">{trust.heading}</h2>
-          <ul className="mt-8 grid gap-6 sm:grid-cols-2">
-            {trust.points.map((point) => (
-              <li key={point.title} className="flex gap-3">
-                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-positive-soft text-positive">
-                  <Check className="size-3.5" aria-hidden />
-                </span>
-                <div>
-                  <h3 className="font-semibold text-ink">{point.title}</h3>
-                  <p className="mt-1 text-base leading-relaxed text-ink-muted">{point.body}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+      {/* Bento --------------------------------------------------------- */}
+      <section className="border-t border-line bg-surface-2/40">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+          <Reveal>
+            <h2 className="max-w-2xl font-display text-display font-semibold tracking-tight text-ink">
+              {bento.heading}
+            </h2>
+            <p className="mt-3 text-lg text-ink-muted">{bento.intro}</p>
+          </Reveal>
+          <Reveal className="mt-12" delay={0.1}>
+            <Bento cards={bento.cards} />
+          </Reveal>
         </div>
       </section>
 
       {/* Pricing ------------------------------------------------------- */}
-      <section id="pricing" className="scroll-mt-20 border-t border-line bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">{pricing.heading}</h2>
-          <p className="mt-2 max-w-2xl text-ink-muted">{pricing.intro}</p>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {Object.values(PLANS).map((plan) => (
-              <Panel key={plan.id} className={`p-6 ${plan.id === "starter" ? "border-accent-line ring-1 ring-accent-line" : ""}`}>
-                <h3 className="text-base font-semibold text-ink">{plan.name}</h3>
-                <p className="mt-1 text-sm text-ink-muted">{plan.blurb}</p>
-                <p className="mt-4 text-xl font-semibold tracking-tight text-ink">
-                  ${plan.priceUsd}
-                  <span className="text-sm font-normal text-ink-muted"> / month</span>
-                </p>
-                <ul className="mt-5 space-y-2 text-sm text-ink-muted">
-                  <li>{plan.limits.publishedAgents} published agent{plan.limits.publishedAgents === 1 ? "" : "s"}</li>
-                  <li>{plan.limits.actionItemsPerMonth.toLocaleString()} autonomous runs a month</li>
-                  <li>{plan.limits.conversationsPerMonth.toLocaleString()} client conversations a month</li>
-                  <li>${plan.limits.modelCostUsdPerMonth} model budget included</li>
-                </ul>
-                <Button asChild className="mt-6 w-full" variant={plan.id === "starter" ? "primary" : "secondary"}>
-                  <Link href="/signup">{plan.priceUsd === 0 ? "Start free" : `Start with ${plan.name}`}</Link>
-                </Button>
-              </Panel>
+      <section id="pricing" className="scroll-mt-20 border-t border-line">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+          <Reveal>
+            <h2 className="max-w-2xl font-display text-display font-semibold tracking-tight text-ink">
+              {pricing.heading}
+            </h2>
+            <p className="mt-3 max-w-2xl text-lg text-ink-muted">{pricing.intro}</p>
+          </Reveal>
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            {Object.values(PLANS).map((plan, index) => (
+              <Reveal key={plan.id} delay={index * 0.12} className="h-full">
+                <Panel
+                  className={cn(
+                    "lift flex h-full flex-col p-6 hover:shadow-md",
+                    plan.id === "starter" && "border-accent-line ring-1 ring-accent-line",
+                  )}
+                >
+                  <h3 className="text-lg font-semibold tracking-tight text-ink">{plan.name}</h3>
+                  <p className="mt-1 text-sm text-ink-muted">{plan.blurb}</p>
+                  <p className="mt-5 font-display text-display font-semibold tracking-tight text-ink">
+                    ${plan.priceUsd}
+                    <span className="font-sans text-sm font-normal tracking-normal text-ink-muted"> / month</span>
+                  </p>
+                  <ul className="mt-5 space-y-2 text-sm text-ink-muted">
+                    <li>{plan.limits.publishedAgents} published agent{plan.limits.publishedAgents === 1 ? "" : "s"}</li>
+                    <li>{plan.limits.actionItemsPerMonth.toLocaleString()} autonomous runs a month</li>
+                    <li>{plan.limits.conversationsPerMonth.toLocaleString()} client conversations a month</li>
+                    <li>${plan.limits.modelCostUsdPerMonth} model budget included</li>
+                  </ul>
+                  <Button asChild className="lift mt-6 w-full" variant={plan.id === "starter" ? "primary" : "secondary"}>
+                    <Link href="/signup">{plan.priceUsd === 0 ? "Start free" : `Start with ${plan.name}`}</Link>
+                  </Button>
+                </Panel>
+              </Reveal>
             ))}
           </div>
-          <p className="mt-4 text-sm text-ink-subtle">{pricing.footnote}</p>
+          <p className="mt-5 text-sm text-ink-subtle">{pricing.footnote}</p>
         </div>
       </section>
 
       {/* CTA ----------------------------------------------------------- */}
-      <section className="border-t border-line">
-        <div className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">{cta.heading}</h2>
-          <p className="mt-2 text-ink-muted">{cta.body}</p>
-          <Button asChild size="lg" className="mt-6">
-            <Link href={cta.button.href}>
+      <section className="stage relative overflow-hidden">
+        <Aurora />
+        <div className="relative mx-auto max-w-6xl px-4 py-24 text-center sm:px-6 sm:py-32">
+          <Reveal>
+            <h2 className="mx-auto max-w-3xl font-display text-hero text-balance text-[var(--stage-ink)]">
+              {cta.heading}
+            </h2>
+            <p className="mt-5 text-lg text-[var(--stage-muted)]">{cta.body}</p>
+            <Link href={cta.button.href} className={cn(STAGE_BUTTON, "mt-9")}>
               {cta.button.label}
               <ArrowRight aria-hidden />
             </Link>
-          </Button>
+          </Reveal>
         </div>
       </section>
     </>

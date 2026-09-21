@@ -24,6 +24,11 @@ const COLOR_PAIRS: { fg: string; bg: string; use: string; min: number }[] = [
   { fg: "--warning", bg: "--warning-soft", use: "Warning badge", min: 4.5 },
   { fg: "--danger", bg: "--danger-soft", use: "Danger badge", min: 4.5 },
   { fg: "--accent", bg: "--surface", use: "Links", min: 4.5 },
+  // The landing page's stage: identical in both themes.
+  { fg: "--stage-ink", bg: "--stage", use: "Stage: headline and body", min: 4.5 },
+  { fg: "--stage-muted", bg: "--stage", use: "Stage: sub-line, labels", min: 4.5 },
+  { fg: "--glow-text-a", bg: "--stage", use: "Stage: gradient word, light stop (72px+)", min: 3 },
+  { fg: "--glow-text-b", bg: "--stage", use: "Stage: gradient word, dark stop (72px+)", min: 3 },
 ];
 
 const TYPE = [
@@ -32,7 +37,8 @@ const TYPE = [
   { cls: "text-base", name: "base · 15px", use: "Reading: transcripts, drafts, marketing body" },
   { cls: "text-lg", name: "lg · 18px", use: "Section and panel titles" },
   { cls: "text-xl", name: "xl · 24px", use: "Page titles" },
-  { cls: "text-display", name: "display · 44px", use: "Marketing hero only" },
+  { cls: "text-display", name: "display · 44px", use: "Public site section headings" },
+  { cls: "font-display text-hero", name: "hero · 56-120px", use: "Landing hero and closing call only" },
 ];
 
 const SPACING = [2, 4, 6, 8, 12, 16];
@@ -164,7 +170,7 @@ export function DesignSystem() {
         </div>
       </Section>
 
-      <Section title="Type" blurb="Five sizes. Weight and colour carry hierarchy within a size; a new size is a design-system change, not a page change.">
+      <Section title="Type" blurb="Five product sizes, plus display and hero for the public site. Weight and colour carry hierarchy within a size; a new size is a design-system change, not a page change. Product screens use the sans; public-site headlines use the display face.">
         <Panel className="divide-y divide-line">
           {TYPE.map((t) => (
             <div key={t.cls} className="grid gap-2 p-4 sm:grid-cols-[10rem_1fr_14rem] sm:items-baseline">
@@ -268,6 +274,43 @@ export function DesignSystem() {
             </label>
           </PanelBody>
         </Panel>
+      </Section>
+
+      <Section
+        title="Landing stage"
+        blurb="The one place the accent is loud. A near-black section that stays dark in both themes, three drifting blobs behind it, the display face, and a gradient on the words that matter. Nothing in the product uses these."
+      >
+        <div className="stage relative overflow-hidden rounded-panel p-8">
+          <div className="aurora" aria-hidden>
+            <i />
+            <i />
+            <i />
+          </div>
+          <div className="grain" aria-hidden />
+          <div className="relative">
+            <p className="font-mono text-xs uppercase tracking-wider text-[var(--glow-text-a)]">Eyebrow</p>
+            <p className="mt-3 font-display text-hero text-[var(--stage-ink)]">
+              Keep the <span className="glow-text">final say.</span>
+            </p>
+            <p className="mt-4 max-w-md text-lg text-[var(--stage-muted)]">Sub-line in stage-muted, one sentence.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <span className="lift inline-flex h-12 items-center rounded-md bg-[var(--stage-ink)] px-6 text-base font-semibold text-[var(--stage)] shadow-[0_0_48px_-10px_var(--glow)]">
+                Stage button
+              </span>
+              <span className="lift inline-flex h-12 items-center rounded-md border border-[var(--stage-line)] px-6 text-base font-medium text-[var(--stage-ink)]">
+                Secondary
+              </span>
+            </div>
+            <dl className="mt-6 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
+              {["--stage", "--stage-surface", "--glow", "--glow-cool", "--glow-hot", "--glow-text-a", "--glow-text-b", "--stage-line"].map((token) => (
+                <div key={token} className="flex items-center gap-2 text-[var(--stage-muted)]">
+                  <span className="size-5 shrink-0 rounded-sm border border-[var(--stage-line)]" style={{ background: `var(${token})` }} />
+                  <dt className="font-mono">{token}</dt>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
       </Section>
 
       <Section title="Feedback" blurb="Every action answers: a toast for the outcome, a skeleton while loading, an empty state that says what to do next.">

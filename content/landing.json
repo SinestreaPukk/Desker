@@ -1,56 +1,111 @@
 {
   "meta": {
     "title": "AI employees for real work",
-    "description": "Hire AI employees with a role, a personality and your company's context. They answer clients, do scheduled work, and stop for your approval before anything goes public."
+    "description": "Hire an AI employee with a role, a voice and your company's context. It answers clients, researches and drafts on a schedule, and nothing goes out without your approval."
   },
   "hero": {
-    "eyebrow": "For small teams with big to-do lists",
-    "headline": "Hire an AI employee. Give it a job. Keep the final say.",
-    "subhead": "Desker turns a job description and your documents into an agent that answers your clients, researches, drafts and follows up on a schedule - and asks you before anything is published or sent.",
-    "primaryCta": { "label": "Create your first agent", "href": "/signup" },
+    "eyebrow": "For teams with more work than people",
+    "headline": "Hire an AI employee. Keep the final say.",
+    "highlight": "final say.",
+    "subhead": "It answers clients, researches, drafts and follows up. Nothing ships without your approval.",
+    "primaryCta": { "label": "Hire your first agent", "href": "/signup" },
     "secondaryCta": { "label": "See the roles", "href": "/showcase" },
-    "note": "Free to start. No credit card. The first agent takes about five minutes."
+    "note": "Free to start. Five minutes to a working agent."
   },
-  "proof": [
-    { "value": "5 min", "label": "from sign-up to a working agent" },
-    { "value": "Draft-only", "label": "by default - nothing goes out unapproved" },
-    { "value": "Every action", "label": "in an audit log you can export" }
+  "stats": [
+    { "value": 8, "suffix": "", "label": "roles ready to hire" },
+    { "value": 5, "suffix": " min", "label": "to a working agent" },
+    { "value": 100, "suffix": "%", "label": "of posts and emails wait for your approval" }
   ],
+  "ticker": {
+    "label": "A week on Desker looks like",
+    "items": [
+      "Mia answered a returns question from the policy",
+      "Nova drafted Monday's LinkedIn post",
+      "Ravi walked a new client through setup",
+      "Iris escalated a refund over $200 to a person",
+      "Sol researched three competitors and cited every source",
+      "Ada logged a bug with steps to reproduce",
+      "Kai qualified a lead and booked the call",
+      "June answered a leave question from the handbook"
+    ]
+  },
   "howItWorks": {
-    "heading": "How it works",
-    "intro": "Three steps, then it runs.",
+    "heading": "Three steps. Then it works.",
+    "intro": "No prompt engineering. A job description and your documents.",
     "steps": [
       {
         "title": "Describe the role",
-        "body": "Pick a template - support, marketing, research, admin - then give it a name, a tone of voice and a plain-language rule for when to fetch a human."
+        "body": "Pick a template. Name it. Give it a voice and one plain rule for when to fetch a human."
       },
       {
-        "title": "Give it your context",
-        "body": "Upload the policies, price lists and FAQs it should know. It answers from those and cites them, instead of guessing."
+        "title": "Hand it your context",
+        "body": "Upload the policies, price lists and FAQs. It answers from those and cites them."
       },
       {
-        "title": "Test, publish, delegate",
-        "body": "Talk to it live before anyone else does. Publish it as a chat link or a widget on your site. Give it a scope of work and a schedule, and review what it produces from your inbox."
+        "title": "Publish and delegate",
+        "body": "Put it on your site. Give it a schedule. Review everything it produces from one inbox."
       }
     ]
   },
-  "trust": {
-    "heading": "Built so you can trust it with your business",
-    "points": [
-      { "title": "A human sign-off, always", "body": "Publishing a post or sending an email waits for your approval. You can loosen that per agent, per tool, once it has earned it." },
-      { "title": "Sources, not guesses", "body": "Answers come from your documents and cited web research. When it doesn't know, it says so." },
-      { "title": "A complete trail", "body": "Every tool call, every approval, every schedule - who did what, when, and why - queryable and exportable." },
-      { "title": "Your data stays yours", "body": "Integration credentials are encrypted at rest. Nothing you upload trains anyone's model." }
+  "bento": {
+    "heading": "Everything a good hire needs.",
+    "intro": "The roles, and the platform underneath them.",
+    "cards": [
+      {
+        "size": "lg",
+        "icon": "inbox",
+        "title": "One inbox for approvals",
+        "body": "Every post and email an agent wants to send lands here with the full text. Approve, edit or reject. From your phone, if that's where you are.",
+        "demo": "approval"
+      },
+      {
+        "size": "tall",
+        "icon": "users",
+        "title": "Eight roles. One click.",
+        "body": "Each one is a job, a voice and a rule for when to stop.",
+        "demo": "roles"
+      },
+      {
+        "size": "wide",
+        "icon": "calendar",
+        "title": "Works on a schedule",
+        "body": "A scope of work, a cadence or a webhook. It runs overnight and reports in the morning."
+      },
+      {
+        "size": "sm",
+        "icon": "file-text",
+        "title": "Answers with sources",
+        "body": "From your documents and cited research. When it doesn't know, it says so."
+      },
+      {
+        "size": "sm",
+        "icon": "scroll",
+        "title": "A complete trail",
+        "body": "Every tool call, approval and schedule. Queryable. Exportable."
+      },
+      {
+        "size": "sm",
+        "icon": "code",
+        "title": "A widget for your site",
+        "body": "One script tag, or a chat link. A passcode if you want one."
+      },
+      {
+        "size": "sm",
+        "icon": "lock",
+        "title": "Yours stays yours",
+        "body": "Credentials encrypted at rest. Nothing you upload trains a model."
+      }
     ]
   },
   "pricing": {
-    "heading": "Simple pricing",
-    "intro": "Priced on what actually costs money: how many agents are live and how much they do each month. Start free; upgrade when an agent is earning its keep.",
-    "footnote": "All plans include every role, unlimited teammates, the audit log and email support."
+    "heading": "Pricing that follows the work.",
+    "intro": "Pay for agents that are live and the work they do. Start free. Upgrade when one is earning its keep.",
+    "footnote": "Every plan includes every role, unlimited teammates, the audit log and email support."
   },
   "cta": {
-    "heading": "Put your first agent to work today",
-    "body": "Five minutes to a working agent. Free to start.",
-    "button": { "label": "Get started", "href": "/signup" }
+    "heading": "Put an agent to work today.",
+    "body": "Five minutes. Free to start.",
+    "button": { "label": "Hire your first agent", "href": "/signup" }
   }
 }
