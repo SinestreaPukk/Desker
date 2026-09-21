@@ -109,7 +109,7 @@ export default async function LandingPage({
             <h2 className="mx-auto max-w-3xl text-center text-title text-balance text-ink">{features.heading}</h2>
             <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-ink-muted">{features.intro}</p>
           </Reveal>
-          <div className="mt-16 space-y-24 sm:mt-24 sm:space-y-32">
+          <div className="mt-16 space-y-20 sm:mt-20 sm:space-y-28">
             {features.items.map((item) => {
               const demo = DEMOS[item.demo];
               return (
@@ -118,9 +118,9 @@ export default async function LandingPage({
                     <h3 className="text-xl font-medium tracking-tight text-balance text-ink">
                       {item.title}
                     </h3>
-                    <p className="mt-3 text-lg leading-relaxed text-ink-muted">{item.body}</p>
+                    <p className="mt-4 text-lg leading-relaxed text-ink-muted">{item.body}</p>
                   </div>
-                  <div className="mx-auto mt-10 max-w-4xl rounded-panel bg-sky-pale/60 p-3 sm:p-6" aria-hidden>
+                  <div className="mat mx-auto mt-10 max-w-4xl rounded-panel p-4 sm:p-6" aria-hidden>
                     <Frame title={demo.title}>{demo.scene}</Frame>
                   </div>
                 </Reveal>

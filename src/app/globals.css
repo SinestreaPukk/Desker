@@ -379,6 +379,17 @@
     inset 0 -1px 0 oklch(0 0 0 / 0.12);
 }
 
+/* The cushion a product window sits on.
+   The sky is the page's most distinctive asset and it was confined to the
+   two ends, leaving the whole middle flat. This is the same light at a
+   whisper - a wash of sky falling from the top edge onto a pale ground - so
+   the frames in between read as lit from the same source. */
+.mat {
+  background:
+    radial-gradient(90% 120% at 50% -10%, color-mix(in oklch, var(--sky) 34%, transparent) 0%, transparent 68%),
+    color-mix(in oklch, var(--sky-pale) 50%, var(--paper));
+}
+
 /* A product window floating over the page: white frame, soft blue glow. */
 .window {
   border-radius: var(--radius-panel);
