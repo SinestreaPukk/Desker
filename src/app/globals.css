@@ -390,6 +390,14 @@
     color-mix(in oklch, var(--sky-pale) 50%, var(--paper));
 }
 
+/* A whole section standing in the same light. Much weaker than .mat: this is
+   a ground for cards to sit on, not a card. Used once, for the roles. */
+.sky-wash {
+  background:
+    radial-gradient(65% 55% at 50% 0%, color-mix(in oklch, var(--sky) 20%, transparent) 0%, transparent 74%),
+    color-mix(in oklch, var(--sky-pale) 20%, var(--paper));
+}
+
 /* A product window floating over the page: white frame, soft blue glow. */
 .window {
   border-radius: var(--radius-panel);

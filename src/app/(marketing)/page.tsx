@@ -131,7 +131,7 @@ export default async function LandingPage({
       </section>
 
       {/* Roles --------------------------------------------------------- */}
-      <section id="roles" className="scroll-mt-20 border-t border-line bg-surface-2/40">
+      <section id="roles" className="sky-wash scroll-mt-20 border-t border-line">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
           <Reveal>
             <h2 className="mx-auto max-w-3xl text-center text-title text-balance text-ink">{roles.heading}</h2>
