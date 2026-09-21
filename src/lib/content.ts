@@ -11,6 +11,7 @@ import landing from "../../content/landing.json";
 import showcase from "../../content/showcase.json";
 import contact from "../../content/contact.json";
 import templates from "../../content/templates.json";
+import { PLAN_IDS } from "@/lib/billing/plans";
 import { TOOL_IDS } from "@/lib/tools/registry";
 import { WORK_TOOL_IDS } from "@/lib/work/tools";
 
@@ -69,7 +70,14 @@ const landingSchema = z.object({
       .max(8),
   }),
   roles: z.object({ heading: z.string(), intro: z.string() }),
-  pricing: z.object({ heading: z.string(), intro: z.string(), footnote: z.string() }),
+  pricing: z.object({
+    heading: z.string(),
+    intro: z.string(),
+    /** Which tier carries the emphasis. A decision, so it is written down. */
+    popularPlan: z.enum(PLAN_IDS),
+    popularLabel: z.string().min(1).max(24),
+    footnote: z.string(),
+  }),
   faq: z.object({
     heading: z.string(),
     items: z.array(z.object({ q: z.string().min(1), a: z.string().min(1) })).min(3).max(10),

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { currentUser } from "@/lib/auth";
 import { defaultProject } from "@/lib/projects";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import { Clouds, Faq, RoleGrid, TrustLine } from "@/components/marketing/landing-blocks";
@@ -150,33 +151,67 @@ export default async function LandingPage({
             <h2 className="mx-auto max-w-3xl text-center text-title text-balance text-ink">{pricing.heading}</h2>
             <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-ink-muted">{pricing.intro}</p>
           </Reveal>
-          <div className="mx-auto mt-12 grid max-w-5xl gap-4 md:grid-cols-3">
-            {Object.values(PLANS).map((plan, index) => (
-              <Reveal key={plan.id} delay={index * 0.1} className="h-full">
-                <Panel
-                  className={cn(
-                    "lift flex h-full flex-col p-6 hover:shadow-md",
-                    plan.id === "starter" && "border-accent-line ring-1 ring-accent-line",
-                  )}
+          {/* items-stretch keeps the three the same height; mt-auto on the
+              button puts all three calls on one baseline whatever the blurb
+              above them does. The popular one stands a row-height proud of
+              its neighbours from md up, which is emphasis you can see from
+              across the room - the ring alone was a detail nobody noticed. */}
+          {/* Three columns only from lg. At 768 they were 230px wide and every
+              feature line wrapped twice; below that it is one readable column. */}
+          <div className="mx-auto mt-12 grid max-w-md items-stretch gap-4 lg:max-w-5xl lg:grid-cols-3">
+            {Object.values(PLANS).map((plan, index) => {
+              const popular = plan.id === pricing.popularPlan;
+              return (
+                <Reveal
+                  key={plan.id}
+                  delay={index * 0.08}
+                  // Proud of its neighbours at the top only: pulled up a row
+                  // of padding and given that height back, so it reads as the
+                  // larger card while its foot - and so its call - still lands
+                  // on the same line as the other two.
+                  className={cn("h-full", popular && "lg:-mt-4 lg:h-[calc(100%+1rem)]")}
                 >
-                  <h3 className="text-lg font-semibold tracking-tight text-ink">{plan.name}</h3>
-                  <p className="mt-1 text-sm text-ink-muted">{plan.blurb}</p>
-                  <p className="mt-5 text-display font-medium tracking-tight text-ink">
-                    ${plan.priceUsd}
-                    <span className="text-sm font-normal tracking-normal text-ink-muted"> / month</span>
-                  </p>
-                  <ul className="mt-5 space-y-2 text-sm text-ink-muted">
-                    <li>{plan.limits.publishedAgents} published agent{plan.limits.publishedAgents === 1 ? "" : "s"}</li>
-                    <li>{plan.limits.actionItemsPerMonth.toLocaleString()} autonomous runs a month</li>
-                    <li>{plan.limits.conversationsPerMonth.toLocaleString()} client conversations a month</li>
-                    <li>${plan.limits.modelCostUsdPerMonth} model budget included</li>
-                  </ul>
-                  <Button asChild className="mt-6 w-full" variant={plan.id === "starter" ? "primary" : "secondary"}>
-                    <Link href="/signup">{plan.priceUsd === 0 ? "Start free" : `Start with ${plan.name}`}</Link>
-                  </Button>
-                </Panel>
-              </Reveal>
-            ))}
+                  <Panel
+                    className={cn(
+                      "lift relative flex h-full flex-col p-6 hover:shadow-md",
+                      popular
+                        ? "border-accent-line shadow-sm ring-2 ring-accent-line"
+                        : "hover:border-accent-line",
+                    )}
+                  >
+                    {popular ? (
+                      <Badge tone="accent" className="absolute -top-2.5 left-6 shadow-xs">
+                        {pricing.popularLabel}
+                      </Badge>
+                    ) : null}
+                    <h3 className="text-lg font-semibold tracking-tight text-ink">{plan.name}</h3>
+                    {/* Two lines' worth whether it needs them, so the three prices
+                        sit on one line instead of stepping down the row. */}
+                    <p className="mt-1 min-h-10 text-sm text-ink-muted">{plan.blurb}</p>
+                    <p className="mt-5 text-display font-medium tracking-tight text-ink">
+                      ${plan.priceUsd}
+                      <span className="text-sm font-normal tracking-normal text-ink-muted"> / month</span>
+                    </p>
+                    <ul className="mt-6 space-y-2.5 text-sm text-ink-muted">
+                      {[
+                        `${plan.limits.publishedAgents} published agent${plan.limits.publishedAgents === 1 ? "" : "s"}`,
+                        `${plan.limits.actionItemsPerMonth.toLocaleString()} autonomous runs a month`,
+                        `${plan.limits.conversationsPerMonth.toLocaleString()} client conversations a month`,
+                        `$${plan.limits.modelCostUsdPerMonth} model budget included`,
+                      ].map((line) => (
+                        <li key={line} className="flex items-start gap-2.5">
+                          <Check className="mt-0.5 size-3.5 shrink-0 text-positive" aria-hidden />
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button asChild className="mt-auto w-full" variant={popular ? "primary" : "secondary"}>
+                      <Link href="/signup">{plan.priceUsd === 0 ? "Start free" : `Start with ${plan.name}`}</Link>
+                    </Button>
+                  </Panel>
+                </Reveal>
+              );
+            })}
           </div>
           <p className="mt-6 text-center text-sm text-ink-subtle">{pricing.footnote}</p>
         </div>

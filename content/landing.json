@@ -73,6 +73,8 @@
   "pricing": {
     "heading": "Pricing that follows the work",
     "intro": "Pay for agents that are live and the work they do. Start free. Upgrade when one is earning its keep.",
+    "popularPlan": "starter",
+    "popularLabel": "Most popular",
     "footnote": "Every plan includes every role, unlimited teammates, the audit log and email support."
   },
   "faq": {
