@@ -6,14 +6,17 @@ import { currentUser } from "@/lib/auth";
 import { defaultProject } from "@/lib/projects";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
-import { Faq, Horizon, RoleGrid } from "@/components/marketing/landing-blocks";
+import { Clouds, Faq, RoleGrid } from "@/components/marketing/landing-blocks";
 import { GLASS_BUTTON } from "@/components/marketing/glass-button";
 import {
   ApprovalScene,
-  ChatScene,
+  AssistantScene,
+  DevScene,
   Frame,
   HeroStage,
-  RosterScene,
+  MarketerScene,
+  ResearcherScene,
+  SupportScene,
 } from "@/components/marketing/hero-stage";
 import { Parallax, Reveal } from "@/components/marketing/reveal";
 import { LANDING, SITE, pageMetadata, templateById } from "@/lib/content";
@@ -27,10 +30,14 @@ export const metadata: Metadata = pageMetadata({
   absoluteTitle: true,
 });
 
+/** Each feature's frame: the matching showreel scene, finished. */
 const DEMOS = {
-  chat: { title: "Inbox · Conversations", scene: <ChatScene beat={2} /> },
-  roster: { title: "Roster", scene: <RosterScene beat={2} /> },
-  approval: { title: "Inbox · Approvals", scene: <ApprovalScene beat={2} /> },
+  support: { title: "Client chat · Mia", scene: <SupportScene beat={3} /> },
+  marketer: { title: "Work · Nova · scheduled run", scene: <MarketerScene beat={3} /> },
+  researcher: { title: "Work · Sol · weekly brief", scene: <ResearcherScene beat={3} /> },
+  "dev-support": { title: "Client chat · Ada", scene: <DevScene beat={3} /> },
+  assistant: { title: "Work · Kai · follow-ups", scene: <AssistantScene beat={3} /> },
+  approval: { title: "Inbox · Approvals", scene: <ApprovalScene beat={3} /> },
 } as const;
 
 /**
@@ -61,11 +68,9 @@ export default async function LandingPage({
       {/* Hero ---------------------------------------------------------- */}
       <section className="sky relative -mt-14 overflow-hidden pt-14">
         <div className="sun right-[12%] top-[46%] hidden sm:block" aria-hidden />
-        <Parallax className="absolute inset-x-0 bottom-0 h-[58%]" distance={-60}>
-          <Horizon />
+        <Parallax className="absolute inset-0" distance={-40}>
+          <Clouds />
         </Parallax>
-        {/* The foot of the mountains dissolves into the page. */}
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-paper" aria-hidden />
 
         <div className="relative mx-auto max-w-6xl px-4 pt-20 text-center sm:px-6 sm:pt-28">
           <h1 className="mx-auto max-w-4xl font-display text-hero text-balance text-[var(--sky-ink)]">
@@ -89,7 +94,7 @@ export default async function LandingPage({
           <p className="mt-4 text-sm text-[var(--sky-ink)]">{hero.note}</p>
 
           {/* The product, floating over the horizon and down into the page. */}
-          <HeroStage className="relative z-10 mx-auto -mb-24 mt-16 max-w-4xl text-left sm:-mb-32 sm:mt-24" />
+          <HeroStage className="relative z-10 mx-auto -mb-24 mt-14 max-w-4xl text-left sm:-mb-32 sm:mt-20" />
         </div>
       </section>
 
@@ -98,6 +103,7 @@ export default async function LandingPage({
         <div className="mx-auto max-w-6xl px-4 pb-20 pt-44 sm:px-6 sm:pb-28 sm:pt-56">
           <Reveal>
             <h2 className="mx-auto max-w-3xl text-center text-title text-balance text-ink">{features.heading}</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-ink-muted">{features.intro}</p>
           </Reveal>
           <div className="mt-16 space-y-24 sm:mt-24 sm:space-y-32">
             {features.items.map((item) => {
@@ -187,10 +193,7 @@ export default async function LandingPage({
       {/* CTA ----------------------------------------------------------- */}
       <section className="sky relative overflow-hidden">
         <div className="sun left-[10%] top-[30%] hidden sm:block" aria-hidden />
-        <div className="absolute inset-x-0 bottom-0 h-[55%]" aria-hidden>
-          <Horizon />
-        </div>
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-paper" aria-hidden />
+        <Clouds />
         <div className="relative mx-auto max-w-6xl px-4 pb-40 pt-24 text-center sm:px-6 sm:pb-56 sm:pt-32">
           <Reveal>
             <h2 className="mx-auto max-w-3xl font-display text-hero text-balance text-[var(--sky-ink)]">{cta.heading}</h2>

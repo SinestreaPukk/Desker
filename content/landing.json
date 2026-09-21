@@ -5,27 +5,49 @@
   },
   "hero": {
     "headline": "AI employees that do real work",
-    "subhead": "Desker answers your clients, researches and drafts on a schedule, and asks you before anything goes out.",
-    "primaryCta": { "label": "Hire your first agent", "href": "/signup" },
-    "secondaryCta": { "label": "See the roles", "href": "/showcase" },
+    "subhead": "A marketer, a researcher, developer support, an assistant, a support desk. Each one works from your documents, on a schedule, and asks before anything goes out.",
+    "primaryCta": {
+      "label": "Hire your first agent",
+      "href": "/signup"
+    },
+    "secondaryCta": {
+      "label": "See the roles",
+      "href": "/showcase"
+    },
     "note": "Free to start. Five minutes to a working agent."
   },
   "features": {
-    "heading": "How Desker helps, all day",
+    "heading": "Not a chatbot. A staff.",
+    "intro": "Every agent has a job, your context, and tools that reach the outside world - behind your approval.",
     "items": [
       {
-        "title": "It answers your clients from your own documents",
-        "body": "Upload the policies, price lists and FAQs. Every answer comes from those, with the source named.",
-        "demo": "chat"
+        "title": "A marketer that drafts on a schedule",
+        "body": "Every Monday at nine, Nova reads what your competitors announced, drafts the post in your voice and queues it for your approval.",
+        "demo": "marketer"
       },
       {
-        "title": "It works on a schedule while you sleep",
-        "body": "Give it a scope of work and a cadence. It researches, drafts and follows up, then reports in the morning.",
-        "demo": "roster"
+        "title": "A researcher that cites its sources",
+        "body": "Sol answers a standing question every week with a brief you can check: numbered sources, quotes, links. Emailed to you.",
+        "demo": "researcher"
+      },
+      {
+        "title": "Developer support that reproduces the bug",
+        "body": "Ada reads your API docs, explains the fix with a code sample, reproduces the problem, and logs the issue for engineering with steps.",
+        "demo": "dev-support"
+      },
+      {
+        "title": "An assistant that keeps follow-ups moving",
+        "body": "Kai drafts the email with the numbers from your notes, schedules the next step himself, and never commits you to anything without asking.",
+        "demo": "assistant"
+      },
+      {
+        "title": "Support that answers from your own documents",
+        "body": "Mia searches the policies and product sheets you upload and answers from them, naming the source. When she doesn't know, she says so.",
+        "demo": "support"
       },
       {
         "title": "You approve anything that leaves the building",
-        "body": "Posts and emails wait in one inbox with the full text. Approve, edit or reject from your phone.",
+        "body": "Posts and emails wait in one inbox with the full text. Approve, edit or reject - from your phone. Every decision lands in the audit trail.",
         "demo": "approval"
       }
     ]
@@ -71,6 +93,9 @@
   "cta": {
     "heading": "Put an agent to work today",
     "body": "Five minutes. Free to start.",
-    "button": { "label": "Hire your first agent", "href": "/signup" }
+    "button": {
+      "label": "Hire your first agent",
+      "href": "/signup"
+    }
   }
 }

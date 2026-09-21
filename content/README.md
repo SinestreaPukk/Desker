@@ -20,8 +20,8 @@ Rules that keep this safe to edit:
   the page supports them; there is no HTML.
 - `landing.json`: `hero.headline` is the serif line in the sky (keep it under
   60 characters, it is set very large); `features.items[].demo` picks which
-  piece of the product the frame under that heading shows (`chat`, `roster`
-  or `approval`); `faq.items` are plain question/answer pairs.
+  showreel scene the frame under that heading shows (`support`, `marketer`,
+  `researcher`, `dev-support`, `assistant` or `approval`); `faq.items` are plain question/answer pairs.
 - `templates.json` fields that the wizard uses (`jobTitle`, `team`,
   `personality`, `welcomeMessage`, `escalationRule`, `responsibilities`,
   `allowedTools`, `workTools`) are written in the same plain language an owner

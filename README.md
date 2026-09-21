@@ -326,10 +326,12 @@ loaded through `next/font`) and are documented on `/design-system` under
 - **Motion is not on the critical path.** The library lives in one lazy chunk
   fetched after `load` (another e2e checks that), the browser Sentry SDK is
   deferred the same way, and the sky, sun and glass button are CSS.
-- **The moving picture is the product.** `hero-stage.tsx` loops an agent
-  joining the roster, a client message being answered and a draft being
-  approved, built from the app's own components - it cannot go stale. The
-  same scenes, at rest, are the frames under each feature heading.
+- **The moving picture is the product.** `hero-stage.tsx` is a showreel of
+  five agents doing their jobs - support answering from a document, a
+  marketer drafting on a schedule, a researcher citing sources, developer
+  support reproducing a bug, an assistant moving a follow-up - with role tabs
+  and a progress bar, built from the app's own components so it cannot go
+  stale. The same scenes, finished, are the frames under each feature.
 
 Copy, features, FAQ and the calls to action all come from
 `content/landing.json`; the icons are generated from the brand mark by

@@ -40,24 +40,25 @@ const landingSchema = z.object({
   meta,
   hero: z.object({
     headline: z.string().min(1).max(60),
-    subhead: z.string().max(160),
+    subhead: z.string().max(200),
     primaryCta: link,
     secondaryCta: link,
     note: z.string(),
   }),
   features: z.object({
     heading: z.string(),
+    intro: z.string(),
     items: z
       .array(
         z.object({
           title: z.string().min(1),
           body: z.string().min(1).max(200),
           /** Which piece of the product the frame under the heading shows. */
-          demo: z.enum(["chat", "roster", "approval"]),
+          demo: z.enum(["support", "marketer", "researcher", "dev-support", "assistant", "approval"]),
         }),
       )
       .min(2)
-      .max(5),
+      .max(8),
   }),
   roles: z.object({ heading: z.string(), intro: z.string() }),
   pricing: z.object({ heading: z.string(), intro: z.string(), footnote: z.string() }),
