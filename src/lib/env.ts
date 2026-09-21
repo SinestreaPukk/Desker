@@ -79,6 +79,8 @@ export const env = {
   },
 
   chatRateLimit: int("CHAT_RATE_LIMIT", 20),
+  /** Sign-ups per client address per ten minutes. */
+  signupRateLimit: int("SIGNUP_RATE_LIMIT", 20),
   chatRateLimitWindowMs: int("CHAT_RATE_LIMIT_WINDOW_MS", 60_000),
 
   /** Max accepted upload size for a single context document. */

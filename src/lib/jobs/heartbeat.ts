@@ -6,6 +6,7 @@
  * shows up as a failing /api/health rather than as an agent that never ran.
  */
 import { prisma } from "@/lib/db";
+import { withCronMonitor } from "@/lib/monitoring";
 import { inngest } from "./client";
 
 export const HEARTBEAT_SOURCE = "heartbeat";
@@ -29,14 +30,18 @@ export const heartbeat = inngest.createFunction(
     triggers: { cron: HEARTBEAT_CRON },
   },
   async ({ step, runId }) => {
-    // Step results are serialised, so hand back strings, not Dates.
-    const row = await step.run("write-heartbeat", async () => {
-      const created = await prisma.heartbeat.create({
-        data: { source: HEARTBEAT_SOURCE, runId },
-        select: { id: true, createdAt: true },
-      });
-      return { id: created.id, at: created.createdAt.toISOString() };
-    });
+    // Step results are serialised, so hand back strings, not Dates. The
+    // check-in tells Sentry's cron monitor the scheduler is alive; a missed
+    // one is an alert, which is the whole point of this function.
+    const row = await step.run("write-heartbeat", () =>
+      withCronMonitor("job-runtime-heartbeat", HEARTBEAT_CRON, async () => {
+        const created = await prisma.heartbeat.create({
+          data: { source: HEARTBEAT_SOURCE, runId },
+          select: { id: true, createdAt: true },
+        });
+        return { id: created.id, at: created.createdAt.toISOString() };
+      }),
+    );
 
     await step.run("prune-old-heartbeats", () =>
       prisma.heartbeat.deleteMany({

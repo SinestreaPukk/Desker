@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
 import { currentUser } from "@/lib/auth";
 import { Forbidden } from "@/lib/organizations";
+import { captureError } from "@/lib/monitoring";
 
 export class HttpError extends Error {
   constructor(
@@ -58,7 +59,7 @@ export async function handle<T>(fn: () => Promise<T>): Promise<Response> {
         fieldErrors: error.flatten().fieldErrors,
       });
     }
-    console.error("[api] unhandled error", error);
+    captureError(error, { route: "api" });
     return jsonError(500, "Something went wrong on our end. Please try again.");
   }
 }

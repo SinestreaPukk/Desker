@@ -32,6 +32,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NewProjectDialog } from "@/components/new-project-dialog";
+import { FeedbackButton } from "@/components/feedback-dialog";
+import { UsageTracker } from "@/components/usage-tracker";
 import { useAdminLiveFeed, useIssues } from "@/hooks/use-admin-data";
 import { cn, initialsOf } from "@/lib/utils";
 
@@ -190,6 +192,7 @@ export function AdminShell({
         {navLinks}
 
         <div className="mt-auto space-y-3 pt-4">
+          <FeedbackButton project={project.slug} />
           <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -225,8 +228,14 @@ export function AdminShell({
       </aside>
 
       <main id="admin-main" className="min-w-0 flex-1">
+        {process.env.NEXT_PUBLIC_ENVIRONMENT === "staging" ? (
+          <p className="border-b border-warning-line bg-warning-soft px-4 py-1.5 text-center text-xs text-warning">
+            Staging - demo data, reset without notice. Nothing here reaches real clients.
+          </p>
+        ) : null}
         {children}
       </main>
+      <UsageTracker project={project.slug} />
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { agentInputSchema } from "@/lib/validation";
 import { toAgentDetail } from "@/lib/serialize";
 import { findAgentFor } from "@/lib/projects";
 import { canPublishAgent } from "@/lib/billing/limits";
+import { track } from "@/lib/product-events";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,6 +69,24 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(input.widgetSide !== undefined ? { widgetSide: input.widgetSide ?? null } : {}),
       },
     });
+
+    // Publishing is the moment a plan and a product decision both hinge on;
+    // record it in the trail and in the usage events.
+    if (input.status !== undefined && input.status !== existing.status) {
+      await audit({
+        organizationId: existing.project.organizationId,
+        actorType: "user",
+        actorId: userId,
+        action: input.status === "published" ? "agent.published" : "agent.unpublished",
+        targetType: "agent",
+        targetId: agentId,
+      });
+      await track({
+        name: input.status === "published" ? "agent.published" : "agent.unpublished",
+        organizationId: existing.project.organizationId,
+        userId,
+      });
+    }
 
     return toAgentDetail(agent);
   });

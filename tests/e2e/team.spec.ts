@@ -25,6 +25,7 @@ test("an owner invites a teammate who joins from the link", async ({ page, brows
   await guest.getByRole("link", { name: "Create an account" }).click();
   await expect(guest.getByLabel("Email")).toHaveValue(invitee.email);
   await guest.getByLabel("Password").fill(invitee.password);
+  await guest.getByLabel(/I agree to the/).check();
   await guest.getByRole("button", { name: "Create account" }).click();
 
   // Same project as the owner: the invitee joined, rather than founding an org.

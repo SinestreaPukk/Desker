@@ -127,6 +127,8 @@ function WebhookForm({ project }: { project: string }) {
             <PanelDescription>
               <code>publish_post</code> sends the approved draft here as JSON. Point a Zapier or
               Make catch hook at it, or your own endpoint, and route it to X, LinkedIn or a CMS.
+              Give the endpoint only the permission to create a post - never a token that can
+              read or delete. Set a signing secret and verify it on your side.
             </PanelDescription>
           </div>
         </PanelHeader>
@@ -197,7 +199,9 @@ function EmailForm({ project }: { project: string }) {
             <PanelTitle>Email (Resend)</PanelTitle>
             <PanelDescription>
               <code>send_email</code> goes through Resend. The from-address must be on a domain
-              verified in your Resend account.
+              verified in your Resend account. Create a key with <em>sending access</em> only,
+              restricted to that domain: it is stored encrypted, and even so it should not be
+              able to do more than send.
             </PanelDescription>
           </div>
         </PanelHeader>

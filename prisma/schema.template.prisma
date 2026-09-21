@@ -29,9 +29,48 @@ model User {
   email        String   @unique
   passwordHash String
   name         String?
+  /// When and which version of the Terms and Privacy Policy this person
+  /// accepted at sign-up. The acceptance record the legal documents need.
+  termsAcceptedAt DateTime?
+  termsVersion    String?
   createdAt    DateTime @default(now())
 
   memberships Membership[]
+  feedback    Feedback[]
+}
+
+/// What a person told us from inside the product. Read by the team, never by
+/// an agent; forwarded to the notification webhook when one is configured.
+model Feedback {
+  id             String   @id @default(cuid())
+  organizationId String?
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// bug | idea | question | other
+  kind           String   @default("other")
+  message        String
+  /// Where they were when they sent it.
+  path           String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+}
+
+/// Lightweight product analytics: which screens and actions people actually
+/// use. One row per event; no third party sees it. Decides what gets built.
+model ProductEvent {
+  id             String   @id @default(cuid())
+  organizationId String?
+  userId         String?
+  /// page.viewed, agent.published, approval.decided, ...
+  name           String
+  path           String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([name, createdAt])
 }
 
 // ---------------------------------------------------------------------------

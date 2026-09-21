@@ -11,6 +11,8 @@ import { inngest } from "./client";
 import { fireDueScopes } from "@/lib/work/scope";
 import { executeApprovedAction, runActionItem, type StepRunner } from "@/lib/work/runner";
 import { prisma } from "@/lib/db";
+import { captureError } from "@/lib/monitoring";
+import { transition } from "@/lib/work/runner";
 
 type StepTools = { run: (id: string, fn: () => Promise<unknown>) => Promise<unknown> };
 
@@ -43,6 +45,16 @@ export const runActionItemFn = inngest.createFunction(
       { limit: 1, key: "event.data.actionItemId" },
       { limit: 3, key: "event.data.organizationId" },
     ],
+    // Out of retries: the item must not sit in in_progress forever with
+    // nobody told. Fail it visibly and report it.
+    onFailure: async ({ event, error }) => {
+      const actionItemId = String(event.data.event.data.actionItemId);
+      const organizationId = String(event.data.event.data.organizationId ?? "");
+      captureError(error, { organizationId, actionItemId, route: "inngest:action-item-run" });
+      await transition(actionItemId, "failed", {
+        error: `The job runtime gave up after retries: ${error.message}`,
+      }).catch(() => {});
+    },
   },
   async ({ event, step }) => {
     const actionItemId = String(event.data.actionItemId);

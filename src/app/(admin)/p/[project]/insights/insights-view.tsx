@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { useAnalytics, type AnalyticsResponse } from "@/hooks/use-admin-data";
 import { errorMessage } from "@/lib/api-client";
@@ -88,6 +89,17 @@ export function InsightsView({ project }: { project: string }) {
             message={errorMessage(error)}
             onRetry={() => void refetch()}
             retrying={isRefetching}
+          />
+        ) : data!.totals.conversations === 0 && data!.work.totals.runs === 0 ? (
+          <EmptyState
+            icon={TrendingUp}
+            title="Nothing to measure yet"
+            description="Insights fill in once a published agent has talked to a client or run a task on its own. Conversations, escalations, ratings, tasks and cost per agent all land here."
+            action={
+              <Button asChild variant="secondary">
+                <Link href={`/p/${project}/roster`}>Go to the roster</Link>
+              </Button>
+            }
           />
         ) : (
           <>

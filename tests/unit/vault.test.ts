@@ -30,3 +30,18 @@ describe("vault", () => {
     expect(() => open(flipped)).toThrow();
   });
 });
+
+describe("backfill seal format", () => {
+  it("what the backfill script seals, the app can open", async () => {
+    process.env.VAULT_KEY = randomBytes(32).toString("base64");
+    const { open } = await import("@/lib/vault");
+    // The script is plain ESM with a local seal(); exercise the same algorithm here.
+    const { createCipheriv } = await import("node:crypto");
+    const key = Buffer.from(process.env.VAULT_KEY, "base64");
+    const iv = randomBytes(12);
+    const cipher = createCipheriv("aes-256-gcm", key, iv);
+    const ct = Buffer.concat([cipher.update(Buffer.from(JSON.stringify({ apiKey: "re_x" }), "utf8")), cipher.final()]);
+    const sealed = ["v1", iv.toString("base64url"), cipher.getAuthTag().toString("base64url"), ct.toString("base64url")].join(".");
+    expect(open(sealed)).toEqual({ apiKey: "re_x" });
+  });
+});

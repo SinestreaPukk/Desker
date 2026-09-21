@@ -292,6 +292,45 @@ Nothing an agent does publicly happens without a visible, reviewable trail.
   models) applied to the usage counters. An unpriced model shows as unknown,
   never as free - the figure is what billing will meter.
 
+## Monitoring, staging and the first run
+
+- **Error monitoring** is Sentry, behind `lib/monitoring.ts`; set `SENTRY_DSN`
+  and `NEXT_PUBLIC_SENTRY_DSN` to turn it on (nothing else imports Sentry).
+  Unhandled API errors, failed action items and Inngest functions that
+  exhaust their retries are reported with the organisation, agent and item
+  tagged. Request bodies are never sent.
+- **The scheduler is monitored on its own.** The heartbeat function checks in
+  to a Sentry cron monitor (`job-runtime-heartbeat`), which alerts when a
+  check-in is missed, and `GET /api/health/jobs` answers 503 once two
+  intervals pass without a heartbeat - point an uptime monitor at that URL.
+  A failed run also raises an inbox issue and posts to
+  `NOTIFY_WEBHOOK_URLS`. A silently dead schedule is the one failure this
+  product must never have.
+- **First run.** A new organisation lands on an empty roster with a guided
+  panel (hire → give it documents → test and publish) rather than in the
+  wizard; Inbox, Insights, Work, Approvals and the audit log all have empty
+  states that say what will appear there and how.
+- **Feedback and usage.** *Send feedback* in the sidebar stores a `Feedback`
+  row, forwards it to the notification webhook, and counts it. Page views
+  and key actions (publish, approve, reject, manual run) are recorded as
+  `ProductEvent` rows - first-party, no third party - so what the first
+  customers actually use decides what gets built next.
+- **Legal.** `/terms` and `/privacy` are template text (replace them; bump
+  `TERMS_VERSION` in `lib/legal.ts` when you do). Sign-up requires the
+  consent checkbox and records `termsAcceptedAt` + `termsVersion` on the user.
+- **Staging** is a second Vercel project, `desker-staging`, deploying the
+  `staging` branch to <https://desker-staging.vercel.app> with its own Neon
+  database (`desker_staging`), its own auth and vault secrets, and its own
+  Inngest app id. A banner marks it. Seed it with
+  `DEMO_PASSWORD=... node scripts/seed-demo.mjs https://desker-staging.vercel.app`,
+  which builds a demo organisation through the real API: two published
+  agents, a context document, a weekly scope of work and one run. Promote
+  by merging `main` into `staging`.
+- **Security check.** `npm run check:security` (after `next build`) scans
+  the client bundle for server secret names and values, client components
+  for server env reads, and - with `DATABASE_URL` - every integration for
+  unsealed secrets.
+
 ## Background jobs
 
 Work that must happen without a browser tab open runs as

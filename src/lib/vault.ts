@@ -16,14 +16,15 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 const VERSION = "v1";
 
 let cachedKey: Buffer | null = null;
+let cachedRaw: string | null = null;
 
 export function vaultConfigured(): boolean {
   return Boolean(process.env.VAULT_KEY?.trim());
 }
 
 function key(): Buffer {
-  if (cachedKey) return cachedKey;
   const raw = process.env.VAULT_KEY?.trim();
+  if (cachedKey && raw === cachedRaw) return cachedKey;
   if (!raw) {
     throw new Error(
       "VAULT_KEY is not set. Generate one with `openssl rand -base64 32` - integrations cannot be stored without it.",
@@ -34,6 +35,7 @@ function key(): Buffer {
     throw new Error("VAULT_KEY must be 32 bytes, base64-encoded (openssl rand -base64 32).");
   }
   cachedKey = buf;
+  cachedRaw = raw;
   return buf;
 }
 

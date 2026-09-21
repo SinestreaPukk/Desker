@@ -49,6 +49,10 @@ export const signupSchema = z
       .max(200, "That password is too long."),
     /** An invitation token; joins that organisation instead of creating one. */
     invite: z.string().trim().max(200).optional(),
+    /** The consent step. Recorded with the terms version on the user. */
+    acceptTerms: z.literal(true, {
+      message: "You need to accept the Terms of Service and Privacy Policy to create an account.",
+    }),
   })
   .strict();
 

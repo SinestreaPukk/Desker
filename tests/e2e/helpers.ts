@@ -7,6 +7,7 @@ export const ADMIN = {
   email: "e2e-admin@example.com",
   password: "e2e-password-123",
   name: "E2E Admin",
+  acceptTerms: true,
 };
 
 export const ADMIN_STATE = "tests/e2e/.auth/admin.json";
@@ -36,6 +37,7 @@ export async function signUp(
   await page.goto("/signup");
   await page.getByLabel("Email").fill(admin.email);
   await page.getByLabel("Password").fill(admin.password);
+  await page.getByLabel(/I agree to the/).check();
   await page.getByRole("button", { name: "Create account" }).click();
   // Signs in and lands inside a project. Which page depends on whether the
   // workspace already has agents - the wizard when empty, the roster when not -

@@ -22,7 +22,7 @@ import { useActionItems } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
 import { ACTION_STATUSES, STATUS_LABELS } from "@/lib/work/types";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime, safeHttpUrl } from "@/lib/utils";
 
 const TRIGGER_LABEL: Record<string, string> = {
   schedule: "Scheduled",
@@ -196,13 +196,22 @@ function ActionItemRow({
                     {finding.findings}
                   </pre>
                   <ul className="mt-2 space-y-0.5 text-xs">
-                    {finding.sources.map((source, i) => (
-                      <li key={i}>
-                        <a href={source.url} target="_blank" rel="noreferrer" className="text-accent hover:underline">
-                          [{i + 1}] {source.title}
-                        </a>
-                      </li>
-                    ))}
+                    {finding.sources.map((source, i) => {
+                      const href = safeHttpUrl(source.url);
+                      return (
+                        <li key={i}>
+                          {href ? (
+                            <a href={href} target="_blank" rel="noreferrer noopener" className="text-accent hover:underline">
+                              [{i + 1}] {source.title}
+                            </a>
+                          ) : (
+                            <span className="text-ink-muted">
+                              [{i + 1}] {source.title} <span className="text-ink-subtle">(unlinked: not an http URL)</span>
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </details>
               ))}

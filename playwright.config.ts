@@ -92,6 +92,8 @@ export default defineConfig({
       // spec, which signs up a fresh organisation for it.
       VAULT_KEY: process.env.VAULT_KEY ?? "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
       ENFORCE_PLAN_LIMITS: "true",
+      // The suite signs up many accounts from one address in a minute.
+      SIGNUP_RATE_LIMIT: "1000",
     },
   },
 });

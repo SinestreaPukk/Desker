@@ -14,7 +14,12 @@
 import "server-only";
 import { env } from "@/lib/env";
 
-export type NotificationKind = "escalation" | "critical_issue" | "handoff_reply";
+export type NotificationKind =
+  | "escalation"
+  | "critical_issue"
+  | "handoff_reply"
+  | "run_failed"
+  | "feedback";
 
 export interface Notification {
   kind: NotificationKind;
@@ -22,23 +27,28 @@ export interface Notification {
   /** Plain-text body. Kept short - this lands in a chat channel. */
   body: string;
   agentName: string;
-  conversationId: string;
+  /** One or the other: what the "open" link should point at. */
+  conversationId?: string;
+  path?: string;
   severity?: string | null;
 }
 
-function conversationUrl(conversationId: string): string | null {
+function linkFor(notification: Notification): string | null {
   const base = env.appUrl;
-  return base ? `${base}/inbox/${conversationId}` : null;
+  if (!base) return null;
+  if (notification.path) return `${base}${notification.path}`;
+  if (notification.conversationId) return `${base}/inbox/${notification.conversationId}`;
+  return null;
 }
 
 /** Slack incoming-webhook payload. Renders acceptably anywhere else too. */
 function toPayload(notification: Notification) {
-  const url = conversationUrl(notification.conversationId);
+  const url = linkFor(notification);
   const lines = [
     `*${notification.title}*`,
     notification.body,
     `_${notification.agentName}_${notification.severity ? ` · severity ${notification.severity}` : ""}`,
-    url ? `<${url}|Open the conversation>` : null,
+    url ? `<${url}|Open in Desker>` : null,
   ].filter(Boolean);
 
   return {
@@ -52,7 +62,7 @@ function toPayload(notification: Notification) {
     // Everything a non-Slack consumer needs, so a generic relay does not have
     // to parse the blocks above.
     kind: notification.kind,
-    conversationId: notification.conversationId,
+    conversationId: notification.conversationId ?? null,
     agentName: notification.agentName,
     severity: notification.severity ?? null,
     url,

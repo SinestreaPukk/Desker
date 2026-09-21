@@ -33,3 +33,18 @@ export function initialsOf(name: string): string {
     .map((part) => part[0]!.toUpperCase())
     .join("");
 }
+
+/**
+ * A URL that came from an agent or a web page is untrusted content. Only an
+ * absolute http(s) URL becomes a link; anything else (javascript:, data:,
+ * a relative path into our own app) is shown as text.
+ */
+export function safeHttpUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}

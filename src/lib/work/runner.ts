@@ -23,6 +23,8 @@ import {
 import { toStringArray } from "@/lib/agent-fields";
 import { findIntegration, resolveEmail } from "./integrations";
 import { hasSearchProvider } from "./research";
+import { captureMessage } from "@/lib/monitoring";
+import { notifyInBackground } from "@/lib/notify";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
 import { WORK_TOOL_IDS, workToolDefinitions } from "./tools";
 import { executeWorkTool, executePendingAction, type RunContext } from "./execute";
@@ -158,8 +160,26 @@ async function finishRun(
     outputTokens: { increment: outcome.outputTokens },
     ...(outcome.error ? { error: outcome.error } : {}),
   });
-  // A failed run is something the agent is telling its owner about itself.
+  // A failed run is something the agent is telling its owner about itself -
+  // in the inbox, in the notification channel, and in error monitoring.
   if (outcome.error) {
+    const agent = await prisma.agent.findUnique({
+      where: { id: item.agentId },
+      select: { name: true, project: { select: { slug: true } } },
+    });
+    captureMessage(`Action item failed: ${outcome.error}`, {
+      organizationId: item.organizationId,
+      agentId: item.agentId,
+      actionItemId,
+    });
+    notifyInBackground({
+      kind: "run_failed",
+      title: "A scheduled task failed",
+      body: outcome.error,
+      agentName: agent?.name ?? "Agent",
+      path: agent ? `/p/${agent.project.slug}/work?item=${actionItemId}` : undefined,
+      severity: "medium",
+    });
     await prisma.issue
       .create({
         data: {

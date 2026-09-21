@@ -6,11 +6,24 @@ import { uniqueSlug } from "@/lib/projects";
 import { createOrganizationFor, defaultOrganizationName } from "@/lib/organizations";
 import { audit } from "@/lib/audit";
 import { findOpenInvitation } from "@/lib/invites";
+import { TERMS_VERSION } from "@/lib/legal";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   return handle(async () => {
+    // A handful of sign-ups per address in ten minutes is a person or an
+    // office; a stream of them is a script.
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+    const limit = checkRateLimit(`signup:${ip}`, env.signupRateLimit, 10 * 60_000);
+    if (!limit.allowed) {
+      throw new HttpError(429, `Too many sign-ups from this address. Try again in ${limit.retryAfterSeconds}s.`);
+    }
     const input = await parseJson(request, signupSchema);
 
     const existing = await prisma.user.findUnique({ where: { email: input.email } });
@@ -30,7 +43,13 @@ export async function POST(request: Request) {
       const passwordHash = await hashPassword(input.password);
       const user = await prisma.$transaction(async (tx) => {
         const created = await tx.user.create({
-          data: { email: input.email, name: input.name?.trim() || null, passwordHash },
+          data: {
+            email: input.email,
+            name: input.name?.trim() || null,
+            passwordHash,
+            termsAcceptedAt: new Date(),
+            termsVersion: TERMS_VERSION,
+          },
           select: { id: true, email: true, name: true },
         });
         await tx.membership.create({
@@ -64,6 +83,8 @@ export async function POST(request: Request) {
           email: input.email,
           name: input.name?.trim() || null,
           passwordHash,
+          termsAcceptedAt: new Date(),
+          termsVersion: TERMS_VERSION,
         },
         select: { id: true, email: true, name: true },
       });

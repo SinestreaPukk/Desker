@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Panel, PanelBody } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { api, ApiError } from "@/lib/api-client";
@@ -18,6 +19,7 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
+  const [accepted, setAccepted] = React.useState(false);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,6 +38,7 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
           name: String(form.get("name") ?? ""),
           email,
           password,
+          acceptTerms: accepted,
           ...(inviteToken ? { invite: inviteToken } : {}),
         }),
       });
@@ -115,7 +118,32 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
               />
             </Field>
 
-            <Button type="submit" className="w-full" loading={pending}>
+            <div>
+              <label htmlFor="accept-terms" className="flex cursor-pointer items-start gap-2.5 text-[0.8125rem] text-ink">
+                <Checkbox
+                  id="accept-terms"
+                  checked={accepted}
+                  onCheckedChange={(next) => setAccepted(next === true)}
+                  className="mt-0.5"
+                />
+                <span>
+                  I agree to the{" "}
+                  <Link href="/terms" target="_blank" className="font-medium text-accent hover:underline">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" target="_blank" className="font-medium text-accent hover:underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </span>
+              </label>
+              {fieldErrors.acceptTerms?.[0] ? (
+                <p className="mt-1.5 text-xs text-danger">{fieldErrors.acceptTerms[0]}</p>
+              ) : null}
+            </div>
+
+            <Button type="submit" className="w-full" loading={pending} disabled={!accepted}>
               Create account
             </Button>
           </form>

@@ -1,6 +1,7 @@
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { findAgentFor } from "@/lib/projects";
 import { startRun, RunRefused } from "@/lib/work/scope";
+import { track } from "@/lib/product-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ ag
       throw error;
     }
     if (!item) throw new HttpError(500, "Could not start the run.");
+    await track({ name: "run.started_manually", organizationId: agent.project.organizationId, userId });
     return { id: item.id, status: item.status, error: item.error };
   });
 }

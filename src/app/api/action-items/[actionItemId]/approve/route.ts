@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { agentsVisibleTo } from "@/lib/projects";
 import { audit } from "@/lib/audit";
+import { track } from "@/lib/product-events";
 import { inngest } from "@/lib/jobs/client";
 import { transition, InvalidTransition } from "@/lib/work/runner";
 import { toActionItemDto, actionItemInclude } from "../../serialize";
@@ -47,6 +48,8 @@ export async function POST(_request: Request, { params }: { params: Promise<{ ac
         error: `Approved, but the job runtime could not be reached: ${error instanceof Error ? error.message : "unknown error"}`,
       });
     }
+
+    await track({ name: "approval.approved", organizationId: item.organizationId, userId, metadata: { tool: (item.pendingAction as { tool?: string } | null)?.tool ?? "" } });
 
     const fresh = await prisma.actionItem.findUniqueOrThrow({
       where: { id: actionItemId },

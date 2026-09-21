@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { agentsVisibleTo } from "@/lib/projects";
 import { audit } from "@/lib/audit";
+import { track } from "@/lib/product-events";
 import { transition, InvalidTransition } from "@/lib/work/runner";
 import { rejectSchema } from "@/lib/work/validation";
 import { toActionItemDto, actionItemInclude } from "../../serialize";
@@ -36,6 +37,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
       targetId: actionItemId,
       metadata: { reason, tool: (item.pendingAction as { tool?: string } | null)?.tool ?? null },
     });
+
+    await track({ name: "approval.rejected", organizationId: item.organizationId, userId, metadata: { tool: (item.pendingAction as { tool?: string } | null)?.tool ?? "" } });
 
     const fresh = await prisma.actionItem.findUniqueOrThrow({
       where: { id: actionItemId },

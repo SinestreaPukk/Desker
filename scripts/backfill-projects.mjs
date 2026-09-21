@@ -22,6 +22,7 @@
  * developer's existing dev.db upgrades the same way a server does.
  */
 import { PrismaClient } from "@prisma/client";
+import { createCipheriv, randomBytes } from "node:crypto";
 
 const provider = process.env.DATABASE_PROVIDER ?? "postgresql";
 const isSqlite = provider === "sqlite";
@@ -117,12 +118,70 @@ async function ensureIssueAgent() {
   console.log(`[backfill] added Issue.agentId and filled ${updated} row(s).`);
 }
 
+/**
+ * Same format as lib/vault.ts (v1.<iv>.<tag>.<ciphertext>, base64url); the
+ * cross-check test in tests/unit/vault.test.ts keeps the two in step.
+ */
+function seal(value) {
+  const raw = process.env.VAULT_KEY?.trim();
+  if (!raw) return null;
+  const key = Buffer.from(raw, "base64");
+  if (key.length !== 32) return null;
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([cipher.update(Buffer.from(JSON.stringify(value), "utf8")), cipher.final()]);
+  return ["v1", iv.toString("base64url"), cipher.getAuthTag().toString("base64url"), ciphertext.toString("base64url")].join(".");
+}
+
+/**
+ * Integration secrets written before the vault existed sit in plain text in
+ * `config`. Seal them now, so no row waits for its first use to be protected.
+ */
+async function sealLegacyIntegrations() {
+  if (!(await tableExists("Integration")) || !(await columnExists("Integration", "secret"))) return;
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT id, type, config FROM "Integration" WHERE "secret" IS NULL`,
+  );
+  if (rows.length === 0) return;
+  if (!process.env.VAULT_KEY?.trim()) {
+    console.warn(`[backfill] ${rows.length} integration(s) hold plain-text secrets and VAULT_KEY is not set; they stay unsealed.`);
+    return;
+  }
+  let sealed = 0;
+  for (const row of rows) {
+    const config = typeof row.config === "string" ? JSON.parse(row.config) : (row.config ?? {});
+    let display;
+    let secret;
+    if (row.type === "webhook" && config.url) {
+      let host = "webhook";
+      try { host = new URL(config.url).host; } catch {}
+      display = { host, ...(config.secret ? { signed: "true" } : {}) };
+      secret = seal({ url: config.url, ...(config.secret ? { secret: config.secret } : {}) });
+    } else if (row.type === "email" && config.apiKey) {
+      display = { provider: "resend", from: config.from ?? "" };
+      secret = seal({ provider: "resend", from: config.from ?? "", apiKey: config.apiKey });
+    } else {
+      continue;
+    }
+    if (!secret) continue;
+    await prisma.$executeRawUnsafe(
+      sql(`UPDATE "Integration" SET "config" = $1, "secret" = $2 WHERE id = $3`),
+      isSqlite ? JSON.stringify(display) : display,
+      secret,
+      row.id,
+    );
+    sealed += 1;
+  }
+  if (sealed > 0) console.log(`[backfill] sealed ${sealed} integration secret(s) that were stored in plain text.`);
+}
+
 async function main() {
   if (!(await tableExists("Agent"))) {
     console.log("[backfill] fresh database; db push will create everything.");
     return;
   }
   await ensureIssueAgent();
+  await sealLegacyIntegrations();
 
   await ensureTable(
     "Project",

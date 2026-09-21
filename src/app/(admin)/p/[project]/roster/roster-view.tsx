@@ -8,7 +8,6 @@ import {
   MessageSquare,
   Plus,
   Search,
-  UserRoundPlus,
 } from "lucide-react";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
@@ -25,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { useAgents } from "@/hooks/use-admin-data";
+import { FirstRun } from "@/components/first-run";
 import { errorMessage } from "@/lib/api-client";
 import type { AgentSummaryDto } from "@/lib/serialize";
 import { formatRelativeTime } from "@/lib/utils";
@@ -140,19 +140,7 @@ export function RosterView({ project }: { project: string }) {
             retrying={isRefetching}
           />
         ) : agents!.length === 0 ? (
-          <EmptyState
-            icon={UserRoundPlus}
-            title="No one on the roster yet"
-            description="Hire your first AI employee for this project: give them a name, a job, and the documents they need. It takes about five minutes."
-            action={
-              <Button asChild size="lg">
-                <Link href={`/p/${project}/agents/new`}>
-                  <Plus aria-hidden />
-                  Create your first agent
-                </Link>
-              </Button>
-            }
-          />
+          <FirstRun project={project} />
         ) : (
           <div className="space-y-4">
             <p className="meta" aria-live="polite">
