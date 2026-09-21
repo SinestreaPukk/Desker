@@ -48,14 +48,16 @@ export function captureMessage(message: string, context: ErrorContext = {}): voi
 /**
  * A cron monitor: Sentry expects a check-in on the schedule and alerts when
  * one is missed - which is how a dead scheduler becomes a page rather than
- * a support ticket. A no-op without a DSN.
+ * a support ticket. A no-op without a DSN, and outside production builds:
+ * a developer's laptop checking in on a different schedule would rewrite the
+ * monitor's config and then "miss" the moment it closes.
  */
 export function withCronMonitor<T>(
   slug: string,
   cron: string,
   run: () => Promise<T>,
 ): Promise<T> {
-  if (!monitoringEnabled()) return run();
+  if (!monitoringEnabled() || process.env.NODE_ENV !== "production") return run();
   return Sentry.withMonitor(slug, run, {
     schedule: { type: "crontab", value: cron },
     checkinMargin: 2,
