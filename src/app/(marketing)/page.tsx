@@ -116,7 +116,7 @@ export default async function LandingPage({
                     </h3>
                     <p className="mt-3 text-lg leading-relaxed text-ink-muted">{item.body}</p>
                   </div>
-                  <div className="mx-auto mt-10 max-w-4xl rounded-panel bg-sky-pale/60 p-3 dark:bg-surface-2 sm:p-6" aria-hidden>
+                  <div className="mx-auto mt-10 max-w-4xl rounded-panel bg-sky-pale/60 p-3 sm:p-6" aria-hidden>
                     <Frame title={demo.title}>{demo.scene}</Frame>
                   </div>
                 </Reveal>

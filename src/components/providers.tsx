@@ -1,13 +1,19 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApiError } from "@/lib/api-client";
+import { isPublicPath } from "@/lib/public-routes";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  // The public site is always light. next-themes still reads and writes the
+  // visitor's stored choice - it just does not apply it here - so the theme
+  // they picked is waiting for them the moment they reach the product.
+  const forcedTheme = isPublicPath(usePathname()) ? "light" : undefined;
   const [queryClient] = React.useState(
     () =>
       new QueryClient({
@@ -33,6 +39,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
+      forcedTheme={forcedTheme}
     >
       <QueryClientProvider client={queryClient}>
         <TooltipProvider delayDuration={300}>

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-logo";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { SITE } from "@/lib/content";
 import { GLASS_BUTTON_SM } from "@/components/marketing/glass-button";
 import { SiteHeader } from "@/components/marketing/site-header";
@@ -37,7 +36,6 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <ThemeToggle />
             <Link
               href="/login"
               className="hidden h-9 items-center rounded-md px-3 text-sm font-medium text-current/90 hover:text-current sm:inline-flex"
