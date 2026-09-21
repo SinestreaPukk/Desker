@@ -6,8 +6,8 @@ import { currentUser } from "@/lib/auth";
 import { defaultProject } from "@/lib/projects";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
-import { Clouds, Faq, RoleGrid } from "@/components/marketing/landing-blocks";
-import { GLASS_BUTTON } from "@/components/marketing/glass-button";
+import { Clouds, Faq, RoleGrid, TrustLine } from "@/components/marketing/landing-blocks";
+import { GLASS_BUTTON, SKY_LINK } from "@/components/marketing/glass-button";
 import {
   ApprovalScene,
   AssistantScene,
@@ -66,11 +66,15 @@ export default async function LandingPage({
   return (
     <>
       {/* Hero ---------------------------------------------------------- */}
-      <section className="sky relative -mt-14 overflow-hidden pt-14">
-        <div className="sun right-[12%] top-[46%] hidden sm:block" aria-hidden />
-        <Parallax className="absolute inset-0" distance={-40}>
-          <Clouds />
-        </Parallax>
+      <section className="sky relative -mt-14 pt-14">
+        {/* The weather is clipped to the sky. The product window is not - it is
+            meant to hang past the horizon, and the section used to cut it off. */}
+        <div className="absolute inset-0 overflow-hidden" aria-hidden>
+          <div className="sun right-[12%] top-[58%] hidden sm:block" />
+          <Parallax className="absolute inset-0" distance={-40}>
+            <Clouds />
+          </Parallax>
+        </div>
 
         <div className="relative mx-auto max-w-6xl px-4 pt-20 text-center sm:px-6 sm:pt-28">
           <h1 className="mx-auto max-w-4xl font-display text-hero text-balance text-[var(--sky-ink)]">
@@ -79,19 +83,19 @@ export default async function LandingPage({
           <p className="mx-auto mt-6 max-w-2xl text-lg font-medium leading-relaxed text-[var(--sky-ink)] sm:text-xl sm:leading-snug">
             {hero.subhead}
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          {/* One button carries the page; the other is a link and looks like one. */}
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-8">
             <Link href={hero.primaryCta.href} className={GLASS_BUTTON}>
               {hero.primaryCta.label}
               <ArrowRight aria-hidden />
             </Link>
-            <Link
-              href={hero.secondaryCta.href}
-              className="inline-flex h-11 items-center gap-1.5 rounded-lg px-3 text-base font-medium text-[var(--sky-ink)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sky-ink)]"
-            >
+            <Link href={hero.secondaryCta.href} className={SKY_LINK}>
               {hero.secondaryCta.label}
+              <ArrowRight aria-hidden />
             </Link>
           </div>
-          <p className="mt-4 text-sm text-[var(--sky-ink)]">{hero.note}</p>
+          <p className="mt-6 text-sm text-[var(--sky-ink)]">{hero.note}</p>
+          <TrustLine items={hero.trust} className="mt-4" />
 
           {/* The product, floating over the horizon and down into the page. */}
           <HeroStage className="relative z-10 mx-auto -mb-24 mt-14 max-w-4xl text-left sm:-mb-32 sm:mt-20" />
@@ -192,7 +196,7 @@ export default async function LandingPage({
 
       {/* CTA ----------------------------------------------------------- */}
       <section className="sky relative overflow-hidden">
-        <div className="sun left-[10%] top-[30%] hidden sm:block" aria-hidden />
+        <div className="sun left-[10%] top-[58%] hidden sm:block" aria-hidden />
         <Clouds />
         <div className="relative mx-auto max-w-6xl px-4 pb-40 pt-24 text-center sm:px-6 sm:pb-56 sm:pt-32">
           <Reveal>

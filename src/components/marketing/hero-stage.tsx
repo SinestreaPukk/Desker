@@ -143,6 +143,10 @@ export function HeroStage({ className }: { className?: string }) {
   // The server renders the first scene finished. On mount the loop starts
   // from its first beat, so the visitor sees it build.
   const [pos, setPos] = React.useState<{ scene: number; beat: number } | null>(null);
+  const tablist = React.useRef<HTMLDivElement>(null);
+  // Which sides of the tab strip have more tabs off-screen, so the fade only
+  // ever covers something there is more of - never the active tab at an end.
+  const [edge, setEdge] = React.useState<"none" | "left" | "right" | "both">("none");
 
   React.useEffect(() => {
     if (still) return;
@@ -163,13 +167,35 @@ export function HeroStage({ className }: { className?: string }) {
   const current = SCENES[scene]!;
   const running = pos !== null && !still;
 
+  const syncEdges = React.useCallback(() => {
+    const strip = tablist.current;
+    if (!strip) return;
+    const more = { left: strip.scrollLeft > 4, right: strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 4 };
+    setEdge(more.left && more.right ? "both" : more.left ? "left" : more.right ? "right" : "none");
+  }, []);
+
+  // On a phone the five tabs are wider than the window, so the strip scrolls
+  // and the reel keeps the running one in view. scrollLeft rather than
+  // scrollIntoView, which would drag the whole page up with it.
+  React.useEffect(() => {
+    const strip = tablist.current;
+    const tab = strip?.children[scene];
+    if (!strip || !(tab instanceof HTMLElement)) return;
+    const target = tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2;
+    strip.scrollTo({ left: Math.max(0, target), behavior: still ? "auto" : "smooth" });
+    syncEdges();
+  }, [scene, still, syncEdges]);
+
   return (
     <div className={cn("window overflow-hidden", className)}>
       {/* Role tabs: which agent is on, and how far through its scene. */}
       <div
+        ref={tablist}
         role="tablist"
         aria-label="Agents in the demo"
-        className="flex gap-1 overflow-x-auto border-b border-line bg-surface-2/60 p-1.5"
+        data-edge={edge}
+        onScroll={syncEdges}
+        className="tab-strip flex gap-1 overflow-x-auto border-b border-line bg-surface-2/60 p-1.5"
       >
         {SCENES.map((entry, index) => {
           const Icon = entry.icon;
@@ -182,7 +208,9 @@ export function HeroStage({ className }: { className?: string }) {
               aria-selected={active}
               onClick={() => setPos({ scene: index, beat: 0 })}
               className={cn(
-                "relative flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-md px-2.5 py-2 text-xs font-medium transition-colors sm:text-sm",
+                // Natural width on a phone - equal fifths of 358px truncated
+                // every label to "Su…" - and equal fifths from sm up.
+                "relative flex shrink-0 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-colors sm:min-w-0 sm:flex-1 sm:shrink sm:px-2.5 sm:text-sm",
                 active ? "bg-surface text-ink shadow-xs" : "text-ink-muted hover:bg-surface/70 hover:text-ink",
               )}
             >

@@ -14,7 +14,21 @@
       "label": "See the roles",
       "href": "/showcase"
     },
-    "note": "Free to start. Five minutes to a working agent."
+    "note": "Free to start. Five minutes to a working agent.",
+    "trust": [
+      {
+        "icon": "shield",
+        "label": "Nothing you upload trains a model"
+      },
+      {
+        "icon": "approval",
+        "label": "Draft-only until you approve"
+      },
+      {
+        "icon": "lock",
+        "label": "Credentials encrypted at rest"
+      }
+    ]
   },
   "features": {
     "heading": "Not a chatbot. A staff.",

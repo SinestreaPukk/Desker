@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
-import { TEMPLATES } from "@/lib/content";
+import { ChevronDown, CircleCheck, Lock, ShieldCheck } from "lucide-react";
+import { TEMPLATES, type TRUST_ICONS } from "@/lib/content";
 import { TemplateIcon } from "@/components/marketing/template-icon";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,42 @@ export function Clouds({ className }: { className?: string }) {
       <i />
       <i />
     </div>
+  );
+}
+
+const TRUST_GLYPH = {
+  shield: ShieldCheck,
+  approval: CircleCheck,
+  lock: Lock,
+} satisfies Record<(typeof TRUST_ICONS)[number], React.ComponentType<{ className?: string }>>;
+
+/**
+ * The line under the hero's buttons.
+ *
+ * A B2B buyer's first objection to an AI employee is "will it do something on
+ * its own?", and the answers were all buried in the FAQ at the bottom of the
+ * page. Each claim here is one the FAQ makes in the same words - no logos, no
+ * counts, nothing we cannot show.
+ */
+export function TrustLine({
+  items,
+  className,
+}: {
+  items: readonly { icon: (typeof TRUST_ICONS)[number]; label: string }[];
+  className?: string;
+}) {
+  return (
+    <ul className={cn("flex flex-wrap items-center justify-center gap-x-6 gap-y-2", className)}>
+      {items.map((item) => {
+        const Glyph = TRUST_GLYPH[item.icon];
+        return (
+          <li key={item.label} className="inline-flex items-center gap-2 text-sm text-[var(--sky-ink)]">
+            <Glyph className="size-4 shrink-0 opacity-70" aria-hidden />
+            {item.label}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

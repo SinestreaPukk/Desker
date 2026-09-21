@@ -77,6 +77,11 @@
   --sky-pale: oklch(0.930 0.035 235);
   --sky-ink: oklch(0.995 0.002 240);
   --sky-glass: oklch(0.560 0.200 262);
+  /* The foot of the button. --sky-glass alone is the same lightness as
+     --sky-deep, so a glass button on the deep sky used to disappear into it;
+     running the gradient down into the brand indigo makes it the highest
+     contrast thing on the page, which is what the one primary call needs. */
+  --sky-glass-deep: oklch(0.395 0.235 266);
   --sky-glass-fg: oklch(0.995 0.002 240);
   --sky-shadow: oklch(0.560 0.170 255 / 0.35);
 
@@ -323,10 +328,14 @@
    without JavaScript, and every motion here stops under
    prefers-reduced-motion (the global rule above zeroes the durations). */
 
+/* The horizon sits below the words, not through them. Every stop here was
+   moved down until white text cleared 4.5:1 over the whole text block at
+   390, 768 and 1440 - the fade now happens behind the product window, which
+   is where a horizon belongs anyway. */
 .sky {
   background:
-    radial-gradient(60% 45% at 78% 62%, oklch(0.99 0.01 90 / 0.85) 0%, oklch(0.99 0.01 90 / 0) 100%),
-    linear-gradient(180deg, var(--sky-deep) 0%, var(--sky-deep) 48%, var(--sky) 68%, var(--sky-pale) 84%, var(--paper) 100%);
+    radial-gradient(70% 28% at 72% 94%, oklch(0.99 0.01 90 / 0.85) 0%, oklch(0.99 0.01 90 / 0) 100%),
+    linear-gradient(180deg, var(--sky-deep) 0%, var(--sky-deep) 63%, var(--sky) 78%, var(--sky-pale) 90%, var(--paper) 100%);
   color: var(--sky-ink);
 }
 
@@ -349,13 +358,12 @@
 
 /* Cluely-style glass button: a blue gradient, a light rim and a soft blue drop. */
 .glass {
-  --glass-a: color-mix(in oklch, var(--sky-glass) 100%, white 0%);
-  --glass-b: color-mix(in oklch, var(--sky-glass) 78%, white 22%);
   background:
-    radial-gradient(110% 110% at 10% 15%, oklch(1 0 0 / 0.35) 0%, oklch(1 0 0 / 0) 60%),
-    linear-gradient(180deg, var(--glass-b) 0%, var(--glass-a) 100%);
+    radial-gradient(110% 110% at 10% 15%, oklch(1 0 0 / 0.30) 0%, oklch(1 0 0 / 0) 62%),
+    linear-gradient(180deg, var(--sky-glass) 0%, var(--sky-glass-deep) 100%);
   color: var(--sky-glass-fg);
   box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.16),
     0 12px 28px -8px var(--sky-shadow),
     inset 0 1px 0 oklch(1 0 0 / 0.45),
     inset 0 -1px 0 oklch(0 0 0 / 0.12);
@@ -363,8 +371,9 @@
 }
 .glass:hover {
   transform: translateY(-1px);
-  filter: brightness(1.06);
+  filter: brightness(1.08);
   box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.24),
     0 18px 36px -10px var(--sky-shadow),
     inset 0 1px 0 oklch(1 0 0 / 0.5),
     inset 0 -1px 0 oklch(0 0 0 / 0.12);
@@ -378,6 +387,27 @@
   box-shadow:
     0 30px 80px -24px var(--sky-shadow),
     0 1px 0 oklch(1 0 0 / 0.6) inset;
+}
+
+/* The showreel's tab strip. Too wide for a phone, so it scrolls; the fade
+   marks the side that has more tabs on it, and never the end you are at. */
+.tab-strip {
+  scrollbar-width: none;
+}
+.tab-strip::-webkit-scrollbar {
+  display: none;
+}
+.tab-strip[data-edge="right"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent 100%);
+}
+.tab-strip[data-edge="left"] {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent 100%);
+  mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent 100%);
+}
+.tab-strip[data-edge="both"] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 2.5rem, #000 calc(100% - 2.5rem), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 2.5rem, #000 calc(100% - 2.5rem), transparent 100%);
 }
 
 /* The showreel's tab progress bar: one scene's worth of time, left to right. */
@@ -402,11 +432,13 @@
   opacity: 0.55;
   animation: cloud-drift 80s ease-in-out infinite alternate;
 }
-.clouds > i:nth-child(1) { width: 34rem; height: 9rem; left: -8%; top: 46%; }
-.clouds > i:nth-child(2) { width: 26rem; height: 7rem; left: 22%; top: 58%; opacity: 0.45; animation-duration: 95s; animation-delay: -30s; }
-.clouds > i:nth-child(3) { width: 40rem; height: 10rem; right: -10%; top: 50%; opacity: 0.6; animation-duration: 110s; animation-delay: -60s; }
-.clouds > i:nth-child(4) { width: 22rem; height: 6rem; left: 55%; top: 66%; opacity: 0.4; animation-duration: 70s; animation-delay: -15s; }
-.clouds > i:nth-child(5) { width: 60rem; height: 12rem; left: 10%; top: 74%; opacity: 0.7; animation-duration: 130s; animation-delay: -90s; }
+/* Kept at and below the horizon. Higher up they drifted behind the headline
+   and the buttons, and a white cloud under white text is a blank line. */
+.clouds > i:nth-child(1) { width: 34rem; height: 9rem; left: -8%; top: 68%; }
+.clouds > i:nth-child(2) { width: 26rem; height: 7rem; left: 22%; top: 76%; opacity: 0.45; animation-duration: 95s; animation-delay: -30s; }
+.clouds > i:nth-child(3) { width: 40rem; height: 10rem; right: -10%; top: 70%; opacity: 0.6; animation-duration: 110s; animation-delay: -60s; }
+.clouds > i:nth-child(4) { width: 22rem; height: 6rem; left: 55%; top: 82%; opacity: 0.4; animation-duration: 70s; animation-delay: -15s; }
+.clouds > i:nth-child(5) { width: 60rem; height: 12rem; left: 10%; top: 88%; opacity: 0.7; animation-duration: 130s; animation-delay: -90s; }
 
 @keyframes cloud-drift {
   from { transform: translateX(-6%); }

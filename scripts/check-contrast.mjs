@@ -97,7 +97,8 @@ const TEXT_PAIRS = [
   // The landing page's sky, the same in both themes. White copy sits only
   // over the deep band of the gradient.
   ["sky-ink", "sky-deep", 4.5, "hero headline, sub-line and note on the deep sky"],
-  ["sky-glass-fg", "sky-glass", 4.5, "glass button label"],
+  ["sky-glass-fg", "sky-glass", 4.5, "glass button label, top of the gradient"],
+  ["sky-glass-fg", "sky-glass-deep", 4.5, "glass button label, foot of the gradient"],
 ];
 
 // Avatar figure against its own tile. Decorative (the agent's name is always

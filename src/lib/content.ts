@@ -36,6 +36,12 @@ const siteSchema = z.object({
   }),
 });
 
+/**
+ * The hero's trust row. Deliberately a closed set: each glyph stands for a
+ * promise made elsewhere on the page, so a new one is a decision, not a typo.
+ */
+export const TRUST_ICONS = ["shield", "approval", "lock"] as const;
+
 const landingSchema = z.object({
   meta,
   hero: z.object({
@@ -44,6 +50,8 @@ const landingSchema = z.object({
     primaryCta: link,
     secondaryCta: link,
     note: z.string(),
+    /** Short, checkable claims. Every one must be answered by the FAQ below. */
+    trust: z.array(z.object({ icon: z.enum(TRUST_ICONS), label: z.string().min(1).max(48) })).max(4),
   }),
   features: z.object({
     heading: z.string(),
