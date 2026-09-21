@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "title": "AI employees for real work",
+    "description": "Hire AI employees with a role, a personality and your company's context. They answer clients, do scheduled work, and stop for your approval before anything goes public."
+  },
+  "hero": {
+    "eyebrow": "For small teams with big to-do lists",
+    "headline": "Hire an AI employee. Give it a job. Keep the final say.",
+    "subhead": "Desker turns a job description and your documents into an agent that answers your clients, researches, drafts and follows up on a schedule - and asks you before anything is published or sent.",
+    "primaryCta": { "label": "Create your first agent", "href": "/signup" },
+    "secondaryCta": { "label": "See the roles", "href": "/showcase" },
+    "note": "Free to start. No credit card. The first agent takes about five minutes."
+  },
+  "proof": [
+    { "value": "5 min", "label": "from sign-up to a working agent" },
+    { "value": "Draft-only", "label": "by default - nothing goes out unapproved" },
+    { "value": "Every action", "label": "in an audit log you can export" }
+  ],
+  "howItWorks": {
+    "heading": "How it works",
+    "intro": "Three steps, then it runs.",
+    "steps": [
+      {
+        "title": "Describe the role",
+        "body": "Pick a template - support, marketing, research, admin - then give it a name, a tone of voice and a plain-language rule for when to fetch a human."
+      },
+      {
+        "title": "Give it your context",
+        "body": "Upload the policies, price lists and FAQs it should know. It answers from those and cites them, instead of guessing."
+      },
+      {
+        "title": "Test, publish, delegate",
+        "body": "Talk to it live before anyone else does. Publish it as a chat link or a widget on your site. Give it a scope of work and a schedule, and review what it produces from your inbox."
+      }
+    ]
+  },
+  "trust": {
+    "heading": "Built so you can trust it with your business",
+    "points": [
+      { "title": "A human sign-off, always", "body": "Publishing a post or sending an email waits for your approval. You can loosen that per agent, per tool, once it has earned it." },
+      { "title": "Sources, not guesses", "body": "Answers come from your documents and cited web research. When it doesn't know, it says so." },
+      { "title": "A complete trail", "body": "Every tool call, every approval, every schedule - who did what, when, and why - queryable and exportable." },
+      { "title": "Your data stays yours", "body": "Integration credentials are encrypted at rest. Nothing you upload trains anyone's model." }
+    ]
+  },
+  "pricing": {
+    "heading": "Simple pricing",
+    "intro": "Priced on what actually costs money: how many agents are live and how much they do each month. Start free; upgrade when an agent is earning its keep.",
+    "footnote": "All plans include every role, unlimited teammates, the audit log and email support."
+  },
+  "cta": {
+    "heading": "Put your first agent to work today",
+    "body": "Five minutes to a working agent. Free to start.",
+    "button": { "label": "Get started", "href": "/signup" }
+  }
+}

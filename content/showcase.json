@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "title": "Agent roles",
+    "description": "Customer support, onboarding, research, marketing, executive assistant, dev support, sales development, people ops - every role Desker agents can fill, with an example of each at work."
+  },
+  "heading": "Roles you can hire today",
+  "intro": "Each role is a starting point in the hire wizard: a job title, a tone of voice, a default escalation rule and the tools it may use. Adjust anything; the agent is yours.",
+  "exampleLabel": "For example",
+  "cta": { "label": "Hire this role", "href": "/signup" }
+}

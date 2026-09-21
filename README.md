@@ -292,6 +292,25 @@ Nothing an agent does publicly happens without a visible, reviewable trail.
   models) applied to the usage counters. An unpriced model shows as unknown,
   never as free - the figure is what billing will meter.
 
+## The public site
+
+The unauthenticated pages - `/` (landing), `/showcase` (every agent role,
+with an example of each at work), `/contact`, `/terms`, `/privacy` - live in
+`app/(marketing)` and share the product's tokens and components.
+
+**Every word comes from `/content`.** `site.json` (company, nav, footer),
+`landing.json`, `showcase.json`, `contact.json`, and `templates.json` - the
+role templates, which are both the hire wizard's starting points and the
+showcase's cards. `lib/content.ts` validates the files at build; a missing
+field fails typecheck with the file and field named. A copy change is a text
+edit and a redeploy. See `content/README.md`.
+
+Page titles, descriptions and Open Graph tags come from the same files, the
+OG preview image is generated from the landing headline, and `sitemap.xml`
+and `robots.txt` are generated (the product routes are disallowed). The
+contact form stores every message as feedback, forwards it to the
+notification webhook, and emails `CONTACT_EMAIL` when Resend is configured.
+
 ## Monitoring, staging and the first run
 
 - **Error monitoring** is Sentry, behind `lib/monitoring.ts`; set `SENTRY_DSN`

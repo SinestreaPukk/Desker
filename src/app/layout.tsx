@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { BRAND } from "@/lib/brand";
+import { SITE } from "@/lib/content";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -8,12 +9,14 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE.company.siteUrl),
   title: {
-    default: `${BRAND.name} — ${BRAND.tagline}`,
+    default: `${BRAND.name} — ${SITE.company.tagline}`,
     template: `%s · ${BRAND.name}`,
   },
-  description:
-    "Build AI employees with a role, a personality, and your company's context, then put them in front of real clients.",
+  description: SITE.company.description,
+  openGraph: { siteName: BRAND.name, type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

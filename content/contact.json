@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "title": "Contact",
+    "description": "Talk to the people building Desker - questions, partnerships, or help getting your first agent live."
+  },
+  "heading": "Talk to us",
+  "intro": "Questions about a role, a partnership, or getting your first agent live? Send a note and a person replies - usually within a working day.",
+  "form": {
+    "name": "Your name",
+    "email": "Email",
+    "company": "Company (optional)",
+    "message": "How can we help?",
+    "submit": "Send message",
+    "success": "Thanks - we have your message and will reply by email.",
+    "error": "Something went wrong sending that. Email us directly instead."
+  },
+  "details": {
+    "heading": "Company details",
+    "lines": [
+      "Desker",
+      "Bangkok, Thailand"
+    ],
+    "emailLabel": "Email",
+    "hoursLabel": "Hours",
+    "hours": "Monday to Friday, 9:00-18:00 (Bangkok, UTC+7)"
+  }
+}

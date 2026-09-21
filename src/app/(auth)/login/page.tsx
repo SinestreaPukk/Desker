@@ -14,7 +14,7 @@ export default async function LoginPage({
   const { invite } = await searchParams;
   // A stale session (JWT with no user row) must not bounce someone away from
   // the one page that can replace it.
-  if (await currentUser()) redirect(invite ? `/invite/${invite}` : "/roster");
+  if (await currentUser()) redirect(invite ? `/invite/${invite}` : "/");
   return (
     <Suspense>
       <LoginForm />

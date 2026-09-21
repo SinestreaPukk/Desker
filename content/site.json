@@ -1,0 +1,40 @@
+{
+  "company": {
+    "name": "Desker",
+    "legalName": "Desker",
+    "tagline": "AI employees for real work",
+    "description": "Hire AI employees with a role, a personality and your company's context. They answer your clients, do work on a schedule, and stop for your approval before anything goes public.",
+    "email": "hello@desker.example",
+    "location": "Bangkok, Thailand",
+    "siteUrl": "https://desker-beta.vercel.app",
+    "twitter": ""
+  },
+  "nav": [
+    { "label": "How it works", "href": "/#how-it-works" },
+    { "label": "Roles", "href": "/showcase" },
+    { "label": "Pricing", "href": "/#pricing" },
+    { "label": "Contact", "href": "/contact" }
+  ],
+  "footer": {
+    "blurb": "Desker gives small teams an AI staff they can actually trust: every agent has a job, a voice, your documents, and a human sign-off before it publishes or sends.",
+    "columns": [
+      {
+        "heading": "Product",
+        "links": [
+          { "label": "Roles", "href": "/showcase" },
+          { "label": "Pricing", "href": "/#pricing" },
+          { "label": "Sign in", "href": "/login" }
+        ]
+      },
+      {
+        "heading": "Company",
+        "links": [
+          { "label": "Contact", "href": "/contact" },
+          { "label": "Terms of Service", "href": "/terms" },
+          { "label": "Privacy Policy", "href": "/privacy" }
+        ]
+      }
+    ],
+    "legal": "© {year} {company}. All rights reserved."
+  }
+}

@@ -14,7 +14,7 @@ export default async function SignupPage({
 }) {
   const { invite: token } = await searchParams;
   // A signed-in user with an invitation goes straight to accepting it.
-  if (await currentUser()) redirect(token ? `/invite/${token}` : "/roster");
+  if (await currentUser()) redirect(token ? `/invite/${token}` : "/");
   const invitation = token ? await findOpenInvitation(token) : null;
   return (
     <Suspense>
