@@ -195,7 +195,7 @@ export function HeroStage({ className }: { className?: string }) {
         aria-label="Agents in the demo"
         data-edge={edge}
         onScroll={syncEdges}
-        className="tab-strip flex gap-1 overflow-x-auto border-b border-line bg-surface-2/60 p-1.5"
+        className="tab-strip no-scrollbar flex gap-1 overflow-x-auto border-b border-line bg-surface-2/60 p-1.5"
       >
         {SCENES.map((entry, index) => {
           const Icon = entry.icon;

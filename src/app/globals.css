@@ -392,6 +392,26 @@
   color: var(--sky-ink);
 }
 
+/* A band of the same sky for the tops of the inner pages.
+   .sky places its stops as percentages of its own height, which is right for
+   the hero - one tall section whose proportions barely change. A page header
+   is not that: its height swings by hundreds of pixels as the title and the
+   intro wrap, so a percentage horizon climbs over the words on a phone. Here
+   the fade is anchored to the bottom edge in absolute units instead, which
+   means the deep plateau reaches down to a fixed distance above the foot at
+   every width, and any content inside that padding is on it. */
+.sky-band {
+  background: linear-gradient(
+    180deg,
+    var(--sky-deep) 0,
+    var(--sky-deep) calc(100% - 8rem),
+    var(--sky) calc(100% - 5rem),
+    var(--sky-pale) calc(100% - 1.75rem),
+    var(--paper) 100%
+  );
+  color: var(--sky-ink);
+}
+
 /* The sun: a soft disc and a wide halo, breathing very slowly. */
 .sun {
   position: absolute;
@@ -463,10 +483,10 @@
 
 /* The showreel's tab strip. Too wide for a phone, so it scrolls; the fade
    marks the side that has more tabs on it, and never the end you are at. */
-.tab-strip {
+.no-scrollbar {
   scrollbar-width: none;
 }
-.tab-strip::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .tab-strip[data-edge="right"] {
