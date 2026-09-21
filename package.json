@@ -23,7 +23,7 @@
     "desktop:build": "tauri build",
     "icon": "node scripts/make-icon.mjs 1024 src-tauri/icons/icon.png && tauri icon src-tauri/icons/icon.png",
     "check:contrast": "node scripts/check-contrast.mjs",
-    "verify": "npm run typecheck && npm run lint && npm run check:contrast && npm test",
+    "verify": "npm run check:dupes && npm run typecheck && npm run lint && npm run check:contrast && npm test",
     "build:standalone": "next build && node scripts/prepare-standalone.mjs",
     "start:standalone": "node .next/standalone/server.js",
     "db:backfill": "node scripts/backfill-projects.mjs",
@@ -31,7 +31,8 @@
     "deploy:build": "npm run db:generate && npm run db:backfill && npm run db:deploy && next build",
     "vercel-build": "npm run deploy:build",
     "db:deploy": "node scripts/db-deploy.mjs",
-    "check:security": "node scripts/security-check.mjs"
+    "check:security": "node scripts/security-check.mjs",
+    "check:dupes": "sh -c 'f=$(find src content scripts tests prisma public -name \"* [0-9].*\" -type f); if [ -n \"$f\" ]; then echo \"Duplicate (cloud-sync) files found:\"; echo \"$f\"; exit 1; fi'"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"
