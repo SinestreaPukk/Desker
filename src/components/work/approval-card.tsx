@@ -187,7 +187,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
 
         {item.summary ? (
           <details>
-            <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-ink-subtle">
+            <summary className="eyebrow cursor-pointer">
               The agent&apos;s report
             </summary>
             <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-ink-muted">

@@ -42,7 +42,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
         return (
           <Shell title={`Join ${invitation.organization.name}`}>
             <p className="text-sm text-ink-muted">{error.message}</p>
-            <p className="mt-1 text-xs text-ink-subtle">You are signed in as {user.email}.</p>
+            <p className="mt-1 text-xs text-ink-muted">You are signed in as {user.email}.</p>
             <Button asChild className="mt-4" variant="secondary">
               <Link href={`/api/auth/signout?callbackUrl=${encodeURIComponent(`/login?invite=${token}`)}`}>
                 Sign out and switch account

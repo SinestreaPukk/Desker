@@ -308,13 +308,21 @@
     color: var(--ink-muted);
   }
 
-  /* Metadata: ids, counts, timestamps, model names. */
+  /* Metadata: ids, counts, timestamps, model names.
+
+     On the body tone, not the subtle one. This class labels the numbers on
+     the insights page, the columns of every table and the timestamp on every
+     record - all things a person reads to know what they are looking at - and
+     at 11px uppercase mono it is the hardest type in the product to begin
+     with. It measured 3.91:1 there, under AA. --ink-subtle stays what it
+     always was and is now only what it is good for: icons, placeholders,
+     list markers and other things that are not read. */
   .meta {
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: var(--ink-subtle);
+    color: var(--ink-muted);
   }
 
   /* Long-form text: the terms and the privacy policy.

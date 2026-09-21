@@ -33,7 +33,7 @@ function Chip({ onClick, children }: { onClick: () => void; children: React.Reac
 function Reading({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={cn("rounded-md border border-dashed border-line bg-surface-2/60 px-3 py-2 text-sm", className)} aria-live="polite">
-      <span className="mr-1.5 inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-ink-subtle">
+      <span className="eyebrow mr-1.5 inline-flex items-center gap-1">
         <Lightbulb className="size-3" aria-hidden />
         {label}
       </span>

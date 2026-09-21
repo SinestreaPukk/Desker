@@ -213,7 +213,7 @@ export function ConversationDetail({
                           message.role === "user" && "text-ink",
                           message.role === "assistant" && "text-accent",
                           message.role === "human" && "text-warning",
-                          message.role === "tool" && "text-ink-subtle",
+                          message.role === "tool" && "text-ink-muted",
                         )}
                       >
                         {message.role === "user"
@@ -561,7 +561,7 @@ function ToolTurn({ content }: { content: string }) {
         return (
           <div key={index} className={index > 0 ? "mt-2 border-t border-line pt-2" : ""}>
             {name ? (
-              <p className="mb-1 font-sans text-xs font-semibold uppercase tracking-wide text-ink-subtle">
+              <p className="eyebrow mb-1">
                 {toolLabel(name)}
               </p>
             ) : null}

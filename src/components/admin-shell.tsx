@@ -327,7 +327,7 @@ function ProjectSwitcher({
                   <Link href={`/p/${first!.slug}/${tab}`}>
                     <Building2 className="size-3.5 text-ink-subtle" aria-hidden />
                     <span className="truncate">{org.name}</span>
-                    <span className="ml-auto text-xs text-ink-subtle">{org.role}</span>
+                    <span className="ml-auto text-xs text-ink-muted">{org.role}</span>
                   </Link>
                 </DropdownMenuItem>
               ))}

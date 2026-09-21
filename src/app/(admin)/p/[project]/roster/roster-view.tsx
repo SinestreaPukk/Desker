@@ -203,7 +203,7 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
           </h2>
           <p className="mt-0.5 truncate text-sm text-ink-muted">
             {agent.jobTitle}
-            {agent.department ? <span className="text-ink-subtle"> · {agent.department}</span> : null}
+            {agent.department ? <span className="text-ink-muted"> · {agent.department}</span> : null}
           </p>
         </div>
         <StatusBadge status={agent.status} />
@@ -242,7 +242,7 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
 
       <div className="mt-auto flex items-center justify-between px-4 pb-3">
         <p className="meta">Updated {formatRelativeTime(agent.updatedAt)}</p>
-        <span className="text-xs text-ink-subtle opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <span className="text-xs text-ink-muted opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
           {live ? "Open editor →" : "Finish setting up →"}
         </span>
       </div>

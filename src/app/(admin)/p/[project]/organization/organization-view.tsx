@@ -133,7 +133,7 @@ function MembersPanel({
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-ink">
                       {member.name ?? member.email}
-                      {isSelf ? <span className="ml-1.5 text-xs text-ink-subtle">(you)</span> : null}
+                      {isSelf ? <span className="ml-1.5 text-xs text-ink-muted">(you)</span> : null}
                     </p>
                     <p className="truncate text-xs text-ink-muted">
                       {member.email} · joined {formatRelativeTime(member.joinedAt)}
@@ -461,7 +461,7 @@ function BillingPanel({
         <Meter label="Runs" used={usage.actionItems} limit={plan.limits.actionItemsPerMonth} />
         <Meter label="Conversations" used={usage.conversations} limit={plan.limits.conversationsPerMonth} />
         <Meter label="Model spend" used={usage.modelCostUsd} limit={plan.limits.modelCostUsdPerMonth} money />
-        <p className="text-xs text-ink-subtle">
+        <p className="text-xs text-ink-muted">
           {(usage.inputTokens + usage.outputTokens).toLocaleString()} tokens · {usage.searches} web searches
           {plan.limits.runsPerHour < Number.MAX_SAFE_INTEGER
             ? ` · rate: ${plan.limits.runsPerHour} runs/hour, ${plan.limits.chatMessagesPerMinute} client messages/minute`
@@ -487,7 +487,7 @@ function BillingPanel({
                         {p.name} <span className="text-ink-muted">· ${p.priceUsd}/mo</span>
                       </p>
                       <p className="mt-0.5 text-xs text-ink-muted">{p.blurb}</p>
-                      <p className="mt-1 text-xs text-ink-subtle">
+                      <p className="mt-1 text-xs text-ink-muted">
                         {p.limits.publishedAgents} agents · {p.limits.actionItemsPerMonth.toLocaleString()} runs ·{" "}
                         {p.limits.conversationsPerMonth.toLocaleString()} conversations · ${p.limits.modelCostUsdPerMonth} model budget
                       </p>

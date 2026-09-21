@@ -85,7 +85,9 @@ const TEXT_PAIRS = [
   ["ink", "surface-2", 4.5, "body text on a raised panel"],
   ["ink-muted", "paper", 4.5, "secondary text on the page"],
   ["ink-muted", "surface", 4.5, "secondary text on a card"],
-  ["ink-subtle", "paper", 3.0, "metadata (uppercase mono, treated as non-essential)"],
+  // .meta moved to ink-muted; ink-subtle is now only icons, placeholders and
+  // list markers, which are non-text and answer to 3:1.
+  ["ink-subtle", "paper", 3.0, "icon tints and placeholders (non-text)"],
   ["accent-fg", "accent", 4.5, "primary button label"],
   ["accent-soft-fg", "accent-soft", 4.5, "accent badge"],
   ["positive", "positive-soft", 4.5, "published badge"],

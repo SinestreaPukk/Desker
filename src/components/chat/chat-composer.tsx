@@ -105,7 +105,7 @@ export function ChatComposer({
           </Button>
         )}
       </div>
-      <p className="mt-1.5 px-1 text-xs text-ink-subtle">
+      <p className="mt-1.5 px-1 text-xs text-ink-muted">
         Enter to send · Shift + Enter for a new line
       </p>
     </form>

@@ -154,7 +154,7 @@ function ActionItemRow({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
             <span className="font-medium text-ink">{item.agent.name}</span>
             <span className="text-ink-muted">{TRIGGER_LABEL[item.trigger] ?? item.trigger}</span>
-            <span className="text-xs text-ink-subtle">{formatRelativeTime(item.createdAt)}</span>
+            <span className="text-xs text-ink-muted">{formatRelativeTime(item.createdAt)}</span>
           </div>
           <p className="truncate text-xs text-ink-muted">
             {item.summary ?? item.error ?? (item.status === "in_progress" ? "Working…" : "Not started")}
@@ -180,14 +180,14 @@ function ActionItemRow({
 
           {item.summary ? (
             <section>
-              <h4 className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-subtle">Report</h4>
+              <h4 className="eyebrow mb-1">Report</h4>
               <pre className="whitespace-pre-wrap font-sans leading-relaxed text-ink">{item.summary}</pre>
             </section>
           ) : null}
 
           {item.findings.length > 0 ? (
             <section>
-              <h4 className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-subtle">Findings</h4>
+              <h4 className="eyebrow mb-1">Findings</h4>
               {item.findings.map((finding, index) => (
                 <details key={index} className="mb-2 rounded-sm border border-line bg-surface p-3">
                   <summary className="cursor-pointer text-ink">{finding.query}</summary>
@@ -205,7 +205,7 @@ function ActionItemRow({
                             </a>
                           ) : (
                             <span className="text-ink-muted">
-                              [{i + 1}] {source.title} <span className="text-ink-subtle">(unlinked: not an http URL)</span>
+                              [{i + 1}] {source.title} <span className="text-ink-muted">(unlinked: not an http URL)</span>
                             </span>
                           )}
                         </li>
@@ -219,13 +219,13 @@ function ActionItemRow({
 
           {item.drafts.length > 0 ? (
             <section>
-              <h4 className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-subtle">Drafts</h4>
+              <h4 className="eyebrow mb-1">Drafts</h4>
               {item.drafts.map((draft) => (
                 <details key={draft.id} className="mb-2 rounded-sm border border-line bg-surface p-3">
                   <summary className="cursor-pointer text-ink">
                     <StatusBadge status={draft.status} className="mr-2" />
                     {draft.title}
-                    <span className="ml-2 text-xs text-ink-subtle">{draft.kind.replace("_", " ")}</span>
+                    <span className="ml-2 text-xs text-ink-muted">{draft.kind.replace("_", " ")}</span>
                   </summary>
                   <pre className="mt-2 whitespace-pre-wrap font-sans leading-relaxed text-ink">{draft.body}</pre>
                 </details>
@@ -241,7 +241,7 @@ function ActionItemRow({
 
           {item.steps.length > 0 ? (
             <details>
-              <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-ink-subtle">
+              <summary className="eyebrow cursor-pointer">
                 {item.steps.length} tool call{item.steps.length === 1 ? "" : "s"}
               </summary>
               <ol className="mt-2 space-y-1.5">
@@ -250,7 +250,7 @@ function ActionItemRow({
                     <span className={step.ok ? "text-ink" : "text-danger"}>
                       <code className="font-mono">{step.tool}</code>
                     </span>
-                    <span className="ml-2 text-ink-subtle">{formatRelativeTime(step.at)}</span>
+                    <span className="ml-2 text-ink-muted">{formatRelativeTime(step.at)}</span>
                     <pre className="mt-1 whitespace-pre-wrap font-mono text-xs text-ink-muted">
                       {JSON.stringify(step.input)}
                     </pre>
@@ -261,7 +261,7 @@ function ActionItemRow({
             </details>
           ) : null}
 
-          <p className="text-xs text-ink-subtle">
+          <p className="text-xs text-ink-muted">
             {item.inputTokens + item.outputTokens > 0
               ? `${item.inputTokens.toLocaleString()} in / ${item.outputTokens.toLocaleString()} out tokens · `
               : ""}

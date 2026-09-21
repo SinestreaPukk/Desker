@@ -44,7 +44,7 @@ export default async function ClientChatPage({ params }: Props) {
         </div>
 
         <footer className="flex items-center justify-between gap-3 px-4 py-3 sm:px-0 sm:pt-4">
-          <p className="text-xs text-ink-subtle">
+          <p className="text-xs text-ink-muted">
             An AI assistant on {BRAND.name}. Replies may be imperfect — ask for a
             human any time.
           </p>

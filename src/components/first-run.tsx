@@ -50,7 +50,7 @@ export function FirstRun({ project }: { project: string }) {
               </span>
               <div>
                 <p className="text-base font-medium text-ink">
-                  <span className="mr-1.5 text-ink-subtle">{index + 1}.</span>
+                  <span className="mr-1.5 text-ink-muted">{index + 1}.</span>
                   {step.title}
                 </p>
                 <p className="text-sm text-ink-muted">{step.body}</p>
@@ -66,7 +66,7 @@ export function FirstRun({ project }: { project: string }) {
             Hire your first agent
           </Link>
         </Button>
-        <p className="text-xs text-ink-subtle">Nothing is visible to clients until you publish.</p>
+        <p className="text-xs text-ink-muted">Nothing is visible to clients until you publish.</p>
       </div>
     </Panel>
   );

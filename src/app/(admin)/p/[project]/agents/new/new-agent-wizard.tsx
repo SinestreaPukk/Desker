@@ -184,7 +184,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                     "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                     done && "bg-accent text-accent-fg",
                     current && "border-2 border-accent text-accent",
-                    !done && !current && "border border-line-strong text-ink-subtle",
+                    !done && !current && "border border-line-strong text-ink-muted",
                   )}
                 >
                   {done ? <Check className="size-3" aria-hidden /> : index + 1}
