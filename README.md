@@ -618,8 +618,11 @@ glibc + openssl, and musl pulls in the wasm fallbacks described above.
 
 Vercel runs `vercel-build` when it is present, and here it is
 `npm run deploy:build`: generate the Postgres schema and client, run the
-backfill, `prisma db push` (no `--accept-data-loss`, so a destructive change
-fails the deploy rather than dropping a column), then `next build`.
+backfill, apply the schema, then `next build`. The schema step
+(`scripts/db-deploy.mjs`) diffs the live database against the schema first
+and refuses if the resulting SQL drops a table or a column - Prisma's own
+guard would also refuse every new unique index, which blocked deploys twice.
+A deliberate destructive change ships with `ALLOW_DESTRUCTIVE_MIGRATION=1`.
 
 1. Create a Postgres database with pgvector - Neon and Supabase both offer it -
    and take its connection string.

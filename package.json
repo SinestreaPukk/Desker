@@ -28,8 +28,9 @@
     "start:standalone": "node .next/standalone/server.js",
     "db:backfill": "node scripts/backfill-projects.mjs",
     "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
-    "deploy:build": "npm run db:generate && npm run db:backfill && prisma db push --skip-generate && next build",
-    "vercel-build": "npm run deploy:build"
+    "deploy:build": "npm run db:generate && npm run db:backfill && npm run db:deploy && next build",
+    "vercel-build": "npm run deploy:build",
+    "db:deploy": "node scripts/db-deploy.mjs"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"
