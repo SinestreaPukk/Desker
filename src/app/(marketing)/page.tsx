@@ -121,7 +121,10 @@ export default async function LandingPage({
                     </h3>
                     <p className="mt-4 text-lg leading-relaxed text-ink-muted">{item.body}</p>
                   </div>
-                  <div className="mat mx-auto mt-10 max-w-4xl rounded-panel p-4 sm:p-6" aria-hidden>
+                  {/* inert, not aria-hidden: these are a picture of the product, and
+                      aria-hidden left their Approve and Reject buttons in the tab
+                      order for a keyboard user to land on. */}
+                  <div className="mat mx-auto mt-10 max-w-4xl rounded-panel p-4 sm:p-6" inert>
                     <Frame title={demo.title}>{demo.scene}</Frame>
                   </div>
                 </Reveal>

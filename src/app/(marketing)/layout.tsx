@@ -3,6 +3,7 @@ import { BrandMark } from "@/components/brand-logo";
 import { SITE } from "@/lib/content";
 import { GLASS_BUTTON_SM } from "@/components/marketing/glass-button";
 import { SiteHeader } from "@/components/marketing/site-header";
+import { SiteNav } from "@/components/marketing/site-nav";
 
 /**
  * The public shell: what a stranger sees. Same tokens and components as the
@@ -20,25 +21,15 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       </a>
       <SiteHeader>
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-current">
+          <Link href="/" className="focus-current inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-current">
             <BrandMark className="[[data-clear]_&]:bg-current" />
             {SITE.company.name}
           </Link>
-          <nav aria-label="Site" className="hidden items-center gap-6 md:flex">
-            {SITE.nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-sm text-current/80 transition-colors hover:text-current"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <SiteNav items={SITE.nav} />
           <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="hidden h-9 items-center rounded-md px-3 text-sm font-medium text-current/90 hover:text-current sm:inline-flex"
+              className="focus-current inline-flex h-9 items-center rounded-md px-3 text-sm font-medium text-current/90 transition-colors hover:text-current"
             >
               Sign in
             </Link>
@@ -61,7 +52,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               {SITE.company.name}
             </Link>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-muted">{SITE.footer.blurb}</p>
-            <p className="mt-3 text-sm text-ink-subtle">
+            <p className="mt-3 text-sm text-ink-muted">
               {SITE.company.location} ·{" "}
               <a href={`mailto:${SITE.company.email}`} className="hover:text-ink">
                 {SITE.company.email}
@@ -70,7 +61,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </div>
           {SITE.footer.columns.map((column) => (
             <div key={column.heading}>
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">{column.heading}</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{column.heading}</h2>
               <ul className="mt-3 space-y-2">
                 {column.links.map((item) => (
                   <li key={item.href}>
@@ -84,7 +75,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           ))}
         </div>
         <div className="border-t border-line">
-          <p className="mx-auto max-w-6xl px-4 py-4 text-xs text-ink-subtle sm:px-6">
+          <p className="mx-auto max-w-6xl px-4 py-4 text-xs text-ink-muted sm:px-6">
             {SITE.footer.legal.replace("{year}", String(year)).replace("{company}", SITE.company.legalName)}
           </p>
         </div>

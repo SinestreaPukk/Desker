@@ -241,7 +241,11 @@ export function HeroStage({ className }: { className?: string }) {
         </span>
       </div>
 
-      <div className="min-h-[21rem] bg-paper p-4 text-ink sm:p-5">{current.render(beat)}</div>
+      {/* The tabs above are real controls; the scene under them is a picture,
+          so its Approve and Reject buttons stay out of the tab order. */}
+      <div className="min-h-[21rem] bg-paper p-4 text-ink sm:p-5" inert>
+        {current.render(beat)}
+      </div>
     </div>
   );
 }

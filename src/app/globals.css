@@ -260,6 +260,13 @@
     border-radius: 4px;
   }
 
+  /* The public header crosses two grounds - white type on the sky, ink type
+     on frosted paper - so its focus ring follows the type. The brand indigo
+     is only 2:1 against the deep sky and would vanish over the hero. */
+  .focus-current:focus-visible {
+    outline-color: currentColor;
+  }
+
   ::selection {
     background: var(--accent-soft);
     color: var(--accent-soft-fg);
