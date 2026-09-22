@@ -117,14 +117,18 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
             placeholder="Action, e.g. tool.called"
             className="w-48"
           />
-          <label htmlFor="audit-from" className="sr-only">
+          {/* These two were labelled sr-only, which left a sighted reader two
+              identical empty date boxes with nothing to say which end of the
+              range each one is. The other controls in this row name
+              themselves through their value; these cannot. */}
+          <label htmlFor="audit-from" className="text-sm text-ink-muted">
             From
           </label>
-          <Input id="audit-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" />
-          <label htmlFor="audit-to" className="sr-only">
+          <Input id="audit-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-[9.5rem]" />
+          <label htmlFor="audit-to" className="text-sm text-ink-muted">
             To
           </label>
-          <Input id="audit-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
+          <Input id="audit-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-[9.5rem]" />
         </div>
       </PageToolbar>
 

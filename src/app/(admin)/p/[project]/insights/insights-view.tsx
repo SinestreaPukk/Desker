@@ -165,7 +165,9 @@ export function InsightsView({ project }: { project: string }) {
                     icon={FileQuestion}
                     title="No gaps found"
                     description="Every search your agents ran returned something. Upload more context as new topics come up."
-                    className="py-10"
+                    /* Already inside a titled panel; a second border around it
+                       is a box in a box. */
+                    className="border-0 bg-transparent py-10"
                   />
                 ) : (
                   <ul className="divide-y divide-line rounded-lg border border-line">
