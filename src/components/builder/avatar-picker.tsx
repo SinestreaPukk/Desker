@@ -114,7 +114,7 @@ export function AvatarPicker({
 
       <div className="space-y-3 rounded-lg border border-line bg-surface-2/50 p-3">
         <fieldset>
-          <legend className="meta mb-2">Colour</legend>
+          <legend className="eyebrow mb-2">Colour</legend>
           <div className="flex flex-wrap gap-2">
             {TONES.map((option) => (
               <button
@@ -138,8 +138,12 @@ export function AvatarPicker({
         </fieldset>
 
         <fieldset>
-          <legend className="meta mb-2">Face</legend>
-          <div className="flex flex-wrap gap-2">
+          <legend className="eyebrow mb-2">Face</legend>
+          {/* A fixed six-wide grid, not a wrap: twelve faces flowing freely
+              left the twelfth alone on a second row at most widths, and a
+              ragged row of portraits is the first thing the eye catches. Two
+              even rows of six. */}
+          <div className="grid grid-cols-6 justify-items-center gap-2">
             {catalogue.map((entry) => {
               const selected = value === entry.key;
               return (
