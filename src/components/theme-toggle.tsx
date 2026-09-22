@@ -16,7 +16,7 @@ const OPTIONS = [
  * Three-way theme control. A segmented radio group rather than a toggle, so
  * "follow my system" stays reachable instead of being an invisible default.
  */
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
   // The active theme is unknown until hydration; until then no option is shown
   // as selected, which keeps server and client markup identical.
@@ -26,7 +26,10 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Colour theme"
-      className="inline-flex items-center gap-0.5 rounded-md border border-line bg-surface-2 p-0.5"
+      className={cn(
+        "inline-flex items-center gap-0.5 rounded-md border border-line bg-surface-2 p-0.5",
+        className,
+      )}
     >
       {OPTIONS.map((option) => {
         const Icon = option.icon;

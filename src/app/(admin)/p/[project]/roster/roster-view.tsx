@@ -201,10 +201,11 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
               {agent.name}
             </Link>
           </h2>
-          <p className="mt-0.5 truncate text-sm text-ink-muted">
-            {agent.jobTitle}
-            {agent.department ? <span className="text-ink-muted"> · {agent.department}</span> : null}
-          </p>
+          {/* The job title alone. Run together with the team it read
+              "Customer Support Lead · Custo…" - a name cut mid-word, which is
+              the one thing a card like this must not do. The team is a
+              classification, so it sits with the other metadata at the foot. */}
+          <p className="mt-0.5 truncate text-sm text-ink-muted">{agent.jobTitle}</p>
         </div>
         <StatusBadge status={agent.status} />
       </div>
@@ -241,7 +242,10 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
       </dl>
 
       <div className="mt-auto flex items-center justify-between px-4 pb-3">
-        <p className="meta">Updated {formatRelativeTime(agent.updatedAt)}</p>
+        <p className="meta min-w-0 truncate">
+          {agent.department ? `${agent.department} · ` : ""}
+          Updated {formatRelativeTime(agent.updatedAt)}
+        </p>
         <span className="text-xs text-ink-muted opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
           {live ? "Open editor →" : "Finish setting up →"}
         </span>

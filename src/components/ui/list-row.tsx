@@ -14,6 +14,7 @@ export function ListRow({
   badges,
   body,
   meta,
+  aside,
   trailing,
   muted,
   className,
@@ -23,6 +24,14 @@ export function ListRow({
   badges?: React.ReactNode;
   body?: React.ReactNode;
   meta?: React.ReactNode;
+  /**
+   * Right-aligned metadata - a timestamp, a count. Deliberately not inside
+   * the `relative z-10` the trailing slot gets: a row like this is one
+   * stretched link, and anything lifted above it would punch a dead patch in
+   * the click target. This is read, not clicked.
+   */
+  aside?: React.ReactNode;
+  /** An interactive control at the right: a button, a menu. */
   trailing?: React.ReactNode;
   /** Resolved / done items step back without disappearing. */
   muted?: boolean;
@@ -46,6 +55,7 @@ export function ListRow({
           {body ? <div className="mt-1 text-sm leading-relaxed">{body}</div> : null}
           {meta ? <p className="mt-2 flex flex-wrap items-center gap-x-2 meta">{meta}</p> : null}
         </div>
+        {aside ? <p className="meta shrink-0 whitespace-nowrap pt-0.5">{aside}</p> : null}
         {trailing ? <div className="relative z-10 shrink-0">{trailing}</div> : null}
       </div>
     </Panel>

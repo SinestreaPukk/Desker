@@ -191,9 +191,13 @@ export function AdminShell({
 
         {navLinks}
 
-        <div className="mt-auto space-y-3 pt-4">
+        {/* The foot of the sidebar is one group of full-width controls under a
+            rule, rather than three different shapes stacked: the theme
+            control used to sit in the middle as a small floating widget with
+            nothing aligned to it. */}
+        <div className="mt-auto space-y-2 border-t border-line pt-3">
           <FeedbackButton project={project.slug} />
-          <ThemeToggle />
+          <ThemeToggle className="w-full [&>button]:flex-1" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button

@@ -179,7 +179,7 @@ function AuditRow({ entry }: { entry: AuditEntryDto }) {
             ? meta.error
             : null;
   return (
-    <tr className="align-top">
+    <tr className="align-top transition-colors hover:bg-surface-2/60">
       <td className="whitespace-nowrap px-3 py-2 text-ink-muted" title={entry.at}>
         {formatRelativeTime(entry.at)}
       </td>

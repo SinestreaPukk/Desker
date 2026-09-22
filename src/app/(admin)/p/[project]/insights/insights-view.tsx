@@ -289,7 +289,7 @@ export function InsightsView({ project }: { project: string }) {
                       </thead>
                       <tbody className="divide-y divide-line">
                         {data!.agents.map((agent) => (
-                          <tr key={agent.id}>
+                          <tr key={agent.id} className="transition-colors hover:bg-surface-2/60">
                             <td className="py-2.5 pr-3">
                               <Link
                                 href={`/p/${project}/agents/${agent.id}`}
@@ -467,7 +467,7 @@ function WorkSection({ work, days }: { work: AnalyticsResponse["work"]; days: nu
                 </thead>
                 <tbody className="divide-y divide-line">
                   {agents.map((agent) => (
-                    <tr key={agent.id}>
+                    <tr key={agent.id} className="transition-colors hover:bg-surface-2/60">
                       <td className="py-2.5 pr-3">
                         <span className="font-medium text-ink">{agent.name}</span>
                         <span className="ml-2 text-xs text-ink-muted">{agent.jobTitle}</span>
@@ -516,32 +516,44 @@ function KpiRow({
   }[];
 }) {
   return (
+    /* Every tile is the same column: label at the top, the figure under it,
+       and the caption pinned to the foot. That last part is what makes a row
+       of these read as one instrument - the captions line up across the row
+       whatever is above them, instead of each tile spacing its own contents
+       out over whatever height it happened to get. */
     <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-      <Panel className="flex flex-col justify-between p-5">
+      {/* The lead tile is as tall as the four beside it, which left its
+          figure stranded in the middle of an empty card. Label at the head,
+          figure and caption together at the foot: the height then reads as
+          air above a heading rather than a gap inside one. */}
+      <Panel className="flex flex-col p-5">
         <p className="meta">{lead.label}</p>
-        <p className="mt-2 text-display font-semibold leading-none tracking-tight text-ink tabular-nums">
-          {typeof lead.value === "number" ? lead.value.toLocaleString() : lead.value}
-        </p>
-        {lead.hint ? <p className="mt-3 text-sm text-ink-muted">{lead.hint}</p> : null}
+        <div className="mt-auto pt-6">
+          <p className="text-display font-semibold leading-none tracking-tight text-ink tabular-nums">
+            {typeof lead.value === "number" ? lead.value.toLocaleString() : lead.value}
+          </p>
+          {lead.hint ? <p className="mt-2 text-sm text-ink-muted">{lead.hint}</p> : null}
+        </div>
       </Panel>
       <dl className="grid gap-3 sm:grid-cols-2">
-        {stats.map((stat) => (
-          <Panel key={stat.label} className="p-4">
-            <dt className="meta">{stat.label}</dt>
-            <dd className="mt-1 flex items-baseline gap-2">
-              <span className="text-xl font-semibold tabular-nums text-ink">
-                {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-              </span>
-              {stat.ratio !== null && stat.ratio !== undefined ? (
-                <span className="text-sm text-ink-muted">{percent(stat.ratio)}</span>
-              ) : null}
-            </dd>
-            {stat.ratio !== null && stat.ratio !== undefined ? (
-              <RatioBar value={stat.ratio} tone={stat.tone ?? "accent"} />
-            ) : null}
-            {stat.hint ? <dd className="mt-1 text-xs text-ink-muted">{stat.hint}</dd> : null}
-          </Panel>
-        ))}
+        {stats.map((stat) => {
+          const hasRatio = stat.ratio !== null && stat.ratio !== undefined;
+          return (
+            <Panel key={stat.label} className="flex flex-col p-5">
+              <dt className="meta">{stat.label}</dt>
+              <dd className="mt-3 flex items-baseline gap-2">
+                <span className="text-xl font-semibold leading-none tabular-nums text-ink">
+                  {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
+                </span>
+                {hasRatio ? (
+                  <span className="text-sm tabular-nums text-ink-muted">{percent(stat.ratio!)}</span>
+                ) : null}
+              </dd>
+              {hasRatio ? <RatioBar value={stat.ratio!} tone={stat.tone ?? "accent"} /> : null}
+              {stat.hint ? <dd className="mt-auto pt-3 text-xs text-ink-muted">{stat.hint}</dd> : null}
+            </Panel>
+          );
+        })}
       </dl>
     </div>
   );
@@ -558,7 +570,10 @@ const BAR_TONE = {
 function RatioBar({ value, tone }: { value: number; tone: keyof typeof BAR_TONE }) {
   const width = Math.max(0, Math.min(1, value)) * 100;
   return (
-    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3" aria-hidden>
+    /* A hairline, not a rule. At 6px on a full-width track an empty one read
+       as a loading skeleton and a full one drew the eye harder than the
+       number it was describing. */
+    <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-line" aria-hidden>
       <div className={`h-full rounded-full ${BAR_TONE[tone]}`} style={{ width: `${width}%` }} />
     </div>
   );

@@ -302,13 +302,10 @@ function ConversationRow({
           <p className="line-clamp-2 text-ink-muted">{conversation.preview || "No client message yet."}</p>
         )
       }
-      meta={
-        <>
-          <span>{conversation.messageCount} messages</span>
-          <span aria-hidden>·</span>
-          <span>{formatRelativeTime(conversation.lastMessageAt)}</span>
-        </>
-      }
+      meta={<span>{conversation.messageCount} messages</span>}
+      /* When it last moved, at the right edge, so a list of these can be
+         scanned down one column instead of hunting for it mid-line. */
+      aside={formatRelativeTime(conversation.lastMessageAt)}
     />
   );
 }
