@@ -14,6 +14,7 @@ const garamond = EB_Garamond({
   subsets: ["latin"],
   weight: ["400", "500"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

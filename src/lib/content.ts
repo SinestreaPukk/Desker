@@ -141,6 +141,10 @@ const templateSchema = z.object({
   responsibilities: z.array(z.string().min(1)).max(8),
   allowedTools: z.array(z.enum(TOOL_IDS)),
   workTools: z.array(z.enum(WORK_TOOL_IDS)),
+  defaultObjectives: z.array(z.string().min(1)).optional(),
+  defaultTriggerType: z.enum(["manual", "cron", "webhook"]).optional(),
+  defaultCron: z.string().nullable().optional(),
+  defaultContext: z.string().optional(),
 });
 
 const templatesSchema = z.object({ templates: z.array(templateSchema).min(1) }).superRefine((v, ctx) => {

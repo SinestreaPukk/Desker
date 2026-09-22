@@ -72,7 +72,10 @@ export async function projectsFor(userId: string) {
  * account never shows an empty chrome with nowhere to go.
  */
 export async function defaultProject(userId: string) {
-  const [existing] = await projectsFor(userId);
+  const existing = await prisma.project.findFirst({
+    where: projectsVisibleTo(userId),
+    orderBy: { createdAt: "asc" },
+  });
   if (existing) return existing;
 
   const organization = await primaryOrganizationFor(userId);

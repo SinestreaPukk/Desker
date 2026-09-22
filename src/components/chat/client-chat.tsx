@@ -115,96 +115,145 @@ export function ClientChat({
     );
   }
 
+  return (
+    <ActiveChat
+      agent={agent}
+      messages={messages}
+      sessionId={sessionId}
+      agentId={agentId}
+      passcode={passcode}
+      handledByHuman={data!.handledByHuman}
+      variant={variant}
+      onClose={onClose}
+    />
+  );
+}
+
+function ActiveChat({
+  agent,
+  messages,
+  sessionId,
+  agentId,
+  passcode,
+  handledByHuman,
+  variant,
+  onClose,
+}: {
+  agent: PublicAgentDto;
+  messages: MessageDto[];
+  sessionId: string;
+  agentId: string;
+  passcode: string;
+  handledByHuman?: boolean;
+  variant: "page" | "widget";
+  onClose?: () => void;
+}) {
   const liveFeedUrl = `/api/chat/${agentId}/live?sessionId=${encodeURIComponent(sessionId)}`;
 
-  const initial: ChatBubble[] = [
-    ...(agent.welcomeMessage?.trim() && messages.length === 0
-      ? [
-          {
-            id: "greeting",
-            role: "assistant" as const,
-            content: agent.welcomeMessage.trim(),
-          },
-        ]
-      : []),
-    ...messages.map((message) => ({
-      id: message.id,
-      // A colleague's turn reaches the client in the same place an agent's
-      // does; only the byline differs.
-      role: message.role === "user" ? ("user" as const) : ("assistant" as const),
-      content: message.content,
-      authorName: message.role === "human" ? (message.authorName ?? null) : null,
-      serverId: message.id,
-      persisted: message.role !== "user",
-      rating: (message.rating === 1 ? 1 : message.rating === -1 ? -1 : null) as 1 | -1 | null,
-    })),
-  ];
+  const initial = React.useMemo<ChatBubble[]>(
+    () => [
+      ...(agent.welcomeMessage?.trim() && messages.length === 0
+        ? [
+            {
+              id: "greeting",
+              role: "assistant" as const,
+              content: agent.welcomeMessage.trim(),
+            },
+          ]
+        : []),
+      ...messages.map((message) => ({
+        id: message.id,
+        // A colleague's turn reaches the client in the same place an agent's
+        // does; only the byline differs.
+        role: message.role === "user" ? ("user" as const) : ("assistant" as const),
+        content: message.content,
+        authorName: message.role === "human" ? (message.authorName ?? null) : null,
+        serverId: message.id,
+        persisted: message.role !== "user",
+        rating: (message.rating === 1 ? 1 : message.rating === -1 ? -1 : null) as 1 | -1 | null,
+      })),
+    ],
+    [agent.welcomeMessage, messages],
+  );
 
-  const rate = async (messageId: string, rating: 1 | -1 | 0) => {
-    try {
-      await api("/api/chat/feedback", {
-        method: "POST",
-        body: JSON.stringify({ agentId, sessionId, messageId, rating }),
-      });
-    } catch {
-      // Feedback is best-effort; a failed save is not worth an error banner
-      // in the middle of someone's conversation.
-    }
-  };
+  const rate = React.useCallback(
+    async (messageId: string, rating: 1 | -1 | 0) => {
+      try {
+        await api("/api/chat/feedback", {
+          method: "POST",
+          body: JSON.stringify({ agentId, sessionId, messageId, rating }),
+        });
+      } catch {
+        // Feedback is best-effort; a failed save is not worth an error banner
+        // in the middle of someone's conversation.
+      }
+    },
+    [agentId, sessionId],
+  );
+
+  const payload = React.useMemo(
+    () => ({ agentId, sessionId, ...(passcode ? { passcode } : {}) }),
+    [agentId, sessionId, passcode],
+  );
+
+  const header = React.useMemo(
+    () => (
+      <header
+        className={cn(
+          "flex items-center gap-3 border-b border-line bg-surface px-4 py-3",
+          variant === "widget" && "rounded-t-panel",
+        )}
+      >
+        <AgentAvatar name={agent.name} src={agent.avatarUrl} seed={agent.id} size="md" />
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-sm font-semibold text-ink">
+            {agent.name}
+          </h1>
+          <p className="truncate text-xs text-ink-muted">
+            {agent.jobTitle}
+            {agent.department ? ` · ${agent.department}` : ""}
+          </p>
+        </div>
+
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Start a new conversation"
+          title="Start a new conversation"
+          onClick={() => resetClientSession(agentId)}
+        >
+          <RotateCcw aria-hidden />
+        </Button>
+
+        {onClose ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Close chat"
+            onClick={onClose}
+          >
+            <span aria-hidden className="text-lg leading-none">
+              ×
+            </span>
+          </Button>
+        ) : null}
+      </header>
+    ),
+    [variant, agent.name, agent.avatarUrl, agent.id, agent.jobTitle, agent.department, agentId, onClose],
+  );
 
   return (
     <ChatSurface
       key={sessionId}
       agent={agent}
       endpoint="/api/chat"
-      payload={{ agentId, sessionId, ...(passcode ? { passcode } : {}) }}
+      payload={payload}
       initialMessages={initial}
       liveFeedUrl={liveFeedUrl}
       onRate={rate}
-      initiallyHandedToHuman={Boolean(data!.handledByHuman)}
+      initiallyHandedToHuman={Boolean(handledByHuman)}
       autoFocus={variant === "widget"}
-      header={
-        <header
-          className={cn(
-            "flex items-center gap-3 border-b border-line bg-surface px-4 py-3",
-            variant === "widget" && "rounded-t-panel",
-          )}
-        >
-          <AgentAvatar name={agent.name} src={agent.avatarUrl} seed={agent.id} size="md" />
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-sm font-semibold text-ink">
-              {agent.name}
-            </h1>
-            <p className="truncate text-xs text-ink-muted">
-              {agent.jobTitle}
-              {agent.department ? ` · ${agent.department}` : ""}
-            </p>
-          </div>
-
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Start a new conversation"
-            title="Start a new conversation"
-            onClick={() => resetClientSession(agentId)}
-          >
-            <RotateCcw aria-hidden />
-          </Button>
-
-          {onClose ? (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Close chat"
-              onClick={onClose}
-            >
-              <span aria-hidden className="text-lg leading-none">
-                ×
-              </span>
-            </Button>
-          ) : null}
-        </header>
-      }
+      header={header}
     />
   );
 }

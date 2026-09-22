@@ -242,6 +242,23 @@ export function AgentBuilder({
     [form, saved],
   );
 
+  const previewAgent = React.useMemo(
+    () => ({
+      id: agent.id,
+      name: saved.name,
+      jobTitle: saved.jobTitle,
+      department: saved.department,
+      avatarUrl: saved.avatarUrl,
+      welcomeMessage: saved.welcomeMessage,
+    }),
+    [agent.id, saved.name, saved.jobTitle, saved.department, saved.avatarUrl, saved.welcomeMessage],
+  );
+
+  const previewPayload = React.useMemo(
+    () => ({ agentId: agent.id, previewId }),
+    [agent.id, previewId],
+  );
+
   // Warn before losing edits on a reload or tab close.
   React.useEffect(() => {
     if (!dirty) return;
@@ -787,16 +804,9 @@ export function AgentBuilder({
           </div>
 
           <ChatSurface
-            agent={{
-              id: agent.id,
-              name: saved.name,
-              jobTitle: saved.jobTitle,
-              department: saved.department,
-              avatarUrl: saved.avatarUrl,
-              welcomeMessage: saved.welcomeMessage,
-            }}
+            agent={previewAgent}
             endpoint="/api/preview"
-            payload={{ agentId: agent.id, previewId }}
+            payload={previewPayload}
             controlsRef={previewControls}
             composerPlaceholder="Try what a client would ask…"
             className="min-h-[28rem] lg:min-h-0"

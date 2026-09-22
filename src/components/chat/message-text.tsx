@@ -16,7 +16,7 @@ import * as React from "react";
  * code spans are: split the string, wrap the piece in an element, and keep the
  * text a text child. Nothing here ever becomes markup from the string itself.
  */
-export function MessageText({ content }: { content: string }) {
+export const MessageText = React.memo(function MessageText({ content }: { content: string }) {
   const blocks = React.useMemo(
     () => content.split(/\n{2,}/).filter((block) => block.trim()),
     [content],
@@ -57,7 +57,7 @@ export function MessageText({ content }: { content: string }) {
       })}
     </>
   );
-}
+});
 
 /**
  * Splits on inline code spans and bold runs. Everything stays a React text
@@ -65,7 +65,11 @@ export function MessageText({ content }: { content: string }) {
  * become markup themselves. Code is first in the alternation so a bold run
  * inside backticks stays code.
  */
-function Inline({ text }: { text: string }) {
+const Inline = React.memo(function Inline({ text }: { text: string }) {
+  if (!text.includes("`") && !text.includes("**")) {
+    return <>{text}</>;
+  }
+
   const parts = text.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*)/g);
   return (
     <>
@@ -91,4 +95,4 @@ function Inline({ text }: { text: string }) {
       })}
     </>
   );
-}
+});

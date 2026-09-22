@@ -14,6 +14,7 @@ import { audit } from "@/lib/audit";
 import { retrieveContext } from "@/lib/rag/retriever";
 import type { ToolCall } from "@/lib/llm/provider";
 import { inngest } from "@/lib/jobs/client";
+import { afterResponse } from "@/lib/after-response";
 import { researchTheWeb, type ResearchFindings } from "./research";
 import {
   deliverEmail,
@@ -334,10 +335,22 @@ async function scheduleFollowup(input: unknown, ctx: RunContext): Promise<WorkTo
     ...current,
     followupIds: [...((current.followupIds as string[] | undefined) ?? []), followup.id],
   }));
-  await inngest.send({
-    name: "work/action-item.run",
-    data: { actionItemId: followup.id, organizationId: ctx.organizationId },
-  });
+  try {
+    await inngest.send({
+      name: "work/action-item.run",
+      data: { actionItemId: followup.id, organizationId: ctx.organizationId },
+    });
+  } catch (error) {
+    console.warn("[scheduleFollowup] inngest.send failed, running followup via afterResponse:", error);
+    afterResponse(async () => {
+      try {
+        const { runActionItem, inlineSteps } = await import("./runner");
+        await runActionItem(followup.id, inlineSteps);
+      } catch (err) {
+        console.error(`[scheduleFollowup:afterResponse] execution failed for followup ${followup.id}:`, err);
+      }
+    });
+  }
   return {
     content: `Follow-up queued as task ${followup.id}, ${
       scheduledFor ? `starting ${scheduledFor.toISOString()}` : "starting as soon as this task finishes"

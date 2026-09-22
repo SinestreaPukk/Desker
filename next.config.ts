@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
   // Produces .next/standalone for a small production container image. Vercel
   // builds its own serverless output and breaks on standalone mode, so it is
   // skipped there - Vercel sets the VERCEL variable during builds.
   ...(process.env.VERCEL ? {} : { output: "standalone" as const }),
+  reactStrictMode: true,
+  serverExternalPackages: ["pdf-parse", "mammoth"],
   outputFileTracingIncludes: {
     "/api/**": ["./node_modules/.prisma/client/**"],
   },

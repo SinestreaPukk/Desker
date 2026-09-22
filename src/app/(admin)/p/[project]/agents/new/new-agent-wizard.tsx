@@ -31,6 +31,7 @@ import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
 import { TEMPLATES, templateById, type AgentTemplate } from "@/lib/content";
 import { TemplateIcon } from "@/components/marketing/template-icon";
 import { WORK_TOOL_IDS } from "@/lib/work/tools";
+import type { TriggerType } from "@/lib/work/types";
 import { cn } from "@/lib/utils";
 
 /**
@@ -83,7 +84,14 @@ export function NewAgentWizard({ project }: { project: string }) {
     setTemplate(id);
     // Name and avatar are the admin's own; a new role swaps everything else.
     setForm((current) => ({ ...formFromTemplate(preset), name: current.name, avatarUrl: current.avatarUrl }));
-    setScope((current) => ({ ...scopeFromTemplate(preset), context: current.context, objectivesText: current.objectivesText }));
+    setScope((current) => {
+      const templateScope = scopeFromTemplate(preset);
+      return {
+        ...templateScope,
+        context: current.context.trim() ? current.context : templateScope.context,
+        objectivesText: current.objectivesText.trim() ? current.objectivesText : templateScope.objectivesText,
+      };
+    });
   }
 
   const stepValid = [
@@ -476,7 +484,16 @@ function formFromTemplate(preset: AgentTemplate | undefined) {
 }
 
 function scopeFromTemplate(preset: AgentTemplate | undefined): ScopeFormState {
-  return { ...defaultScopeForm(), tools: preset ? [...preset.workTools] : [...WORK_TOOL_IDS] };
+  const base = defaultScopeForm();
+  if (!preset) return base;
+  return {
+    ...base,
+    context: preset.defaultContext ?? "",
+    objectivesText: preset.defaultObjectives ? preset.defaultObjectives.join("\n") : "",
+    triggerType: (preset.defaultTriggerType as TriggerType) ?? "manual",
+    cron: preset.defaultCron ?? base.cron,
+    tools: [...preset.workTools],
+  };
 }
 
 function TemplateCard({

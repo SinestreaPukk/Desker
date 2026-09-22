@@ -3,8 +3,9 @@ import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { agentsVisibleTo } from "@/lib/projects";
 import { audit } from "@/lib/audit";
 import { track } from "@/lib/product-events";
+import { afterResponse } from "@/lib/after-response";
 import { inngest } from "@/lib/jobs/client";
-import { transition, InvalidTransition } from "@/lib/work/runner";
+import { transition, InvalidTransition, executeApprovedAction, inlineSteps } from "@/lib/work/runner";
 import { toActionItemDto, actionItemInclude } from "../../serialize";
 
 export const runtime = "nodejs";
@@ -44,8 +45,13 @@ export async function POST(_request: Request, { params }: { params: Promise<{ ac
         data: { actionItemId, organizationId: item.organizationId },
       });
     } catch (error) {
-      await transition(actionItemId, "failed", {
-        error: `Approved, but the job runtime could not be reached: ${error instanceof Error ? error.message : "unknown error"}`,
+      console.warn("[approve] inngest.send failed, executing inline via afterResponse:", error);
+      afterResponse(async () => {
+        try {
+          await executeApprovedAction(actionItemId, inlineSteps);
+        } catch (err) {
+          console.error(`[approve:afterResponse] execution failed for item ${actionItemId}:`, err);
+        }
       });
     }
 

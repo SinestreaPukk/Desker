@@ -105,7 +105,14 @@ async function retrieveInProcess(
 ): Promise<RetrievedChunk[]> {
   const chunks = await prisma.documentChunk.findMany({
     where: { agentId },
-    select: { id: true, content: true, embeddingJson: true },
+    select: {
+      id: true,
+      documentId: true,
+      chunkIndex: true,
+      content: true,
+      embeddingJson: true,
+      document: { select: { filename: true } },
+    },
   });
   if (chunks.length === 0) return [];
 
@@ -128,31 +135,74 @@ async function retrieveInProcess(
     .sort((a, b) => b.score - a.score)
     .slice(0, CANDIDATE_POOL);
 
-  return hydrate(reciprocalRankFusion([vectorRanking, keywordRanking]), topK);
+  const knownById = new Map(
+    chunks.map((chunk) => [
+      chunk.id,
+      {
+        id: chunk.id,
+        documentId: chunk.documentId,
+        chunkIndex: chunk.chunkIndex,
+        content: chunk.content,
+        filename: chunk.document.filename,
+      },
+    ]),
+  );
+
+  return hydrate(
+    reciprocalRankFusion([vectorRanking, keywordRanking]),
+    topK,
+    knownById,
+  );
+}
+
+interface HydratedChunkSource {
+  id: string;
+  documentId: string;
+  chunkIndex: number;
+  content: string;
+  filename: string;
 }
 
 /** Turns fused ids back into displayable chunks, preserving fusion order. */
 async function hydrate(
   fused: Map<string, number>,
   topK: number,
+  knownChunks?: Map<string, HydratedChunkSource>,
 ): Promise<RetrievedChunk[]> {
   const ordered = [...fused.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, topK);
   if (ordered.length === 0) return [];
 
-  const rows = await prisma.documentChunk.findMany({
-    where: { id: { in: ordered.map(([id]) => id) } },
-    select: {
-      id: true,
-      documentId: true,
-      chunkIndex: true,
-      content: true,
-      document: { select: { filename: true } },
-    },
-  });
+  const missingIds = ordered
+    .map(([id]) => id)
+    .filter((id) => !knownChunks?.has(id));
 
-  const byId = new Map(rows.map((row) => [row.id, row]));
+  const byId = new Map<string, HydratedChunkSource>(knownChunks);
+
+  if (missingIds.length > 0) {
+    const rows = await prisma.documentChunk.findMany({
+      where: { id: { in: missingIds } },
+      select: {
+        id: true,
+        documentId: true,
+        chunkIndex: true,
+        content: true,
+        document: { select: { filename: true } },
+      },
+    });
+
+    for (const row of rows) {
+      byId.set(row.id, {
+        id: row.id,
+        documentId: row.documentId,
+        chunkIndex: row.chunkIndex,
+        content: row.content,
+        filename: row.document.filename,
+      });
+    }
+  }
+
   return ordered.flatMap(([id, score]) => {
     const row = byId.get(id);
     if (!row) return [];
@@ -160,7 +210,7 @@ async function hydrate(
       {
         id: row.id,
         documentId: row.documentId,
-        filename: row.document.filename,
+        filename: row.filename,
         chunkIndex: row.chunkIndex,
         content: row.content,
         score,

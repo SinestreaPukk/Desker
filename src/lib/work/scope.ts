@@ -12,7 +12,8 @@ import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { inngest } from "@/lib/jobs/client";
 import { toStringArray } from "@/lib/agent-fields";
-import { transition } from "./runner";
+import { afterResponse } from "@/lib/after-response";
+import { runActionItem, inlineSteps } from "./runner";
 import { canStartRun } from "@/lib/billing/limits";
 import type { AutonomyMode, ToolAutonomy, TriggerType } from "./types";
 
@@ -252,9 +253,16 @@ export async function startRun(input: StartRunInput) {
       data: { actionItemId: item.id, organizationId: agent.project.organizationId },
     });
   } catch (error) {
-    const reason = `Could not reach the job runtime: ${error instanceof Error ? error.message : "unknown error"}. Is Inngest running?`;
-    await transition(item.id, "failed", { error: reason });
-    return prisma.actionItem.findUniqueOrThrow({ where: { id: item.id } });
+    // If the Inngest runner is unreachable (e.g. local dev, self-hosting without Inngest dev server),
+    // fall back to executing inline via afterResponse so runs never stall or fail due to runtime plumbing.
+    console.warn("[startRun] inngest.send failed, executing inline via afterResponse:", error);
+    afterResponse(async () => {
+      try {
+        await runActionItem(item.id, inlineSteps);
+      } catch (err) {
+        console.error(`[startRun:afterResponse] execution failed for item ${item.id}:`, err);
+      }
+    });
   }
   return item;
 }

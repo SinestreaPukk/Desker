@@ -24,7 +24,7 @@ export interface ChatSurfaceAgent {
  * widget and the builder's preview pane. One implementation means the preview
  * cannot drift away from what a client actually sees.
  */
-export function ChatSurface({
+export const ChatSurface = React.memo(function ChatSurface({
   agent,
   endpoint,
   payload,
@@ -193,4 +193,4 @@ export function ChatSurface({
       />
     </div>
   );
-}
+});

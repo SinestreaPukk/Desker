@@ -21,7 +21,14 @@
         "Record feature requests clients raise"
       ],
       "allowedTools": ["search_company_context", "log_issue", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "escalate_to_human"]
+      "workTools": ["search_context", "escalate_to_human"],
+      "defaultObjectives": [
+        "Answer customer questions accurately using official company policies and uploaded documentation",
+        "Cite the specific document or section referenced in the response",
+        "Escalate refund requests, angry customers, or complex account disputes immediately"
+      ],
+      "defaultTriggerType": "manual",
+      "defaultContext": "Customer support lead helping customers resolve product, order, and policy questions quickly and accurately."
     },
     {
       "id": "client-onboarding",
@@ -43,7 +50,14 @@
         "Flag anything that blocks a client from getting started"
       ],
       "allowedTools": ["search_company_context", "log_issue", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "schedule_followup", "send_email", "escalate_to_human"]
+      "workTools": ["search_context", "schedule_followup", "send_email", "escalate_to_human"],
+      "defaultObjectives": [
+        "Guide new clients step-by-step through their setup journey",
+        "Check that key integration steps are completed before progressing",
+        "Schedule follow-ups to ensure clients are not blocked"
+      ],
+      "defaultTriggerType": "manual",
+      "defaultContext": "Onboarding specialist assisting clients with account configuration, team invites, and integration setup."
     },
     {
       "id": "researcher",
@@ -65,7 +79,15 @@
         "Flag claims that cannot be verified"
       ],
       "allowedTools": ["search_company_context", "escalate_to_human"],
-      "workTools": ["web_research", "search_context", "schedule_followup", "escalate_to_human"]
+      "workTools": ["web_research", "search_context", "schedule_followup", "escalate_to_human"],
+      "defaultObjectives": [
+        "Research competitor product releases, pricing changes, and industry news from the past week",
+        "Synthesize findings into a concise briefing with numbered citations [1], [2] and direct links",
+        "Flag any gaps in coverage or unverified rumours for human review"
+      ],
+      "defaultTriggerType": "cron",
+      "defaultCron": "0 9 * * 5",
+      "defaultContext": "Weekly market and competitive intelligence research brief. Ground every claim in a numbered source."
     },
     {
       "id": "marketer",
@@ -87,7 +109,15 @@
         "Queue everything for approval before it is published"
       ],
       "allowedTools": ["search_company_context", "escalate_to_human"],
-      "workTools": ["web_research", "search_context", "draft_content", "publish_post", "schedule_followup", "escalate_to_human"]
+      "workTools": ["web_research", "search_context", "draft_content", "publish_post", "schedule_followup", "escalate_to_human"],
+      "defaultObjectives": [
+        "Research what competitors announced and key industry trends over the past week",
+        "Draft a compelling social post highlighting our company values and products in our brand voice",
+        "Queue the draft for approval before publishing"
+      ],
+      "defaultTriggerType": "cron",
+      "defaultCron": "0 9 * * 1",
+      "defaultContext": "Weekly content marketer drafting high-impact announcements and social updates. Keep tone concise, professional, and authentic."
     },
     {
       "id": "secretary",
@@ -109,7 +139,14 @@
         "Keep a clear record of what was agreed"
       ],
       "allowedTools": ["search_company_context", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "draft_content", "send_email", "schedule_followup", "escalate_to_human"]
+      "workTools": ["search_context", "draft_content", "send_email", "schedule_followup", "escalate_to_human"],
+      "defaultObjectives": [
+        "Review action items, meeting notes, and incoming requests",
+        "Draft follow-up emails with specific dates, metrics, and next steps for human approval",
+        "Schedule follow-up tasks if a response is expected"
+      ],
+      "defaultTriggerType": "manual",
+      "defaultContext": "Executive assistant keeping correspondence and commitments on schedule. Queue all emails for approval."
     },
     {
       "id": "dev-support",
@@ -131,7 +168,14 @@
         "Research unfamiliar errors before answering"
       ],
       "allowedTools": ["search_company_context", "log_issue", "log_suggestion", "escalate_to_human"],
-      "workTools": ["web_research", "search_context", "draft_content", "escalate_to_human"]
+      "workTools": ["web_research", "search_context", "draft_content", "escalate_to_human"],
+      "defaultObjectives": [
+        "Analyze API questions and error logs submitted by developers",
+        "Search API documentation to explain root causes and provide verified code fixes",
+        "Log reproducible issue reports for engineering when bug fixes require codebase changes"
+      ],
+      "defaultTriggerType": "manual",
+      "defaultContext": "Developer support engineer providing precise code samples, headers, and reproduction steps for engineering."
     },
     {
       "id": "sales-development",
@@ -153,7 +197,14 @@
         "Book meetings for the sales team"
       ],
       "allowedTools": ["search_company_context", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "draft_content", "send_email", "schedule_followup", "escalate_to_human"]
+      "workTools": ["search_context", "draft_content", "send_email", "schedule_followup", "escalate_to_human"],
+      "defaultObjectives": [
+        "Qualify inbound customer inquiries and identify team requirements",
+        "Answer product and plan questions from documentation without quoting unauthorized discounts",
+        "Draft meeting scheduling emails and queue them for human approval"
+      ],
+      "defaultTriggerType": "manual",
+      "defaultContext": "Sales development representative qualifying prospects and proposing demo walkthroughs."
     },
     {
       "id": "people-ops",
@@ -175,7 +226,14 @@
         "Route sensitive matters to a person straight away"
       ],
       "allowedTools": ["search_company_context", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "draft_content", "send_email", "escalate_to_human"]
+      "workTools": ["search_context", "draft_content", "send_email", "escalate_to_human"],
+      "defaultObjectives": [
+        "Answer employee policy, leave, and benefit inquiries strictly from the company handbook",
+        "Draft routine internal announcements and policy reminders for human approval",
+        "Route sensitive or confidential matters immediately to HR leadership"
+      ],
+      "defaultTriggerType": "manual",
+      "defaultContext": "People operations coordinator providing confidential and accurate policy guidance from company documentation."
     }
   ]
 }

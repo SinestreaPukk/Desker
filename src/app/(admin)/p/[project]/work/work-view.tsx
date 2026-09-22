@@ -2,11 +2,21 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Briefcase, ChevronDown, ChevronRight } from "lucide-react";
+import { Briefcase, ChevronDown, ChevronRight, Play } from "lucide-react";
+import { toast } from "sonner";
 import { ApprovalCard } from "@/components/work/approval-card";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Panel } from "@/components/ui/panel";
 import {
   Select,
@@ -17,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { useAgents } from "@/hooks/use-admin-data";
-import { useActionItems } from "@/hooks/use-work-data";
+import { useActionItems, useRunScope, useScope } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
 import { ACTION_STATUSES, STATUS_LABELS } from "@/lib/work/types";
@@ -65,40 +75,44 @@ export function WorkView({
       />
 
       <PageToolbar>
-        <div className="flex flex-wrap items-center gap-3">
-          <label htmlFor="work-agent" className="sr-only">
-            Agent
-          </label>
-          <Select value={agentId} onValueChange={setAgentId}>
-            <SelectTrigger id="work-agent" className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All agents</SelectItem>
-              {(agents.data ?? []).map((agent) => (
-                <SelectItem key={agent.id} value={agent.id}>
-                  {agent.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <label htmlFor="work-status" className="sr-only">
-            Status
-          </label>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger id="work-status" className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {ACTION_STATUSES.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {STATUS_LABELS[value]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {waiting > 0 ? <Badge tone="warning">{waiting} waiting for approval</Badge> : null}
+        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <label htmlFor="work-agent" className="sr-only">
+              Agent
+            </label>
+            <Select value={agentId} onValueChange={setAgentId}>
+              <SelectTrigger id="work-agent" className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All agents</SelectItem>
+                {(agents.data ?? []).map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <label htmlFor="work-status" className="sr-only">
+              Status
+            </label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger id="work-status" className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {ACTION_STATUSES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {STATUS_LABELS[value]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {waiting > 0 ? <Badge tone="warning">{waiting} waiting for approval</Badge> : null}
+          </div>
+
+          <RunAgentDialog agents={agents.data ?? []} defaultAgentId={agentId} />
         </div>
       </PageToolbar>
 
@@ -272,5 +286,112 @@ function ActionItemRow({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function RunAgentDialog({
+  agents,
+  defaultAgentId,
+}: {
+  agents: Array<{ id: string; name: string; avatarUrl?: string | null; jobTitle?: string }>;
+  defaultAgentId?: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [chosenId, setChosenId] = React.useState<string | null>(null);
+
+  const fallbackId = defaultAgentId && defaultAgentId !== "all" ? defaultAgentId : (agents[0]?.id ?? "");
+  const selectedId = chosenId ?? fallbackId;
+
+  const scope = useScope(selectedId);
+  const run = useRunScope(selectedId);
+  const selectedAgent = agents.find((a) => a.id === selectedId);
+
+  async function handleStart() {
+    if (!selectedId) return;
+    try {
+      await run.mutateAsync();
+      toast.success(`Run started for ${selectedAgent?.name ?? "agent"}`, {
+        description: "The agent is executing its scope of work. Results will update here.",
+      });
+      setOpen(false);
+    } catch (caught) {
+      toast.error(errorMessage(caught));
+    }
+  }
+
+  if (agents.length === 0) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="gap-1.5">
+          <Play className="size-3.5 fill-current" aria-hidden />
+          <span>Run agent</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogTitle>Run an agent now</DialogTitle>
+        <DialogDescription>
+          Trigger this agent&apos;s autonomous scope of work immediately. Research, drafts, and follow-ups will run according to its instructions.
+        </DialogDescription>
+
+        <div className="mt-4 space-y-4">
+          <div>
+            <label htmlFor="select-run-agent" className="mb-1.5 block text-xs font-medium text-ink-muted">
+              Select agent
+            </label>
+            <Select value={selectedId} onValueChange={setChosenId}>
+              <SelectTrigger id="select-run-agent" className="w-full">
+                <SelectValue placeholder="Choose an agent" />
+              </SelectTrigger>
+              <SelectContent>
+                {agents.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name} {a.jobTitle ? `(${a.jobTitle})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedAgent ? (
+            <div className="space-y-2 rounded-lg border border-line bg-surface-2/50 p-3 text-xs">
+              <div className="flex items-center gap-2 font-medium text-ink">
+                <AgentAvatar name={selectedAgent.name} src={selectedAgent.avatarUrl} seed={selectedAgent.id} size="sm" />
+                <span>{selectedAgent.name}</span>
+                <span className="text-ink-muted">· {scope.data?.autonomy === "auto" ? "Autonomous" : "Draft-only mode"}</span>
+              </div>
+              {scope.data?.objectives && scope.data.objectives.length > 0 ? (
+                <div>
+                  <span className="mb-1 block text-ink-muted">Standing objectives:</span>
+                  <ul className="list-inside list-disc space-y-0.5 text-ink">
+                    {scope.data.objectives.slice(0, 3).map((obj, i) => (
+                      <li key={i} className="truncate">{obj}</li>
+                    ))}
+                    {scope.data.objectives.length > 3 ? (
+                      <li className="text-ink-muted">+{scope.data.objectives.length - 3} more</li>
+                    ) : null}
+                  </ul>
+                </div>
+              ) : (
+                <p className="text-ink-muted">
+                  No custom objectives set yet. The agent will run based on its core responsibilities.
+                </p>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mt-6 flex justify-end gap-2">
+          <DialogClose asChild>
+            <Button variant="ghost" size="sm">Cancel</Button>
+          </DialogClose>
+          <Button size="sm" onClick={() => void handleStart()} loading={run.isPending} disabled={!selectedId}>
+            <Play className="size-3.5 fill-current" aria-hidden />
+            Start run
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

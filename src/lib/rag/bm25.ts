@@ -53,34 +53,39 @@ export function bm25Rank(query: string, docs: Bm25Doc[]): { id: string; score: n
   const queryTerms = [...new Set(contentTerms(query))];
   if (queryTerms.length === 0 || docs.length === 0) return [];
 
-  const tokenized = docs.map((doc) => ({
-    id: doc.id,
-    terms: contentTerms(doc.content),
-  }));
-  const avgLength =
-    tokenized.reduce((sum, doc) => sum + doc.terms.length, 0) / tokenized.length || 1;
+  let totalLength = 0;
+  const tokenized = docs.map((doc) => {
+    const terms = contentTerms(doc.content);
+    totalLength += terms.length;
+    const counts = new Map<string, number>();
+    for (const term of terms) {
+      counts.set(term, (counts.get(term) ?? 0) + 1);
+    }
+    return { id: doc.id, termsLength: terms.length, counts };
+  });
 
-  // Document frequency per query term.
+  const avgLength = totalLength / tokenized.length || 1;
+
+  // Document frequency per query term: O(1) map check per document.
   const docFreq = new Map<string, number>();
   for (const term of queryTerms) {
     let count = 0;
-    for (const doc of tokenized) if (doc.terms.includes(term)) count++;
+    for (const doc of tokenized) {
+      if (doc.counts.has(term)) count++;
+    }
     docFreq.set(term, count);
   }
 
   const scored = tokenized.map((doc) => {
-    const counts = new Map<string, number>();
-    for (const term of doc.terms) counts.set(term, (counts.get(term) ?? 0) + 1);
-
     let score = 0;
     for (const term of queryTerms) {
-      const freq = counts.get(term) ?? 0;
+      const freq = doc.counts.get(term) ?? 0;
       if (freq === 0) continue;
       const n = docFreq.get(term) ?? 0;
       // BM25+ style idf; never negative, so a term in every doc contributes ~0.
       const idf = Math.log(1 + (docs.length - n + 0.5) / (n + 0.5));
       const norm = freq * (K1 + 1);
-      const denom = freq + K1 * (1 - B + (B * doc.terms.length) / avgLength);
+      const denom = freq + K1 * (1 - B + (B * doc.termsLength) / avgLength);
       score += idf * (norm / denom);
     }
     return { id: doc.id, score };

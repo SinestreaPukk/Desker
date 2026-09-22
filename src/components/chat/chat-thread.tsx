@@ -8,7 +8,85 @@ import { ToolTrace } from "./tool-trace";
 import type { ChatBubble } from "@/hooks/use-chat-stream";
 import { cn } from "@/lib/utils";
 
-export function ChatThread({
+interface UserBubbleProps {
+  content: string;
+}
+
+const UserBubble = React.memo(function UserBubble({ content }: UserBubbleProps) {
+  return (
+    <li className="flex justify-end">
+      <div className="max-w-[85%] rounded-panel rounded-br-md bg-accent px-3.5 py-2.5 text-sm leading-relaxed text-accent-fg">
+        <span className="sr-only">You said: </span>
+        <div className="space-y-2">
+          <MessageText content={content} />
+        </div>
+      </div>
+    </li>
+  );
+});
+
+interface AssistantBubbleProps {
+  message: ChatBubble;
+  agentName: string;
+  agentAvatarUrl?: string | null;
+  agentSeed?: string;
+  onRate?: (messageId: string, rating: 1 | -1 | 0) => void;
+}
+
+const AssistantBubble = React.memo(function AssistantBubble({
+  message,
+  agentName,
+  agentAvatarUrl,
+  agentSeed,
+  onRate,
+}: AssistantBubbleProps) {
+  return (
+    <li className="flex gap-2.5">
+      <AgentAvatar
+        name={agentName}
+        src={agentAvatarUrl}
+        seed={agentSeed}
+        size="sm"
+        className="mt-0.5"
+      />
+      <div className="min-w-0 max-w-[85%] space-y-2">
+        <span className="sr-only">
+          {message.authorName ?? agentName} said:{" "}
+        </span>
+        {message.authorName ? (
+          <p className="text-xs font-medium text-ink-muted">
+            {message.authorName} · a colleague
+          </p>
+        ) : null}
+        {message.activity?.length ? (
+          <ToolTrace activity={message.activity} />
+        ) : null}
+        {message.content.trim() ? (
+          <div
+            className={cn(
+              "space-y-2 rounded-panel rounded-tl-md border border-line bg-surface px-3.5 py-2.5",
+              "text-sm leading-relaxed text-ink",
+              message.streaming && "stream-caret",
+            )}
+          >
+            <MessageText content={message.content} />
+          </div>
+        ) : message.streaming && !message.activity?.length ? (
+          <TypingIndicator agentName={agentName} />
+        ) : null}
+
+        {onRate && message.persisted && !message.streaming && message.content.trim() ? (
+          <RatingControls
+            rating={message.rating ?? null}
+            onRate={(rating) => onRate(message.serverId ?? message.id, rating)}
+          />
+        ) : null}
+      </div>
+    </li>
+  );
+});
+
+export const ChatThread = React.memo(function ChatThread({
   messages,
   agentName,
   agentAvatarUrl,
@@ -28,7 +106,6 @@ export function ChatThread({
   /** Present on the client surfaces only; the builder preview does not rate. */
   onRate?: (messageId: string, rating: 1 | -1 | 0) => void;
 }) {
-  const endRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   // Only auto-scroll when the reader is already at the bottom, so scrolling up
   // to re-read something is not yanked back by every streamed token.
@@ -43,9 +120,12 @@ export function ChatThread({
   }, []);
 
   React.useEffect(() => {
-    if (pinnedRef.current) {
-      endRef.current?.scrollIntoView({ block: "end" });
-    }
+    if (!pinnedRef.current || !containerRef.current) return;
+    const element = containerRef.current;
+    const frame = requestAnimationFrame(() => {
+      element.scrollTop = element.scrollHeight;
+    });
+    return () => cancelAnimationFrame(frame);
   }, [messages]);
 
   if (messages.length === 0 && emptyState) {
@@ -69,57 +149,16 @@ export function ChatThread({
       <ol className="space-y-5 p-4 sm:p-5" aria-live="polite" aria-atomic="false">
         {messages.map((message) =>
           message.role === "user" ? (
-            <li key={message.id} className="flex justify-end">
-              <div className="max-w-[85%] rounded-panel rounded-br-md bg-accent px-3.5 py-2.5 text-sm leading-relaxed text-accent-fg">
-                <span className="sr-only">You said: </span>
-                <div className="space-y-2">
-                  <MessageText content={message.content} />
-                </div>
-              </div>
-            </li>
+            <UserBubble key={message.id} content={message.content} />
           ) : (
-            <li key={message.id} className="flex gap-2.5">
-              <AgentAvatar
-                name={agentName}
-                src={agentAvatarUrl}
-                seed={agentSeed}
-                size="sm"
-                className="mt-0.5"
-              />
-              <div className="min-w-0 max-w-[85%] space-y-2">
-                <span className="sr-only">
-                  {message.authorName ?? agentName} said:{" "}
-                </span>
-                {message.authorName ? (
-                  <p className="text-xs font-medium text-ink-muted">
-                    {message.authorName} · a colleague
-                  </p>
-                ) : null}
-                {message.activity?.length ? (
-                  <ToolTrace activity={message.activity} />
-                ) : null}
-                {message.content.trim() ? (
-                  <div
-                    className={cn(
-                      "space-y-2 rounded-panel rounded-tl-md border border-line bg-surface px-3.5 py-2.5",
-                      "text-sm leading-relaxed text-ink",
-                      message.streaming && "stream-caret",
-                    )}
-                  >
-                    <MessageText content={message.content} />
-                  </div>
-                ) : message.streaming && !message.activity?.length ? (
-                  <TypingIndicator agentName={agentName} />
-                ) : null}
-
-                {onRate && message.persisted && !message.streaming && message.content.trim() ? (
-                  <RatingControls
-                    rating={message.rating ?? null}
-                    onRate={(rating) => onRate(message.serverId ?? message.id, rating)}
-                  />
-                ) : null}
-              </div>
-            </li>
+            <AssistantBubble
+              key={message.id}
+              message={message}
+              agentName={agentName}
+              agentAvatarUrl={agentAvatarUrl}
+              agentSeed={agentSeed}
+              onRate={onRate}
+            />
           ),
         )}
 
@@ -137,10 +176,9 @@ export function ChatThread({
           </li>
         ) : null}
       </ol>
-      <div ref={endRef} />
     </div>
   );
-}
+});
 
 /**
  * Thumbs on a reply. Quiet by default - the buttons sit at low contrast until

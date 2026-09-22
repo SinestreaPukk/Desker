@@ -25,9 +25,10 @@ export const keys = {
 };
 
 function query(filters: Record<string, string>): string {
-  const params = new URLSearchParams(
-    Object.entries(filters).filter(([, value]) => value && value !== "all"),
-  );
+  const entries = Object.entries(filters)
+    .filter(([, value]) => value && value !== "all")
+    .sort(([a], [b]) => a.localeCompare(b));
+  const params = new URLSearchParams(entries);
   const search = params.toString();
   return search ? `?${search}` : "";
 }

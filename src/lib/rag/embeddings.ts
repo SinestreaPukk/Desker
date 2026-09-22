@@ -70,9 +70,17 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   return dot;
 }
 
+let openAiClient: import("openai").default | null = null;
+async function getOpenAiClient() {
+  if (!openAiClient) {
+    const { default: OpenAI } = await import("openai");
+    openAiClient = new OpenAI({ apiKey: env.openaiApiKey });
+  }
+  return openAiClient;
+}
+
 async function openAiEmbed(texts: string[]): Promise<number[][]> {
-  const { default: OpenAI } = await import("openai");
-  const client = new OpenAI({ apiKey: env.openaiApiKey });
+  const client = await getOpenAiClient();
   const response = await client.embeddings.create({
     model: "text-embedding-3-small",
     input: texts,

@@ -95,6 +95,74 @@ function decodeEntities(text: string): string {
     .replace(/&nbsp;/g, " ");
 }
 
+async function searchWikipedia(query: string): Promise<SearchHit[]> {
+  try {
+    const url = new URL("https://en.wikipedia.org/w/api.php");
+    url.searchParams.set("action", "query");
+    url.searchParams.set("list", "search");
+    url.searchParams.set("srsearch", query);
+    url.searchParams.set("utf8", "");
+    url.searchParams.set("format", "json");
+
+    const response = await fetchWithTimeout(url, {
+      headers: { "user-agent": USER_AGENT, accept: "application/json" },
+    });
+    if (!response.ok) return [];
+    const data = (await response.json()) as {
+      query?: { search?: { title?: string; snippet?: string }[] };
+    };
+    return (data.query?.search ?? [])
+      .filter((item) => item.title)
+      .slice(0, MAX_PAGES * 2)
+      .map((item) => ({
+        title: item.title!,
+        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title!.replace(/ /g, "_"))}`,
+        snippet: decodeEntities((item.snippet ?? "").replace(/<[^>]+>/g, "").trim()),
+      }));
+  } catch {
+    return [];
+  }
+}
+
+async function searchDuckDuckGo(query: string): Promise<SearchHit[]> {
+  try {
+    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const response = await fetchWithTimeout(url, {
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        accept: "text/html,application/xhtml+xml",
+      },
+    });
+    if (!response.ok) throw new Error(`DuckDuckGo status ${response.status}`);
+    const html = await response.text();
+    const hits: SearchHit[] = [];
+    const regex =
+      /<h2[^>]*class="result__title"[^>]*>[\s\S]*?<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/gi;
+    let match;
+    while ((match = regex.exec(html)) !== null && hits.length < MAX_PAGES * 2) {
+      let rawUrl = match[1];
+      if (rawUrl.includes("uddg=")) {
+        try {
+          const parsed = new URL(rawUrl.startsWith("//") ? `https:${rawUrl}` : rawUrl);
+          rawUrl = parsed.searchParams.get("uddg") || rawUrl;
+        } catch {
+          // ignore
+        }
+      }
+      const title = decodeEntities(match[2].replace(/<[^>]+>/g, "").trim());
+      const snippet = decodeEntities(match[3].replace(/<[^>]+>/g, "").trim());
+      if (rawUrl && title && !rawUrl.includes("duckduckgo.com/y.js")) {
+        hits.push({ title, url: rawUrl, snippet });
+      }
+    }
+    if (hits.length > 0) return hits;
+  } catch (error) {
+    console.warn("[research] DuckDuckGo search fallback failed, trying Wikipedia:", error);
+  }
+  return searchWikipedia(query);
+}
+
 export class NoSearchProvider extends Error {
   constructor() {
     super(
@@ -105,7 +173,7 @@ export class NoSearchProvider extends Error {
 }
 
 export function hasSearchProvider(): boolean {
-  return Boolean(process.env.BRAVE_SEARCH_API_KEY?.trim() || process.env.TAVILY_API_KEY?.trim());
+  return true;
 }
 
 /** How long a set of results stays good enough to reuse. */
@@ -120,7 +188,8 @@ async function searchUncached(query: string): Promise<{ provider: string; hits: 
   if (brave) return { provider: "brave", hits: await searchBrave(query, brave) };
   const tavily = process.env.TAVILY_API_KEY?.trim();
   if (tavily) return { provider: "tavily", hits: await searchTavily(query, tavily) };
-  throw new NoSearchProvider();
+  const hits = await searchDuckDuckGo(query);
+  return { provider: "duckduckgo", hits };
 }
 
 export async function webSearch(
@@ -130,8 +199,7 @@ export async function webSearch(
     ? "brave"
     : process.env.TAVILY_API_KEY?.trim()
       ? "tavily"
-      : null;
-  if (!provider) throw new NoSearchProvider();
+      : "duckduckgo";
 
   const key = cacheKey(provider, query);
   const hit = await prisma.searchCache
