@@ -18,7 +18,7 @@ import {
 } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime, safeHttpUrl } from "@/lib/utils";
 
 const TRIGGER_LABEL: Record<string, string> = {
   schedule: "scheduled run",
@@ -193,6 +193,49 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
             <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-ink-muted">
               {item.summary}
             </pre>
+          </details>
+        ) : null}
+
+        {item.findings && item.findings.length > 0 ? (
+          <details className="rounded-sm border border-line bg-surface-2/40 p-2.5">
+            <summary className="eyebrow cursor-pointer text-ink">
+              Research sources &amp; citations ({item.findings.length})
+            </summary>
+            <div className="mt-2 space-y-3">
+              {item.findings.map((finding, idx) => (
+                <div key={idx} className="space-y-1 text-xs">
+                  <p className="font-medium text-ink">{finding.query}</p>
+                  <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-ink-muted">
+                    {finding.findings}
+                  </pre>
+                  {finding.sources.length > 0 ? (
+                    <ul className="space-y-0.5 pt-1">
+                      {finding.sources.map((source, sIdx) => {
+                        const href = safeHttpUrl(source.url);
+                        return (
+                          <li key={sIdx} className="truncate">
+                            {href ? (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noreferrer noopener"
+                                className="text-accent hover:underline"
+                              >
+                                [{sIdx + 1}] {source.title}
+                              </a>
+                            ) : (
+                              <span className="text-ink-muted">
+                                [{sIdx + 1}] {source.title}
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                </div>
+              ))}
+            </div>
           </details>
         ) : null}
 

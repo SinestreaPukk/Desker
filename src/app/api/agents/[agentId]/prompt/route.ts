@@ -3,6 +3,11 @@ import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { toStringArray } from "@/lib/agent-fields";
 import { buildSystemPrompt } from "@/lib/agent-prompt";
 import { toolDefinitionsFor } from "@/lib/tools/registry";
+import { buildRunPrompt } from "@/lib/work/prompt";
+import { WORK_TOOL_IDS, WORK_TOOL_METADATA, scopeTools } from "@/lib/work/tools";
+import { findIntegration, resolveEmail } from "@/lib/work/integrations";
+import { hasSearchProvider } from "@/lib/work/research";
+import type { AutonomyMode } from "@/lib/work/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,12 +24,15 @@ export async function GET(_request: Request, { params }: Params) {
     await requireAdmin();
     const { agentId } = await params;
 
-    const agent = await prisma.agent.findUnique({ where: { id: agentId } });
+    const agent = await prisma.agent.findUnique({
+      where: { id: agentId },
+      include: { project: { select: { organizationId: true } } },
+    });
     if (!agent) throw new HttpError(404, "That agent no longer exists.");
 
     const allowedTools = toStringArray(agent.allowedTools);
 
-    const [documents, colleagues] = await Promise.all([
+    const [documents, colleagues, scope, publishing, email] = await Promise.all([
       prisma.document.findMany({
         where: { agentId, status: "ready" },
         select: { filename: true },
@@ -36,6 +44,9 @@ export async function GET(_request: Request, { params }: Params) {
             orderBy: { name: "asc" },
           })
         : Promise.resolve([]),
+      prisma.scopeOfWork.findUnique({ where: { agentId } }),
+      findIntegration(agent.project.organizationId, "webhook"),
+      resolveEmail(agent.project.organizationId),
     ]);
 
     const prompt = buildSystemPrompt({
@@ -51,14 +62,34 @@ export async function GET(_request: Request, { params }: Params) {
       recall: null,
     });
 
+    const workPrompt = buildRunPrompt({
+      agent,
+      scope: {
+        context: scope?.context ?? "",
+        objectives: scope ? toStringArray(scope.objectives) : [],
+      },
+      autonomy: (scope?.autonomy as AutonomyMode) ?? "draft_only",
+      documentNames: documents.map((document) => document.filename),
+      hasPublishing: Boolean(publishing),
+      hasEmail: Boolean(email),
+      hasSearch: hasSearchProvider(),
+    });
+
+    const activeWorkTools = scopeTools(scope?.tools) ?? [...WORK_TOOL_IDS];
+
     return {
       prompt,
       tools: toolDefinitionsFor(allowedTools).map((tool) => ({
         name: tool.name,
         description: tool.description,
       })),
-      // Rough, but enough to spot a persona that has grown into an essay.
       approxTokens: Math.round(prompt.length / 4),
+      workPrompt,
+      workTools: activeWorkTools.map((t) => ({
+        name: t,
+        description: WORK_TOOL_METADATA[t]?.label ?? t,
+      })),
+      approxWorkTokens: Math.round(workPrompt.length / 4),
     };
   });
 }

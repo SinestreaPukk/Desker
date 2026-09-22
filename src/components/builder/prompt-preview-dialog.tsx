@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState, Skeleton } from "@/components/ui/states";
 import { usePromptPreview } from "@/hooks/use-admin-data";
 import { errorMessage } from "@/lib/api-client";
@@ -32,12 +33,17 @@ export function PromptPreviewDialog({
   dirty: boolean;
 }) {
   const { data, isPending, error, refetch } = usePromptPreview(agentId, open);
+  const [tab, setTab] = React.useState<"chat" | "work">("chat");
   const [copied, setCopied] = React.useState(false);
 
+  const currentPrompt = tab === "chat" ? data?.prompt : (data?.workPrompt ?? data?.prompt);
+  const currentTools = tab === "chat" ? (data?.tools ?? []) : (data?.workTools ?? data?.tools ?? []);
+  const currentTokens = tab === "chat" ? data?.approxTokens : (data?.approxWorkTokens ?? data?.approxTokens);
+
   async function copy() {
-    if (!data) return;
+    if (!currentPrompt) return;
     try {
-      await navigator.clipboard.writeText(data.prompt);
+      await navigator.clipboard.writeText(currentPrompt);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -67,25 +73,36 @@ export function PromptPreviewDialog({
             <ErrorState message={errorMessage(error)} onRetry={() => void refetch()} />
           ) : (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
+                <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+                  <TabsList>
+                    <TabsTrigger value="chat">Client chat prompt</TabsTrigger>
+                    {data?.workPrompt ? (
+                      <TabsTrigger value="work">Autonomous work prompt</TabsTrigger>
+                    ) : null}
+                  </TabsList>
+                </Tabs>
+                <div className="flex items-center gap-2">
                   <Badge tone="neutral" className="font-mono">
-                    ~{data!.approxTokens} tokens
+                    ~{currentTokens} tokens
                   </Badge>
-                  {data!.tools.map((tool) => (
-                    <Badge key={tool.name} tone="accent" className="font-mono">
-                      {tool.name}
-                    </Badge>
-                  ))}
+                  <Button type="button" variant="ghost" size="sm" onClick={() => void copy()}>
+                    {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
+                    {copied ? "Copied" : "Copy"}
+                  </Button>
                 </div>
-                <Button type="button" variant="ghost" size="sm" onClick={copy}>
-                  {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
-                  {copied ? "Copied" : "Copy"}
-                </Button>
               </div>
 
-              <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-lg border border-line bg-surface-2 p-4 font-mono text-xs leading-relaxed text-ink">
-                {data!.prompt}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {currentTools.map((tool) => (
+                  <Badge key={tool.name} tone="accent" className="font-mono" title={tool.description}>
+                    {tool.name}
+                  </Badge>
+                ))}
+              </div>
+
+              <pre className="max-h-[55vh] overflow-auto whitespace-pre-wrap rounded-lg border border-line bg-surface-2 p-4 font-mono text-xs leading-relaxed text-ink">
+                {currentPrompt}
               </pre>
             </>
           )}

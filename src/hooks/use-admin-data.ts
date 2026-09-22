@@ -345,6 +345,9 @@ export interface PromptPreview {
   prompt: string;
   tools: { name: string; description: string }[];
   approxTokens: number;
+  workPrompt?: string;
+  workTools?: { name: string; description: string }[];
+  approxWorkTokens?: number;
 }
 
 export function usePromptPreview(agentId: string, enabled: boolean) {
