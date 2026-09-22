@@ -15,6 +15,9 @@
  * change, so a dropped column is invisible in the SQL - the guard cannot
  * protect a SQLite database and does not claim to.
  */
+// Must precede @prisma/client: it loads .env on import and sets
+// DATABASE_URL, which would then win over .env.local.
+import "./load-env.mjs";
 import { execFileSync } from "node:child_process";
 
 const url = process.env.DATABASE_URL;

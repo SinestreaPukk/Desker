@@ -6,6 +6,9 @@
  *   node scripts/gen-schema.mjs            # uses DATABASE_PROVIDER, default postgresql
  *   node scripts/gen-schema.mjs sqlite     # explicit override
  */
+// Must precede @prisma/client: it loads .env on import and sets
+// DATABASE_URL, which would then win over .env.local.
+import "./load-env.mjs";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

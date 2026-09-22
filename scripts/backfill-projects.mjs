@@ -21,6 +21,9 @@
  * normally. Safe to run repeatedly. Works on both PostgreSQL and SQLite so a
  * developer's existing dev.db upgrades the same way a server does.
  */
+// Must precede @prisma/client: it loads .env on import and sets
+// DATABASE_URL, which would then win over .env.local.
+import "./load-env.mjs";
 import { PrismaClient } from "@prisma/client";
 import { createCipheriv, randomBytes } from "node:crypto";
 

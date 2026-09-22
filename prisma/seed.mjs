@@ -7,6 +7,9 @@
  *
  *   npm run db:seed
  */
+// Must precede @prisma/client: it loads .env on import and sets
+// DATABASE_URL, which would then win over .env.local.
+import "../scripts/load-env.mjs";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { mkdir, writeFile } from "node:fs/promises";
