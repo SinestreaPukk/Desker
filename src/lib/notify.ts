@@ -12,6 +12,7 @@
  * triggered it - a broken webhook must not break a client's chat.
  */
 import "server-only";
+import { afterResponse } from "@/lib/after-response";
 import { env } from "@/lib/env";
 
 export type NotificationKind =
@@ -100,7 +101,13 @@ export async function notify(notification: Notification): Promise<void> {
   );
 }
 
-/** Fire and forget, for call sites that must not wait. */
+/**
+ * Fire and forget, for call sites that must not wait.
+ *
+ * Handed to the runtime rather than left as a floating promise: a route
+ * handler that returns before the webhook resolves can have its invocation
+ * frozen, and the notification never leaves. See afterResponse.
+ */
 export function notifyInBackground(notification: Notification): void {
-  void notify(notification);
+  afterResponse(() => notify(notification));
 }
