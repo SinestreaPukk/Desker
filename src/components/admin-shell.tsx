@@ -108,7 +108,7 @@ export function AdminShell({
               "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
               active
                 ? "bg-accent-soft text-accent-soft-fg"
-                : "text-ink-muted hover:bg-surface-2 hover:text-ink",
+                : "text-ink-muted hover:bg-surface hover:text-ink",
             )}
           >
             <Icon className="size-4 shrink-0" aria-hidden />
@@ -150,7 +150,9 @@ export function AdminShell({
       </a>
 
       {/* Mobile top bar */}
-      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3 lg:hidden">
+      {/* The same ground as the rail it stands in for. The nav links inside
+          hover to bg-surface, which needs something quieter behind it. */}
+      <header className="flex items-center justify-between border-b border-line bg-rail px-4 py-3 lg:hidden">
         <Link href={`${base}/roster`} className="flex items-center gap-2 font-semibold text-ink">
           <BrandMark />
           {BRAND.name}
@@ -171,14 +173,21 @@ export function AdminShell({
       </header>
 
       {mobileNavOpen ? (
-        <div id="mobile-nav" className="space-y-3 border-b border-line bg-surface p-3 lg:hidden">
+        <div id="mobile-nav" className="space-y-3 border-b border-line bg-rail p-3 lg:hidden">
           {projectSwitcher}
           {navLinks}
         </div>
       ) : null}
 
-      {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-surface p-4 lg:flex">
+      {/* Desktop sidebar.
+
+          A ground of its own. The rail, the page and a panel used to be
+          white, near-white and white - two of the three the same colour - so
+          the whole app read as one pale field divided by hairlines and
+          nothing sat on top of anything. Three steps now: the rail is the
+          quietest, the page sits above it, and a panel is the brightest thing
+          on screen, which is what makes a card look like an object. */}
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-rail p-4 lg:flex">
         <Link
           href={`${base}/roster`}
           className="mb-4 flex items-center gap-2 px-1 text-base font-semibold tracking-tight text-ink"
@@ -196,14 +205,14 @@ export function AdminShell({
             control used to sit in the middle as a small floating widget with
             nothing aligned to it. */}
         <div className="mt-auto space-y-2 border-t border-line pt-3">
-          <FeedbackButton project={project.slug} />
+          <FeedbackButton project={project.slug} className="hover:bg-surface" />
           <ThemeToggle className="w-full [&>button]:flex-1" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(
                   "flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors",
-                  "hover:bg-surface-2",
+                  "hover:bg-surface",
                 )}
               >
                 <span
@@ -285,8 +294,8 @@ function ProjectSwitcher({
           <button
             aria-label={`Switch project or organisation (${organization?.name ?? ""}: ${project.name})`}
             className={cn(
-              "flex w-full items-center gap-2 rounded-md border border-line bg-surface-2 px-2.5 py-2",
-              "text-left transition-colors hover:bg-surface-3",
+              "flex w-full items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-2",
+              "text-left transition-colors hover:border-line-strong",
             )}
           >
             <span className="min-w-0 flex-1">

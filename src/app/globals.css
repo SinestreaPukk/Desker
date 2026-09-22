@@ -20,6 +20,13 @@
   --surface: oklch(1 0 0);
   --surface-2: oklch(0.968 0.004 270);
   --surface-3: oklch(0.941 0.006 270);
+  /* The app's navigation rail, and only that.
+     It needs to sit a step below the page in both themes so the chrome
+     recedes and a panel is the brightest thing on screen. No existing surface
+     does that: --surface-2 is darker than the page in light and lighter than
+     it in dark, so a rail painted with it receded in one theme and advanced
+     in the other. This one is defined as "below paper" in each. */
+  --rail: oklch(0.957 0.004 270);
 
   /* text */
   --ink: oklch(0.215 0.018 270);
@@ -93,6 +100,7 @@
   --surface: oklch(0.207 0.015 270);
   --surface-2: oklch(0.245 0.016 270);
   --surface-3: oklch(0.288 0.017 270);
+  --rail: oklch(0.138 0.013 270);
 
   --ink: oklch(0.958 0.006 270);
   --ink-muted: oklch(0.745 0.011 270);
@@ -144,6 +152,7 @@
 
 @theme inline {
   --color-paper: var(--paper);
+  --color-rail: var(--rail);
   --color-sky-pale: var(--sky-pale);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);

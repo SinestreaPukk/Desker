@@ -85,6 +85,8 @@ const TEXT_PAIRS = [
   ["ink", "surface-2", 4.5, "body text on a raised panel"],
   ["ink-muted", "paper", 4.5, "secondary text on the page"],
   ["ink-muted", "surface", 4.5, "secondary text on a card"],
+  ["ink", "rail", 4.5, "navigation label on the rail"],
+  ["ink-muted", "rail", 4.5, "inactive navigation label on the rail"],
   // .meta moved to ink-muted; ink-subtle is now only icons, placeholders and
   // list markers, which are non-text and answer to 3:1.
   ["ink-subtle", "paper", 3.0, "icon tints and placeholders (non-text)"],

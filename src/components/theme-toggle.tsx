@@ -42,10 +42,15 @@ export function ThemeToggle({ className }: { className?: string }) {
             aria-checked={active}
             aria-label={option.label}
             onClick={() => setTheme(option.value)}
+            /* Selection shows as colour, not elevation. A raised white chip
+               works on a light rail and fails on a dark one, where the card
+               tone is darker than the track it would sit in; accent-soft is
+               the same idea in both themes, and it is what an active item in
+               the nav above already looks like. */
             className={cn(
               "rounded-sm p-1.5 transition-colors",
               active
-                ? "bg-surface text-ink shadow-xs"
+                ? "bg-accent-soft text-accent-soft-fg"
                 : "text-ink-subtle hover:text-ink",
             )}
           >

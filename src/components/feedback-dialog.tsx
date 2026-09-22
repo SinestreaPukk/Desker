@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { MessageSquareHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -26,11 +27,11 @@ import { api, errorMessage } from "@/lib/api-client";
  * The feedback channel: one button, always there, two fields. What people
  * write here decides what gets built next, so it has to cost them nothing.
  */
-export function FeedbackButton({ project }: { project: string }) {
+export function FeedbackButton({ project, className }: { project: string; className?: string }) {
   const [open, setOpen] = React.useState(false);
   return (
     <>
-      <Button variant="ghost" size="sm" className="justify-start" onClick={() => setOpen(true)}>
+      <Button variant="ghost" size="sm" className={cn("justify-start", className)} onClick={() => setOpen(true)}>
         <MessageSquareHeart aria-hidden />
         Send feedback
       </Button>
