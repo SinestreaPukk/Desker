@@ -294,7 +294,7 @@ export function DesignSystem() {
 
       <Section
         title="Landing sky"
-        blurb="The one place the page is a picture. A dawn gradient: brand indigo at the top, violet where the white serif headline sits, warming to orchid and peach where the product window floats over the sunrise ribbons, and a single glass button. Nothing in the product uses these."
+        blurb="The one place the page is a picture. A tonal gradient in the brand family: logo indigo at the top, a deeper blue-indigo where the white serif headline sits, periwinkle and lavender where the product window floats over the ribbons; the sun and the call to action are the only warm things, and a single glass button. Nothing in the product uses these."
       >
         <div className="sky relative overflow-hidden rounded-panel p-8 text-center">
           <div className="sun right-[8%] top-[20%]" aria-hidden />

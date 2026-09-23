@@ -101,16 +101,16 @@
   --av-6-bg: oklch(0.932 0.040 306);
   --av-6-fg: oklch(0.435 0.155 305);
 
-  /* The landing page's sky: dawn. The brand indigo at the zenith, where the
-     header and the headline start, warming through violet (the band the
-     rest of the white type sits on; 7.7:1 and up) to orchid and a peach
-     horizon behind the product - an analogous walk from the logo's blue to
-     the call to action's apricot, which the ribbons and the sun finish.
-     Identical in both themes - it is a picture, not a surface. */
-  --sky-top: oklch(0.360 0.190 272);
-  --sky-deep: oklch(0.460 0.200 290);
-  --sky: oklch(0.660 0.140 335);
-  --sky-pale: oklch(0.900 0.050 55);
+  /* The landing page's sky, in the brand's own family: the logo indigo at
+     the zenith, a deeper blue-indigo where the white type sits (8.2:1 and
+     up), periwinkle and a lavender mist behind the product. Tonal on
+     purpose - the page's colour story is indigo + neutral + one apricot
+     action, and the sky is the 30%, so the only warm things in the hero
+     are the sun and the button. Identical in both themes - a picture. */
+  --sky-top: oklch(0.340 0.200 270);
+  --sky-deep: oklch(0.440 0.190 272);
+  --sky: oklch(0.700 0.110 276);
+  --sky-pale: oklch(0.930 0.030 280);
   --sky-ink: oklch(0.995 0.002 240);
   --sky-glass: oklch(0.560 0.200 262);
   /* The foot of the button. --sky-glass alone is the same lightness as
@@ -126,21 +126,21 @@
   --sun-mid: oklch(0.930 0.100 80);
   --sun-rim: oklch(0.850 0.140 60 / 0.85);
   --sun-halo: oklch(0.780 0.140 40 / 0.35);
-  /* Clouds at dawn catch the light: a warm blush, never pure white. */
-  --cloud: oklch(0.930 0.050 30);
-  /* The hero's sunrise ribbons, far to near, each running left to right
-     from cool to warm - toward the sun, which sits on the right. The hues
-     walk the analogous chain from the sky's blue through violet and rose to
-     apricot, so the scene ends on the call to action's own colour. */
-  --ribbon-far-start: oklch(0.800 0.120 220);
-  --ribbon-far-mid: oklch(0.740 0.130 290);
-  --ribbon-far-end: oklch(0.820 0.120 20);
-  --ribbon-mid-start: oklch(0.700 0.150 275);
-  --ribbon-mid-mid: oklch(0.760 0.130 340);
-  --ribbon-mid-end: oklch(0.840 0.130 60);
-  --ribbon-near-start: oklch(0.860 0.100 60);
-  --ribbon-near-mid: oklch(0.840 0.090 10);
-  --ribbon-near-end: oklch(0.800 0.100 300);
+  /* Clouds: a lavender white, so they sit in the sky rather than on it. */
+  --cloud: oklch(0.960 0.020 280);
+  /* The hero's ribbons, far to near: tints of the sky itself, drifting a
+     little from blue toward violet left to right. Only the middle ribbon's
+     right end warms - the sun's light on it - so the apricot of the call to
+     action is echoed once, not spread across the scene. */
+  --ribbon-far-start: oklch(0.800 0.080 255);
+  --ribbon-far-mid: oklch(0.760 0.100 275);
+  --ribbon-far-end: oklch(0.820 0.070 295);
+  --ribbon-mid-start: oklch(0.600 0.170 268);
+  --ribbon-mid-mid: oklch(0.680 0.140 282);
+  --ribbon-mid-end: oklch(0.860 0.090 65);
+  --ribbon-near-start: oklch(0.900 0.040 260);
+  --ribbon-near-mid: oklch(0.880 0.050 280);
+  --ribbon-near-end: oklch(0.910 0.040 300);
 
   color-scheme: light;
 }
@@ -491,7 +491,7 @@
    is where a horizon belongs anyway. */
 .sky {
   background:
-    radial-gradient(70% 28% at 72% 94%, oklch(0.960 0.060 60 / 0.7) 0%, oklch(0.960 0.060 60 / 0) 100%),
+    radial-gradient(70% 28% at 72% 94%, oklch(0.970 0.030 75 / 0.6) 0%, oklch(0.970 0.030 75 / 0) 100%),
     linear-gradient(180deg, var(--sky-top) 0%, var(--sky-deep) 45%, var(--sky-deep) 63%, var(--sky) 78%, var(--sky-pale) 90%, var(--paper) 100%);
   color: var(--sky-ink);
 }
