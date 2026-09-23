@@ -83,7 +83,7 @@ export default async function LandingPage({
             sand rather than their own paper haze; this lands the edge on paper. */}
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-10 bg-linear-to-b from-transparent to-paper" />
 
-        <div className="relative mx-auto max-w-6xl px-4 pt-16 text-center sm:px-6 sm:pt-24">
+        <div className="relative mx-auto max-w-6xl px-4 pt-24 text-center [perspective:1600px] sm:px-6 sm:pt-36">
           <Reveal>
             <h1 className="mx-auto max-w-4xl font-display text-hero text-balance text-[var(--sky-ink)]">
               {hero.headline}
@@ -103,8 +103,10 @@ export default async function LandingPage({
             <p className="mt-4 text-sm font-medium text-[var(--sky-ink)]">{hero.microcopy}</p>
           </Reveal>
 
-          {/* The product, floating over the horizon and down into the page */}
-          <HeroStage className="relative z-10 mx-auto -mb-24 mt-12 max-w-4xl text-left sm:-mb-32 sm:mt-16" />
+          {/* The product, floating over the horizon and down into the page.
+              stage-rise tilts it back and lowers it at the top of the page,
+              and scrolling stands it up toward the reader (globals.css). */}
+          <HeroStage className="stage-rise relative z-10 mx-auto -mb-24 mt-12 max-w-4xl text-left sm:-mb-32 sm:mt-16" />
         </div>
       </section>
 

@@ -581,6 +581,32 @@
     0 1px 0 oklch(1 0 0 / 0.6) inset;
 }
 
+/* The hero's product window rising as the page scrolls: it starts lower
+   and tilted back, like a screen lying open, and stands up to face the
+   reader over the first 60% of a viewport of scroll. A scroll-driven CSS
+   animation - no JavaScript, transform only (no layout shift). Browsers
+   without scroll timelines, and anyone who asked for reduced motion, get
+   the window standing, which is the end state. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .stage-rise {
+      transform-origin: 50% 100%;
+      animation: stage-rise linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 60vh;
+    }
+  }
+}
+
+@keyframes stage-rise {
+  from {
+    transform: translateY(64px) rotateX(24deg) scale(0.92);
+  }
+  to {
+    transform: none;
+  }
+}
+
 /* The showreel's tab strip. Too wide for a phone, so it scrolls; the fade
    marks the side that has more tabs on it, and never the end you are at. */
 .no-scrollbar {
