@@ -116,13 +116,19 @@
   --sky-glass-deep: oklch(0.395 0.235 266);
   --sky-glass-fg: oklch(0.995 0.002 240);
   --sky-shadow: oklch(0.560 0.170 255 / 0.35);
-  /* The hero's dune ridges, far to near, crest then foot. */
-  --dune-far-top: oklch(0.880 0.060 245);
-  --dune-far-foot: oklch(0.930 0.040 235);
-  --dune-mid-top: oklch(0.760 0.110 250);
-  --dune-mid-foot: oklch(0.880 0.060 240);
-  --dune-near-top: oklch(0.600 0.160 258);
-  --dune-near-foot: oklch(0.820 0.090 245);
+  /* The hero's sunrise ribbons, far to near, each running left to right
+     from cool to warm - toward the sun, which sits on the right. The hues
+     walk the analogous chain from the sky's blue through violet and rose to
+     apricot, so the scene ends on the call to action's own colour. */
+  --ribbon-far-start: oklch(0.800 0.120 220);
+  --ribbon-far-mid: oklch(0.740 0.130 290);
+  --ribbon-far-end: oklch(0.820 0.120 20);
+  --ribbon-mid-start: oklch(0.700 0.150 275);
+  --ribbon-mid-mid: oklch(0.760 0.130 340);
+  --ribbon-mid-end: oklch(0.840 0.130 60);
+  --ribbon-near-start: oklch(0.860 0.100 60);
+  --ribbon-near-mid: oklch(0.840 0.090 10);
+  --ribbon-near-end: oklch(0.800 0.100 300);
 
   color-scheme: light;
 }

@@ -37,8 +37,8 @@ export function Clouds({ className }: { className?: string }) {
 }
 
 /**
- * A desert and coastal horizon drawn with rolling ridges meeting the sea blue sky,
- * dissolving softly into the paper ground.
+ * The horizon: three sunrise ribbons rising behind the product and
+ * dissolving into the paper ground. Colours are the --ribbon-* tokens.
  */
 export function Horizon({ className }: { className?: string }) {
   return (
@@ -49,32 +49,36 @@ export function Horizon({ className }: { className?: string }) {
       className={cn("block h-full w-full pointer-events-none", className)}
     >
       <defs>
-        <linearGradient id="dune-far" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--dune-far-top)" />
-          <stop offset="100%" stopColor="var(--dune-far-foot)" />
-        </linearGradient>
-        <linearGradient id="dune-mid" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--dune-mid-top)" />
-          <stop offset="100%" stopColor="var(--dune-mid-foot)" />
-        </linearGradient>
-        <linearGradient id="dune-near" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--dune-near-top)" />
-          <stop offset="100%" stopColor="var(--dune-near-foot)" />
-        </linearGradient>
-        <linearGradient id="desert-haze" x1="0" y1="0" x2="0" y2="1">
+        {(["far", "mid", "near"] as const).map((ribbon) => (
+          <linearGradient key={ribbon} id={`ribbon-${ribbon}`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={`var(--ribbon-${ribbon}-start)`} />
+            <stop offset="50%" stopColor={`var(--ribbon-${ribbon}-mid)`} />
+            <stop offset="100%" stopColor={`var(--ribbon-${ribbon}-end)`} />
+          </linearGradient>
+        ))}
+        <linearGradient id="ribbon-haze" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--paper)" stopOpacity="0" />
           <stop offset="100%" stopColor="var(--paper)" stopOpacity="1" />
         </linearGradient>
       </defs>
 
-      {/* Far ridge: sweeping dune crests in distant sea haze */}
-      <path fill="url(#dune-far)" d="M0 300 Q240 220 480 270 T960 210 T1440 260 L1440 420 L0 420 Z" />
-      {/* Mid ridge: rolling dunes */}
-      <path fill="url(#dune-mid)" d="M0 340 Q320 240 640 290 T1280 230 T1440 280 L1440 420 L0 420 Z" />
-      {/* Near ridge: deep coastal dune silhouette */}
-      <path fill="url(#dune-near)" d="M0 420 L0 330 Q200 270 440 320 T920 280 T1440 360 L1440 420 Z" />
-      {/* Haze at the foot dissolving seamlessly into the paper surface */}
-      <rect x="0" y="280" width="1440" height="140" fill="url(#desert-haze)" />
+      <path
+        fill="url(#ribbon-far)"
+        opacity="0.75"
+        d="M0 250 C 300 170, 600 330, 900 240 S 1300 160, 1440 220 L1440 420 L0 420 Z"
+      />
+      <path
+        fill="url(#ribbon-mid)"
+        opacity="0.85"
+        d="M0 300 C 280 230, 560 360, 860 290 S 1260 230, 1440 300 L1440 420 L0 420 Z"
+      />
+      <path
+        fill="url(#ribbon-near)"
+        opacity="0.9"
+        d="M0 350 C 320 300, 640 400, 980 340 S 1320 320, 1440 360 L1440 420 L0 420 Z"
+      />
+      {/* Haze at the foot, dissolving into the paper */}
+      <rect x="0" y="300" width="1440" height="120" fill="url(#ribbon-haze)" />
     </svg>
   );
 }

@@ -84,8 +84,9 @@ export default async function LandingPage({
         <Parallax className="absolute inset-x-0 bottom-0 h-[55%]" distance={-60}>
           <Horizon />
         </Parallax>
-        {/* The horizon is cropped to fit (slice), so its last row can be dune
-            blue rather than its own paper haze; this lands the edge on paper. */}
+        {/* The horizon is cropped to fit (slice), so its last row can be
+            ribbon colour rather than its own paper haze; this lands the edge
+            on paper. */}
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-10 bg-linear-to-b from-transparent to-paper" />
 
         <div className="relative mx-auto max-w-6xl px-4 pt-16 text-center sm:px-6 sm:pt-24">
