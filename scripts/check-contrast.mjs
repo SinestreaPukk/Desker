@@ -141,9 +141,10 @@ const UI_PAIRS = [
   ["line-strong", "surface", 3.0, "input border"],
   ["focus", "paper", 3.0, "focus ring on the page"],
   ["focus", "surface", 3.0, "focus ring on a card"],
-  ["ember", "paper", 3.0, "ember highlight mark (underline, progress, dot)"],
-  ["ember", "surface", 3.0, "ember highlight mark on a card"],
-  ["ember-fill", "paper", 3.0, "ember button edge on the page"],
+  // No pair for --ember as a mark on paper: it is 2:1 there by design (a
+  // light warm tone) and is only ever decorative - an underline under words
+  // that are already legible, a progress bar beside a labelled tab. Anything
+  // a reader needs in ember is --ember-ink, checked above.
 ];
 
 // Ember must never read as caution. Hue distance between the two families,
@@ -152,6 +153,8 @@ const HUE_GAPS = [
   ["ember-ink", "warning", 30],
   ["ember-soft", "warning-soft", 30],
   ["ember", "av-4-fg", 30],
+  // Nor as danger: an ember Approve must not look destructive.
+  ["ember-fill", "danger", 25],
 ];
 
 let failures = 0;

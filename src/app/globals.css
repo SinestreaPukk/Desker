@@ -48,21 +48,23 @@
   --accent-soft-fg: oklch(0.330 0.200 268.5);
   --accent-line: oklch(0.875 0.060 270);
 
-  /* ember - the one warm tone, blue's complement. Rare on purpose: the primary
-     call on a screen, the "Most popular" plan, a key number. Never body text,
-     never a large ground, never more than two things per view.
-     --ember is the bright mark (underlines, progress, dots; non-text, 3:1).
-     --ember-fill is the button: #EE6227 under white type is only 3.1:1, so
-     the fill is taken down to where white clears 4.5:1. --ember-ink is for
-     the rare ember word on a light ground. */
-  --ember: oklch(0.665 0.186 40.5);
-  --ember-fill: oklch(0.580 0.184 39);
-  --ember-hover: oklch(0.525 0.169 39);
-  --ember-fg: oklch(0.995 0.002 40);
-  --ember-ink: oklch(0.529 0.160 39.4);
-  --ember-soft: oklch(0.967 0.017 45);
-  --ember-line: oklch(0.902 0.054 45);
-  --ember-shadow: oklch(0.580 0.184 39 / 0.40);
+  /* ember - the one warm tone: apricot, the sky's split complement. Rare on
+     purpose: the primary call on a screen, the "Most popular" plan, a key
+     number. Never body text, never a large ground, never more than two things
+     per view.
+     Warm hues are light by nature and blues dark (the natural order of hues),
+     so ember stays light and carries dark type. Taken dark enough for white
+     type, orange turns to rust. --ember is also the bright mark
+     (underlines, progress) - decorative only, it is 2:1 on paper; anything a
+     reader needs in ember is set in --ember-ink. See redesign/COLOR.md. */
+  --ember: oklch(0.770 0.156 55);
+  --ember-fill: oklch(0.770 0.156 55);
+  --ember-hover: oklch(0.730 0.165 52);
+  --ember-fg: oklch(0.215 0.018 270);
+  --ember-ink: oklch(0.520 0.140 48);
+  --ember-soft: oklch(0.967 0.019 55);
+  --ember-line: oklch(0.880 0.074 55);
+  --ember-shadow: oklch(0.700 0.160 55 / 0.45);
 
   /* semantic */
   --positive: oklch(0.44 0.085 172);
@@ -149,16 +151,15 @@
   --accent-soft-fg: oklch(0.845 0.110 268.5);
   --accent-line: oklch(0.402 0.090 268.5);
 
-  /* Ember lifts the same way the indigo does: a luminous fill under dark
-     type, a light tint for the rare ember word. */
-  --ember: oklch(0.771 0.142 43.5);
-  --ember-fill: oklch(0.735 0.160 42);
-  --ember-hover: oklch(0.790 0.128 44);
-  --ember-fg: oklch(0.195 0.040 40);
-  --ember-ink: oklch(0.800 0.123 46);
-  --ember-soft: oklch(0.295 0.062 40);
-  --ember-line: oklch(0.400 0.085 40);
-  --ember-shadow: oklch(0.735 0.160 42 / 0.30);
+  /* Ember keeps its light fill and dark type; its text tint lifts. */
+  --ember: oklch(0.790 0.145 58);
+  --ember-fill: oklch(0.790 0.145 58);
+  --ember-hover: oklch(0.835 0.115 62);
+  --ember-fg: oklch(0.195 0.040 50);
+  --ember-ink: oklch(0.830 0.115 60);
+  --ember-soft: oklch(0.300 0.055 55);
+  --ember-line: oklch(0.420 0.080 55);
+  --ember-shadow: oklch(0.790 0.145 58 / 0.30);
 
   --positive: oklch(0.775 0.105 172);
   --positive-fg: oklch(0.195 0.040 172);
@@ -541,10 +542,10 @@
 }
 
 /* The ember call to action: the same glass, in the page's one warm tone.
-   Both ends of the gradient carry white type at 4.5:1 or better. */
+   Both ends of the gradient carry the dark label at 4.5:1 or better. */
 .glass-ember {
   background:
-    radial-gradient(110% 110% at 10% 15%, oklch(1 0 0 / 0.22) 0%, oklch(1 0 0 / 0) 62%),
+    radial-gradient(110% 110% at 10% 15%, oklch(1 0 0 / 0.35) 0%, oklch(1 0 0 / 0) 62%),
     linear-gradient(180deg, var(--ember-fill) 0%, var(--ember-hover) 100%);
   color: var(--ember-fg);
   box-shadow:

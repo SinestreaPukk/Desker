@@ -30,7 +30,6 @@ const COLOR_PAIRS: { fg: string; bg: string; use: string; min: number }[] = [
   { fg: "--ember-fg", bg: "--ember-fill", use: "Ember call-to-action label", min: 4.5 },
   { fg: "--ember-ink", bg: "--ember-soft", use: "Ember badge (Most popular)", min: 4.5 },
   { fg: "--ember-ink", bg: "--surface", use: "Ember text (key numbers)", min: 4.5 },
-  { fg: "--ember", bg: "--surface", use: "Ember highlight mark (non-text)", min: 3 },
   { fg: "--danger-fg", bg: "--danger", use: "Danger button label", min: 4.5 },
   // The landing page's sky: identical in both themes.
   { fg: "--sky-ink", bg: "--sky-deep", use: "Sky: headline and copy on the deep band", min: 4.5 },
