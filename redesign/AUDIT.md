@@ -85,6 +85,6 @@ No Tailwind default-palette hues (`blue-500` etc.) anywhere — only white/black
 
 ## 6. Screenshots (`redesign/before/`)
 
-landing-1440, landing-390 (full page) · showcase-1440 · login-1440/390 · app-roster, app-work-approvals (+ dark), app-inbox, app-insights, app-agent-builder, app-client-chat (1440 + 390).
+landing-1440, landing-390 (full page) · showcase-1440 · login-1440/390 · app-roster, app-work-approvals (+ dark), app-work-item, app-inbox, app-insights, app-agent-builder, app-client-chat (1440 + 390).
 
-The app screens are from the local seed account (`admin@example.com`). Its Work page is empty, so there is no live approval card in the "before" set.
+App screens use the demo org from `scripts/seed-demo.mjs` (`demo@northwind.example`, seeded locally 2026-09-23). Its one run finished `done` with two drafts (`app-work-item-1440.png`). The agent tried to queue the caption, but no social account is connected, so nothing reached `needs_approval`, and the Approve button appears only in the landing page's picture of the product.

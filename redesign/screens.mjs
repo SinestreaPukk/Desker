@@ -70,10 +70,14 @@ await Promise.all([page.waitForURL(/\/p\/[^/]+\//, { timeout: 30_000 }), page.cl
 const slug = /\/p\/([^/]+)\//.exec(page.url())[1];
 const agents = await (await page.request.get(`${BASE}/api/agents?project=${slug}`)).json();
 const agent = Array.isArray(agents) ? agents[0] : null;
+const items = await (await page.request.get(`${BASE}/api/action-items?project=${slug}`)).json();
+const item =
+  (Array.isArray(items) && (items.find((i) => i.status === "needs_approval") ?? items[0])) || null;
 await page.close();
 
 await shoot(context, `/p/${slug}/roster`, "app-roster-1440.png", { full: false });
 await shoot(context, `/p/${slug}/work`, "app-work-approvals-1440.png", { full: false });
+if (item) await shoot(context, `/p/${slug}/work?item=${item.id}`, "app-work-item-1440.png");
 await shoot(context, `/p/${slug}/inbox`, "app-inbox-1440.png", { full: false });
 await shoot(context, `/p/${slug}/insights`, "app-insights-1440.png", { full: false });
 if (agent) {
