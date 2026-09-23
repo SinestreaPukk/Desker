@@ -10,6 +10,8 @@ const badge = cva(
       tone: {
         neutral: "border-line bg-surface-2 text-ink-muted",
         accent: "border-accent-line bg-accent-soft text-accent-soft-fg",
+        /** Ember emphasis ("Most popular"). Rare; never a status. */
+        ember: "border-ember-line bg-ember-soft text-ember-ink",
         positive: "border-positive-line bg-positive-soft text-positive",
         warning: "border-warning-line bg-warning-soft text-warning",
         danger: "border-danger-line bg-danger-soft text-danger",

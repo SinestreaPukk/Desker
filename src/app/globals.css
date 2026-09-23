@@ -7,8 +7,10 @@
 /* ---------------------------------------------------------------------------
    Design tokens.
 
-   The look is a staff record, not a chat toy: warm paper neutrals, ink-black
-   text, one clay accent, and a mono face reserved for identifiers and metadata.
+   The look is a staff record, not a chat toy: cool paper neutrals, ink-black
+   text, the brand indigo, one warm ember for the single thing each screen
+   wants done, and a mono face reserved for identifiers and metadata. Roles
+   and the 60-30-10 split are written up in redesign/COLOR.md.
    Every colour is defined here in both themes - nothing may be declared only
    inside a dark block, or the light theme inherits a hole.
    --------------------------------------------------------------------------- */
@@ -46,14 +48,34 @@
   --accent-soft-fg: oklch(0.330 0.200 268.5);
   --accent-line: oklch(0.875 0.060 270);
 
+  /* ember - the one warm tone, blue's complement. Rare on purpose: the primary
+     call on a screen, the "Most popular" plan, a key number. Never body text,
+     never a large ground, never more than two things per view.
+     --ember is the bright mark (underlines, progress, dots; non-text, 3:1).
+     --ember-fill is the button: #EE6227 under white type is only 3.1:1, so
+     the fill is taken down to where white clears 4.5:1. --ember-ink is for
+     the rare ember word on a light ground. */
+  --ember: oklch(0.665 0.186 40.5);
+  --ember-fill: oklch(0.580 0.184 39);
+  --ember-hover: oklch(0.525 0.169 39);
+  --ember-fg: oklch(0.995 0.002 40);
+  --ember-ink: oklch(0.529 0.160 39.4);
+  --ember-soft: oklch(0.967 0.017 45);
+  --ember-line: oklch(0.902 0.054 45);
+  --ember-shadow: oklch(0.580 0.184 39 / 0.40);
+
   /* semantic */
   --positive: oklch(0.44 0.085 172);
+  --positive-fg: oklch(0.995 0.002 172);
   --positive-soft: oklch(0.955 0.028 172);
   --positive-line: oklch(0.865 0.055 172);
-  --warning: oklch(0.48 0.105 75);
-  --warning-soft: oklch(0.960 0.045 85);
-  --warning-line: oklch(0.875 0.075 85);
+  /* Pushed toward yellow (hue 75 -> 85/92) so "Needs approval" beside an
+     ember Approve reads as caution, not as a second brand colour. */
+  --warning: oklch(0.480 0.099 85);
+  --warning-soft: oklch(0.962 0.050 92);
+  --warning-line: oklch(0.880 0.080 92);
   --danger: oklch(0.475 0.175 27);
+  --danger-fg: oklch(0.995 0.002 27);
   --danger-soft: oklch(0.958 0.028 27);
   --danger-line: oklch(0.880 0.055 27);
 
@@ -69,8 +91,9 @@
   --av-2-fg: oklch(0.430 0.105 202);
   --av-3-bg: oklch(0.935 0.048 158);
   --av-3-fg: oklch(0.425 0.095 162);
-  --av-4-bg: oklch(0.940 0.050 62);
-  --av-4-fg: oklch(0.450 0.115 55);
+  /* Tone 4 was orange - a stand-in for ember on every fourth agent. Moss now. */
+  --av-4-bg: oklch(0.938 0.052 118);
+  --av-4-fg: oklch(0.440 0.095 125);
   --av-5-bg: oklch(0.935 0.042 348);
   --av-5-fg: oklch(0.445 0.150 352);
   --av-6-bg: oklch(0.932 0.040 306);
@@ -91,6 +114,13 @@
   --sky-glass-deep: oklch(0.395 0.235 266);
   --sky-glass-fg: oklch(0.995 0.002 240);
   --sky-shadow: oklch(0.560 0.170 255 / 0.35);
+  /* The hero's dune ridges, far to near, crest then foot. */
+  --dune-far-top: oklch(0.880 0.060 245);
+  --dune-far-foot: oklch(0.930 0.040 235);
+  --dune-mid-top: oklch(0.760 0.110 250);
+  --dune-mid-foot: oklch(0.880 0.060 240);
+  --dune-near-top: oklch(0.600 0.160 258);
+  --dune-near-foot: oklch(0.820 0.090 245);
 
   color-scheme: light;
 }
@@ -119,13 +149,27 @@
   --accent-soft-fg: oklch(0.845 0.110 268.5);
   --accent-line: oklch(0.402 0.090 268.5);
 
+  /* Ember lifts the same way the indigo does: a luminous fill under dark
+     type, a light tint for the rare ember word. */
+  --ember: oklch(0.771 0.142 43.5);
+  --ember-fill: oklch(0.735 0.160 42);
+  --ember-hover: oklch(0.790 0.128 44);
+  --ember-fg: oklch(0.195 0.040 40);
+  --ember-ink: oklch(0.800 0.123 46);
+  --ember-soft: oklch(0.295 0.062 40);
+  --ember-line: oklch(0.400 0.085 40);
+  --ember-shadow: oklch(0.735 0.160 42 / 0.30);
+
   --positive: oklch(0.775 0.105 172);
+  --positive-fg: oklch(0.195 0.040 172);
   --positive-soft: oklch(0.275 0.045 172);
   --positive-line: oklch(0.375 0.060 172);
-  --warning: oklch(0.815 0.115 85);
-  --warning-soft: oklch(0.295 0.045 80);
-  --warning-line: oklch(0.395 0.065 80);
+  --warning: oklch(0.830 0.120 92);
+  --warning-soft: oklch(0.300 0.048 90);
+  --warning-line: oklch(0.395 0.065 90);
   --danger: oklch(0.735 0.155 27);
+  /* White on this lifted red was 2.5:1 - the dark danger button was unreadable. */
+  --danger-fg: oklch(0.195 0.040 27);
   --danger-soft: oklch(0.295 0.055 27);
   --danger-line: oklch(0.400 0.080 27);
 
@@ -140,8 +184,8 @@
   --av-2-fg: oklch(0.810 0.095 199);
   --av-3-bg: oklch(0.303 0.050 162);
   --av-3-fg: oklch(0.808 0.090 162);
-  --av-4-bg: oklch(0.312 0.058 55);
-  --av-4-fg: oklch(0.822 0.105 62);
+  --av-4-bg: oklch(0.305 0.050 120);
+  --av-4-fg: oklch(0.820 0.105 120);
   --av-5-bg: oklch(0.308 0.070 352);
   --av-5-fg: oklch(0.808 0.115 350);
   --av-6-bg: oklch(0.306 0.072 305);
@@ -172,13 +216,23 @@
   --color-accent-soft-fg: var(--accent-soft-fg);
   --color-accent-line: var(--accent-line);
 
+  --color-ember: var(--ember);
+  --color-ember-fill: var(--ember-fill);
+  --color-ember-hover: var(--ember-hover);
+  --color-ember-fg: var(--ember-fg);
+  --color-ember-ink: var(--ember-ink);
+  --color-ember-soft: var(--ember-soft);
+  --color-ember-line: var(--ember-line);
+
   --color-positive: var(--positive);
+  --color-positive-fg: var(--positive-fg);
   --color-positive-soft: var(--positive-soft);
   --color-positive-line: var(--positive-line);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-warning-line: var(--warning-line);
   --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
   --color-danger-soft: var(--danger-soft);
   --color-danger-line: var(--danger-line);
 
@@ -486,6 +540,45 @@
     inset 0 -1px 0 oklch(0 0 0 / 0.12);
 }
 
+/* The ember call to action: the same glass, in the page's one warm tone.
+   Both ends of the gradient carry white type at 4.5:1 or better. */
+.glass-ember {
+  background:
+    radial-gradient(110% 110% at 10% 15%, oklch(1 0 0 / 0.22) 0%, oklch(1 0 0 / 0) 62%),
+    linear-gradient(180deg, var(--ember-fill) 0%, var(--ember-hover) 100%);
+  color: var(--ember-fg);
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.16),
+    0 12px 28px -8px var(--ember-shadow),
+    inset 0 1px 0 oklch(1 0 0 / 0.40),
+    inset 0 -1px 0 oklch(0 0 0 / 0.12);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms, filter 220ms;
+  will-change: transform;
+}
+.glass-ember:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.24),
+    0 18px 36px -10px var(--ember-shadow),
+    inset 0 1px 0 oklch(1 0 0 / 0.45),
+    inset 0 -1px 0 oklch(0 0 0 / 0.12);
+}
+
+/* The header's call, while the header is still clear over the sky: an
+   outline in the sky's own white, so the hero's button is the only ember on
+   screen. It takes the ember once the page scrolls and the hero's is gone.
+   Type and rim are white on the deep sky - the headline's pair. */
+[data-clear] .nav-cta {
+  background: transparent;
+  color: var(--sky-ink);
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.7);
+  filter: none;
+}
+[data-clear] .nav-cta:hover {
+  background: oklch(1 0 0 / 0.1);
+}
+
 /* The cushion a product window sits on.
    The sky is the page's most distinctive asset and it was confined to the
    two ends, leaving the whole middle flat. This is the same light at a
@@ -581,5 +674,5 @@
 .lift:hover { transform: translateY(-2px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .lift:hover, .glass:hover { transform: none; }
+  .lift:hover, .glass:hover, .glass-ember:hover { transform: none; }
 }

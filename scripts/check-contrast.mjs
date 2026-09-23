@@ -37,6 +37,21 @@ function oklchToSrgb(L, C, H) {
   return lin.map((v) => Math.min(1, Math.max(0, v)));
 }
 
+/** Whether an oklch colour survives the trip to sRGB without clipping. */
+function inGamut(L, C, H) {
+  const h = (H * Math.PI) / 180;
+  const a = C * Math.cos(h);
+  const b = C * Math.sin(h);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ].every((v) => v >= -0.001 && v <= 1.001);
+}
+
 function relativeLuminance([r, g, b]) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
@@ -51,6 +66,8 @@ function contrast(a, b) {
 // --- token extraction ------------------------------------------------------
 
 const css = readFileSync(join(root, "src", "app", "globals.css"), "utf8");
+const hues = {};
+const outOfGamut = [];
 
 function tokensFrom(selector) {
   const start = css.indexOf(`${selector} {`);
@@ -63,11 +80,10 @@ function tokensFrom(selector) {
   const pattern = /--([\w-]+):\s*oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/g;
   let match;
   while ((match = pattern.exec(block))) {
-    tokens[match[1]] = oklchToSrgb(
-      Number(match[2]),
-      Number(match[3]),
-      Number(match[4]),
-    );
+    const lch = [Number(match[2]), Number(match[3]), Number(match[4])];
+    tokens[match[1]] = oklchToSrgb(...lch);
+    hues[`${selector} ${match[1]}`] = lch;
+    if (!inGamut(...lch)) outOfGamut.push(`${selector} --${match[1]}`);
   }
   return tokens;
 }
@@ -98,6 +114,14 @@ const TEXT_PAIRS = [
   ["danger", "paper", 4.5, "inline error message"],
   ["accent", "paper", 4.5, "accent link on the page"],
   ["accent", "surface", 4.5, "accent link on a card"],
+  // Ember: the call to action and the rare highlight.
+  ["ember-fg", "ember-fill", 4.5, "ember call-to-action label"],
+  ["ember-fg", "ember-hover", 4.5, "ember call-to-action label, hovered"],
+  ["ember-ink", "paper", 4.5, "ember text on the page"],
+  ["ember-ink", "surface", 4.5, "ember text on a card"],
+  ["ember-ink", "ember-soft", 4.5, "ember badge (Most popular)"],
+  ["danger-fg", "danger", 4.5, "danger button label"],
+  ["positive-fg", "positive", 4.5, "label on a solid positive fill"],
   // The landing page's sky, the same in both themes. White copy sits only
   // over the deep band of the gradient.
   ["sky-ink", "sky-deep", 4.5, "hero headline, sub-line and note on the deep sky"],
@@ -117,6 +141,17 @@ const UI_PAIRS = [
   ["line-strong", "surface", 3.0, "input border"],
   ["focus", "paper", 3.0, "focus ring on the page"],
   ["focus", "surface", 3.0, "focus ring on a card"],
+  ["ember", "paper", 3.0, "ember highlight mark (underline, progress, dot)"],
+  ["ember", "surface", 3.0, "ember highlight mark on a card"],
+  ["ember-fill", "paper", 3.0, "ember button edge on the page"],
+];
+
+// Ember must never read as caution. Hue distance between the two families,
+// in both themes, for the text tone and the soft ground a badge sits on.
+const HUE_GAPS = [
+  ["ember-ink", "warning", 30],
+  ["ember-soft", "warning-soft", 30],
+  ["ember", "av-4-fg", 30],
 ];
 
 let failures = 0;
@@ -135,6 +170,51 @@ for (const [theme, tokens] of Object.entries(themes)) {
       `  ${pass ? "ok" : "FAIL"}  ${value.toFixed(2)}:1 (needs ${min})  ${fg} on ${bg} - ${label}`,
     );
   }
+}
+
+for (const [selector, label] of [[":root", "light"], [":root.dark", "dark"]]) {
+  console.log(`\n  ${label.toUpperCase()} hue separation`);
+  for (const [a, b, min] of HUE_GAPS) {
+    const ha = (hues[`${selector} ${a}`] ?? hues[`:root ${a}`])?.[2];
+    const hb = (hues[`${selector} ${b}`] ?? hues[`:root ${b}`])?.[2];
+    if (ha === undefined || hb === undefined) {
+      console.log(`  ?  ${a} vs ${b} - token missing`);
+      failures++;
+      continue;
+    }
+    const gap = Math.min(Math.abs(ha - hb), 360 - Math.abs(ha - hb));
+    const pass = gap >= min;
+    if (!pass) failures++;
+    console.log(`  ${pass ? "ok" : "FAIL"}  ${gap.toFixed(1)}deg (needs ${min})  ${a} vs ${b}`);
+  }
+}
+
+// Informational: oklch past sRGB is deliberate for some tokens (the indigo
+// is wider on a P3 screen). The ratios above are computed on the clipped
+// sRGB value, which is the conservative reading.
+if (outOfGamut.length) {
+  console.log(`\n  note  past sRGB, clipped for the ratios above: ${outOfGamut.join(", ")}`);
+}
+
+// The hex mirrors in src/lib/brand.ts must match the tokens they copy.
+const brand = readFileSync(join(root, "src", "lib", "brand.ts"), "utf8");
+const mirror = /TOKEN_HEX = \{([\s\S]*?)\}/.exec(brand)?.[1] ?? "";
+console.log("\n  HEX MIRRORS (src/lib/brand.ts)");
+for (const [, key, hex] of mirror.matchAll(/"?([\w-]+(?:@dark)?)"?:\s*"(#[0-9A-Fa-f]{6})"/g)) {
+  const [name, theme] = key.split("@");
+  const token = themes[theme ?? "light"][name];
+  if (!token) {
+    console.log(`  ?  ${key} - no such token`);
+    failures++;
+    continue;
+  }
+  const want = token.map((v) => Math.round((v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055) * 255));
+  const got = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const drift = Math.max(...want.map((v, i) => Math.abs(v - got[i])));
+  const pass = drift <= 2;
+  if (!pass) failures++;
+  const expected = "#" + want.map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase();
+  console.log(`  ${pass ? "ok" : "FAIL"}  ${key} ${hex}${pass ? "" : ` (token is ${expected})`}`);
 }
 
 console.log(

@@ -26,6 +26,12 @@ const COLOR_PAIRS: { fg: string; bg: string; use: string; min: number }[] = [
   { fg: "--warning", bg: "--warning-soft", use: "Warning badge", min: 4.5 },
   { fg: "--danger", bg: "--danger-soft", use: "Danger badge", min: 4.5 },
   { fg: "--accent", bg: "--surface", use: "Links", min: 4.5 },
+  // Ember: the one thing a screen wants done. See redesign/COLOR.md.
+  { fg: "--ember-fg", bg: "--ember-fill", use: "Ember call-to-action label", min: 4.5 },
+  { fg: "--ember-ink", bg: "--ember-soft", use: "Ember badge (Most popular)", min: 4.5 },
+  { fg: "--ember-ink", bg: "--surface", use: "Ember text (key numbers)", min: 4.5 },
+  { fg: "--ember", bg: "--surface", use: "Ember highlight mark (non-text)", min: 3 },
+  { fg: "--danger-fg", bg: "--danger", use: "Danger button label", min: 4.5 },
   // The landing page's sky: identical in both themes.
   { fg: "--sky-ink", bg: "--sky-deep", use: "Sky: headline and copy on the deep band", min: 4.5 },
   { fg: "--sky-glass-fg", bg: "--sky-glass", use: "Sky: glass button, top of the gradient", min: 4.5 },
@@ -135,7 +141,7 @@ export function DesignSystem() {
         <ThemeToggle />
       </header>
 
-      <Section title="Colour" blurb="One accent, a few neutrals, three semantic tones. Each pair checked against WCAG AA.">
+      <Section title="Colour" blurb="Neutrals ~60%, brand indigo and sky ~30%, ember ~10% - the one action per screen. Three semantic tones. Each pair checked against WCAG AA.">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[40rem] text-sm">
             <thead>
@@ -225,9 +231,13 @@ export function DesignSystem() {
         </Section>
       </div>
 
-      <Section title="Buttons" blurb="One primary action per screen. Secondary for the alternative, ghost for the incidental, danger only for the irreversible.">
+      <Section title="Buttons" blurb="Ember (cta) for the one action a screen exists for, at most once per view. Primary indigo for everyday commits. Secondary for the alternative, ghost for the incidental, danger only for the irreversible.">
         <Panel>
           <PanelBody className="flex flex-wrap items-center gap-3">
+            <Button variant="cta">
+              <Check aria-hidden />
+              Approve
+            </Button>
             <Button>
               <Plus aria-hidden />
               Primary

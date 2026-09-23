@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { EB_Garamond, Geist, Geist_Mono } from "next/font/google";
-import { BRAND } from "@/lib/brand";
+import { BRAND, TOKEN_HEX } from "@/lib/brand";
 import { SITE } from "@/lib/content";
 import { Providers } from "@/components/providers";
 import "./globals.css";
@@ -33,8 +33,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   // Do not block pinch-zoom; capping it fails WCAG 1.4.4.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafaff" },
-    { media: "(prefers-color-scheme: dark)", color: "#141319" },
+    { media: "(prefers-color-scheme: light)", color: TOKEN_HEX.paper },
+    { media: "(prefers-color-scheme: dark)", color: TOKEN_HEX["paper@dark"] },
   ],
 };
 

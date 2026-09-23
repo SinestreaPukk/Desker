@@ -115,7 +115,7 @@ export function AdminShell({
             {item.label}
             {item.segment === "inbox" && openCount > 0 ? (
               <span
-                className="ml-auto rounded-full bg-danger px-1.5 py-0.5 text-xs font-semibold text-white tabular-nums"
+                className="ml-auto rounded-full bg-danger px-1.5 py-0.5 text-xs font-semibold text-danger-fg tabular-nums"
                 aria-label={`${openCount} open items`}
               >
                 {openCount > 99 ? "99+" : openCount}

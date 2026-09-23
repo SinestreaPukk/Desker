@@ -220,7 +220,7 @@ export function HeroStage({ className }: { className?: string }) {
                 <span
                   key={scene}
                   aria-hidden
-                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-accent"
+                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-ember"
                   style={{ animation: `reel-progress ${(BEAT_MS * BEATS) / 1000}s linear forwards` }}
                 />
               ) : null}
@@ -340,7 +340,7 @@ function Step({ done, active, children }: { done: boolean; active?: boolean; chi
       <span
         className={cn(
           "flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-300",
-          done ? "border-positive bg-positive text-white" : active ? "border-accent" : "border-line-strong/50",
+          done ? "border-positive bg-positive text-positive-fg" : active ? "border-accent" : "border-line-strong/50",
         )}
       >
         {done ? (
@@ -384,7 +384,7 @@ function RunHeader({
 function ApprovalActions({ what }: { what: string }) {
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2">
-      <Button size="sm">
+      <Button size="sm" variant="cta">
         <Check aria-hidden />
         Approve and {what}
       </Button>
@@ -621,7 +621,12 @@ export function ApprovalScene({ beat }: { beat: number }) {
         in year three was never really yours.
       </blockquote>
       <div className="mt-3 flex items-center gap-2">
-        <Button size="sm" disabled={done} className={cn(done && "bg-positive text-white disabled:opacity-100")}>
+        <Button
+          size="sm"
+          variant="cta"
+          disabled={done}
+          className={cn(done && "bg-positive text-positive-fg disabled:opacity-100")}
+        >
           {done ? (
             <>
               <Check aria-hidden />

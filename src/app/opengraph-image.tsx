@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { LANDING, SITE } from "@/lib/content";
-import { BRAND } from "@/lib/brand";
+import { BRAND, TOKEN_HEX } from "@/lib/brand";
 
 export const alt = `${SITE.company.name} — ${LANDING.meta.title}`;
 export const size = { width: 1200, height: 630 };
@@ -18,8 +18,8 @@ export default function OpenGraphImage() {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: 72,
-          background: "linear-gradient(135deg, #fafaff 0%, #ecebff 100%)",
-          color: "#1a1a2e",
+          background: `linear-gradient(135deg, ${TOKEN_HEX.paper} 0%, ${TOKEN_HEX["accent-soft"]} 100%)`,
+          color: TOKEN_HEX.ink,
           fontFamily: "sans-serif",
         }}
       >
@@ -33,9 +33,10 @@ export default function OpenGraphImage() {
           <div style={{ fontSize: 60, fontWeight: 700, lineHeight: 1.1, letterSpacing: -1.5, maxWidth: 1000 }}>
             {LANDING.hero.headline}
           </div>
-          <div style={{ fontSize: 28, color: "#4a4a63", maxWidth: 960, lineHeight: 1.35 }}>{LANDING.meta.description}</div>
+          <div style={{ width: 96, height: 6, borderRadius: 3, background: TOKEN_HEX.ember }} />
+          <div style={{ fontSize: 28, color: TOKEN_HEX["ink-muted"], maxWidth: 960, lineHeight: 1.35 }}>{LANDING.meta.description}</div>
         </div>
-        <div style={{ fontSize: 22, color: "#7a7a90" }}>{SITE.company.siteUrl.replace(/^https?:\/\//, "")}</div>
+        <div style={{ fontSize: 22, color: TOKEN_HEX["ink-subtle"] }}>{SITE.company.siteUrl.replace(/^https?:\/\//, "")}</div>
       </div>
     ),
     size,
