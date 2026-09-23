@@ -51,7 +51,7 @@ export function SectionHeader({
   return (
     <div className={cn(align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-2xl", className)}>
       <p className={cn("eyebrow sd-rise", inverse ? "text-accent-fg/80" : "text-accent")}>{eyebrow}</p>
-      <h2 id={id} className={cn("mt-3 text-title text-balance", inverse ? "text-accent-fg" : "text-ink")}>
+      <h2 id={id} className={cn("sd-rise mt-3 text-title text-balance", inverse ? "text-accent-fg" : "text-ink")}>
         <Words text={heading} />
       </h2>
       {intro ? (

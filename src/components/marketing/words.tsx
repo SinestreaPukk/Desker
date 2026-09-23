@@ -15,24 +15,8 @@ export function HeroWords({ text }: { text: string }) {
   ));
 }
 
-/**
- * A heading whose words rise in as it scrolls into view (.sd-words /
- * .sd-word). Each word takes a slightly later slice of the heading's own
- * entry, so they arrive left to right.
- */
+/** A heading's text. Once split into words for a reveal; plain now - the
+ * per-word scroll animations made scrolling janky. */
 export function Words({ text }: { text: string }) {
-  return (
-    <span className="sd-words">
-      {text.split(" ").map((word, index) => (
-        <span key={index}>
-          <span
-            className="sd-word"
-            style={{ animationRange: `entry ${10 + index * 6}% cover ${32 + index * 6}%` } as React.CSSProperties}
-          >
-            {word}
-          </span>{" "}
-        </span>
-      ))}
-    </span>
-  );
+  return <>{text}</>;
 }
