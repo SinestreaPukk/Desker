@@ -101,12 +101,16 @@
   --av-6-bg: oklch(0.932 0.040 306);
   --av-6-fg: oklch(0.435 0.155 305);
 
-  /* The landing page's sky. A clear morning: deep at the zenith, where the
-     white headline sits (held above 4.5:1), fading to pale and then to the
-     page. Identical in both themes - it is a picture, not a surface. */
-  --sky-deep: oklch(0.560 0.170 255);
-  --sky: oklch(0.760 0.105 245);
-  --sky-pale: oklch(0.930 0.035 235);
+  /* The landing page's sky: dawn. The brand indigo at the zenith, where the
+     header and the headline start, warming through violet (the band the
+     rest of the white type sits on; 7.7:1 and up) to orchid and a peach
+     horizon behind the product - an analogous walk from the logo's blue to
+     the call to action's apricot, which the ribbons and the sun finish.
+     Identical in both themes - it is a picture, not a surface. */
+  --sky-top: oklch(0.360 0.190 272);
+  --sky-deep: oklch(0.460 0.200 290);
+  --sky: oklch(0.660 0.140 335);
+  --sky-pale: oklch(0.900 0.050 55);
   --sky-ink: oklch(0.995 0.002 240);
   --sky-glass: oklch(0.560 0.200 262);
   /* The foot of the button. --sky-glass alone is the same lightness as
@@ -115,7 +119,15 @@
      contrast thing on the page, which is what the one primary call needs. */
   --sky-glass-deep: oklch(0.395 0.235 266);
   --sky-glass-fg: oklch(0.995 0.002 240);
-  --sky-shadow: oklch(0.560 0.170 255 / 0.35);
+  --sky-shadow: oklch(0.360 0.190 272 / 0.35);
+  /* The sun: a warm disc, not a white blur - pale gold at the core, apricot
+     at the rim, a faint coral halo. */
+  --sun-core: oklch(0.980 0.040 90);
+  --sun-mid: oklch(0.930 0.100 80);
+  --sun-rim: oklch(0.850 0.140 60 / 0.85);
+  --sun-halo: oklch(0.780 0.140 40 / 0.35);
+  /* Clouds at dawn catch the light: a warm blush, never pure white. */
+  --cloud: oklch(0.930 0.050 30);
   /* The hero's sunrise ribbons, far to near, each running left to right
      from cool to warm - toward the sun, which sits on the right. The hues
      walk the analogous chain from the sky's blue through violet and rose to
@@ -479,8 +491,8 @@
    is where a horizon belongs anyway. */
 .sky {
   background:
-    radial-gradient(70% 28% at 72% 94%, oklch(0.99 0.01 90 / 0.85) 0%, oklch(0.99 0.01 90 / 0) 100%),
-    linear-gradient(180deg, var(--sky-deep) 0%, var(--sky-deep) 63%, var(--sky) 78%, var(--sky-pale) 90%, var(--paper) 100%);
+    radial-gradient(70% 28% at 72% 94%, oklch(0.960 0.060 60 / 0.7) 0%, oklch(0.960 0.060 60 / 0) 100%),
+    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-deep) 45%, var(--sky-deep) 63%, var(--sky) 78%, var(--sky-pale) 90%, var(--paper) 100%);
   color: var(--sky-ink);
 }
 
@@ -495,7 +507,7 @@
 .sky-band {
   background: linear-gradient(
     180deg,
-    var(--sky-deep) 0,
+    var(--sky-top) 0,
     var(--sky-deep) calc(100% - 8rem),
     var(--sky) calc(100% - 5rem),
     var(--sky-pale) calc(100% - 1.75rem),
@@ -504,14 +516,21 @@
   color: var(--sky-ink);
 }
 
-/* The sun: a soft disc and a wide halo, breathing very slowly. */
+/* The sun: a warm disc with a soft halo, breathing very slowly. The halo is
+   in the gradient, so no blur filter - sharper, and cheaper to paint. */
 .sun {
   position: absolute;
-  width: 11rem;
-  height: 11rem;
+  width: 16rem;
+  height: 16rem;
   border-radius: 9999px;
-  background: radial-gradient(circle, oklch(1 0 0) 0%, oklch(1 0 0 / 0.9) 38%, oklch(1 0 0 / 0) 72%);
-  filter: blur(6px);
+  background: radial-gradient(
+    circle,
+    var(--sun-core) 0%,
+    var(--sun-mid) 18%,
+    var(--sun-rim) 34%,
+    var(--sun-halo) 52%,
+    transparent 70%
+  );
   will-change: transform;
   transform: translateZ(0);
   animation: sun-breathe 12s ease-in-out infinite alternate;
@@ -664,7 +683,7 @@
   position: absolute;
   display: block;
   border-radius: 9999px;
-  background: oklch(1 0 0);
+  background: var(--cloud);
   filter: blur(28px);
   will-change: transform;
   transform: translateZ(0);

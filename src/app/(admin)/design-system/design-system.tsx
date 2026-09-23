@@ -294,7 +294,7 @@ export function DesignSystem() {
 
       <Section
         title="Landing sky"
-        blurb="The one place the page is a picture. A clear-morning gradient, deep where the white serif headline sits and pale by the time the product window floats over the horizon, and a single glass button. Nothing in the product uses these."
+        blurb="The one place the page is a picture. A dawn gradient: brand indigo at the top, violet where the white serif headline sits, warming to orchid and peach where the product window floats over the sunrise ribbons, and a single glass button. Nothing in the product uses these."
       >
         <div className="sky relative overflow-hidden rounded-panel p-8 text-center">
           <div className="sun right-[8%] top-[20%]" aria-hidden />
@@ -303,7 +303,7 @@ export function DesignSystem() {
             <p className="mt-3 text-lg font-medium text-[var(--sky-ink)]">One line beneath it, in the sans.</p>
             <span className="glass mt-6 inline-flex h-11 items-center rounded-lg px-5 text-base font-medium">Glass button</span>
             <dl className="mt-10 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
-              {["--sky-deep", "--sky", "--sky-pale", "--sky-glass"].map((token) => (
+              {["--sky-top", "--sky-deep", "--sky", "--sky-pale"].map((token) => (
                 <div key={token} className="flex items-center justify-center gap-2 text-ink">
                   <span className="size-5 shrink-0 rounded-sm border border-line" style={{ background: `var(${token})` }} />
                   <dt className="font-mono">{token}</dt>
