@@ -580,6 +580,17 @@
   background: oklch(1 0 0 / 0.1);
 }
 
+/* The ember underline under a keyword (components/marketing/highlight.tsx).
+   text-decoration rather than a background bar, so it follows the words
+   when they wrap. */
+.ember-underline {
+  text-decoration-line: underline;
+  text-decoration-color: var(--ember);
+  text-decoration-thickness: 0.09em;
+  text-underline-offset: 0.14em;
+  text-decoration-skip-ink: none;
+}
+
 /* The cushion a product window sits on.
    The sky is the page's most distinctive asset and it was confined to the
    two ends, leaving the whole middle flat. This is the same light at a

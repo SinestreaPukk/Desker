@@ -30,18 +30,38 @@ const siteSchema = z.object({
     twitter: z.string(),
   }),
   nav: z.array(link).max(6),
+  /** The header's call to action. */
+  navCta: link,
   footer: z.object({
     blurb: z.string(),
-    columns: z.array(z.object({ heading: z.string(), links: z.array(link) })).max(4),
+    /** Heading of the column the layout fills with every role. */
+    rolesHeading: z.string(),
+    columns: z.array(z.object({ heading: z.string(), links: z.array(link) })).max(3),
+    /** Profiles to link. Empty until the accounts exist. */
+    social: z.array(link),
     legal: z.string(),
   }),
 });
 
-/**
- * The hero's trust row. Deliberately a closed set: each glyph stands for a
- * promise made elsewhere on the page, so a new one is a decision, not a typo.
- */
-export const TRUST_ICONS = ["shield", "approval", "lock"] as const;
+/** Glyphs the landing page may put beside a point. A closed set, so a new one is a decision. */
+export const LANDING_ICONS = [
+  "upload",
+  "calendar",
+  "approve",
+  "draft",
+  "person",
+  "source",
+  "log",
+  "lock",
+  "handoff",
+] as const;
+
+/** Section heading pattern used by every landing section: eyebrow, heading, intro. */
+const sectionHead = {
+  eyebrow: z.string().min(1).max(32),
+  heading: z.string().min(1).max(64),
+  intro: z.string().max(200).optional(),
+};
 
 const landingSchema = z.object({
   meta,
@@ -50,36 +70,76 @@ const landingSchema = z.object({
     subhead: z.string().max(200),
     primaryCta: link,
     secondaryCta: link,
-    note: z.string(),
-    /** Short, checkable claims. Every one must be answered by the FAQ below. */
-    trust: z.array(z.object({ icon: z.enum(TRUST_ICONS), label: z.string().min(1).max(48) })).max(4),
+    /** One line of reassurance under the buttons. */
+    microcopy: z.string().max(90),
+  }),
+  /** "Built on" facts. Names only - TODO: real logos only, with permission. */
+  trustStrip: z.object({
+    label: z.string(),
+    items: z.array(z.string().min(1).max(40)).min(1).max(6),
+  }),
+  problem: z.object({
+    eyebrow: sectionHead.eyebrow,
+    pains: z.array(z.string().min(1).max(120)).min(1).max(3),
+    promise: z.string().min(1).max(120),
+    /** The words in the promise that carry the ember underline. */
+    highlight: z.string().min(1),
+  }),
+  steps: z.object({
+    ...sectionHead,
+    items: z
+      .array(z.object({ icon: z.enum(LANDING_ICONS), title: z.string().min(1).max(40), body: z.string().min(1).max(120) }))
+      .length(3),
   }),
   features: z.object({
-    heading: z.string(),
-    intro: z.string(),
+    ...sectionHead,
     items: z
       .array(
         z.object({
-          title: z.string().min(1),
+          /** Short label above the title, e.g. the agent and role. */
+          label: z.string().min(1).max(32),
+          title: z.string().min(1).max(64),
           body: z.string().min(1).max(200),
-          /** Which piece of the product the frame under the heading shows. */
+          /** Which piece of the product the tile shows. */
           demo: z.enum(["support", "marketer", "researcher", "dev-support", "assistant", "approval"]),
         }),
       )
       .min(2)
       .max(8),
   }),
-  roles: z.object({ heading: z.string(), intro: z.string() }),
+  trust: z.object({
+    ...sectionHead,
+    items: z
+      .array(z.object({ icon: z.enum(LANDING_ICONS), title: z.string().min(1).max(48), body: z.string().min(1).max(160) }))
+      .min(3)
+      .max(8),
+  }),
+  roles: z.object({ ...sectionHead, cta: z.string().min(1).max(24) }),
+  /**
+   * Outcome numbers. A value stays null until it is measured - the section is
+   * not shown in production while any value is missing. Never an estimate.
+   */
+  metrics: z.object({
+    ...sectionHead,
+    items: z
+      .array(z.object({ label: z.string().min(1).max(48), value: z.string().nullable(), todo: z.string().optional() }))
+      .length(3),
+  }),
+  /** Real quotes only. Hidden until enabled with at least one item. */
+  testimonials: z.object({
+    enabled: z.boolean(),
+    ...sectionHead,
+    items: z.array(z.object({ quote: z.string().min(1), name: z.string().min(1), title: z.string().min(1) })),
+  }),
   pricing: z.object({
-    heading: z.string(),
-    intro: z.string(),
+    ...sectionHead,
     /** Which tier carries the emphasis. A decision, so it is written down. */
     popularPlan: z.enum(PLAN_IDS),
     popularLabel: z.string().min(1).max(24),
     footnote: z.string(),
   }),
   faq: z.object({
-    heading: z.string(),
+    ...sectionHead,
     items: z.array(z.object({ q: z.string().min(1), a: z.string().min(1) })).min(3).max(10),
   }),
   cta: z.object({ heading: z.string(), body: z.string(), button: link }),

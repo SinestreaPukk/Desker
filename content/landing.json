@@ -7,70 +7,167 @@
     "headline": "AI employees that do real work",
     "subhead": "A marketer, a researcher, developer support, an assistant, a support desk. Each one works from your documents, on a schedule, and asks before anything goes out.",
     "primaryCta": {
-      "label": "Hire your first agent",
+      "label": "Start free",
       "href": "/signup"
     },
     "secondaryCta": {
-      "label": "See the roles",
-      "href": "/showcase"
+      "label": "See it work",
+      "href": "/#product"
     },
-    "note": "Free to start. Five minutes to a working agent.",
-    "trust": [
+    "microcopy": "Free forever plan · No credit card · Nothing sends without your OK"
+  },
+  "trustStrip": {
+    "label": "Built on models from",
+    "items": [
+      "Anthropic Claude",
+      "OpenAI"
+    ]
+  },
+  "problem": {
+    "eyebrow": "Why Desker",
+    "pains": [
+      "Your team rewrites the same replies, posts and research every week.",
+      "Most AI tools either leave the work to you, or act without asking."
+    ],
+    "promise": "Desker gives you AI staff that does the work and waits for your OK.",
+    "highlight": "waits for your OK"
+  },
+  "steps": {
+    "eyebrow": "How it works",
+    "heading": "Working in three steps",
+    "items": [
       {
-        "icon": "shield",
-        "label": "Nothing you upload trains a model"
+        "icon": "upload",
+        "title": "Upload your docs",
+        "body": "Policies, product guides, notes. Your agents answer from them and name the source."
       },
       {
-        "icon": "approval",
-        "label": "Draft-only until you approve"
+        "icon": "calendar",
+        "title": "Pick a role and a schedule",
+        "body": "Choose one of eight roles and when it works: every Monday, every Friday, or when a customer writes."
       },
       {
-        "icon": "lock",
-        "label": "Credentials encrypted at rest"
+        "icon": "approve",
+        "title": "Approve, edit, or reject",
+        "body": "Finished drafts wait in one inbox. Nothing is sent until you say so."
       }
     ]
   },
   "features": {
-    "heading": "Not a chatbot. A staff.",
-    "intro": "Every agent has a job, your context, and tools that reach the outside world - behind your approval.",
+    "eyebrow": "Product",
+    "heading": "Real work, ready for your review",
+    "intro": "Five roles and one inbox. Each agent works on its own schedule and hands you a finished draft.",
     "items": [
       {
-        "title": "A marketer that drafts on a schedule",
-        "body": "Every Monday at nine, Nova reads what your competitors announced, drafts the post in your voice and queues it for your approval.",
+        "label": "Approvals inbox",
+        "title": "You have the final say on everything",
+        "body": "Every post, email and ticket waits in one inbox. Approve, edit or reject in one click, and every decision is logged.",
+        "demo": "approval"
+      },
+      {
+        "label": "Nova · Marketer",
+        "title": "Weekly posts in your voice",
+        "body": "Every Monday, Nova reads what changed this week and drafts the post for you to approve.",
         "demo": "marketer"
       },
       {
-        "title": "A researcher that cites its sources",
-        "body": "Sol answers a standing question every week with a brief you can check: numbered sources, quotes, links. Emailed to you.",
-        "demo": "researcher"
-      },
-      {
-        "title": "Developer support that reproduces the bug",
-        "body": "Ada reads your API docs, explains the fix with a code sample, reproduces the problem, and logs the issue for engineering with steps.",
-        "demo": "dev-support"
-      },
-      {
-        "title": "An assistant that keeps follow-ups moving",
-        "body": "Kai drafts the email with the numbers from your notes, schedules the next step himself, and never commits you to anything without asking.",
-        "demo": "assistant"
-      },
-      {
-        "title": "Support that answers from your own documents",
-        "body": "Mia searches the policies and product sheets you upload and answers from them, naming the source. When she doesn't know, she says so.",
+        "label": "Mia · Support",
+        "title": "Answers straight from your policies",
+        "body": "Mia answers customers from the documents you upload and names the source. Unsure? She hands off to you.",
         "demo": "support"
       },
       {
-        "title": "You approve anything that leaves the building",
-        "body": "Posts and emails wait in one inbox with the full text. Approve, edit or reject - from your phone. Every decision lands in the audit trail.",
-        "demo": "approval"
+        "label": "Sol · Researcher",
+        "title": "Research briefs you can check",
+        "body": "Sol answers your standing questions every week, with numbered sources you can open.",
+        "demo": "researcher"
+      },
+      {
+        "label": "Ada · Dev support",
+        "title": "Bug reports engineers can act on",
+        "body": "Ada answers developers from your API docs, reproduces the problem and logs it with steps.",
+        "demo": "dev-support"
+      },
+      {
+        "label": "Kai · Assistant",
+        "title": "Follow-ups that never slip",
+        "body": "Kai drafts the email from your meeting notes and proposes the next meeting. You confirm.",
+        "demo": "assistant"
+      }
+    ]
+  },
+  "trust": {
+    "eyebrow": "Trust & control",
+    "heading": "Built to ask before it acts",
+    "intro": "One wrong email can cost you a customer. Desker is designed so nothing leaves without a person seeing it first.",
+    "items": [
+      {
+        "icon": "draft",
+        "title": "Draft-only by default",
+        "body": "Agents can't publish or send anything until you allow it, per agent and per tool."
+      },
+      {
+        "icon": "person",
+        "title": "A person approves every send",
+        "body": "Posts and emails wait in your inbox with the full text. You approve, edit or reject."
+      },
+      {
+        "icon": "source",
+        "title": "Answers name their source",
+        "body": "Agents answer from your documents and cited web pages. When they don't know, they say so."
+      },
+      {
+        "icon": "log",
+        "title": "A full audit log",
+        "body": "Every run, draft and decision is recorded: who did what, and when."
+      },
+      {
+        "icon": "lock",
+        "title": "Your data never trains models",
+        "body": "What you upload stays yours and is never used to train an AI model. Saved credentials are encrypted."
+      },
+      {
+        "icon": "handoff",
+        "title": "Clear rules for handing off",
+        "body": "Each agent has an escalation rule. When it applies, the agent stops and brings in a person."
       }
     ]
   },
   "roles": {
+    "eyebrow": "Roles",
     "heading": "Eight roles, ready to hire",
-    "intro": "Each one is a job, a voice and a rule for when to fetch a human. Pick one and change anything."
+    "intro": "Pick a role and change anything. Each one knows when to ask a person.",
+    "cta": "Explore role"
+  },
+  "metrics": {
+    "eyebrow": "Outcomes",
+    "heading": "What teams get back",
+    "items": [
+      {
+        "label": "Hours saved per week",
+        "value": null,
+        "todo": "Measure with design partners"
+      },
+      {
+        "label": "Median time to first reply",
+        "value": null,
+        "todo": "From conversation timestamps"
+      },
+      {
+        "label": "Drafts approved without edits",
+        "value": null,
+        "todo": "From action-item approvals"
+      }
+    ]
+  },
+  "testimonials": {
+    "enabled": false,
+    "eyebrow": "Customers",
+    "heading": "What teams say",
+    "items": []
   },
   "pricing": {
+    "eyebrow": "Pricing",
     "heading": "Pricing that follows the work",
     "intro": "Pay for agents that are live and the work they do. Start free. Upgrade when one is earning its keep.",
     "popularPlan": "starter",
@@ -78,6 +175,7 @@
     "footnote": "Every plan includes every role, unlimited teammates, the audit log and email support."
   },
   "faq": {
+    "eyebrow": "FAQ",
     "heading": "Frequently asked questions",
     "items": [
       {
@@ -110,7 +208,7 @@
     "heading": "Put an agent to work today",
     "body": "Five minutes. Free to start.",
     "button": {
-      "label": "Hire your first agent",
+      "label": "Start free",
       "href": "/signup"
     }
   }

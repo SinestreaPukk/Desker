@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-logo";
-import { SITE } from "@/lib/content";
+import { SITE, TEMPLATES } from "@/lib/content";
 import { GLASS_BUTTON_SM } from "@/components/marketing/glass-button";
 import { SiteHeader } from "@/components/marketing/site-header";
-import { SiteNav } from "@/components/marketing/site-nav";
+import { SiteMenu, SiteNav } from "@/components/marketing/site-nav";
 
 /**
  * The public shell: what a stranger sees. Same tokens and components as the
@@ -26,16 +26,18 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             {SITE.company.name}
           </Link>
           <SiteNav items={SITE.nav} />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Full strength, not /75: on the sky the dimmed white fell under 4.5:1. */}
             <Link
               href="/login"
-              className="focus-current inline-flex h-9 items-center rounded-md px-3 text-sm font-medium text-current/90 transition-colors hover:text-current"
+              className="focus-current hidden min-h-[44px] items-center rounded-md px-3 text-sm font-medium text-current underline-offset-4 hover:underline md:inline-flex"
             >
               Sign in
             </Link>
-            <Link href="/signup" className={GLASS_BUTTON_SM}>
-              Get started
+            <Link href={SITE.navCta.href} className={GLASS_BUTTON_SM}>
+              {SITE.navCta.label}
             </Link>
+            <SiteMenu items={SITE.nav} signIn={{ label: "Sign in", href: "/login" }} />
           </div>
         </div>
       </SiteHeader>
@@ -45,33 +47,39 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       </main>
 
       <footer className="border-t border-line bg-surface">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr]">
-          <div>
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
+          <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-ink">
               <BrandMark />
               {SITE.company.name}
             </Link>
-            <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-muted">{SITE.footer.blurb}</p>
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">{SITE.footer.blurb}</p>
             <p className="mt-3 text-sm text-ink-muted">
               {SITE.company.location} ·{" "}
               <a href={`mailto:${SITE.company.email}`} className="hover:text-ink">
                 {SITE.company.email}
               </a>
             </p>
-          </div>
-          {SITE.footer.columns.map((column) => (
-            <div key={column.heading}>
-              <h2 className="eyebrow">{column.heading}</h2>
-              <ul className="mt-3 space-y-2">
-                {column.links.map((item) => (
+            {/* TODO: social profiles - listed in content/site.json once they exist. */}
+            {SITE.footer.social.length > 0 ? (
+              <ul className="mt-4 flex flex-wrap gap-4">
+                {SITE.footer.social.map((item) => (
                   <li key={item.href}>
-                    <Link href={item.href} className="text-sm text-ink-muted hover:text-ink">
+                    <a href={item.href} rel="me noopener" className="text-sm font-medium text-ink-muted hover:text-ink">
                       {item.label}
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
-            </div>
+            ) : null}
+          </div>
+          <FooterColumn heading={SITE.footer.columns[0]!.heading} links={SITE.footer.columns[0]!.links} />
+          <FooterColumn
+            heading={SITE.footer.rolesHeading}
+            links={TEMPLATES.map((role) => ({ label: role.name, href: `/showcase#${role.id}` }))}
+          />
+          {SITE.footer.columns.slice(1).map((column) => (
+            <FooterColumn key={column.heading} heading={column.heading} links={column.links} />
           ))}
         </div>
         <div className="border-t border-line">
@@ -80,6 +88,23 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </p>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function FooterColumn({ heading, links }: { heading: string; links: readonly { label: string; href: string }[] }) {
+  return (
+    <div>
+      <h2 className="eyebrow">{heading}</h2>
+      <ul className="mt-3 space-y-2">
+        {links.map((item) => (
+          <li key={item.href + item.label}>
+            <Link href={item.href} className="text-sm text-ink-muted hover:text-ink">
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

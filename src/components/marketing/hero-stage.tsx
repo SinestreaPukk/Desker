@@ -242,9 +242,22 @@ export function HeroStage({ className }: { className?: string }) {
       </div>
 
       {/* The tabs above are real controls; the scene under them is a picture,
-          so its Approve and Reject buttons stay out of the tab order. */}
-      <div className="min-h-[21rem] bg-paper p-4 text-ink sm:p-5" inert>
-        {current.render(beat)}
+          so its Approve and Reject buttons stay out of the tab order.
+          Every scene sits in the same grid cell, finished and invisible
+          except the running one, so the stage is always as tall as its
+          tallest scene at this width. A fixed min-height did that at one
+          width only: the reel grew and shrank the page under the reader
+          every few seconds, which is layout shift. */}
+      <div className="grid grid-cols-1 bg-paper p-4 text-ink sm:p-5" inert>
+        {SCENES.map((entry, index) => (
+          <div
+            key={entry.id}
+            aria-hidden={index !== scene}
+            className={cn("min-w-0 self-center [grid-area:1/1]", index !== scene && "invisible")}
+          >
+            {entry.render(index === scene ? beat : BEATS - 1)}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -590,7 +603,7 @@ export function AssistantScene({ beat }: { beat: number }) {
           <StatusBadge status="needs_approval" />
           <span className="text-sm text-ink">Nothing sends until you say so.</span>
           <span className="ml-auto flex gap-2">
-            <Button size="sm">
+            <Button size="sm" variant="cta">
               <Check aria-hidden />
               Approve and send
             </Button>

@@ -10,31 +10,84 @@
     "twitter": ""
   },
   "nav": [
-    { "label": "How it works", "href": "/#how-it-works" },
-    { "label": "Roles", "href": "/showcase" },
-    { "label": "Pricing", "href": "/#pricing" },
-    { "label": "Contact", "href": "/contact" }
+    {
+      "label": "Product",
+      "href": "/#product"
+    },
+    {
+      "label": "Roles",
+      "href": "/#roles"
+    },
+    {
+      "label": "Pricing",
+      "href": "/#pricing"
+    },
+    {
+      "label": "FAQ",
+      "href": "/#faq"
+    }
   ],
+  "navCta": {
+    "label": "Start free",
+    "href": "/signup"
+  },
   "footer": {
     "blurb": "Desker gives small teams an AI staff they can actually trust: every agent has a job, a voice, your documents, and a human sign-off before it publishes or sends.",
+    "rolesHeading": "Roles",
     "columns": [
       {
         "heading": "Product",
         "links": [
-          { "label": "Roles", "href": "/showcase" },
-          { "label": "Pricing", "href": "/#pricing" },
-          { "label": "Sign in", "href": "/login" }
+          {
+            "label": "How it works",
+            "href": "/#how-it-works"
+          },
+          {
+            "label": "Trust & control",
+            "href": "/#trust"
+          },
+          {
+            "label": "Pricing",
+            "href": "/#pricing"
+          },
+          {
+            "label": "FAQ",
+            "href": "/#faq"
+          },
+          {
+            "label": "Sign in",
+            "href": "/login"
+          }
         ]
       },
       {
         "heading": "Company",
         "links": [
-          { "label": "Contact", "href": "/contact" },
-          { "label": "Terms of Service", "href": "/terms" },
-          { "label": "Privacy Policy", "href": "/privacy" }
+          {
+            "label": "Contact",
+            "href": "/contact"
+          }
+        ]
+      },
+      {
+        "heading": "Legal",
+        "links": [
+          {
+            "label": "Privacy Policy",
+            "href": "/privacy"
+          },
+          {
+            "label": "Terms of Service",
+            "href": "/terms"
+          },
+          {
+            "label": "Security",
+            "href": "/#trust"
+          }
         ]
       }
     ],
+    "social": [],
     "legal": "© {year} {company}. All rights reserved."
   }
 }

@@ -1,14 +1,26 @@
 import Link from "next/link";
-import { Check, ChevronDown, CircleCheck, FileSearch, Lock, ShieldCheck } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { TEMPLATES, type TRUST_ICONS } from "@/lib/content";
+import {
+  ArrowRight,
+  BookOpenCheck,
+  CalendarClock,
+  ChevronDown,
+  CircleCheckBig,
+  FilePen,
+  FileUp,
+  LifeBuoy,
+  LockKeyhole,
+  ScrollText,
+  UserCheck,
+} from "lucide-react";
+import { LANDING_ICONS, TEMPLATES } from "@/lib/content";
 import { TemplateIcon } from "@/components/marketing/template-icon";
 import { cn } from "@/lib/utils";
 
 /**
  * The parts of the landing page that are pure markup and CSS: the sky's
- * horizon, the role cards and the FAQ. No client code, so they read
- * identically to a crawler and to a browser with scripts off.
+ * horizon, the steps, the trust grid, the roles, the numbers and the FAQ. No
+ * client code, so they read identically to a crawler and to a browser with
+ * scripts off.
  */
 
 /** Drifting clouds across the lower half of the sky. Decorative; CSS only. */
@@ -24,145 +36,254 @@ export function Clouds({ className }: { className?: string }) {
   );
 }
 
-const TRUST_GLYPH = {
-  shield: ShieldCheck,
-  approval: CircleCheck,
-  lock: Lock,
-} satisfies Record<(typeof TRUST_ICONS)[number], React.ComponentType<{ className?: string }>>;
+/**
+ * A desert and coastal horizon drawn with rolling ridges meeting the sea blue sky,
+ * dissolving softly into the paper ground.
+ */
+export function Horizon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 1440 420"
+      preserveAspectRatio="xMidYMax slice"
+      aria-hidden
+      className={cn("block h-full w-full pointer-events-none", className)}
+    >
+      <defs>
+        <linearGradient id="dune-far" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--dune-far-top)" />
+          <stop offset="100%" stopColor="var(--dune-far-foot)" />
+        </linearGradient>
+        <linearGradient id="dune-mid" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--dune-mid-top)" />
+          <stop offset="100%" stopColor="var(--dune-mid-foot)" />
+        </linearGradient>
+        <linearGradient id="dune-near" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--dune-near-top)" />
+          <stop offset="100%" stopColor="var(--dune-near-foot)" />
+        </linearGradient>
+        <linearGradient id="desert-haze" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--paper)" stopOpacity="0" />
+          <stop offset="100%" stopColor="var(--paper)" stopOpacity="1" />
+        </linearGradient>
+      </defs>
+
+      {/* Far ridge: sweeping dune crests in distant sea haze */}
+      <path fill="url(#dune-far)" d="M0 300 Q240 220 480 270 T960 210 T1440 260 L1440 420 L0 420 Z" />
+      {/* Mid ridge: rolling dunes */}
+      <path fill="url(#dune-mid)" d="M0 340 Q320 240 640 290 T1280 230 T1440 280 L1440 420 L0 420 Z" />
+      {/* Near ridge: deep coastal dune silhouette */}
+      <path fill="url(#dune-near)" d="M0 420 L0 330 Q200 270 440 320 T920 280 T1440 360 L1440 420 Z" />
+      {/* Haze at the foot dissolving seamlessly into the paper surface */}
+      <rect x="0" y="280" width="1440" height="140" fill="url(#desert-haze)" />
+    </svg>
+  );
+}
+
+/* --- Icons ------------------------------------------------------------------ */
+
+const ICONS: Record<(typeof LANDING_ICONS)[number], React.ComponentType<{ className?: string }>> = {
+  upload: FileUp,
+  calendar: CalendarClock,
+  approve: CircleCheckBig,
+  draft: FilePen,
+  person: UserCheck,
+  source: BookOpenCheck,
+  log: ScrollText,
+  lock: LockKeyhole,
+  handoff: LifeBuoy,
+};
+
+export function LandingIcon({ icon, className }: { icon: (typeof LANDING_ICONS)[number]; className?: string }) {
+  const Icon = ICONS[icon];
+  return <Icon className={className} aria-hidden />;
+}
+
+/* --- Trust strip ------------------------------------------------------------ */
 
 /**
- * The line under the hero's buttons.
- *
- * A B2B buyer's first objection to an AI employee is "will it do something on
- * its own?", and the answers were all buried in the FAQ at the bottom of the
- * page. Each claim here is one the FAQ makes in the same words - no logos, no
- * counts, nothing we cannot show.
+ * What the product is built on, as names. TODO: real logos only - provider
+ * wordmarks need their brand permission, and customer logos need a customer.
  */
-export function TrustLine({
+export function TrustStrip({ label, items }: { label: string; items: readonly string[] }) {
+  return (
+    <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center sm:gap-6">
+      <p className="eyebrow">{label}</p>
+      <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+        {items.map((item) => (
+          <li key={item} className="text-lg font-semibold tracking-tight text-ink-muted">
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* --- How it works ------------------------------------------------------------ */
+
+export function Steps({
   items,
-  className,
 }: {
-  items: readonly { icon: (typeof TRUST_ICONS)[number]; label: string }[];
-  className?: string;
+  items: readonly { icon: (typeof LANDING_ICONS)[number]; title: string; body: string }[];
 }) {
   return (
-    <ul className={cn("flex flex-wrap items-center justify-center gap-x-6 gap-y-2", className)}>
-      {items.map((item) => {
-        const Glyph = TRUST_GLYPH[item.icon];
-        return (
-          <li key={item.label} className="inline-flex items-center gap-2 text-sm text-[var(--sky-ink)]">
-            <Glyph className="size-4 shrink-0 opacity-70" aria-hidden />
-            {item.label}
-          </li>
-        );
-      })}
+    <ol className="relative grid gap-10 md:grid-cols-3 md:gap-8">
+      {/* The rail joining the three numbers, behind them, from md up. */}
+      <span aria-hidden className="absolute left-[16.7%] right-[16.7%] top-6 hidden h-px bg-accent-line md:block" />
+      {items.map((step, index) => (
+        <li key={step.title} className="relative flex flex-col items-center text-center">
+          <span className="relative flex size-12 items-center justify-center rounded-full border border-accent-line bg-surface text-accent shadow-xs">
+            <LandingIcon icon={step.icon} className="size-5" />
+            <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-accent font-mono text-xs text-accent-fg">
+              {index + 1}
+            </span>
+          </span>
+          <h3 className="mt-5 text-lg font-semibold tracking-tight text-ink">{step.title}</h3>
+          <p className="mt-2 max-w-xs text-base leading-relaxed text-ink-muted">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/* --- Trust & control --------------------------------------------------------- */
+
+export function TrustGrid({
+  items,
+}: {
+  items: readonly { icon: (typeof LANDING_ICONS)[number]; title: string; body: string }[];
+}) {
+  return (
+    <ul className="grid gap-px overflow-hidden rounded-panel border border-accent-fg/15 bg-accent-fg/15 sm:grid-cols-2 lg:grid-cols-3">
+      {items.map((item) => (
+        <li key={item.title} className="bg-accent p-6">
+          <span className="flex size-10 items-center justify-center rounded-lg bg-accent-fg/10 text-accent-fg">
+            <LandingIcon icon={item.icon} className="size-5" />
+          </span>
+          <h3 className="mt-4 text-lg font-semibold tracking-tight text-accent-fg">{item.title}</h3>
+          <p className="mt-2 text-base leading-relaxed text-accent-fg/85">{item.body}</p>
+        </li>
+      ))}
     </ul>
   );
 }
 
-/* --- The roles bento ------------------------------------------------------- */
-
-/**
- * The two roles that get a tile of their own, and what shows inside it.
- *
- * Eight identical cards told a reader that all eight are the same thing in
- * eight flavours, which is the opposite of the pitch. Two of them are the
- * ones people arrive wanting - somebody to answer clients, somebody to post -
- * so those two get the room and a glimpse of the actual work, and the other
- * six stay compact. The four-column grid comes out exactly square: the wide
- * tile is two rows, the marketer's is two columns, and the rest fill the
- * last row.
- */
-const FEATURED = {
-  "customer-support": "sm:col-span-2 lg:row-span-2",
-  marketer: "sm:col-span-2",
-} as const;
-
-/** Mia, mid-answer. No buttons: the whole tile is already a link. */
-function MiniChat() {
+/** A slice of the audit log: the promise above, as the record shows it. A picture. */
+export function AuditTrail() {
+  const rows = [
+    { time: "09:00", who: "Nova", what: "drafted a post · waiting for approval" },
+    { time: "09:12", who: "You", what: "edited the draft" },
+    { time: "09:13", who: "You", what: "approved · published" },
+    { time: "10:41", who: "Mia", what: "escalated a refund question to you" },
+  ];
   return (
-    <span className="mt-6 flex flex-col gap-2 rounded-lg border border-line bg-paper p-3" aria-hidden>
-      <span className="ml-auto max-w-[82%] rounded-panel rounded-br-md bg-accent px-3 py-2 text-xs leading-relaxed text-accent-fg">
-        Is the drill still under warranty?
-      </span>
-      <span className="max-w-[90%] rounded-panel rounded-tl-md border border-line bg-surface px-3 py-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-soft-fg">
-          <FileSearch className="size-3" aria-hidden />
-          returns-policy.pdf
-        </span>
-        <span className="mt-1.5 block text-xs leading-relaxed text-ink">
-          Power tools carry 24 months, so this is a warranty claim rather than a return.
-        </span>
-      </span>
-    </span>
+    <div className="rounded-panel border border-accent-fg/15 bg-accent-fg/[0.06] p-4" aria-hidden>
+      <p className="meta text-accent-fg/80">Audit log · today</p>
+      <ol className="mt-3 space-y-2.5">
+        {rows.map((row) => (
+          <li key={row.time} className="flex items-baseline gap-3 text-sm">
+            <span className="font-mono text-xs text-accent-fg/70">{row.time}</span>
+            <span className="text-accent-fg">
+              <span className="font-semibold">{row.who}</span> <span className="text-accent-fg/85">{row.what}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
-/** Nova's draft, waiting. The buttons are a picture of buttons. */
-function MiniDraft() {
-  return (
-    <span className="flex flex-col rounded-lg border border-line bg-paper p-3" aria-hidden>
-      <span className="flex items-center justify-between gap-2">
-        <span className="meta whitespace-nowrap">Draft · LinkedIn</span>
-        <Badge tone="warning">Needs approval</Badge>
-      </span>
-      <span className="mt-2 block text-xs leading-relaxed text-ink">
-        Every tool we sell now carries a lifetime warranty. Not 24 months. Lifetime.
-      </span>
-      <span className="mt-3 flex items-center gap-1.5">
-        <span className="inline-flex h-7 items-center gap-1.5 rounded-md bg-accent px-2.5 text-xs font-medium text-accent-fg">
-          <Check className="size-3" aria-hidden />
-          Approve
-        </span>
-        <span className="inline-flex h-7 items-center rounded-md px-2.5 text-xs font-medium text-ink-muted">
-          Edit
-        </span>
-      </span>
-    </span>
-  );
-}
+/* --- Roles ------------------------------------------------------------------- */
 
-/** Every role, from the same records the wizard and showcase use. */
-export function RoleGrid() {
+/** Every role, from the same records the wizard and showcase use. One card each. */
+export function RoleGrid({ cta }: { cta: string }) {
   return (
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {TEMPLATES.map((role) => {
-        const span = FEATURED[role.id as keyof typeof FEATURED];
-        const wide = role.id === "marketer";
-        return (
-          <li key={role.id} className={span}>
-            <Link
-              href={`/showcase#${role.id}`}
-              className="lift flex h-full flex-col rounded-panel border border-line bg-surface p-5 hover:border-accent-line hover:shadow-md"
-            >
-              <span className={cn("flex flex-1 flex-col", wide && "gap-5 sm:flex-row sm:items-center")}>
-                <span className={cn("flex flex-col", wide && "sm:flex-1")}>
-                  <span className="flex size-10 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
-                    <TemplateIcon icon={role.icon} className="size-4" />
-                  </span>
-                  <span className="mt-4 text-lg font-semibold tracking-tight text-ink">{role.name}</span>
-                  <span className="mt-1 text-sm text-ink-muted">{role.jobTitle}</span>
-                  <span className="mt-3 text-sm leading-relaxed text-ink-muted">{role.pitch}</span>
-                </span>
-                {wide ? <span className="sm:flex-1">{<MiniDraft />}</span> : null}
-              </span>
-              {span && !wide ? <MiniChat /> : null}
-            </Link>
-          </li>
-        );
-      })}
+      {TEMPLATES.map((role) => (
+        <li key={role.id}>
+          <Link
+            href={`/showcase#${role.id}`}
+            className="group lift flex h-full flex-col rounded-panel border border-line bg-surface p-5 shadow-xs hover:border-accent-line hover:shadow-md"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
+              <TemplateIcon icon={role.icon} className="size-4" />
+            </span>
+            <span className="mt-4 text-lg font-semibold tracking-tight text-ink">{role.name}</span>
+            <span className="mt-2 text-sm leading-relaxed text-ink-muted">{role.pitch}</span>
+            <span className="mt-auto flex items-center justify-between pt-5 text-sm font-medium text-accent">
+              <span>{cta}</span>
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
+            </span>
+          </Link>
+        </li>
+      ))}
     </ul>
   );
 }
 
-/** Native disclosure, so it opens without JavaScript. */
+/* --- Outcomes ------------------------------------------------------------------ */
+
+type Metric = { label: string; value: string | null; todo?: string };
+
+/** The section shows in production only once every value is measured. */
+export function metricsReady(items: readonly Metric[]): boolean {
+  return items.every((item) => item.value !== null);
+}
+
+export function MetricTiles({ items }: { items: readonly Metric[] }) {
+  return (
+    <dl className="grid gap-4 sm:grid-cols-3">
+      {items.map((item) => (
+        <div
+          key={item.label}
+          className={cn(
+            "rounded-panel border bg-surface p-6 text-center",
+            item.value === null ? "border-dashed border-line-strong" : "border-line shadow-xs",
+          )}
+        >
+          {/* Key numbers are an ember moment - in the ink tone, which is the one that reads. */}
+          <dd className="text-display font-medium tracking-tight text-ember-ink">{item.value ?? "—"}</dd>
+          <dt className="mt-2 text-sm text-ink-muted">{item.label}</dt>
+          {item.value === null ? (
+            <p className="mt-3 font-mono text-xs text-danger">TODO: {item.todo ?? "measure this"}</p>
+          ) : null}
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/* --- Testimonials -------------------------------------------------------------- */
+
+/** Real quotes only. The page renders this only when content enables it. */
+export function Testimonials({ items }: { items: readonly { quote: string; name: string; title: string }[] }) {
+  return (
+    <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {items.map((item) => (
+        <li key={item.name}>
+          <figure className="flex h-full flex-col rounded-panel border border-line bg-surface p-6 shadow-xs">
+            <blockquote className="text-base leading-relaxed text-ink">&ldquo;{item.quote}&rdquo;</blockquote>
+            <figcaption className="mt-auto pt-5 text-sm">
+              <span className="font-semibold text-ink">{item.name}</span>
+              <span className="text-ink-muted"> · {item.title}</span>
+            </figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/* --- FAQ ------------------------------------------------------------------------- */
+
+/** Native disclosure, so it opens without JavaScript and works from the keyboard. */
 export function Faq({ items }: { items: readonly { q: string; a: string }[] }) {
   return (
     <div className="divide-y divide-line border-y border-line">
       {items.map((item, index) => (
         <details key={item.q} className="group" open={index === 0}>
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-6 rounded-sm py-5 text-lg font-medium tracking-tight text-ink transition-colors hover:text-accent [&::-webkit-details-marker]:hidden">
-            {item.q}
+          <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-6 rounded-md py-4 text-lg font-medium tracking-tight text-ink transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
+            <span>{item.q}</span>
             <ChevronDown
               className="size-4 shrink-0 text-ink-subtle transition-transform duration-300 group-open:rotate-180"
               aria-hidden
