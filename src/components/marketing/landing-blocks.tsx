@@ -50,8 +50,8 @@ export function LandingIcon({ icon, className }: { icon: (typeof LANDING_ICONS)[
 export function TrustStrip({ label, items }: { label: string; items: readonly string[] }) {
   return (
     <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center sm:gap-6">
-      <p className="eyebrow">{label}</p>
-      <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+      <p className="eyebrow sd-rise">{label}</p>
+      <ul className="sd-stagger flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
         {items.map((item) => (
           <li key={item} className="text-lg font-semibold tracking-tight text-ink-muted">
             {item}
@@ -70,14 +70,14 @@ export function Steps({
   items: readonly { icon: (typeof LANDING_ICONS)[number]; title: string; body: string }[];
 }) {
   return (
-    <ol className="relative grid gap-10 md:grid-cols-3 md:gap-8">
+    <ol className="sd-stagger relative grid gap-10 md:grid-cols-3 md:gap-8">
       {/* The rail joining the three numbers, behind them, from md up. */}
-      <span aria-hidden className="absolute left-[16.7%] right-[16.7%] top-6 hidden h-px bg-accent-line md:block" />
+      <span aria-hidden className="sd-draw absolute left-[16.7%] right-[16.7%] top-6 hidden h-px bg-accent-line md:block" />
       {items.map((step, index) => (
         <li key={step.title} className="relative flex flex-col items-center text-center">
           <span className="relative flex size-12 items-center justify-center rounded-full border border-accent-line bg-surface text-accent shadow-xs">
             <LandingIcon icon={step.icon} className="size-5" />
-            <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-accent font-mono text-xs text-accent-fg">
+            <span className="sd-pop absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-accent font-mono text-xs text-accent-fg">
               {index + 1}
             </span>
           </span>
@@ -97,7 +97,7 @@ export function TrustGrid({
   items: readonly { icon: (typeof LANDING_ICONS)[number]; title: string; body: string }[];
 }) {
   return (
-    <ul className="grid gap-px overflow-hidden rounded-panel border border-accent-fg/15 bg-accent-fg/15 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="sd-stagger grid gap-px overflow-hidden rounded-panel border border-accent-fg/15 bg-accent-fg/15 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
         <li key={item.title} className="bg-accent p-6">
           <span className="flex size-10 items-center justify-center rounded-lg bg-accent-fg/10 text-accent-fg">
@@ -120,9 +120,9 @@ export function AuditTrail() {
     { time: "10:41", who: "Mia", what: "escalated a refund question to you" },
   ];
   return (
-    <div className="rounded-panel border border-accent-fg/15 bg-accent-fg/[0.06] p-4" aria-hidden>
+    <div className="sd-rise rounded-panel border border-accent-fg/15 bg-accent-fg/[0.06] p-4" aria-hidden>
       <p className="meta text-accent-fg/80">Audit log · today</p>
-      <ol className="mt-3 space-y-2.5">
+      <ol className="sd-stagger mt-3 space-y-2.5">
         {rows.map((row) => (
           <li key={row.time} className="flex items-baseline gap-3 text-sm">
             <span className="font-mono text-xs text-accent-fg/70">{row.time}</span>
@@ -141,7 +141,7 @@ export function AuditTrail() {
 /** Every role, from the same records the wizard and showcase use. One card each. */
 export function RoleGrid({ cta }: { cta: string }) {
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <ul className="sd-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {TEMPLATES.map((role) => (
         <li key={role.id}>
           <Link
@@ -175,7 +175,7 @@ export function metricsReady(items: readonly Metric[]): boolean {
 
 export function MetricTiles({ items }: { items: readonly Metric[] }) {
   return (
-    <dl className="grid gap-4 sm:grid-cols-3">
+    <dl className="sd-stagger grid gap-4 sm:grid-cols-3">
       {items.map((item) => (
         <div
           key={item.label}
@@ -184,7 +184,7 @@ export function MetricTiles({ items }: { items: readonly Metric[] }) {
             item.value === null ? "border-dashed border-line-strong" : "border-line shadow-xs",
           )}
         >
-          <dd className="text-display font-medium tracking-tight text-accent">{item.value ?? "—"}</dd>
+          <dd className="sd-pop text-display font-medium tracking-tight text-accent">{item.value ?? "—"}</dd>
           <dt className="mt-2 text-sm text-ink-muted">{item.label}</dt>
           {item.value === null ? (
             <p className="mt-3 font-mono text-xs text-danger">TODO: {item.todo ?? "measure this"}</p>
@@ -200,7 +200,7 @@ export function MetricTiles({ items }: { items: readonly Metric[] }) {
 /** Real quotes only. The page renders this only when content enables it. */
 export function Testimonials({ items }: { items: readonly { quote: string; name: string; title: string }[] }) {
   return (
-    <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <ul className="sd-stagger grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
         <li key={item.name}>
           <figure className="flex h-full flex-col rounded-panel border border-line bg-surface p-6 shadow-xs">
@@ -221,7 +221,7 @@ export function Testimonials({ items }: { items: readonly { quote: string; name:
 /** Native disclosure, so it opens without JavaScript and works from the keyboard. */
 export function Faq({ items }: { items: readonly { q: string; a: string }[] }) {
   return (
-    <div className="divide-y divide-line border-y border-line">
+    <div className="sd-stagger divide-y divide-line border-y border-line">
       {items.map((item, index) => (
         <details key={item.q} className="group" open={index === 0}>
           <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-6 rounded-md py-4 text-lg font-medium tracking-tight text-ink transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">

@@ -5,7 +5,6 @@ import { ArrowRight, Check } from "lucide-react";
 import { currentUser } from "@/lib/auth";
 import { defaultProject } from "@/lib/projects";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import {
   AuditTrail,
@@ -22,9 +21,12 @@ import { GLASS_BUTTON, SKY_LINK } from "@/components/marketing/glass-button";
 import { HeroStage } from "@/components/marketing/hero-stage";
 import { Highlight } from "@/components/marketing/highlight";
 import { Dunes, NightSky } from "@/components/marketing/night-sky";
+import { HeroSnap } from "@/components/marketing/hero-snap";
+import { LinkButton } from "@/components/marketing/link-button";
+import { HeroWords } from "@/components/marketing/words";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { ShowcaseBento } from "@/components/marketing/showcase-bento";
-import { Parallax, Reveal } from "@/components/marketing/reveal";
+import { Reveal } from "@/components/marketing/reveal";
 import { LANDING, SITE, pageMetadata, templateById } from "@/lib/content";
 import { PLANS } from "@/lib/billing/plans";
 import { cn } from "@/lib/utils";
@@ -72,106 +74,108 @@ export default async function LandingPage({
     <>
       {/* Hero ---------------------------------------------------------- */}
       {/* overflow-x-clip, not overflow-hidden: the stage hangs below the sky
-          on purpose (-mb below), and hidden cut its foot off. The sky and
-          dunes are clipped by their own boxes. */}
+          on purpose (-mb below), and hidden cut its foot off; clip is also
+          what lets the stage stick. The sky and dunes are clipped by their
+          own boxes. */}
       <section className="sky relative -mt-14 overflow-x-clip pt-14" data-header-clear>
         <NightSky uid="hero-sky" />
-        {/* A fixed height, not a share of the section: the pinned demo makes
-            the hero tall, and a percentage would blow the dunes up past the
-            crest. */}
-        <Parallax className="absolute inset-x-0 bottom-0 h-[36rem] sm:h-[40rem]" distance={-40}>
+        {/* The dunes crest just above the first screen's fold, whatever the
+            hero's length - the hold makes it long - at a fixed height, since
+            a share of the section would blow them up past the crest. Below
+            them the sand falls into shadow for the stretch the window is
+            pinned over, then the whole hero dissolves into the paper. */}
+        <div className="absolute inset-x-0 top-[calc(100svh-16rem)] h-[36rem] sm:h-[40rem]">
           <Dunes uid="hero-dunes" />
-        </Parallax>
-        {/* The dunes are cropped to fit (slice), so their last row can be
-            sand rather than their own paper haze; this lands the edge on paper. */}
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-10 bg-linear-to-b from-transparent to-paper" />
+        </div>
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 top-[calc(100svh+6rem)] bg-[linear-gradient(to_bottom,transparent,var(--dune-deep)_14rem)]"
+        />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-b from-transparent to-paper" />
 
         <div className="relative mx-auto max-w-6xl px-4 pt-24 text-center sm:px-6 sm:pt-36">
-          <Reveal>
-            <h1 className="mx-auto max-w-4xl font-display text-hero text-balance text-[var(--sky-ink)]">
-              {hero.headline}
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-lg font-medium leading-relaxed text-pretty text-[var(--sky-ink)] sm:text-xl sm:leading-snug">
-              {hero.subhead}
-            </p>
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
-              <Link href={hero.primaryCta.href} className={GLASS_BUTTON}>
-                {hero.primaryCta.label}
-                <ArrowRight aria-hidden />
-              </Link>
-              <Link href={hero.secondaryCta.href} className={SKY_LINK}>
-                {hero.secondaryCta.label}
-              </Link>
-            </div>
-            <p className="mt-4 text-sm font-medium text-[var(--sky-ink)]">{hero.microcopy}</p>
-          </Reveal>
+          {/* hero-copy rises and fades as the window rises, gone by the time
+              it pins, so nothing is left under the clear header. */}
+          <div className="hero-copy">
+          <h1 className="mx-auto max-w-4xl font-display text-hero text-balance text-[var(--sky-ink)]">
+            <HeroWords text={hero.headline} />
+          </h1>
+          <p className="hero-in mx-auto mt-5 max-w-2xl text-lg font-medium leading-relaxed text-pretty text-[var(--sky-ink)] [--in:4] sm:text-xl sm:leading-snug">
+            {hero.subhead}
+          </p>
+          <div className="hero-in mt-7 flex flex-wrap items-center justify-center gap-4 [--in:5]">
+            <Link href={hero.primaryCta.href} className={GLASS_BUTTON}>
+              {hero.primaryCta.label}
+              <ArrowRight aria-hidden />
+            </Link>
+            <Link href={hero.secondaryCta.href} className={SKY_LINK}>
+              {hero.secondaryCta.label}
+            </Link>
+          </div>
+          <p className="hero-in mt-4 text-sm font-medium text-[var(--sky-ink)] [--in:6]">{hero.microcopy}</p>
+          </div>
 
           {/* The product, floating over the horizon and down into the page.
               stage-rise tilts it back at the top of the page and scrolling
-              stands it up toward the reader; the track then holds it pinned
-              under the header for a stretch of scroll while the reel plays,
-              before the page moves on (globals.css). */}
-          <div className="stage-track relative z-10 mx-auto -mb-24 mt-12 max-w-4xl [perspective:1600px] sm:-mb-32 sm:mt-16">
+              stands it up; it pins in the middle of the screen, holds there
+              for a stretch of scroll while the reel plays, then the page
+              moves on. HeroSnap finishes a scroll that stops on the way, so
+              the window lands whole (globals.css, "The hero's stage"). */}
+          <div className="stage-track relative z-10 mx-auto -mb-24 mt-10 max-w-4xl [perspective:1600px] sm:-mb-32 sm:mt-12">
             <HeroStage data-header-solid className="stage-rise stage-pin text-left" />
             <div className="stage-hold" aria-hidden />
           </div>
         </div>
+        <HeroSnap />
       </section>
 
       {/* Built on ------------------------------------------------------- */}
       {/* Top padding clears the stage that hangs down from the hero. */}
       <Section containerClassName="pb-0 pt-32 sm:pb-0 sm:pt-44">
-        <Reveal>
-          <TrustStrip label={trustStrip.label} items={trustStrip.items} />
-        </Reveal>
+        <TrustStrip label={trustStrip.label} items={trustStrip.items} />
       </Section>
 
       {/* Problem -> promise -------------------------------------------- */}
       <Section labelledBy="problem-heading">
-        <Reveal className="mx-auto max-w-3xl text-center">
-          <p className="eyebrow text-accent">{problem.eyebrow}</p>
-          <div className="mt-5 space-y-3">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="eyebrow sd-rise text-accent">{problem.eyebrow}</p>
+          <div className="sd-stagger mt-5 space-y-3">
             {problem.pains.map((pain) => (
               <p key={pain} className="text-xl leading-snug text-pretty text-ink-muted">
                 {pain}
               </p>
             ))}
           </div>
-          <h2 id="problem-heading" className="mt-8 text-title text-balance text-ink">
+          <h2 id="problem-heading" className="sd-rise mt-8 text-title text-balance text-ink">
             <Highlight text={problem.promise} phrase={problem.highlight} />
           </h2>
-        </Reveal>
+        </div>
       </Section>
 
       {/* How it works ----------------------------------------------------- */}
       <Section id="how-it-works" labelledBy="steps-heading" className="border-t border-line bg-surface">
-        <Reveal>
           <SectionHeader id="steps-heading" eyebrow={steps.eyebrow} heading={steps.heading} intro={steps.intro} />
-        </Reveal>
-        <Reveal className="mt-14" delay={0.1}>
+        <div className="mt-14">
           <Steps items={steps.items} />
-        </Reveal>
+        </div>
       </Section>
 
       {/* Showcase ---------------------------------------------------------- */}
       <Section id="product" labelledBy="product-heading" className="sky-wash border-t border-line">
-        <Reveal>
           <SectionHeader
             id="product-heading"
             eyebrow={features.eyebrow}
             heading={features.heading}
             intro={features.intro}
           />
-        </Reveal>
-        <Reveal className="mt-12" delay={0.1}>
+        <div className="mt-12">
           <ShowcaseBento items={features.items} />
-        </Reveal>
+        </div>
       </Section>
 
       {/* Trust & control ---------------------------------------------------- */}
       <Section id="trust" labelledBy="trust-heading" className="bg-accent text-accent-fg">
         <div className="grid items-end gap-10 lg:grid-cols-[1.2fr_1fr]">
-          <Reveal>
             <SectionHeader
               id="trust-heading"
               align="left"
@@ -180,60 +184,49 @@ export default async function LandingPage({
               heading={trust.heading}
               intro={trust.intro}
             />
-          </Reveal>
-          <Reveal delay={0.1}>
-            <AuditTrail />
-          </Reveal>
+          <AuditTrail />
         </div>
-        <Reveal className="mt-12" delay={0.15}>
+        <div className="mt-12">
           <TrustGrid items={trust.items} />
-        </Reveal>
+        </div>
       </Section>
 
       {/* Roles ------------------------------------------------------------- */}
       <Section id="roles" labelledBy="roles-heading">
-        <Reveal>
           <SectionHeader id="roles-heading" eyebrow={roles.eyebrow} heading={roles.heading} intro={roles.intro} />
-        </Reveal>
-        <Reveal className="mt-12" delay={0.1}>
+        <div className="mt-12">
           <RoleGrid cta={roles.cta} />
-        </Reveal>
+        </div>
       </Section>
 
       {/* Outcomes ---------------------------------------------------------- */}
       {showMetrics ? (
         <Section labelledBy="metrics-heading" className="border-t border-line bg-surface">
-          <Reveal>
             <SectionHeader id="metrics-heading" eyebrow={metrics.eyebrow} heading={metrics.heading} intro={metrics.intro} />
-          </Reveal>
-          <Reveal className="mt-12" delay={0.1}>
+          <div className="mt-12">
             <MetricTiles items={metrics.items} />
-          </Reveal>
+          </div>
         </Section>
       ) : null}
 
       {/* Testimonials: real quotes only, off until content enables them --- */}
       {showTestimonials ? (
         <Section labelledBy="testimonials-heading" className="border-t border-line">
-          <Reveal>
             <SectionHeader
               id="testimonials-heading"
               eyebrow={testimonials.eyebrow}
               heading={testimonials.heading}
               intro={testimonials.intro}
             />
-          </Reveal>
-          <Reveal className="mt-12" delay={0.1}>
+          <div className="mt-12">
             <Testimonials items={testimonials.items} />
-          </Reveal>
+          </div>
         </Section>
       ) : null}
 
       {/* Pricing ------------------------------------------------------------ */}
       <Section id="pricing" labelledBy="pricing-heading" className="border-t border-line">
-        <Reveal>
           <SectionHeader id="pricing-heading" eyebrow={pricing.eyebrow} heading={pricing.heading} intro={pricing.intro} />
-        </Reveal>
         {/* Three columns only from lg. At 768 they were 230px wide and every
             feature line wrapped twice; below that it is one readable column. */}
         <div className="mx-auto mt-12 grid max-w-md items-stretch gap-4 lg:max-w-5xl lg:grid-cols-3">
@@ -277,9 +270,9 @@ export default async function LandingPage({
                       </li>
                     ))}
                   </ul>
-                  <Button asChild className="mt-auto min-h-[44px] w-full" variant={popular ? "primary" : "secondary"}>
-                    <Link href="/signup">{plan.priceUsd === 0 ? "Start free" : `Start with ${plan.name}`}</Link>
-                  </Button>
+                  <LinkButton href="/signup" className="mt-auto min-h-[44px] w-full" variant={popular ? "primary" : "secondary"}>
+                    {plan.priceUsd === 0 ? "Start free" : `Start with ${plan.name}`}
+                  </LinkButton>
                 </Panel>
               </Reveal>
             );
@@ -291,12 +284,8 @@ export default async function LandingPage({
       {/* FAQ ---------------------------------------------------------------- */}
       <Section id="faq" labelledBy="faq-heading" className="border-t border-line">
         <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr] lg:gap-16">
-          <Reveal>
             <SectionHeader id="faq-heading" align="left" eyebrow={faq.eyebrow} heading={faq.heading} intro={faq.intro} />
-          </Reveal>
-          <Reveal delay={0.1}>
-            <Faq items={faq.items} />
-          </Reveal>
+          <Faq items={faq.items} />
         </div>
       </Section>
 

@@ -39,7 +39,7 @@ const PLACE: Record<Demo, string> = {
 
 export function ShowcaseBento({ items }: { items: readonly Item[] }) {
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="sd-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
         <li key={item.demo} className={cn("flex", PLACE[item.demo])}>
           <article className="flex w-full flex-col rounded-panel border border-line bg-surface p-5 shadow-xs sm:p-6">
@@ -142,7 +142,7 @@ function MiniSources() {
         <Globe className="size-3.5" aria-hidden />
         Friday brief · 3 sources
       </span>
-      <ol className="mt-2 space-y-1.5">
+      <ol className="sd-stagger mt-2 space-y-1.5">
         {sources.map((title, index) => (
           <li key={title} className="flex items-center gap-2">
             <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-accent-soft font-mono text-xs text-accent-soft-fg">

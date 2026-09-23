@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Words } from "@/components/marketing/words";
 
 /**
  * The landing page's one section shell: one max width, one gutter, one
@@ -49,14 +50,14 @@ export function SectionHeader({
   const inverse = tone === "inverse";
   return (
     <div className={cn(align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-2xl", className)}>
-      <p className={cn("eyebrow", inverse ? "text-accent-fg/80" : "text-accent")}>{eyebrow}</p>
+      <p className={cn("eyebrow sd-rise", inverse ? "text-accent-fg/80" : "text-accent")}>{eyebrow}</p>
       <h2 id={id} className={cn("mt-3 text-title text-balance", inverse ? "text-accent-fg" : "text-ink")}>
-        {heading}
+        <Words text={heading} />
       </h2>
       {intro ? (
         <p
           className={cn(
-            "mt-4 text-lg leading-relaxed text-pretty",
+            "sd-rise mt-4 text-lg leading-relaxed text-pretty",
             align === "center" && "mx-auto max-w-2xl",
             inverse ? "text-accent-fg/85" : "text-ink-muted",
           )}
