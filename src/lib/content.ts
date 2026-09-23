@@ -82,7 +82,7 @@ const landingSchema = z.object({
     eyebrow: sectionHead.eyebrow,
     pains: z.array(z.string().min(1).max(120)).min(1).max(3),
     promise: z.string().min(1).max(120),
-    /** The words in the promise that carry the ember underline. */
+    /** The words in the promise that carry the underline. */
     highlight: z.string().min(1),
   }),
   steps: z.object({

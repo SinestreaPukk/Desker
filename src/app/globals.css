@@ -8,9 +8,10 @@
    Design tokens.
 
    The look is a staff record, not a chat toy: cool paper neutrals, ink-black
-   text, the brand indigo, one warm ember for the single thing each screen
-   wants done, and a mono face reserved for identifiers and metadata. Roles
-   and the 60-30-10 split are written up in redesign/COLOR.md.
+   text, the brand indigo, and a mono face reserved for identifiers and
+   metadata. One hue family on purpose: emphasis comes from contrast (white
+   on indigo, indigo on white), not from a second colour. Roles are written
+   up in redesign/COLOR.md.
    Every colour is defined here in both themes - nothing may be declared only
    inside a dark block, or the light theme inherits a hole.
    --------------------------------------------------------------------------- */
@@ -48,31 +49,12 @@
   --accent-soft-fg: oklch(0.330 0.200 268.5);
   --accent-line: oklch(0.875 0.060 270);
 
-  /* ember - the one warm tone: apricot, the sky's split complement. Rare on
-     purpose: the primary call on a screen, the "Most popular" plan, a key
-     number. Never body text, never a large ground, never more than two things
-     per view.
-     Warm hues are light by nature and blues dark (the natural order of hues),
-     so ember stays light and carries dark type. Taken dark enough for white
-     type, orange turns to rust. --ember is also the bright mark
-     (underlines, progress) - decorative only, it is 2:1 on paper; anything a
-     reader needs in ember is set in --ember-ink. See redesign/COLOR.md. */
-  --ember: oklch(0.770 0.156 55);
-  --ember-fill: oklch(0.770 0.156 55);
-  --ember-hover: oklch(0.730 0.165 52);
-  --ember-fg: oklch(0.215 0.018 270);
-  --ember-ink: oklch(0.520 0.140 48);
-  --ember-soft: oklch(0.967 0.019 55);
-  --ember-line: oklch(0.880 0.074 55);
-  --ember-shadow: oklch(0.700 0.160 55 / 0.45);
-
   /* semantic */
   --positive: oklch(0.44 0.085 172);
   --positive-fg: oklch(0.995 0.002 172);
   --positive-soft: oklch(0.955 0.028 172);
   --positive-line: oklch(0.865 0.055 172);
-  /* Pushed toward yellow (hue 75 -> 85/92) so "Needs approval" beside an
-     ember Approve reads as caution, not as a second brand colour. */
+  /* Toward yellow (hue 85/92) so caution reads as caution, never as brand. */
   --warning: oklch(0.480 0.099 85);
   --warning-soft: oklch(0.962 0.050 92);
   --warning-line: oklch(0.880 0.080 92);
@@ -93,7 +75,7 @@
   --av-2-fg: oklch(0.430 0.105 202);
   --av-3-bg: oklch(0.935 0.048 158);
   --av-3-fg: oklch(0.425 0.095 162);
-  /* Tone 4 was orange - a stand-in for ember on every fourth agent. Moss now. */
+  /* Tone 4 is moss: an orange tone read as a stray accent colour. */
   --av-4-bg: oklch(0.938 0.052 118);
   --av-4-fg: oklch(0.440 0.095 125);
   --av-5-bg: oklch(0.935 0.042 348);
@@ -169,16 +151,6 @@
   --accent-soft-fg: oklch(0.845 0.110 268.5);
   --accent-line: oklch(0.402 0.090 268.5);
 
-  /* Ember keeps its light fill and dark type; its text tint lifts. */
-  --ember: oklch(0.790 0.145 58);
-  --ember-fill: oklch(0.790 0.145 58);
-  --ember-hover: oklch(0.835 0.115 62);
-  --ember-fg: oklch(0.195 0.040 50);
-  --ember-ink: oklch(0.830 0.115 60);
-  --ember-soft: oklch(0.300 0.055 55);
-  --ember-line: oklch(0.420 0.080 55);
-  --ember-shadow: oklch(0.790 0.145 58 / 0.30);
-
   --positive: oklch(0.775 0.105 172);
   --positive-fg: oklch(0.195 0.040 172);
   --positive-soft: oklch(0.275 0.045 172);
@@ -235,13 +207,6 @@
   --color-accent-soft-fg: var(--accent-soft-fg);
   --color-accent-line: var(--accent-line);
 
-  --color-ember: var(--ember);
-  --color-ember-fill: var(--ember-fill);
-  --color-ember-hover: var(--ember-hover);
-  --color-ember-fg: var(--ember-fg);
-  --color-ember-ink: var(--ember-ink);
-  --color-ember-soft: var(--ember-soft);
-  --color-ember-line: var(--ember-line);
 
   --color-positive: var(--positive);
   --color-positive-fg: var(--positive-fg);
@@ -566,51 +531,54 @@
     inset 0 -1px 0 oklch(0 0 0 / 0.12);
 }
 
-/* The ember call to action: the same glass, in the page's one warm tone.
-   Both ends of the gradient carry the dark label at 4.5:1 or better. */
-.glass-ember {
-  background:
-    radial-gradient(110% 110% at 10% 15%, oklch(1 0 0 / 0.35) 0%, oklch(1 0 0 / 0) 62%),
-    linear-gradient(180deg, var(--ember-fill) 0%, var(--ember-hover) 100%);
-  color: var(--ember-fg);
+/* The call to action on the sky: white, with the sky's zenith indigo as its
+   label (12.6:1) - a sky token, not --accent, because the sky is the same in
+   both themes and --accent lifts to periwinkle in dark. On a light section
+   the same call is the solid indigo Button. */
+.cta-sky {
+  background: var(--sky-ink);
+  color: var(--sky-top);
   box-shadow:
-    0 0 0 1px oklch(1 0 0 / 0.16),
-    0 12px 28px -8px var(--ember-shadow),
-    inset 0 1px 0 oklch(1 0 0 / 0.40),
-    inset 0 -1px 0 oklch(0 0 0 / 0.12);
-  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms, filter 220ms;
+    0 0 0 1px oklch(1 0 0 / 0.4),
+    0 12px 28px -10px oklch(0.200 0.120 270 / 0.55);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms, background-color 220ms;
   will-change: transform;
 }
-.glass-ember:hover {
+.cta-sky:hover {
   transform: translateY(-1px);
-  filter: brightness(1.06);
+  background: oklch(0.960 0.020 270);
   box-shadow:
-    0 0 0 1px oklch(1 0 0 / 0.24),
-    0 18px 36px -10px var(--ember-shadow),
-    inset 0 1px 0 oklch(1 0 0 / 0.45),
-    inset 0 -1px 0 oklch(0 0 0 / 0.12);
+    0 0 0 1px oklch(1 0 0 / 0.5),
+    0 18px 36px -12px oklch(0.200 0.120 270 / 0.6);
 }
 
-/* The header's call, while the header is still clear over the sky: an
-   outline in the sky's own white, so the hero's button is the only ember on
-   screen. It takes the ember once the page scrolls and the hero's is gone.
-   Type and rim are white on the deep sky - the headline's pair. */
+/* The header's call. On the frosted header it is the solid indigo of every
+   primary button; while the header is still clear over the sky it is an
+   outline in the sky's white, so the hero's white button is the one call on
+   screen. Type and rim on the sky are the headline's pair. */
+.nav-cta {
+  background: var(--accent);
+  color: var(--accent-fg);
+  transition: background-color 220ms, color 220ms, box-shadow 220ms;
+}
+.nav-cta:hover {
+  background: var(--accent-hover);
+}
 [data-clear] .nav-cta {
   background: transparent;
   color: var(--sky-ink);
   box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.7);
-  filter: none;
 }
 [data-clear] .nav-cta:hover {
   background: oklch(1 0 0 / 0.1);
 }
 
-/* The ember underline under a keyword (components/marketing/highlight.tsx).
-   text-decoration rather than a background bar, so it follows the words
-   when they wrap. */
-.ember-underline {
+/* The underline under a keyword (components/marketing/highlight.tsx), in the
+   sky's blue-indigo. text-decoration rather than a background bar, so it
+   follows the words when they wrap. Decorative: the words read without it. */
+.highlight-underline {
   text-decoration-line: underline;
-  text-decoration-color: var(--ember);
+  text-decoration-color: var(--sky-deep);
   text-decoration-thickness: 0.09em;
   text-underline-offset: 0.14em;
   text-decoration-skip-ink: none;
@@ -711,5 +679,5 @@
 .lift:hover { transform: translateY(-2px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .lift:hover, .glass:hover, .glass-ember:hover { transform: none; }
+  .lift:hover, .glass:hover, .cta-sky:hover { transform: none; }
 }

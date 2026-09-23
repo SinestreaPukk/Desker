@@ -30,5 +30,4 @@ export const TOKEN_HEX = {
   "ink-muted": "#575B64",
   "ink-subtle": "#7D8089",
   "accent-soft": "#E7EFFF",
-  ember: "#FF9646",
 } as const;

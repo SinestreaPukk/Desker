@@ -66,7 +66,6 @@ function contrast(a, b) {
 // --- token extraction ------------------------------------------------------
 
 const css = readFileSync(join(root, "src", "app", "globals.css"), "utf8");
-const hues = {};
 const outOfGamut = [];
 
 function tokensFrom(selector) {
@@ -82,7 +81,6 @@ function tokensFrom(selector) {
   while ((match = pattern.exec(block))) {
     const lch = [Number(match[2]), Number(match[3]), Number(match[4])];
     tokens[match[1]] = oklchToSrgb(...lch);
-    hues[`${selector} ${match[1]}`] = lch;
     if (!inGamut(...lch)) outOfGamut.push(`${selector} --${match[1]}`);
   }
   return tokens;
@@ -114,12 +112,7 @@ const TEXT_PAIRS = [
   ["danger", "paper", 4.5, "inline error message"],
   ["accent", "paper", 4.5, "accent link on the page"],
   ["accent", "surface", 4.5, "accent link on a card"],
-  // Ember: the call to action and the rare highlight.
-  ["ember-fg", "ember-fill", 4.5, "ember call-to-action label"],
-  ["ember-fg", "ember-hover", 4.5, "ember call-to-action label, hovered"],
-  ["ember-ink", "paper", 4.5, "ember text on the page"],
-  ["ember-ink", "surface", 4.5, "ember text on a card"],
-  ["ember-ink", "ember-soft", 4.5, "ember badge (Most popular)"],
+  ["sky-top", "sky-ink", 4.5, "call to action on the sky: indigo label on white"],
   ["danger-fg", "danger", 4.5, "danger button label"],
   ["positive-fg", "positive", 4.5, "label on a solid positive fill"],
   // The landing page's sky, the same in both themes. White copy sits only
@@ -142,21 +135,8 @@ const UI_PAIRS = [
   ["line-strong", "surface", 3.0, "input border"],
   ["focus", "paper", 3.0, "focus ring on the page"],
   ["focus", "surface", 3.0, "focus ring on a card"],
-  // No pair for --ember as a mark on paper: it is 2:1 there by design (a
-  // light warm tone) and is only ever decorative - an underline under words
-  // that are already legible, a progress bar beside a labelled tab. Anything
-  // a reader needs in ember is --ember-ink, checked above.
 ];
 
-// Ember must never read as caution. Hue distance between the two families,
-// in both themes, for the text tone and the soft ground a badge sits on.
-const HUE_GAPS = [
-  ["ember-ink", "warning", 30],
-  ["ember-soft", "warning-soft", 30],
-  ["ember", "av-4-fg", 30],
-  // Nor as danger: an ember Approve must not look destructive.
-  ["ember-fill", "danger", 25],
-];
 
 let failures = 0;
 for (const [theme, tokens] of Object.entries(themes)) {
@@ -173,23 +153,6 @@ for (const [theme, tokens] of Object.entries(themes)) {
     console.log(
       `  ${pass ? "ok" : "FAIL"}  ${value.toFixed(2)}:1 (needs ${min})  ${fg} on ${bg} - ${label}`,
     );
-  }
-}
-
-for (const [selector, label] of [[":root", "light"], [":root.dark", "dark"]]) {
-  console.log(`\n  ${label.toUpperCase()} hue separation`);
-  for (const [a, b, min] of HUE_GAPS) {
-    const ha = (hues[`${selector} ${a}`] ?? hues[`:root ${a}`])?.[2];
-    const hb = (hues[`${selector} ${b}`] ?? hues[`:root ${b}`])?.[2];
-    if (ha === undefined || hb === undefined) {
-      console.log(`  ?  ${a} vs ${b} - token missing`);
-      failures++;
-      continue;
-    }
-    const gap = Math.min(Math.abs(ha - hb), 360 - Math.abs(ha - hb));
-    const pass = gap >= min;
-    if (!pass) failures++;
-    console.log(`  ${pass ? "ok" : "FAIL"}  ${gap.toFixed(1)}deg (needs ${min})  ${a} vs ${b}`);
   }
 }
 

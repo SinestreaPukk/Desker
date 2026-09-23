@@ -250,7 +250,7 @@ export default async function LandingPage({
                   )}
                 >
                   {popular ? (
-                    <Badge tone="ember" className="absolute -top-2.5 left-6 shadow-xs">
+                    <Badge tone="accent" className="absolute -top-2.5 left-6 shadow-xs">
                       {pricing.popularLabel}
                     </Badge>
                   ) : null}
@@ -273,7 +273,7 @@ export default async function LandingPage({
                       </li>
                     ))}
                   </ul>
-                  <Button asChild className="mt-auto min-h-[44px] w-full" variant={popular ? "cta" : "secondary"}>
+                  <Button asChild className="mt-auto min-h-[44px] w-full" variant={popular ? "primary" : "secondary"}>
                     <Link href="/signup">{plan.priceUsd === 0 ? "Start free" : `Start with ${plan.name}`}</Link>
                   </Button>
                 </Panel>

@@ -33,7 +33,6 @@ export default function OpenGraphImage() {
           <div style={{ fontSize: 60, fontWeight: 700, lineHeight: 1.1, letterSpacing: -1.5, maxWidth: 1000 }}>
             {LANDING.hero.headline}
           </div>
-          <div style={{ width: 96, height: 6, borderRadius: 3, background: TOKEN_HEX.ember }} />
           <div style={{ fontSize: 28, color: TOKEN_HEX["ink-muted"], maxWidth: 960, lineHeight: 1.35 }}>{LANDING.meta.description}</div>
         </div>
         <div style={{ fontSize: 22, color: TOKEN_HEX["ink-subtle"] }}>{SITE.company.siteUrl.replace(/^https?:\/\//, "")}</div>

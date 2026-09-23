@@ -220,7 +220,7 @@ export function HeroStage({ className }: { className?: string }) {
                 <span
                   key={scene}
                   aria-hidden
-                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-ember"
+                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-accent"
                   style={{ animation: `reel-progress ${(BEAT_MS * BEATS) / 1000}s linear forwards` }}
                 />
               ) : null}
@@ -397,7 +397,7 @@ function RunHeader({
 function ApprovalActions({ what }: { what: string }) {
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2">
-      <Button size="sm" variant="cta">
+      <Button size="sm">
         <Check aria-hidden />
         Approve and {what}
       </Button>
@@ -603,7 +603,7 @@ export function AssistantScene({ beat }: { beat: number }) {
           <StatusBadge status="needs_approval" />
           <span className="text-sm text-ink">Nothing sends until you say so.</span>
           <span className="ml-auto flex gap-2">
-            <Button size="sm" variant="cta">
+            <Button size="sm">
               <Check aria-hidden />
               Approve and send
             </Button>
@@ -636,7 +636,6 @@ export function ApprovalScene({ beat }: { beat: number }) {
       <div className="mt-3 flex items-center gap-2">
         <Button
           size="sm"
-          variant="cta"
           disabled={done}
           className={cn(done && "bg-positive text-positive-fg disabled:opacity-100")}
         >

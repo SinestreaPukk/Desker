@@ -1,19 +1,18 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The one call to action, in ember. Used in the hero, the sticky header and
- * the closing call. Ember rather than indigo on the sky: the complement
- * separates from the blue by hue where an indigo button only separates by
- * lightness (redesign/COLOR.md has the comparison).
+ * The call to action on the sky: white with an indigo label. Used in the
+ * hero and the closing call; the header uses the _SM one, which is solid
+ * indigo once the header frosts over (see .nav-cta in globals.css).
  */
 export const GLASS_BUTTON = cn(
-  "glass-ember inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 text-base font-medium",
+  "cta-sky inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 text-base font-medium",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sky-glass)] focus-visible:ring-offset-2 focus-visible:ring-offset-paper",
   "[&_svg]:size-4",
 );
 
 export const GLASS_BUTTON_SM = cn(
-  "glass-ember nav-cta inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-4 text-sm font-medium",
+  "nav-cta inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-4 text-sm font-medium",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sky-glass)] focus-visible:ring-offset-2 focus-visible:ring-offset-paper",
 );
 

@@ -245,8 +245,7 @@ export function MetricTiles({ items }: { items: readonly Metric[] }) {
             item.value === null ? "border-dashed border-line-strong" : "border-line shadow-xs",
           )}
         >
-          {/* Key numbers are an ember moment - in the ink tone, which is the one that reads. */}
-          <dd className="text-display font-medium tracking-tight text-ember-ink">{item.value ?? "—"}</dd>
+          <dd className="text-display font-medium tracking-tight text-accent">{item.value ?? "—"}</dd>
           <dt className="mt-2 text-sm text-ink-muted">{item.label}</dt>
           {item.value === null ? (
             <p className="mt-3 font-mono text-xs text-danger">TODO: {item.todo ?? "measure this"}</p>

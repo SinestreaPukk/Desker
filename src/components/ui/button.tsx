@@ -16,9 +16,6 @@ const button = cva(
       variant: {
         primary:
           "bg-accent text-accent-fg hover:bg-accent-hover shadow-sm active:translate-y-px",
-        /** Ember: the one action a screen exists for. At most one per view. */
-        cta:
-          "bg-ember-fill text-ember-fg hover:bg-ember-hover shadow-sm active:translate-y-px",
         secondary:
           "bg-surface text-ink border border-line-strong hover:bg-surface-2 active:translate-y-px",
         ghost: "text-ink-muted hover:bg-surface-2 hover:text-ink",
