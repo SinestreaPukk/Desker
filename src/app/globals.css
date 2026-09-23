@@ -598,6 +598,32 @@
   }
 }
 
+/* The hold. The track is the stage plus a spacer of empty scroll; the stage
+   is sticky inside it, so it stays under the header while the spacer
+   passes, then leaves with the track. The spacer is an element, not
+   padding: a sticky box only travels within its container's content box.
+   Pinning, not scroll-jacking: the wheel, keys, touch and assistive tech
+   all scroll normally. No hold under reduced motion - it would only be
+   empty scrolling. (Sticky works here because the hero clips with
+   overflow-x: clip, which, unlike hidden, is not a scroll container.) */
+.stage-pin {
+  position: sticky;
+  top: 5rem;
+}
+.stage-hold {
+  height: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stage-hold {
+    height: 50vh;
+  }
+  @media (min-width: 640px) {
+    .stage-hold {
+      height: 70vh;
+    }
+  }
+}
+
 @keyframes stage-rise {
   from {
     transform: translateY(64px) rotateX(24deg) scale(0.92);

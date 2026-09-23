@@ -74,16 +74,19 @@ export default async function LandingPage({
       {/* overflow-x-clip, not overflow-hidden: the stage hangs below the sky
           on purpose (-mb below), and hidden cut its foot off. The sky and
           dunes are clipped by their own boxes. */}
-      <section className="sky relative -mt-14 overflow-x-clip pt-14">
+      <section className="sky relative -mt-14 overflow-x-clip pt-14" data-header-clear>
         <NightSky uid="hero-sky" />
-        <Parallax className="absolute inset-x-0 bottom-0 h-[55%]" distance={-40}>
+        {/* A fixed height, not a share of the section: the pinned demo makes
+            the hero tall, and a percentage would blow the dunes up past the
+            crest. */}
+        <Parallax className="absolute inset-x-0 bottom-0 h-[36rem] sm:h-[40rem]" distance={-40}>
           <Dunes uid="hero-dunes" />
         </Parallax>
         {/* The dunes are cropped to fit (slice), so their last row can be
             sand rather than their own paper haze; this lands the edge on paper. */}
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-10 bg-linear-to-b from-transparent to-paper" />
 
-        <div className="relative mx-auto max-w-6xl px-4 pt-24 text-center [perspective:1600px] sm:px-6 sm:pt-36">
+        <div className="relative mx-auto max-w-6xl px-4 pt-24 text-center sm:px-6 sm:pt-36">
           <Reveal>
             <h1 className="mx-auto max-w-4xl font-display text-hero text-balance text-[var(--sky-ink)]">
               {hero.headline}
@@ -104,9 +107,14 @@ export default async function LandingPage({
           </Reveal>
 
           {/* The product, floating over the horizon and down into the page.
-              stage-rise tilts it back and lowers it at the top of the page,
-              and scrolling stands it up toward the reader (globals.css). */}
-          <HeroStage className="stage-rise relative z-10 mx-auto -mb-24 mt-12 max-w-4xl text-left sm:-mb-32 sm:mt-16" />
+              stage-rise tilts it back at the top of the page and scrolling
+              stands it up toward the reader; the track then holds it pinned
+              under the header for a stretch of scroll while the reel plays,
+              before the page moves on (globals.css). */}
+          <div className="stage-track relative z-10 mx-auto -mb-24 mt-12 max-w-4xl [perspective:1600px] sm:-mb-32 sm:mt-16">
+            <HeroStage data-header-solid className="stage-rise stage-pin text-left" />
+            <div className="stage-hold" aria-hidden />
+          </div>
         </div>
       </section>
 

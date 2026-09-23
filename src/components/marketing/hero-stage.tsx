@@ -138,7 +138,7 @@ export const SCENES: readonly Scene[] = [
   },
 ];
 
-export function HeroStage({ className }: { className?: string }) {
+export function HeroStage({ className, ...props }: React.ComponentProps<"div">) {
   const still = useReducedMotionPref();
   // The server renders the first scene finished. On mount the loop starts
   // from its first beat, so the visitor sees it build.
@@ -187,7 +187,7 @@ export function HeroStage({ className }: { className?: string }) {
   }, [scene, still, syncEdges]);
 
   return (
-    <div className={cn("window overflow-hidden", className)}>
+    <div {...props} className={cn("window overflow-hidden", className)}>
       {/* Role tabs: which agent is on, and how far through its scene. */}
       <div
         ref={tablist}
