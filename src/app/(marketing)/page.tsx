@@ -9,9 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import {
   AuditTrail,
-  Clouds,
   Faq,
-  Horizon,
   MetricTiles,
   RoleGrid,
   Steps,
@@ -23,6 +21,7 @@ import {
 import { GLASS_BUTTON, SKY_LINK } from "@/components/marketing/glass-button";
 import { HeroStage } from "@/components/marketing/hero-stage";
 import { Highlight } from "@/components/marketing/highlight";
+import { Dunes, NightSky } from "@/components/marketing/night-sky";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { ShowcaseBento } from "@/components/marketing/showcase-bento";
 import { Parallax, Reveal } from "@/components/marketing/reveal";
@@ -73,20 +72,15 @@ export default async function LandingPage({
     <>
       {/* Hero ---------------------------------------------------------- */}
       {/* overflow-x-clip, not overflow-hidden: the stage hangs below the sky
-          on purpose (-mb below), and hidden cut its foot off. Clouds, sun
-          and horizon are clipped by their own boxes. */}
+          on purpose (-mb below), and hidden cut its foot off. The sky and
+          dunes are clipped by their own boxes. */}
       <section className="sky relative -mt-14 overflow-x-clip pt-14">
-        {/* The sun sits on the horizon behind the stage */}
-        <div className="sun right-[12%] top-[46%] hidden sm:block" aria-hidden />
-        <Parallax className="absolute inset-0" distance={-40}>
-          <Clouds />
+        <NightSky uid="hero-sky" />
+        <Parallax className="absolute inset-x-0 bottom-0 h-[55%]" distance={-40}>
+          <Dunes uid="hero-dunes" />
         </Parallax>
-        <Parallax className="absolute inset-x-0 bottom-0 h-[55%]" distance={-60}>
-          <Horizon />
-        </Parallax>
-        {/* The horizon is cropped to fit (slice), so its last row can be
-            ribbon colour rather than its own paper haze; this lands the edge
-            on paper. */}
+        {/* The dunes are cropped to fit (slice), so their last row can be
+            sand rather than their own paper haze; this lands the edge on paper. */}
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-10 bg-linear-to-b from-transparent to-paper" />
 
         <div className="relative mx-auto max-w-6xl px-4 pt-16 text-center sm:px-6 sm:pt-24">
@@ -298,8 +292,10 @@ export default async function LandingPage({
 
       {/* CTA ---------------------------------------------------------------- */}
       <section className="sky relative overflow-hidden">
-        <div className="sun left-[10%] top-[30%] hidden sm:block" aria-hidden />
-        <Clouds />
+        <NightSky uid="cta-sky" />
+        <div className="absolute inset-x-0 bottom-0 h-[45%]">
+          <Dunes uid="cta-dunes" />
+        </div>
         <div className="relative mx-auto max-w-6xl px-4 pb-40 pt-24 text-center sm:px-6 sm:pb-56 sm:pt-32">
           <Reveal>
             {/* A bookend, not a second hero: same serif, section scale. */}

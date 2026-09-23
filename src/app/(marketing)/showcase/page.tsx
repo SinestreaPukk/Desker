@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GLASS_BUTTON } from "@/components/marketing/glass-button";
+import { NightSky } from "@/components/marketing/night-sky";
 import { PageHeader } from "@/components/marketing/page-header";
 import { TemplateIcon } from "@/components/marketing/template-icon";
 import { Reveal } from "@/components/marketing/reveal";
@@ -105,7 +106,7 @@ export default function ShowcasePage() {
       {/* The same closing call the landing page makes, so the catalogue ends
           somewhere rather than just stopping. */}
       <section className="sky relative overflow-hidden">
-        <div className="sun left-[12%] top-[58%] hidden sm:block" aria-hidden />
+        <NightSky uid="cta-sky" />
         <div className="relative mx-auto max-w-6xl px-4 pb-32 pt-20 text-center sm:px-6 sm:pb-40 sm:pt-24">
           <h2 className="mx-auto max-w-3xl font-display text-title text-balance text-[var(--sky-ink)]">
             {LANDING.cta.heading}

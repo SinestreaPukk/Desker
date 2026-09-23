@@ -112,7 +112,7 @@ const TEXT_PAIRS = [
   ["danger", "paper", 4.5, "inline error message"],
   ["accent", "paper", 4.5, "accent link on the page"],
   ["accent", "surface", 4.5, "accent link on a card"],
-  ["sky-top", "sky-ink", 4.5, "call to action on the sky: indigo label on white"],
+  ["sky-cta-fg", "sky-ink", 4.5, "call to action on the sky: indigo label on white"],
   ["danger-fg", "danger", 4.5, "danger button label"],
   ["positive-fg", "positive", 4.5, "label on a solid positive fill"],
   // The landing page's sky, the same in both themes. White copy sits only

@@ -83,16 +83,15 @@
   --av-6-bg: oklch(0.932 0.040 306);
   --av-6-fg: oklch(0.435 0.155 305);
 
-  /* The landing page's sky, in the brand's own family: the logo indigo at
-     the zenith, a deeper blue-indigo where the white type sits (8.2:1 and
-     up), periwinkle and a lavender mist behind the product. Tonal on
-     purpose - the page's colour story is indigo + neutral + one apricot
-     action, and the sky is the 30%, so the only warm things in the hero
-     are the sun and the button. Identical in both themes - a picture. */
-  --sky-top: oklch(0.340 0.200 270);
-  --sky-deep: oklch(0.440 0.190 272);
-  --sky: oklch(0.700 0.110 276);
+  /* The public site's sky: night over the desert. Near-black navy at the
+     zenith, deep blue where the white type sits (15:1 and up), a blue glow at
+     the horizon behind the dunes. Identical in both themes - a picture. */
+  --sky-top: oklch(0.160 0.050 268);
+  --sky-deep: oklch(0.210 0.075 265);
+  --sky: oklch(0.300 0.110 262);
   --sky-pale: oklch(0.930 0.030 280);
+  /* The white call to action's label on the sky: the logo indigo. */
+  --sky-cta-fg: oklch(0.340 0.200 270);
   --sky-ink: oklch(0.995 0.002 240);
   --sky-glass: oklch(0.560 0.200 262);
   /* The foot of the button. --sky-glass alone is the same lightness as
@@ -101,28 +100,23 @@
      contrast thing on the page, which is what the one primary call needs. */
   --sky-glass-deep: oklch(0.395 0.235 266);
   --sky-glass-fg: oklch(0.995 0.002 240);
-  --sky-shadow: oklch(0.360 0.190 272 / 0.35);
-  /* The sun: a warm disc, not a white blur - pale gold at the core, apricot
-     at the rim, a faint coral halo. */
-  --sun-core: oklch(0.980 0.040 90);
-  --sun-mid: oklch(0.930 0.100 80);
-  --sun-rim: oklch(0.850 0.140 60 / 0.85);
-  --sun-halo: oklch(0.780 0.140 40 / 0.35);
-  /* Clouds: a lavender white, so they sit in the sky rather than on it. */
-  --cloud: oklch(0.960 0.020 280);
-  /* The hero's ribbons, far to near: tints of the sky itself, drifting a
-     little from blue toward violet left to right. Only the middle ribbon's
-     right end warms - the sun's light on it - so the apricot of the call to
-     action is echoed once, not spread across the scene. */
-  --ribbon-far-start: oklch(0.800 0.080 255);
-  --ribbon-far-mid: oklch(0.760 0.100 275);
-  --ribbon-far-end: oklch(0.820 0.070 295);
-  --ribbon-mid-start: oklch(0.600 0.170 268);
-  --ribbon-mid-mid: oklch(0.680 0.140 282);
-  --ribbon-mid-end: oklch(0.860 0.090 65);
-  --ribbon-near-start: oklch(0.900 0.040 260);
-  --ribbon-near-mid: oklch(0.880 0.050 280);
-  --ribbon-near-end: oklch(0.910 0.040 300);
+  --sky-shadow: oklch(0.120 0.060 265 / 0.55);
+  /* The night: stars, the Milky Way's glow, a faint violet airglow. */
+  --night-star: oklch(0.980 0.010 250);
+  --night-milky: oklch(0.600 0.120 258);
+  --night-airglow: oklch(0.450 0.100 300);
+  /* Moonlit dunes, lit from the upper left: crest to deep shadow, and the
+     two edges of a wind ripple. */
+  --dune-crest: oklch(0.600 0.120 258);
+  --dune-lit: oklch(0.460 0.140 262);
+  --dune-mid: oklch(0.360 0.140 264);
+  --dune-shadow: oklch(0.270 0.120 265);
+  --dune-deep: oklch(0.210 0.100 266);
+  --dune-ripple-light: oklch(0.750 0.090 255);
+  --dune-ripple-dark: oklch(0.150 0.080 266);
+  /* The pale washes behind product frames and some sections: the brand's
+     periwinkle and lavender, kept apart from the (now night) sky. */
+  --wash: oklch(0.700 0.110 276);
 
   color-scheme: light;
 }
@@ -456,8 +450,8 @@
    is where a horizon belongs anyway. */
 .sky {
   background:
-    radial-gradient(70% 28% at 72% 94%, oklch(0.970 0.030 75 / 0.6) 0%, oklch(0.970 0.030 75 / 0) 100%),
-    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-deep) 45%, var(--sky-deep) 63%, var(--sky) 78%, var(--sky-pale) 90%, var(--paper) 100%);
+    radial-gradient(80% 30% at 45% 72%, oklch(0.360 0.120 260 / 0.55) 0%, oklch(0.360 0.120 260 / 0) 100%),
+    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-deep) 50%, var(--sky) 72%, var(--sky) 88%, var(--paper) 100%);
   color: var(--sky-ink);
 }
 
@@ -479,32 +473,6 @@
     var(--paper) 100%
   );
   color: var(--sky-ink);
-}
-
-/* The sun: a warm disc with a soft halo, breathing very slowly. The halo is
-   in the gradient, so no blur filter - sharper, and cheaper to paint. */
-.sun {
-  position: absolute;
-  width: 16rem;
-  height: 16rem;
-  border-radius: 9999px;
-  background: radial-gradient(
-    circle,
-    var(--sun-core) 0%,
-    var(--sun-mid) 18%,
-    var(--sun-rim) 34%,
-    var(--sun-halo) 52%,
-    transparent 70%
-  );
-  will-change: transform;
-  transform: translateZ(0);
-  animation: sun-breathe 12s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes sun-breathe {
-  from { transform: scale(1) translateZ(0); opacity: 0.9; }
-  to { transform: scale(1.08) translateZ(0); opacity: 1; }
 }
 
 /* Cluely-style glass button: a blue gradient, a light rim and a soft blue drop. */
@@ -531,13 +499,13 @@
     inset 0 -1px 0 oklch(0 0 0 / 0.12);
 }
 
-/* The call to action on the sky: white, with the sky's zenith indigo as its
-   label (12.6:1) - a sky token, not --accent, because the sky is the same in
-   both themes and --accent lifts to periwinkle in dark. On a light section
-   the same call is the solid indigo Button. */
+/* The call to action on the sky: white, with the logo indigo as its label
+   (12.6:1) - a sky token, not --accent, because the sky is the same in both
+   themes and --accent lifts to periwinkle in dark. On a light section the
+   same call is the solid indigo Button. */
 .cta-sky {
   background: var(--sky-ink);
-  color: var(--sky-top);
+  color: var(--sky-cta-fg);
   box-shadow:
     0 0 0 1px oklch(1 0 0 / 0.4),
     0 12px 28px -10px oklch(0.200 0.120 270 / 0.55);
@@ -591,7 +559,7 @@
    the frames in between read as lit from the same source. */
 .mat {
   background:
-    radial-gradient(90% 120% at 50% -10%, color-mix(in oklch, var(--sky) 34%, transparent) 0%, transparent 68%),
+    radial-gradient(90% 120% at 50% -10%, color-mix(in oklch, var(--wash) 34%, transparent) 0%, transparent 68%),
     color-mix(in oklch, var(--sky-pale) 50%, var(--paper));
 }
 
@@ -599,7 +567,7 @@
    a ground for cards to sit on, not a card. Used once, for the roles. */
 .sky-wash {
   background:
-    radial-gradient(65% 55% at 50% 0%, color-mix(in oklch, var(--sky) 20%, transparent) 0%, transparent 74%),
+    radial-gradient(65% 55% at 50% 0%, color-mix(in oklch, var(--wash) 20%, transparent) 0%, transparent 74%),
     color-mix(in oklch, var(--sky-pale) 20%, var(--paper));
 }
 
@@ -640,35 +608,15 @@
   to { transform: scaleX(1); }
 }
 
-/* Drifting clouds behind the hero: blurred discs on very slow, alternating paths. */
-.clouds {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.clouds > i {
-  position: absolute;
-  display: block;
-  border-radius: 9999px;
-  background: var(--cloud);
-  filter: blur(28px);
-  will-change: transform;
-  transform: translateZ(0);
-  opacity: 0.55;
-  animation: cloud-drift 80s ease-in-out infinite alternate;
-}
-/* Kept at and below the horizon. Higher up they drifted behind the headline
-   and the buttons, and a white cloud under white text is a blank line. */
-.clouds > i:nth-child(1) { width: 34rem; height: 9rem; left: -8%; top: 68%; }
-.clouds > i:nth-child(2) { width: 26rem; height: 7rem; left: 22%; top: 76%; opacity: 0.45; animation-duration: 95s; animation-delay: -30s; }
-.clouds > i:nth-child(3) { width: 40rem; height: 10rem; right: -10%; top: 70%; opacity: 0.6; animation-duration: 110s; animation-delay: -60s; }
-.clouds > i:nth-child(4) { width: 22rem; height: 6rem; left: 55%; top: 82%; opacity: 0.4; animation-duration: 70s; animation-delay: -15s; }
-.clouds > i:nth-child(5) { width: 60rem; height: 12rem; left: 10%; top: 88%; opacity: 0.7; animation-duration: 130s; animation-delay: -90s; }
+/* Stars twinkle in three slow rhythms (components/marketing/night-sky.tsx).
+   Stopped under reduced motion by the global rule. */
+.star-twinkle-1 { animation: twinkle 3.1s ease-in-out infinite alternate; }
+.star-twinkle-2 { animation: twinkle 4.7s ease-in-out infinite alternate; animation-delay: -1.3s; }
+.star-twinkle-3 { animation: twinkle 6.3s ease-in-out infinite alternate; animation-delay: -2.9s; }
 
-@keyframes cloud-drift {
-  from { transform: translateX(-6%) translateZ(0); }
-  to { transform: translateX(6%) translateZ(0); }
+@keyframes twinkle {
+  from { opacity: 1; }
+  to { opacity: 0.35; }
 }
 
 /* Hover lift shared by the landing's cards. */

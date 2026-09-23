@@ -17,71 +17,10 @@ import { TemplateIcon } from "@/components/marketing/template-icon";
 import { cn } from "@/lib/utils";
 
 /**
- * The parts of the landing page that are pure markup and CSS: the sky's
- * horizon, the steps, the trust grid, the roles, the numbers and the FAQ. No
+ * The parts of the landing page that are pure markup and CSS: the steps, the trust grid, the roles, the numbers and the FAQ. No
  * client code, so they read identically to a crawler and to a browser with
  * scripts off.
  */
-
-/** Drifting clouds across the lower half of the sky. Decorative; CSS only. */
-export function Clouds({ className }: { className?: string }) {
-  return (
-    <div className={cn("clouds", className)} aria-hidden>
-      <i />
-      <i />
-      <i />
-      <i />
-      <i />
-    </div>
-  );
-}
-
-/**
- * The horizon: three sunrise ribbons rising behind the product and
- * dissolving into the paper ground. Colours are the --ribbon-* tokens.
- */
-export function Horizon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 1440 420"
-      preserveAspectRatio="xMidYMax slice"
-      aria-hidden
-      className={cn("block h-full w-full pointer-events-none", className)}
-    >
-      <defs>
-        {(["far", "mid", "near"] as const).map((ribbon) => (
-          <linearGradient key={ribbon} id={`ribbon-${ribbon}`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor={`var(--ribbon-${ribbon}-start)`} />
-            <stop offset="50%" stopColor={`var(--ribbon-${ribbon}-mid)`} />
-            <stop offset="100%" stopColor={`var(--ribbon-${ribbon}-end)`} />
-          </linearGradient>
-        ))}
-        <linearGradient id="ribbon-haze" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--paper)" stopOpacity="0" />
-          <stop offset="100%" stopColor="var(--paper)" stopOpacity="1" />
-        </linearGradient>
-      </defs>
-
-      <path
-        fill="url(#ribbon-far)"
-        opacity="0.75"
-        d="M0 250 C 300 170, 600 330, 900 240 S 1300 160, 1440 220 L1440 420 L0 420 Z"
-      />
-      <path
-        fill="url(#ribbon-mid)"
-        opacity="0.85"
-        d="M0 300 C 280 230, 560 360, 860 290 S 1260 230, 1440 300 L1440 420 L0 420 Z"
-      />
-      <path
-        fill="url(#ribbon-near)"
-        opacity="0.9"
-        d="M0 350 C 320 300, 640 400, 980 340 S 1320 320, 1440 360 L1440 420 L0 420 Z"
-      />
-      {/* Haze at the foot, dissolving into the paper */}
-      <rect x="0" y="300" width="1440" height="120" fill="url(#ribbon-haze)" />
-    </svg>
-  );
-}
 
 /* --- Icons ------------------------------------------------------------------ */
 

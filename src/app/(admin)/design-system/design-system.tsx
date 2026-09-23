@@ -12,6 +12,7 @@ import { Panel, PanelBody, PanelDescription, PanelHeader, PanelTitle } from "@/c
 import { Switch } from "@/components/ui/switch";
 import { EmptyState, Skeleton } from "@/components/ui/states";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NightSky } from "@/components/marketing/night-sky";
 
 const COLOR_PAIRS: { fg: string; bg: string; use: string; min: number }[] = [
   { fg: "--ink", bg: "--paper", use: "Body text on the page", min: 4.5 },
@@ -26,7 +27,7 @@ const COLOR_PAIRS: { fg: string; bg: string; use: string; min: number }[] = [
   { fg: "--warning", bg: "--warning-soft", use: "Warning badge", min: 4.5 },
   { fg: "--danger", bg: "--danger-soft", use: "Danger badge", min: 4.5 },
   { fg: "--accent", bg: "--surface", use: "Links", min: 4.5 },
-  { fg: "--sky-top", bg: "--sky-ink", use: "Call to action on the sky (white button)", min: 4.5 },
+  { fg: "--sky-cta-fg", bg: "--sky-ink", use: "Call to action on the sky (white button)", min: 4.5 },
   { fg: "--danger-fg", bg: "--danger", use: "Danger button label", min: 4.5 },
   // The landing page's sky: identical in both themes.
   { fg: "--sky-ink", bg: "--sky-deep", use: "Sky: headline and copy on the deep band", min: 4.5 },
@@ -287,16 +288,16 @@ export function DesignSystem() {
 
       <Section
         title="Landing sky"
-        blurb="The one place the page is a picture. A tonal gradient in the brand family: logo indigo at the top, a deeper blue-indigo where the white serif headline sits, periwinkle and lavender where the product window floats over the ribbons; the sun and the call to action are the only warm things, and a single glass button. Nothing in the product uses these."
+        blurb="The one place the page is a picture: night over the desert. A navy sky with stars and the Milky Way, deep blue where the white serif headline sits, moonlit dunes where the product window floats; the call to action is the white button. Nothing in the product uses these."
       >
         <div className="sky relative overflow-hidden rounded-panel p-8 text-center">
-          <div className="sun right-[8%] top-[20%]" aria-hidden />
+          <NightSky uid="ds-sky" />
           <div className="relative">
             <p className="font-display text-hero text-[var(--sky-ink)]">One serif headline</p>
             <p className="mt-3 text-lg font-medium text-[var(--sky-ink)]">One line beneath it, in the sans.</p>
             <span className="glass mt-6 inline-flex h-11 items-center rounded-lg px-5 text-base font-medium">Glass button</span>
             <dl className="mt-10 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
-              {["--sky-top", "--sky-deep", "--sky", "--sky-pale"].map((token) => (
+              {["--sky-top", "--sky-deep", "--sky", "--dune-crest"].map((token) => (
                 <div key={token} className="flex items-center justify-center gap-2 text-ink">
                   <span className="size-5 shrink-0 rounded-sm border border-line" style={{ background: `var(${token})` }} />
                   <dt className="font-mono">{token}</dt>

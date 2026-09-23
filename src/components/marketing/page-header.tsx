@@ -1,3 +1,4 @@
+import { NightSky } from "@/components/marketing/night-sky";
 import { cn } from "@/lib/utils";
 
 /**
@@ -29,10 +30,9 @@ export function PageHeader({
 }) {
   return (
     <section className={cn("sky-band relative -mt-14 pt-14", className)}>
-      {/* The sun sits on the horizon, low enough that only its crown clears
-          the fade. Clipped to the band; nothing here touches the copy. */}
+      {/* The same night sky as the landing page, clipped to the band. */}
       <div className="absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="sun -bottom-24 right-[14%] hidden opacity-70 sm:block" />
+        <NightSky uid="header-sky" />
       </div>
 
       {/* pb must stay at or above the 8rem the fade is anchored at, so the
