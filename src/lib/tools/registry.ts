@@ -22,7 +22,6 @@ export function isToolId(value: string): value is ToolId {
 }
 
 export const SEVERITIES = ["low", "medium", "high", "critical"] as const;
-export type Severity = (typeof SEVERITIES)[number];
 
 /** UI-facing copy for the builder's permission checkboxes. */
 export const TOOL_METADATA: Record<

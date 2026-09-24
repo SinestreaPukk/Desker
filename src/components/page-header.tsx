@@ -42,7 +42,7 @@ export function PageHeader({
 }) {
   return (
     // The rule runs the full width of the page; what it divides does not.
-    <div className={cn("border-b border-line", className)}>
+    <div className={cn("border-b border-line bg-surface/40 backdrop-blur-xs", className)}>
       <div
         className={cn(
           "flex flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6",
@@ -54,14 +54,14 @@ export function PageHeader({
         )}
       >
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-ink">{title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">{title}</h1>
           {description ? (
-            <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-muted">
+            <p className="mt-1 max-w-2xl text-xs sm:text-sm leading-relaxed text-ink-muted">
               {description}
             </p>
           ) : null}
         </div>
-        {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+        {actions ? <div className="flex shrink-0 items-center gap-2.5">{actions}</div> : null}
       </div>
     </div>
   );
@@ -75,12 +75,20 @@ export function PageHeader({
 export function PageToolbar({
   children,
   className,
+  stack = false,
 }: {
   children: React.ReactNode;
   className?: string;
+  /**
+   * Keep the children on separate rows at every width, and let the strip take
+   * the height it needs. For a toolbar carrying more than a page's width of
+   * controls - the Inbox's four tabs plus its four filters - where the single
+   * row would otherwise overflow its fixed height and print over the list.
+   */
+  stack?: boolean;
 }) {
   return (
-    <div className={cn("border-b border-line", className)}>
+    <div className={cn("border-b border-line bg-surface/20 backdrop-blur-xs", className)}>
       <div
         className={cn(
           "flex flex-col gap-3 px-4 py-3 sm:px-6",
@@ -88,7 +96,7 @@ export function PageToolbar({
           // starts at exactly the same y on every tab. Controls of differing
           // heights (a tab strip vs a select) would otherwise shift it by a few
           // pixels, which is visible as a jump when switching tabs.
-          "lg:h-16 lg:flex-row lg:items-center lg:justify-between lg:py-0",
+          !stack && "lg:h-16 lg:flex-row lg:items-center lg:justify-between lg:py-0",
           COLUMN,
         )}
       >

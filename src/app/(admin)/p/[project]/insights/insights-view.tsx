@@ -2,7 +2,20 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { FileQuestion, Search, ThumbsDown, TrendingUp } from "lucide-react";
+import {
+  AlertTriangle,
+  Bug,
+  CheckCircle2,
+  Clock,
+  Coins,
+  FileQuestion,
+  MessageSquare,
+  Search,
+  ThumbsDown,
+  ThumbsUp,
+  TrendingUp,
+  XCircle,
+} from "lucide-react";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +38,21 @@ import { EmptyState, ErrorState, LoadingKpis, LoadingRows } from "@/components/u
 import { useAnalytics, type AnalyticsResponse } from "@/hooks/use-admin-data";
 import { errorMessage } from "@/lib/api-client";
 import { cn, formatRelativeTime } from "@/lib/utils";
+import {
+  awaitingCaption,
+  conversationsCaption,
+  costCaption,
+  escalationCaption,
+  failedCaption,
+  formatHours,
+  helpfulCaption,
+  humanCost,
+  humanDuration,
+  issuesCaption,
+  searchesCaption,
+  tasksCaption,
+  timeSaved,
+} from "@/lib/insight-copy";
 
 function percent(value: number | null): string {
   return value === null ? "—" : `${Math.round(value * 100)}%`;
@@ -108,44 +136,66 @@ export function InsightsView({ project }: { project: string }) {
           <>
             <KpiRow
               lead={{
-                label: "Client conversations",
+                label: "Questions answered for clients",
                 value: data!.totals.conversations,
-                hint: `last ${data!.days} days`,
+                caption: conversationsCaption({
+                  conversations: data!.totals.conversations,
+                  previousConversations: data!.previous.conversations,
+                  escalated: data!.totals.escalated,
+                  days: data!.days,
+                }),
+                icon: MessageSquare,
               }}
               stats={[
                 {
-                  label: "Escalated to a person",
+                  label: "Handed to a person",
                   value: data!.totals.escalated,
-                  ratio: data!.totals.conversations > 0 ? data!.totals.escalated / data!.totals.conversations : null,
+                  ratio:
+                    data!.totals.conversations > 0
+                      ? data!.totals.escalated / data!.totals.conversations
+                      : null,
                   tone: "danger",
+                  caption: escalationCaption(data!.totals.escalated, data!.totals.conversations),
+                  icon: AlertTriangle,
                 },
                 {
-                  label: "Rated helpful",
+                  label: "Clients said it helped",
                   value: data!.totals.ratedUp,
                   ratio:
                     data!.totals.ratedUp + data!.totals.ratedDown > 0
                       ? data!.totals.ratedUp / (data!.totals.ratedUp + data!.totals.ratedDown)
                       : null,
                   tone: "positive",
-                  hint: data!.totals.ratedUp + data!.totals.ratedDown > 0 ? `of ${data!.totals.ratedUp + data!.totals.ratedDown} rated` : "no ratings yet",
+                  caption: helpfulCaption(data!.totals.ratedUp, data!.totals.ratedDown),
+                  icon: ThumbsUp,
                 },
                 {
-                  label: "Issues logged",
-                  value: data!.totals.issues,
-                  hint: `${data!.totals.suggestions} suggestions`,
+                  label: "Raised for you to deal with",
+                  value: data!.totals.issues + data!.totals.suggestions,
+                  caption: issuesCaption(data!.totals.issues, data!.totals.suggestions),
+                  icon: Bug,
                 },
                 {
-                  label: "Document searches",
-                  value: data!.totals.searches,
-                  ratio: data!.totals.searches > 0 ? 1 - data!.totals.searchMisses / data!.totals.searches : null,
+                  label: "Answered from your documents",
+                  value: data!.totals.searches - data!.totals.searchMisses,
+                  ratio:
+                    data!.totals.searches > 0
+                      ? 1 - data!.totals.searchMisses / data!.totals.searches
+                      : null,
                   tone: "accent",
-                  hint: data!.totals.searches > 0 ? "found something" : undefined,
+                  caption: searchesCaption(data!.totals.searches, data!.totals.searchMisses),
+                  icon: Search,
                 },
               ]}
             />
 
             {/* Work: what the agents did on their own, and what it cost. -------- */}
-            <WorkSection work={data!.work} days={data!.days} />
+            <WorkSection
+              work={data!.work}
+              days={data!.days}
+              previousRuns={data!.previous.runs}
+              conversations={data!.totals.conversations}
+            />
 
             {/* Content gaps first: it is the only panel here that tells an
                 admin what to actually go and do. */}
@@ -246,10 +296,10 @@ export function InsightsView({ project }: { project: string }) {
             <Panel>
               <PanelHeader>
                 <div>
-                  <PanelTitle>Per agent</PanelTitle>
+                  <PanelTitle>How each agent is doing with clients</PanelTitle>
                   <PanelDescription>
-                    A high escalation rate or a low retrieval rate usually means
-                    missing context, not a bad persona.
+                    An agent that often needs a person, or often cannot answer from your
+                    documents, is usually missing a document rather than a better personality.
                   </PanelDescription>
                 </div>
               </PanelHeader>
@@ -273,19 +323,19 @@ export function InsightsView({ project }: { project: string }) {
                             Conversations
                           </th>
                           <th scope="col" className="pb-2 px-3 meta font-medium text-right">
-                            Escalated
+                            Needed a person
                           </th>
                           <th scope="col" className="pb-2 px-3 meta font-medium text-right">
-                            Issues
+                            Raised
                           </th>
                           <th scope="col" className="pb-2 px-3 meta font-medium text-right">
-                            Searches
+                            Look-ups
                           </th>
                           <th scope="col" className="pb-2 px-3 meta font-medium text-right">
-                            Found
+                            Answered from documents
                           </th>
                           <th scope="col" className="pb-2 pl-3 meta font-medium text-right">
-                            Helpful
+                            Said it helped
                           </th>
                         </tr>
                       </thead>
@@ -359,8 +409,8 @@ export function InsightsView({ project }: { project: string }) {
                                 )}
                                 title={
                                   agent.satisfaction === null
-                                    ? "No ratings yet"
-                                    : `${agent.ratedUp} helpful, ${agent.ratedDown} not`
+                                    ? "No client has rated a reply from this agent yet"
+                                    : `${agent.ratedUp} said it helped, ${agent.ratedDown} said it did not`
                                 }
                               >
                                 {percent(agent.satisfaction)}
@@ -386,49 +436,69 @@ function money(value: number | null): string {
   return value < 0.01 && value > 0 ? "<$0.01" : `$${value.toFixed(2)}`;
 }
 
-function duration(ms: number | null): string {
-  if (ms === null) return "—";
-  const minutes = ms / 60_000;
-  if (minutes < 1) return "<1 min";
-  if (minutes < 90) return `${Math.round(minutes)} min`;
-  const hours = minutes / 60;
-  if (hours < 36) return `${hours.toFixed(1)} h`;
-  return `${(hours / 24).toFixed(1)} d`;
-}
-
-function WorkSection({ work, days }: { work: AnalyticsResponse["work"]; days: number }) {
+function WorkSection({
+  work,
+  days,
+  previousRuns,
+  conversations,
+}: {
+  work: AnalyticsResponse["work"];
+  days: number;
+  previousRuns: number;
+  conversations: number;
+}) {
   const { totals, agents } = work;
-  const periodLabel =
-    totals.periods.length === 1 ? totals.periods[0] : `${totals.periods[0]} to ${totals.periods.at(-1)}`;
+  const saved = timeSaved(conversations, totals.done);
   return (
     <>
       <KpiRow
         lead={{
-          label: "Model cost",
-          value: money(totals.costUsd),
-          hint: `${periodLabel} · ${(totals.inputTokens + totals.outputTokens).toLocaleString()} tokens${
-            totals.unpricedModels.length > 0 ? ` · no price for ${totals.unpricedModels.join(", ")}` : ""
-          }`,
+          label: "Time your team did not spend",
+          value: formatHours(saved.hours),
+          caption: saved.caption,
+          icon: Clock,
         }}
         stats={[
-          { label: "Tasks run", value: totals.runs, hint: `last ${days} days` },
           {
-            label: "Completed",
-            value: totals.done,
-            ratio: totals.runs > 0 ? totals.done / totals.runs : null,
-            tone: "positive",
+            label: "Tasks done on their own",
+            value: totals.runs,
+            caption: tasksCaption({
+              runs: totals.runs,
+              previousRuns,
+              done: totals.done,
+              failed: totals.failed,
+              awaiting: totals.awaiting,
+              days,
+            }),
+            icon: TrendingUp,
           },
           {
-            label: "Failed",
+            label: "Stopped before finishing",
             value: totals.failed,
             ratio: totals.runs > 0 ? totals.failed / totals.runs : null,
             tone: "danger",
-            hint: totals.escalated > 0 ? `${totals.escalated} escalated by an agent` : undefined,
+            caption: failedCaption(totals.failed, totals.runs),
+            icon: XCircle,
           },
           {
-            label: "Awaiting approval",
+            label: "Waiting for your approval",
             value: totals.awaiting,
-            hint: `avg decision ${duration(totals.approvalTurnaroundMs)}`,
+            tone: "warning",
+            caption: awaitingCaption(totals.awaiting, totals.approvalTurnaroundMs),
+            icon: CheckCircle2,
+          },
+          {
+            label: "Estimated cost",
+            value: humanCost(totals.costUsd),
+            tone: "accent",
+            caption: costCaption({
+              costUsd: totals.costUsd,
+              runs: totals.runs,
+              conversations,
+              unpricedModels: totals.unpricedModels,
+              days,
+            }),
+            icon: Coins,
           },
         ]}
       />
@@ -436,10 +506,10 @@ function WorkSection({ work, days }: { work: AnalyticsResponse["work"]; days: nu
       <Panel>
         <PanelHeader>
           <div>
-            <PanelTitle>Work per agent</PanelTitle>
+            <PanelTitle>What each agent did on its own</PanelTitle>
             <PanelDescription>
-              Runs in the last {days} days; tokens and cost for the calendar month{totals.periods.length > 1 ? "s" : ""} they fall in.
-              The cost column is what billing will meter.
+              Tasks in the last {days} days. Cost is an estimate of what the work cost to run,
+              and it is what billing will charge for.
             </PanelDescription>
           </div>
         </PanelHeader>
@@ -457,13 +527,12 @@ function WorkSection({ work, days }: { work: AnalyticsResponse["work"]; days: nu
                 <thead>
                   <tr className="border-b border-line">
                     <th scope="col" className="pb-2 pr-3 meta font-medium">Agent</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Runs</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Done</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Failed</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Awaiting</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Avg decision</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Tokens</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Searches</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Tasks</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Finished</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Stopped</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Waiting on you</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">You decide in</th>
+                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Look-ups</th>
                     <th scope="col" className="pb-2 pl-3 meta font-medium text-right">Cost</th>
                   </tr>
                 </thead>
@@ -474,16 +543,17 @@ function WorkSection({ work, days }: { work: AnalyticsResponse["work"]; days: nu
                         <span className="font-medium text-ink">{agent.name}</span>
                         <span className="ml-2 text-xs text-ink-muted">{agent.jobTitle}</span>
                         {agent.escalated > 0 ? (
-                          <span className="ml-2 text-xs text-danger">{agent.escalated} escalated</span>
+                          <span className="ml-2 text-xs text-danger">
+                            asked for a person {agent.escalated}×
+                          </span>
                         ) : null}
                       </td>
                       <td className="py-2.5 px-3 text-right tabular-nums">{agent.runs}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums">{agent.done}</td>
                       <td className={`py-2.5 px-3 text-right tabular-nums ${agent.failed > 0 ? "text-danger" : ""}`}>{agent.failed}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums">{agent.awaiting}</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted">{duration(agent.approvalTurnaroundMs)}</td>
                       <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted">
-                        {(agent.inputTokens + agent.outputTokens).toLocaleString()}
+                        {humanDuration(agent.approvalTurnaroundMs)}
                       </td>
                       <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted">{agent.searches}</td>
                       <td className="py-2.5 pl-3 text-right tabular-nums font-medium text-ink">{money(agent.costUsd)}</td>
@@ -493,11 +563,50 @@ function WorkSection({ work, days }: { work: AnalyticsResponse["work"]; days: nu
               </table>
             </div>
           )}
+
+          {/* For whoever is reconciling an invoice. Nobody else has to know
+              what a token is to read this page. */}
+          {agents.length > 0 ? (
+            <details className="mt-4">
+              <summary className="cursor-pointer text-xs text-ink-muted hover:text-ink">
+                View technical details
+              </summary>
+              <div className="mt-2 rounded-lg border border-line bg-surface-2/50 p-3 text-xs text-ink-muted">
+                <p>
+                  {(totals.inputTokens + totals.outputTokens).toLocaleString()} model tokens over{" "}
+                  {totals.periods.length === 1
+                    ? totals.periods[0]
+                    : `${totals.periods[0]} to ${totals.periods.at(-1)}`}
+                  {totals.unpricedModels.length > 0
+                    ? ` · no published price for ${totals.unpricedModels.join(", ")}`
+                    : ""}
+                  .
+                </p>
+                <ul className="mt-1.5 space-y-0.5">
+                  {agents.map((agent) => (
+                    <li key={agent.id}>
+                      {agent.name}: {(agent.inputTokens + agent.outputTokens).toLocaleString()} tokens
+                      {" · "}
+                      {money(agent.costUsd)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </details>
+          ) : null}
         </PanelBody>
       </Panel>
     </>
   );
 }
+
+const STAT_ICON_TONE = {
+  neutral: "border-line bg-surface-2 text-ink-muted",
+  accent: "border-accent-line/70 bg-accent-soft text-accent-soft-fg",
+  positive: "border-positive-line/70 bg-positive-soft text-positive",
+  warning: "border-warning-line/70 bg-warning-soft text-warning",
+  danger: "border-danger-line/70 bg-danger-soft text-danger",
+} as const;
 
 /**
  * One KPI style for the whole dashboard: a lead card with the number that
@@ -508,51 +617,75 @@ function KpiRow({
   lead,
   stats,
 }: {
-  lead: { label: string; value: number | string; hint?: string };
+  lead: {
+    label: string;
+    value: number | string;
+    /** One line saying what the number means and which way it is going. */
+    caption?: string;
+    hint?: string;
+    icon?: React.ComponentType<{ className?: string }>;
+  };
   stats: {
     label: string;
     value: number | string;
+    caption?: string;
     hint?: string;
     ratio?: number | null;
     tone?: "accent" | "positive" | "warning" | "danger";
+    icon?: React.ComponentType<{ className?: string }>;
   }[];
 }) {
+  const LeadIcon = lead.icon;
   return (
-    /* Every tile is the same column: label at the top, the figure under it,
-       and the caption pinned to the foot. That last part is what makes a row
-       of these read as one instrument - the captions line up across the row
-       whatever is above them, instead of each tile spacing its own contents
-       out over whatever height it happened to get. */
     <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-      {/* The lead tile is as tall as the four beside it, which left its
-          figure stranded in the middle of an empty card. Label at the head,
-          figure and caption together at the foot: the height then reads as
-          air above a heading rather than a gap inside one. */}
-      <Panel className="flex flex-col p-5">
-        <p className="meta">{lead.label}</p>
+      <Panel className="flex flex-col p-5 transition-all duration-150 hover:border-line-strong hover:shadow-xs">
+        <div className="flex items-start justify-between gap-2">
+          <p className="meta font-semibold">{lead.label}</p>
+          {LeadIcon ? (
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-accent-line/60 bg-accent-soft text-accent-soft-fg shadow-2xs">
+              <LeadIcon className="size-4" />
+            </span>
+          ) : null}
+        </div>
         <div className="mt-auto pt-6">
-          <p className="text-display font-semibold leading-none tracking-tight text-ink tabular-nums">
+          <p className="text-display font-bold leading-none tracking-tight text-ink tabular-nums">
             {typeof lead.value === "number" ? lead.value.toLocaleString() : lead.value}
           </p>
-          {lead.hint ? <p className="mt-2 text-sm text-ink-muted">{lead.hint}</p> : null}
+          {lead.caption ? (
+            <p className="mt-2 text-sm leading-relaxed text-ink-muted">{lead.caption}</p>
+          ) : null}
+          {lead.hint ? <p className="mt-1 text-xs text-ink-subtle">{lead.hint}</p> : null}
         </div>
       </Panel>
       <dl className="grid gap-3 sm:grid-cols-2">
         {stats.map((stat) => {
           const hasRatio = stat.ratio !== null && stat.ratio !== undefined;
+          const StatIcon = stat.icon;
           return (
-            <Panel key={stat.label} className="flex flex-col p-5">
-              <dt className="meta">{stat.label}</dt>
+            <Panel key={stat.label} className="flex flex-col p-5 transition-all duration-150 hover:border-line-strong hover:shadow-xs">
+              <div className="flex items-start justify-between gap-2">
+                <dt className="meta font-semibold">{stat.label}</dt>
+                {StatIcon ? (
+                  <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-md border shadow-2xs", STAT_ICON_TONE[stat.tone ?? "neutral"])}>
+                    <StatIcon className="size-3.5" />
+                  </span>
+                ) : null}
+              </div>
               <dd className="mt-3 flex items-baseline gap-2">
-                <span className="text-xl font-semibold leading-none tabular-nums text-ink">
+                <span className="text-xl font-bold leading-none tabular-nums text-ink">
                   {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
                 </span>
                 {hasRatio ? (
-                  <span className="text-sm tabular-nums text-ink-muted">{percent(stat.ratio!)}</span>
+                  <span className="text-sm font-medium tabular-nums text-ink-muted">{percent(stat.ratio!)}</span>
                 ) : null}
               </dd>
               {hasRatio ? <RatioBar value={stat.ratio!} tone={stat.tone ?? "accent"} /> : null}
-              {stat.hint ? <dd className="mt-auto pt-3 text-xs text-ink-muted">{stat.hint}</dd> : null}
+              {/* Every bar says in words what it would otherwise leave the
+                  reader to infer from its length. */}
+              {stat.caption ? (
+                <dd className="mt-2.5 text-xs leading-relaxed text-ink-muted">{stat.caption}</dd>
+              ) : null}
+              {stat.hint ? <dd className="mt-auto pt-3 text-xs text-ink-subtle">{stat.hint}</dd> : null}
             </Panel>
           );
         })}
@@ -572,11 +705,8 @@ const BAR_TONE = {
 function RatioBar({ value, tone }: { value: number; tone: keyof typeof BAR_TONE }) {
   const width = Math.max(0, Math.min(1, value)) * 100;
   return (
-    /* A hairline, not a rule. At 6px on a full-width track an empty one read
-       as a loading skeleton and a full one drew the eye harder than the
-       number it was describing. */
-    <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-line" aria-hidden>
-      <div className={`h-full rounded-full ${BAR_TONE[tone]}`} style={{ width: `${width}%` }} />
+    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-2 border border-line/40" aria-hidden>
+      <div className={`h-full rounded-full transition-all duration-300 ${BAR_TONE[tone]}`} style={{ width: `${width}%` }} />
     </div>
   );
 }

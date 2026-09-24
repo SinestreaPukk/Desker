@@ -103,13 +103,12 @@ export function ObjectivesHelper({ objectives, onPick }: { objectives: string[];
   );
 }
 
-export function ContextHelper({ value }: { value: string }) {
-  const words = value.trim() ? value.trim().split(/\s+/).length : 0;
+export function ContextHelper({ answered, total }: { answered: number; total: number }) {
   return (
     <Reading label="Before every run the agent knows">
-      {words === 0
-        ? "Only its name and job. Two or three sentences here - who you are, who the audience is, what this month is about - change every draft it writes."
-        : `${words} word${words === 1 ? "" : "s"} of context. It is quoted to the agent verbatim at the start of every run.`}
+      {answered === 0
+        ? "Its name, its job, and whatever the project shares - nothing about this role in particular. One answer above changes every draft it writes."
+        : `Whatever the project shares, then your ${answered} answer${answered === 1 ? "" : "s"} of ${total}, quoted verbatim at the start of every run.`}
     </Reading>
   );
 }

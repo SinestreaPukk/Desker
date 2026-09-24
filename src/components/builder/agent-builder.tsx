@@ -7,16 +7,23 @@ import {
   ArrowLeft,
   ArrowLeftRight,
   Bug,
+  CalendarClock,
+  Check,
   Copy,
   FileCode2,
-  Eye,
+  Hand,
   Lightbulb,
+  MessageSquare,
   MoreVertical,
+  Pause,
+  Play,
   RotateCcw,
   Search,
+  Shuffle,
   Sliders,
   Trash2,
   UserRoundCheck,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AgentAvatar } from "@/components/ui/avatar";
@@ -31,6 +38,7 @@ import {
   PanelHeader,
   PanelTitle,
 } from "@/components/ui/panel";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
   Select,
   SelectContent,
@@ -62,16 +70,20 @@ import { ScopeOfWorkPanel } from "./scope-of-work-panel";
 import { PromptPreviewDialog } from "./prompt-preview-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EscalationRuleHelper } from "./live-example";
+import { HelpLink } from "@/components/help/help-panel";
 import { DuplicateAgentDialog } from "./duplicate-agent-dialog";
 import { DocumentsPanel } from "./documents-panel";
+import { ProjectContextPanel } from "./project-context-panel";
 import { SharePanel } from "./share-panel";
 import { useDeleteAgent, useUpdateAgent } from "@/hooks/use-admin-data";
+import { useRunScope, useScope } from "@/hooks/use-work-data";
+import { describeCadence } from "@/lib/work/cadence";
 import { errorMessage, ApiError } from "@/lib/api-client";
-import { parseLines } from "@/lib/agent-fields";
+import { parseLines, randomAgentName } from "@/lib/agent-fields";
 import { TOOL_IDS, TOOL_METADATA, type ToolId } from "@/lib/tools/registry";
 import type { AgentDetailDto } from "@/lib/serialize";
 import type { AgentInput } from "@/lib/validation";
-import { cn } from "@/lib/utils";
+import { cn, formatRelativeTime } from "@/lib/utils";
 
 const TOOL_ICONS = {
   search: Search,
@@ -90,7 +102,6 @@ interface FormState {
   responsibilitiesText: string;
   allowedTools: ToolId[];
   escalationRule: string;
-  welcomeMessage: string;
   modelProvider: "anthropic" | "openai";
   model: string;
   publicPasscode: string;
@@ -111,7 +122,6 @@ function toFormState(agent: AgentDetailDto): FormState {
       (TOOL_IDS as readonly string[]).includes(tool),
     ),
     escalationRule: agent.escalationRule ?? "",
-    welcomeMessage: agent.welcomeMessage ?? "",
     modelProvider: agent.modelProvider === "openai" ? "openai" : "anthropic",
     model: agent.model ?? "",
     publicPasscode: agent.publicPasscode ?? "",
@@ -131,7 +141,6 @@ function toPayload(form: FormState) {
     responsibilities: parseLines(form.responsibilitiesText),
     allowedTools: form.allowedTools,
     escalationRule: form.escalationRule.trim(),
-    welcomeMessage: form.welcomeMessage.trim(),
     modelProvider: form.modelProvider,
     model: form.model.trim(),
     publicPasscode: form.publicPasscode.trim(),
@@ -141,46 +150,35 @@ function toPayload(form: FormState) {
   };
 }
 
-export type EditorSection =
-  | "identity"
-  | "behaviour"
-  | "capabilities"
-  | "work"
-  | "knowledge"
-  | "publishing"
-  | "model";
+export type EditorSection = "work" | "knowledge" | "profile" | "settings";
 
 const SECTIONS: { id: EditorSection; label: string; hint: string }[] = [
-  { id: "identity", label: "Identity", hint: "Name, job, face, opening line" },
-  { id: "behaviour", label: "Behaviour", hint: "Tone, responsibilities, escalation" },
-  { id: "capabilities", label: "Capabilities", hint: "What it may do in chat" },
-  { id: "knowledge", label: "Knowledge", hint: "Context documents" },
-  { id: "work", label: "Scope of work", hint: "Autonomous runs and trust" },
-  { id: "publishing", label: "Publishing", hint: "Link, widget, passcode" },
-  { id: "model", label: "Model", hint: "Provider and model" },
+  { id: "work", label: "Work & schedule", hint: "When it runs, what it works on, what needs approval" },
+  { id: "knowledge", label: "Knowledge", hint: "Company context and reference documents" },
+  { id: "profile", label: "Profile", hint: "Name, character, responsibilities, chat abilities" },
+  { id: "settings", label: "Sharing & model", hint: "Public link, widget, passcode, model" },
 ];
 
 /** Fields the server can reject, and the section that owns each. */
 const FIELD_SECTION: Record<string, EditorSection> = {
-  name: "identity",
-  jobTitle: "identity",
-  department: "identity",
-  avatarUrl: "identity",
-  welcomeMessage: "identity",
-  personality: "behaviour",
-  responsibilities: "behaviour",
-  escalationRule: "behaviour",
-  allowedTools: "capabilities",
-  widgetColor: "publishing",
-  publicPasscode: "publishing",
-  model: "model",
-  modelProvider: "model",
+  name: "profile",
+  jobTitle: "profile",
+  department: "profile",
+  avatarUrl: "profile",
+  personality: "profile",
+  responsibilities: "profile",
+  escalationRule: "profile",
+  allowedTools: "profile",
+  widgetColor: "settings",
+  publicPasscode: "settings",
+  model: "settings",
+  modelProvider: "settings",
 };
 
 function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next: EditorSection) => void }) {
   return (
     <nav aria-label="Editor sections" className="-mx-1 overflow-x-auto pb-1">
-      <ul className="flex min-w-max gap-1 px-1">
+      <ul className="inline-flex min-w-max items-center gap-1 rounded-lg border border-line bg-surface-2/80 p-1 shadow-2xs">
         {SECTIONS.map((item) => {
           const active = item.id === value;
           return (
@@ -191,8 +189,10 @@ function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next
                 onClick={() => onChange(item.id)}
                 title={item.hint}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm transition-colors",
-                  active ? "bg-accent-soft font-medium text-accent-soft-fg" : "text-ink-muted hover:bg-surface-2 hover:text-ink",
+                  "rounded-md px-3.5 py-1.5 text-sm font-medium transition-all duration-150",
+                  active
+                    ? "bg-surface font-semibold text-ink shadow-xs"
+                    : "text-ink-muted hover:bg-surface/40 hover:text-ink",
                 )}
               >
                 {item.label}
@@ -249,9 +249,19 @@ export function AgentBuilder({
       jobTitle: saved.jobTitle,
       department: saved.department,
       avatarUrl: saved.avatarUrl,
-      welcomeMessage: saved.welcomeMessage,
     }),
-    [agent.id, saved.name, saved.jobTitle, saved.department, saved.avatarUrl, saved.welcomeMessage],
+    [agent.id, saved.name, saved.jobTitle, saved.department, saved.avatarUrl],
+  );
+
+  const contextGreeting = React.useMemo<ChatBubble[]>(
+    () => [
+      {
+        id: "greeting",
+        role: "assistant",
+        content: `Hi! I'm ${form.name || agent.name}, your ${form.jobTitle || agent.jobTitle}. What would you like to work on together?`,
+      },
+    ],
+    [form.name, agent.name, form.jobTitle, agent.jobTitle],
   );
 
   const previewPayload = React.useMemo(
@@ -303,7 +313,9 @@ export function AgentBuilder({
   const [confirmUnpublish, setConfirmUnpublish] = React.useState(false);
   // One decision at a time: the form is grouped into sections and only the
   // current one is on screen. Edits in every section persist until saved.
-  const [section, setSection] = React.useState<EditorSection>("identity");
+  // A new agent still needs its grounding; an existing one is usually opened
+  // to change what it does and when.
+  const [section, setSection] = React.useState<EditorSection>(onboarding ? "knowledge" : "work");
 
   async function togglePublish() {
     if (agent.status === "published") {
@@ -348,7 +360,7 @@ export function AgentBuilder({
             wrap they squeeze the name to zero and push the overflow menu off
             the right edge. */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:flex-nowrap sm:px-6">
-          <Button asChild variant="ghost" size="icon" aria-label="Back to roster">
+          <Button asChild variant="ghost" size="icon" aria-label="Back to roster" className="rounded-lg">
             <Link href={`/p/${project}/roster`}>
               <ArrowLeft aria-hidden />
             </Link>
@@ -359,25 +371,43 @@ export function AgentBuilder({
             src={form.avatarUrl}
             seed={agent.id}
             size="md"
+            className="ring-2 ring-line/50"
           />
 
           <div className="min-w-0 flex-1 basis-24">
-            <h1 className="truncate text-base font-semibold text-ink">
-              {form.name || "Untitled agent"}
-            </h1>
-            <p className="truncate text-xs text-ink-muted">
-              {form.jobTitle || "No job title yet"}
-            </p>
+            <Breadcrumbs
+              items={[
+                { label: "Roster", href: `/p/${project}/roster` },
+                { label: form.name || "Untitled agent" },
+              ]}
+              className="mb-0.5"
+            />
+            <div className="flex items-center gap-2">
+              <h1 className="truncate text-base font-bold text-ink">
+                {form.name || "Untitled agent"}
+              </h1>
+              <span className="hidden text-xs text-ink-subtle sm:inline">·</span>
+              <span className="hidden truncate text-xs text-ink-muted sm:inline">
+                {form.jobTitle || "Agent Studio"}
+              </span>
+            </div>
           </div>
 
-          <div className="flex w-full items-center gap-2 sm:w-auto">
+          <div className="flex w-full items-center gap-2.5 sm:w-auto">
             <StatusBadge status={agent.status} />
-            {dirty ? <Badge tone="warning">Unsaved</Badge> : null}
+            {dirty ? (
+              <Badge tone="warning">Unsaved</Badge>
+            ) : (
+              <span className="hidden items-center gap-1 text-xs font-medium text-positive sm:inline-flex">
+                <Check className="size-3" aria-hidden />
+                Saved
+              </span>
+            )}
             {/* Pushes the buttons to the right edge once the row has wrapped. */}
             <span className="flex-1 sm:hidden" />
 
             <Button
-              variant="secondary"
+              variant={dirty ? "primary" : "secondary"}
               size="sm"
               onClick={() => void onSave()}
               loading={update.isPending}
@@ -388,7 +418,7 @@ export function AgentBuilder({
 
             <Button
               size="sm"
-              variant={agent.status === "published" ? "subtle" : "primary"}
+              variant={!dirty && agent.status !== "published" ? "primary" : "secondary"}
               onClick={() => void togglePublish()}
               loading={update.isPending}
             >
@@ -404,7 +434,7 @@ export function AgentBuilder({
               <DropdownMenuContent>
                 <DropdownMenuItem onSelect={() => setShowPrompt(true)}>
                   <FileCode2 aria-hidden />
-                  View system prompt
+                  View the agent&apos;s instructions
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setShowDuplicate(true)}>
                   <Copy aria-hidden />
@@ -436,8 +466,8 @@ export function AgentBuilder({
                 Configure
               </TabsTrigger>
               <TabsTrigger value="preview" className="flex-1">
-                <Eye aria-hidden />
-                Preview
+                <MessageSquare aria-hidden />
+                Chat
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -479,31 +509,64 @@ export function AgentBuilder({
           <div className="mx-auto max-w-3xl space-y-5 pb-16">
             <FormError message={saveError} />
 
+            <ScheduleSummary agentId={agent.id} onEdit={() => setSection("work")} />
+
             <SectionNav value={section} onChange={setSection} />
 
-            {/* Identity ------------------------------------------------- */}
-            {section === "identity" ? (
+            {/* Work & schedule ------------------------------------------ */}
+            {section === "work" ? (
+              <ScopeOfWorkPanel
+                agentId={agent.id}
+                project={project}
+                agent={{ name: form.name, jobTitle: form.jobTitle }}
+              />
+            ) : null}
+
+            {/* Knowledge: what every agent shares, then this agent's files. */}
+            {section === "knowledge" ? (
+              <>
+                <ProjectContextPanel project={project} embedded />
+                <DocumentsPanel agentId={agent.id} />
+              </>
+            ) : null}
+
+            {/* Profile ---------------------------------------------------- */}
+            {section === "profile" ? (
             <Panel>
               <PanelHeader>
                 <div>
-                  <PanelTitle>Identity</PanelTitle>
+                  <PanelTitle>Profile</PanelTitle>
                   <PanelDescription>
-                    How this agent introduces itself to clients.
+                    Who this agent is and how it behaves. It follows these word for word, so
+                    be specific.
                   </PanelDescription>
                 </div>
               </PanelHeader>
-              <PanelBody className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
+              <PanelBody className="space-y-6">
+                <div className="grid gap-5 sm:grid-cols-3">
                   <Field
                     label="Name"
                     htmlFor="name"
                     required
                     error={fieldErrors.name?.[0]}
+                    action={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => set("name", randomAgentName())}
+                        className="shrink-0"
+                        title="Randomize name"
+                        aria-label="Randomize name"
+                      >
+                        <Shuffle aria-hidden />
+                      </Button>
+                    }
                   >
                     <Input
                       value={form.name}
                       onChange={(event) => set("name", event.target.value)}
-                      placeholder="Mia"
+                      placeholder={agent.name || "e.g. Bright"}
                     />
                   </Field>
 
@@ -519,17 +582,21 @@ export function AgentBuilder({
                       placeholder="Customer Support Lead"
                     />
                   </Field>
+
+                  <Field
+                    label="Team"
+                    htmlFor="department"
+                    hint="Optional. Groups the roster."
+                  >
+                    <Input
+                      value={form.department}
+                      onChange={(event) => set("department", event.target.value)}
+                      placeholder="Customer Experience"
+                    />
+                  </Field>
                 </div>
 
-                <Field label="Team" htmlFor="department" hint="Optional.">
-                  <Input
-                    value={form.department}
-                    onChange={(event) => set("department", event.target.value)}
-                    placeholder="Customer Experience"
-                  />
-                </Field>
-
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label>Avatar</Label>
                   <AvatarPicker
                     name={form.name}
@@ -540,40 +607,11 @@ export function AgentBuilder({
                 </div>
 
                 <Field
-                  label="Opening message"
-                  htmlFor="welcomeMessage"
-                  hint="Shown before the client says anything. Leave blank to open with a quiet screen."
-                >
-                  <Textarea
-                    value={form.welcomeMessage}
-                    onChange={(event) => set("welcomeMessage", event.target.value)}
-                    rows={2}
-                    placeholder="Hi, I'm Mia. Ask me anything about orders, returns or your account."
-                  />
-                </Field>
-              </PanelBody>
-            </Panel>
-            ) : null}
-
-            {/* Character ------------------------------------------------ */}
-            {section === "behaviour" ? (
-            <Panel>
-              <PanelHeader>
-                <div>
-                  <PanelTitle>Character &amp; scope</PanelTitle>
-                  <PanelDescription>
-                    Both go into the system prompt verbatim. Be specific — vague
-                    personas produce vague agents.
-                  </PanelDescription>
-                </div>
-              </PanelHeader>
-              <PanelBody className="space-y-4">
-                <Field
                   label="Personality and tone"
                   htmlFor="personality"
                   required
                   error={fieldErrors.personality?.[0]}
-                  hint="How they speak, what they're like to deal with, what they never do."
+                  hint="How it speaks and what it is like to deal with. Two or three sentences is plenty."
                   aside={
                     <span className="meta tabular-nums">
                       {form.personality.length}/4000
@@ -583,10 +621,10 @@ export function AgentBuilder({
                   <Textarea
                     value={form.personality}
                     onChange={(event) => set("personality", event.target.value)}
-                    rows={5}
+                    rows={4}
                     maxLength={4000}
                     placeholder={
-                      "Warm but efficient. Gets to the point in two sentences, never uses corporate filler, and always says plainly when something isn't possible. Uses the client's name once, not repeatedly."
+                      "Warm but efficient. Gets to the point in two sentences, never uses corporate filler, and always says plainly when something isn't possible."
                     }
                   />
                 </Field>
@@ -594,60 +632,29 @@ export function AgentBuilder({
                 <Field
                   label="Responsibilities"
                   htmlFor="responsibilities"
-                  hint="One per line. Anything not listed here is explicitly out of scope for this agent."
+                  hint="One per line. Anything not on this list is out of scope for this agent."
                 >
                   <Textarea
                     value={form.responsibilitiesText}
                     onChange={(event) =>
                       set("responsibilitiesText", event.target.value)
                     }
-                    rows={5}
+                    rows={4}
                     placeholder={
                       "Answer questions about orders, shipping and returns\nHelp clients find the right product\nCollect enough detail on a bug for engineering to reproduce it"
                     }
                   />
                 </Field>
 
-                <Field
-                  label="Escalation rule"
-                  htmlFor="escalationRule"
-                  hint={
-                    escalationEnabled
-                      ? "Plain language. The agent judges it from the meaning of the conversation, not by keyword matching."
-                      : "Turn on “Escalate to a human” under Capabilities for this rule to take effect."
-                  }
-                >
-                  <Textarea
-                    value={form.escalationRule}
-                    disabled={!escalationEnabled}
-                    onChange={(event) => set("escalationRule", event.target.value)}
-                    rows={3}
-                    placeholder="Escalate if the client is angry, asks for a refund over $200, or mentions legal action."
-                  />
-                </Field>
-                <EscalationRuleHelper
-                  value={form.escalationRule}
-                  onPick={(text) => set("escalationRule", text)}
-                />
-              </PanelBody>
-            </Panel>
-            ) : null}
-
-            {/* Permissions ---------------------------------------------- */}
-            {section === "capabilities" ? (
-            <Panel>
-              <PanelHeader>
-                <div>
-                  <PanelTitle>What they&apos;re allowed to do</PanelTitle>
-                  <PanelDescription>
-                    Unchecked actions are not offered to the model and are refused
-                    server-side if it asks for them anyway.
-                  </PanelDescription>
-                </div>
-              </PanelHeader>
-              <PanelBody className="space-y-4">
                 <fieldset className="space-y-2">
-                  <legend className="sr-only">Permitted actions</legend>
+                  <legend className="text-sm font-medium text-ink">
+                    What it may do when chatting
+                  </legend>
+                  <p className="text-xs text-ink-muted">
+                    Unchecked actions are not offered to the model and are refused if it asks
+                    anyway. What it does on its own is set under Work &amp; schedule.
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
                   {TOOL_IDS.map((tool) => {
                     const meta = TOOL_METADATA[tool];
                     const Icon = TOOL_ICONS[meta.icon];
@@ -691,112 +698,145 @@ export function AgentBuilder({
                       </label>
                     );
                   })}
+                  </div>
                 </fieldset>
 
+                {escalationEnabled ? (
+                  <div className="space-y-2">
+                    <Field
+                      label="When to hand over to a person"
+                      htmlFor="escalationRule"
+                      aside={<HelpLink topic="escalationRule" label="When does an agent escalate?" />}
+                      hint="Plain language. The agent judges it from the meaning of the conversation, not by keyword matching."
+                    >
+                      <Textarea
+                        value={form.escalationRule}
+                        onChange={(event) => set("escalationRule", event.target.value)}
+                        rows={3}
+                        placeholder="Escalate if the client is angry, asks for a refund over $200, or mentions legal action."
+                      />
+                    </Field>
+                    <EscalationRuleHelper
+                      value={form.escalationRule}
+                      onPick={(text) => set("escalationRule", text)}
+                    />
+                  </div>
+                ) : null}
               </PanelBody>
             </Panel>
             ) : null}
 
-            {/* Scope of work -------------------------------------------- */}
-            {section === "work" ? (
-            <ScopeOfWorkPanel agentId={agent.id} project={project} />
-            ) : null}
+            {/* Sharing & model ------------------------------------------- */}
+            {section === "settings" ? (
+              <>
+                <SharePanel
+                  agentId={agent.id}
+                  published={agent.status === "published"}
+                  passcode={form.publicPasscode}
+                  onPasscodeChange={(value) => set("publicPasscode", value)}
+                  widget={{
+                    label: form.widgetLabel,
+                    color: form.widgetColor,
+                    side: form.widgetSide,
+                  }}
+                  onWidgetChange={(next) => {
+                    if (next.label !== undefined) set("widgetLabel", next.label);
+                    if (next.color !== undefined) set("widgetColor", next.color);
+                    if (next.side !== undefined) set("widgetSide", next.side);
+                  }}
+                  widgetFieldError={fieldErrors.widgetColor?.[0]}
+                />
 
-            {/* Model ---------------------------------------------------- */}
-            {section === "model" ? (
-            <Panel>
-              <PanelHeader>
-                <div>
-                  <PanelTitle>Model</PanelTitle>
-                  <PanelDescription>
-                    Which provider answers for this agent. Switching providers
-                    changes nothing else about the configuration.
-                  </PanelDescription>
-                </div>
-              </PanelHeader>
-              <PanelBody className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="modelProvider">Provider</Label>
-                  <Select
-                    value={form.modelProvider}
-                    onValueChange={(value) =>
-                      set("modelProvider", value as FormState["modelProvider"])
-                    }
-                  >
-                    <SelectTrigger id="modelProvider">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
-                      <SelectItem value="openai">OpenAI</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Panel>
+                  <PanelHeader>
+                    <div>
+                      <PanelTitle>Model</PanelTitle>
+                      <PanelDescription>
+                        Which provider answers for this agent. Switching changes nothing else.
+                      </PanelDescription>
+                    </div>
+                  </PanelHeader>
+                  <PanelBody className="space-y-5">
+                    <div className="max-w-sm space-y-1.5">
+                      <Label htmlFor="modelProvider">Provider</Label>
+                      <Select
+                        value={form.modelProvider}
+                        onValueChange={(value) =>
+                          set("modelProvider", value as FormState["modelProvider"])
+                        }
+                      >
+                        <SelectTrigger id="modelProvider">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="anthropic">Anthropic (Claude - Recommended)</SelectItem>
+                          <SelectItem value="openai">OpenAI</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <Field
-                  label="Model override"
-                  htmlFor="model"
-                  hint="Blank uses the deployment default."
-                >
-                  <Input
-                    value={form.model}
-                    onChange={(event) => set("model", event.target.value)}
-                    placeholder="claude-sonnet-4-6"
-                    className="font-mono text-xs"
-                  />
-                </Field>
-              </PanelBody>
-            </Panel>
-            ) : null}
-
-            {section === "knowledge" ? (
-            <DocumentsPanel agentId={agent.id} />
-            ) : null}
-
-            {section === "publishing" ? (
-            <SharePanel
-              agentId={agent.id}
-              published={agent.status === "published"}
-              passcode={form.publicPasscode}
-              onPasscodeChange={(value) => set("publicPasscode", value)}
-              widget={{
-                label: form.widgetLabel,
-                color: form.widgetColor,
-                side: form.widgetSide,
-              }}
-              onWidgetChange={(next) => {
-                if (next.label !== undefined) set("widgetLabel", next.label);
-                if (next.color !== undefined) set("widgetColor", next.color);
-                if (next.side !== undefined) set("widgetSide", next.side);
-              }}
-              widgetFieldError={fieldErrors.widgetColor?.[0]}
-            />
+                    <details className="group rounded-lg border border-line p-3.5 text-sm" open={Boolean(form.model.trim())}>
+                      <summary className="flex cursor-pointer select-none items-center justify-between font-medium text-ink-muted hover:text-ink">
+                        <span>Advanced: choose a specific model</span>
+                        <span className="text-xs text-ink-subtle transition-transform group-open:rotate-180">▼</span>
+                      </summary>
+                      <div className="mt-3 border-t border-line pt-3">
+                        <Field
+                          label="Model name or version"
+                          htmlFor="model"
+                          hint="Leave blank unless you have been told to use a particular model."
+                        >
+                          <Input
+                            value={form.model}
+                            onChange={(event) => set("model", event.target.value)}
+                            placeholder="claude-sonnet-4-6"
+                            className="font-mono text-xs"
+                          />
+                        </Field>
+                      </div>
+                    </details>
+                  </PanelBody>
+                </Panel>
+              </>
             ) : null}
           </div>
         </div>
 
-        {/* --- preview -------------------------------------------------- */}
+        {/* --- colleague collaboration chat -------------------------------- */}
         <aside
           className={cn(
             "flex min-h-0 flex-col border-line bg-surface lg:border-l",
             mobilePane === "configure" && "hidden lg:flex",
           )}
-          aria-label="Live preview"
+          aria-label={`Chat with ${form.name || agent.name}`}
         >
-          <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
-            <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-ink">Live preview</h2>
-              <p className="truncate text-xs text-ink-muted">
-                {dirty
-                  ? "Save to test your latest edits"
-                  : "The same runtime clients get"}
-              </p>
+          <div className="flex items-center justify-between gap-2 border-b border-line bg-surface/80 px-4 py-3 backdrop-blur-xs">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="relative flex size-2 shrink-0">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-accent" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold leading-tight text-ink">
+                  Chat with {form.name || agent.name}
+                </h2>
+                <p className="mt-0.5 truncate text-xs leading-tight text-ink-muted">
+                  {dirty
+                    ? "Save to test your latest edits"
+                    : `${form.jobTitle || agent.jobTitle} · Ready to collaborate`}
+                </p>
+              </div>
             </div>
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => previewControls.current?.reset([])}
+              onClick={() => {
+                previewControls.current?.reset(contextGreeting);
+                fetch(`/api/preview?previewId=${encodeURIComponent(previewId)}`, {
+                  method: "DELETE",
+                }).catch(() => {});
+              }}
             >
               <RotateCcw aria-hidden />
               Restart
@@ -808,7 +848,8 @@ export function AgentBuilder({
             endpoint="/api/preview"
             payload={previewPayload}
             controlsRef={previewControls}
-            composerPlaceholder="Try what a client would ask…"
+            initialMessages={contextGreeting}
+            composerPlaceholder={`Message ${form.name || agent.name}…`}
             className="min-h-[28rem] lg:min-h-0"
           />
         </aside>
@@ -860,9 +901,74 @@ function OnboardingChecklist({ agent }: { agent: AgentDetailDto }) {
         {agent.name} is created. Two steps left:
       </p>
       <ol className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-accent-soft-fg/90">
-        <li>1. Upload a document under “Company context”</li>
-        <li>2. Try a question in the preview, then hit Publish</li>
+        <li>1. Answer company context &amp; upload reference documents</li>
+        <li>2. Chat with your agent to test work &amp; collaborate, then hit Publish</li>
       </ol>
+    </div>
+  );
+}
+
+/**
+ * When this agent works, visible from every tab: the one setting an owner
+ * most often comes back to check, and the one that decides whether the agent
+ * works on its own at all.
+ */
+function ScheduleSummary({ agentId, onEdit }: { agentId: string; onEdit: () => void }) {
+  const scope = useScope(agentId);
+  const run = useRunScope(agentId);
+  if (!scope.data) return null;
+  const s = scope.data;
+
+  const paused = s.triggerType !== "manual" && !s.enabled;
+  const { Icon, title, detail } =
+    paused
+      ? { Icon: Pause, title: "Paused", detail: "Its trigger is turned off, so it only runs when you start it." }
+      : s.triggerType === "cron"
+        ? {
+            Icon: CalendarClock,
+            title: describeCadence(s.cron, s.timezone),
+            detail: s.nextFireAt ? `Next run ${formatRelativeTime(s.nextFireAt)}.` : "Runs on its own.",
+          }
+        : s.triggerType === "webhook"
+          ? { Icon: Zap, title: "Runs when triggered", detail: "Starts whenever its webhook receives an event." }
+          : { Icon: Hand, title: "Only when you run it", detail: "Give it a schedule to have it work on its own." };
+
+  async function onRun() {
+    try {
+      const item = await run.mutateAsync();
+      if (item.error) toast.error("The run could not start", { description: item.error });
+      else toast.success("Run started", { description: "Progress shows under Work & schedule." });
+    } catch (caught) {
+      toast.error(errorMessage(caught));
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 shadow-2xs">
+      <span
+        aria-hidden
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center rounded-lg [&_svg]:size-4.5",
+          s.triggerType === "manual" || paused
+            ? "bg-surface-2 text-ink-muted"
+            : "bg-accent-soft text-accent-soft-fg",
+        )}
+      >
+        <Icon />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-ink">{title}</p>
+        <p className="truncate text-xs text-ink-muted">{detail}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={onEdit}>
+          Change
+        </Button>
+        <Button variant="secondary" size="sm" onClick={() => void onRun()} loading={run.isPending}>
+          <Play aria-hidden />
+          Run now
+        </Button>
+      </div>
     </div>
   );
 }

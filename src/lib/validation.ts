@@ -8,9 +8,13 @@ import { PROVIDER_IDS } from "@/lib/llm/provider";
 import { TOOL_IDS } from "@/lib/tools/registry";
 
 export const agentInputSchema = z.object({
-  name: z.string().trim().min(1, "Give your agent a name.").max(80),
-  jobTitle: z.string().trim().min(1, "A job title tells the agent what it does.").max(120),
-  department: z.string().trim().max(120).optional().or(z.literal("")),
+  name: z.string().trim().min(1, "Give your agent a name.").max(80, "Keep the name under 80 characters."),
+  jobTitle: z
+    .string()
+    .trim()
+    .min(1, "A job title tells the agent what it does.")
+    .max(120, "Keep the job title under 120 characters."),
+  department: z.string().trim().max(120, "Keep the team name under 120 characters.").optional().or(z.literal("")),
   // Built-in avatars are short keys; uploaded ones are data URIs up to
   // MAX_AVATAR_DATA_URI_LENGTH, which the picker already enforces client-side.
   avatarUrl: z.string().trim().max(MAX_AVATAR_DATA_URI_LENGTH).optional().or(z.literal("")),
@@ -18,15 +22,28 @@ export const agentInputSchema = z.object({
     .string()
     .trim()
     .min(10, "Describe the personality in at least a sentence.")
-    .max(4000),
-  responsibilities: z.array(z.string().trim().min(1).max(300)).max(25).default([]),
+    .max(4000, "That is more personality than the agent can read. Keep it under 4,000 characters."),
+  responsibilities: z
+    .array(z.string().trim().min(1).max(300, "Keep each responsibility to a line."))
+    .max(25, "Twenty-five responsibilities is plenty; fewer and clearer works better.")
+    .default([]),
   allowedTools: z.array(z.enum(TOOL_IDS)).default([]),
-  escalationRule: z.string().trim().max(1000).optional().or(z.literal("")),
-  welcomeMessage: z.string().trim().max(500).optional().or(z.literal("")),
+  escalationRule: z
+    .string()
+    .trim()
+    .max(1000, "Keep the rule to a sentence or two - under 1,000 characters.")
+    .optional()
+    .or(z.literal("")),
+  welcomeMessage: z
+    .string()
+    .trim()
+    .max(500, "An opening line under 500 characters reads better.")
+    .optional()
+    .or(z.literal("")),
   status: z.enum(["draft", "published"]).default("draft"),
   modelProvider: z.enum(PROVIDER_IDS).default("anthropic"),
   model: z.string().trim().max(120).optional().or(z.literal("")),
-  publicPasscode: z.string().trim().max(64).optional().or(z.literal("")),
+  publicPasscode: z.string().trim().max(64, "A passcode of up to 64 characters.").optional().or(z.literal("")),
   widgetLabel: z.string().trim().max(60).optional().or(z.literal("")),
   widgetColor: z
     .string()
@@ -59,7 +76,7 @@ export const signupSchema = z
 export const chatRequestSchema = z.object({
   agentId: z.string().min(1),
   sessionId: z.string().min(8).max(128),
-  message: z.string().trim().min(1, "Type a message first.").max(8000),
+  message: z.string().trim().min(1, "Type a message first.").max(8000, "That message is too long to send. Shorten it and try again."),
   passcode: z.string().max(64).optional(),
 });
 

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Briefcase, ChevronDown, ChevronRight, Play } from "lucide-react";
+import { Briefcase, ChevronRight, Play } from "lucide-react";
 import { toast } from "sonner";
 import { ApprovalCard } from "@/components/work/approval-card";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
@@ -30,15 +30,8 @@ import { useAgents } from "@/hooks/use-admin-data";
 import { useActionItems, useRunScope, useScope } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
-import { ACTION_STATUSES, STATUS_LABELS } from "@/lib/work/types";
-import { formatRelativeTime, safeHttpUrl } from "@/lib/utils";
-
-const TRIGGER_LABEL: Record<string, string> = {
-  schedule: "Scheduled",
-  webhook: "Webhook",
-  manual: "Manual",
-  followup: "Follow-up",
-};
+import { ACTION_STATUSES, STATUS_LABELS, TRIGGER_LABELS } from "@/lib/work/types";
+import { cn, formatRelativeTime, safeHttpUrl } from "@/lib/utils";
 
 /**
  * The rough table. Every action item in the project, newest first, with the
@@ -151,27 +144,36 @@ function ActionItemRow({
   const [open, setOpen] = React.useState(initiallyOpen || item.status === "needs_approval");
 
   return (
-    <div>
+    <div className="transition-colors">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-2"
+        className="group flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 hover:bg-surface-2/60"
       >
-        {open ? (
-          <ChevronDown className="size-4 shrink-0 text-ink-subtle" aria-hidden />
-        ) : (
-          <ChevronRight className="size-4 shrink-0 text-ink-subtle" aria-hidden />
-        )}
-        <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" />
+        <ChevronRight
+          className={cn(
+            "size-4 shrink-0 text-ink-subtle transition-transform duration-200",
+            open && "rotate-90",
+          )}
+          aria-hidden
+        />
+        <div className="shrink-0 rounded-full ring-1 ring-line/80">
+          <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" />
+        </div>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
-            <span className="font-medium text-ink">{item.agent.name}</span>
-            <span className="text-ink-muted">{TRIGGER_LABEL[item.trigger] ?? item.trigger}</span>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-sm">
+            <span className="font-semibold text-ink">{item.agent.name}</span>
+            <Badge tone="neutral" className="text-[10px] py-0 px-2 font-normal">
+              {TRIGGER_LABELS[item.trigger] ?? item.trigger}
+            </Badge>
             <span className="text-xs text-ink-muted">{formatRelativeTime(item.createdAt)}</span>
           </div>
-          <p className="truncate text-xs text-ink-muted">
-            {item.summary ?? item.error ?? (item.status === "in_progress" ? "Working…" : "Not started")}
+          <p className="mt-0.5 truncate text-xs text-ink-muted">
+            {item.headline ??
+              item.summary ??
+              item.error ??
+              (item.status === "in_progress" ? "Working…" : "Not started")}
           </p>
         </div>
         {item.escalatedAt ? <Badge tone="danger">Escalated</Badge> : null}
@@ -179,7 +181,7 @@ function ActionItemRow({
       </button>
 
       {open ? (
-        <div className="space-y-4 border-t border-line bg-surface-2/40 px-4 py-4 text-sm">
+        <div className="space-y-4 border-t border-line bg-surface-2/30 px-5 py-4 text-sm">
           {item.status === "needs_approval" && item.pendingAction ? (
             <ApprovalCard item={item} project={project} />
           ) : null}
@@ -192,11 +194,22 @@ function ActionItemRow({
 
           {item.error ? <p className="text-danger">{item.error}</p> : null}
 
+          {/* The owner's account first; the agent's own report is underneath it
+              for anyone who wants the detail. */}
           {item.summary ? (
             <section>
-              <h4 className="eyebrow mb-1">Report</h4>
-              <pre className="whitespace-pre-wrap font-sans leading-relaxed text-ink">{item.summary}</pre>
+              <h4 className="eyebrow mb-1">What happened</h4>
+              <p className="whitespace-pre-wrap leading-relaxed text-ink">{item.summary}</p>
             </section>
+          ) : null}
+
+          {item.report && item.report !== item.summary ? (
+            <details>
+              <summary className="eyebrow cursor-pointer">The agent&apos;s full report</summary>
+              <pre className="mt-2 whitespace-pre-wrap font-sans leading-relaxed text-ink-muted">
+                {item.report}
+              </pre>
+            </details>
           ) : null}
 
           {item.findings.length > 0 ? (
@@ -324,8 +337,8 @@ function RunAgentDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
-          <Play className="size-3.5 fill-current" aria-hidden />
+        <Button variant="secondary" size="sm" className="gap-1.5">
+          <Play className="size-3.5 fill-current text-ink-muted" aria-hidden />
           <span>Run agent</span>
         </Button>
       </DialogTrigger>

@@ -13,7 +13,10 @@ export type AdminEvent =
   | { type: "issue.created"; conversationId: string; agentId: string; issueType: "issue" | "suggestion" | "escalation" }
   | { type: "issue.updated"; issueId: string }
   | { type: "conversation.updated"; conversationId: string; agentId: string }
-  | { type: "conversation.escalated"; conversationId: string; agentId: string };
+  | { type: "conversation.escalated"; conversationId: string; agentId: string }
+  | { type: "suggestion.created"; agentId: string; suggestionId: string }
+  | { type: "suggestion.updated"; suggestionId: string }
+  | { type: "digest.created"; agentId: string; digestId: string };
 
 const globalForEvents = globalThis as unknown as { deskerBus?: EventEmitter };
 

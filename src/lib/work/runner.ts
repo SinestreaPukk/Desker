@@ -26,8 +26,16 @@ import { hasSearchProvider } from "./research";
 import { captureMessage } from "@/lib/monitoring";
 import { notifyInBackground } from "@/lib/notify";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
+import {
+  AGENT_CONTEXT_QUESTIONS,
+  answersFor,
+  effectiveContext,
+  PROJECT_CONTEXT_QUESTIONS,
+} from "./context";
+import { missingGrounding } from "./preflight";
+import { summarizeRun } from "./summary";
 import { WORK_TOOL_IDS, scopeTools, workToolDefinitions } from "./tools";
-import { executeWorkTool, executePendingAction, type RunContext } from "./execute";
+import { executeWorkTool, executePendingAction, recordEscalation, type RunContext } from "./execute";
 import {
   canTransition,
   type ActionStatus,
@@ -78,6 +86,8 @@ interface LoadedRun {
   ctx: RunContext;
   systemPrompt: string;
   kickoff: string;
+  /** Grounding the run needs and does not have. Non-empty means escalate, not run. */
+  missing: string[];
 }
 
 /** Marks the item running and assembles everything the loop needs. Null if it is not runnable. */
@@ -85,7 +95,14 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
   const item = await prisma.actionItem.findUnique({
     where: { id: actionItemId },
     include: {
-      agent: { include: { scopeOfWork: true, documents: { where: { status: "ready" }, select: { id: true, filename: true } } } },
+      agent: {
+        include: {
+          scopeOfWork: true,
+          documents: { where: { status: "ready" }, select: { id: true, filename: true } },
+          // The project's shared context is inherited by every agent in it.
+          project: { select: { context: true, contextAnswers: true } },
+        },
+      },
       parent: { select: { result: true } },
     },
   });
@@ -94,13 +111,24 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
   const scope = item.agent.scopeOfWork;
   const autonomy = (scope?.autonomy ?? "draft_only") as AutonomyMode;
   const documentIds = scope ? toStringArray(scope.documentIds) : [];
+  const objectives = scope ? toStringArray(scope.objectives) : [];
+  const tools = scopeTools(scope?.tools);
   const documents = item.agent.documents.filter(
     (d) => documentIds.length === 0 || documentIds.includes(d.id),
   );
 
-  const [publishing, email] = await Promise.all([
+  const [publishing, email, colleagues] = await Promise.all([
     findIntegration(item.organizationId, "webhook"),
     resolveEmail(item.organizationId),
+    prisma.agent.findMany({
+      where: {
+        status: "published",
+        projectId: item.agent.projectId,
+        id: { not: item.agent.id },
+      },
+      select: { id: true, name: true, jobTitle: true, department: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   await transition(actionItemId, "in_progress");
@@ -120,21 +148,40 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       },
       autonomy,
       toolAutonomy: (scope?.toolAutonomy as ToolAutonomy | null) ?? null,
-      tools: scopeTools(scope?.tools) ?? [...WORK_TOOL_IDS],
+      // No documents means search_context can only come back empty.
+      tools: (tools ?? [...WORK_TOOL_IDS]).filter(
+        (tool) => documents.length > 0 || tool !== "search_context",
+      ),
       documentIds,
       trigger: item.trigger,
     },
     systemPrompt: buildRunPrompt({
       agent: item.agent,
       scope: {
-        context: scope?.context ?? "",
-        objectives: scope ? toStringArray(scope.objectives) : [],
+        context: effectiveContext({
+          projectContext: item.agent.project.context,
+          agentContext: scope?.context,
+        }),
+        objectives,
       },
       autonomy,
       documentNames: documents.map((d) => d.filename),
       hasPublishing: Boolean(publishing),
       hasEmail: Boolean(email),
       hasSearch: hasSearchProvider(),
+      colleagues,
+    }),
+    missing: missingGrounding({
+      projectAnswers: answersFor(
+        item.agent.project.contextAnswers,
+        item.agent.project.context,
+        PROJECT_CONTEXT_QUESTIONS,
+      ),
+      agentAnswers: answersFor(scope?.contextAnswers, scope?.context, AGENT_CONTEXT_QUESTIONS),
+      objectives,
+      tools,
+      documentCount: documents.length,
+      trigger: item.trigger,
     }),
     kickoff: kickoffMessage({
       trigger: item.trigger,
@@ -216,7 +263,25 @@ export async function runActionItem(
 ): Promise<ActionStatus | null> {
   const loaded = await step("load", () => loadRun(actionItemId));
   if (!loaded) return null;
-  const { ctx, systemPrompt, kickoff } = loaded;
+  const { ctx, systemPrompt, kickoff, missing } = loaded;
+
+  if (missing.length > 0) {
+    const summary =
+      "I did not start this task: I am missing grounding I need to do it well.\n\n" +
+      `Missing:\n${missing.map((m) => `- ${m}`).join("\n")}\n\n` +
+      "Fill these in and run me again.";
+    await step("preflight-escalate", () =>
+      recordEscalation(
+        ctx,
+        "Needs more context before it can work",
+        `Missing before the run could start: ${missing.join("; ")}.`,
+      ),
+    );
+    await step("finish", () =>
+      finishRun(actionItemId, { summary, inputTokens: 0, outputTokens: 0 }),
+    );
+    return "done";
+  }
 
   const provider = await getProvider(ctx.agent.modelProvider);
   const tools = workToolDefinitions(ctx.tools);
@@ -274,6 +339,16 @@ export async function runActionItem(
   }
 
   await step("finish", () => finishRun(actionItemId, { summary, ...usage, error }));
+  // The owner's account of the run, written after the work is on the record so
+  // a crash here costs a summary, never the work itself. Its own step: a retry
+  // resumes here instead of re-running the task.
+  await step("summarize", async () => {
+    const written = await summarizeRun(actionItemId).catch((caught: unknown) => {
+      console.error("[work] summary not written", caught);
+      return null;
+    });
+    return written?.headline ?? null;
+  });
   const final = await prisma.actionItem.findUnique({
     where: { id: actionItemId },
     select: { status: true },
@@ -318,3 +393,4 @@ export async function executeApprovedAction(
   });
   return delivery.ok ? "done" : "failed";
 }
+

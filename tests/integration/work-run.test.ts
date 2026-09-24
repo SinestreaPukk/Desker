@@ -27,7 +27,20 @@ beforeAll(async () => {
     data: {
       name: `Work org ${stamp}`,
       slug: `work-org-${stamp}`,
-      projects: { create: { name: "Work", slug: `work-${stamp}` } },
+      projects: {
+        create: {
+          name: "Work",
+          slug: `work-${stamp}`,
+          // The shared context every run is grounded in; without it the
+          // pre-flight check stops a writing agent before it starts.
+          context: "The business: Northwind Supply Co. sells hand tools to tradespeople.",
+          contextAnswers: {
+            business: "Northwind Supply Co. sells hand tools to tradespeople.",
+            audience: "Self-employed tradespeople.",
+            tone: "Plain and direct.",
+          },
+        },
+      },
     },
     include: { projects: true },
   });
@@ -92,19 +105,26 @@ describe("scheduling", () => {
       where: { agentId },
       data: { createdAt: new Date(Date.now() - 86_400_000) },
     });
-    const now = new Date("2026-09-20T10:07:00Z");
+    // Ticks are relative to the clock, not to a date written into the test:
+    // the scope only counts a tick that falls after it was created, so fixed
+    // timestamps stop being due the day after they are written.
+    const TICK = 300_000; // the */5 cadence, in ms
+    const tick = new Date(Math.floor(Date.now() / TICK) * TICK);
+    const now = new Date(tick.getTime() + 2 * 60_000);
     const first = await fireDueScopes(now).catch(() => "send-failed");
     // startRun fails the item when Inngest is unreachable, but still creates it.
     const items = await prisma.actionItem.findMany({ where: { agentId, trigger: "schedule" } });
     expect(items).toHaveLength(1);
-    expect(items[0]!.dedupeKey).toBe(`${(await prisma.scopeOfWork.findUniqueOrThrow({ where: { agentId } })).id}:2026-09-20T10:05:00.000Z`);
+    expect(items[0]!.dedupeKey).toBe(
+      `${(await prisma.scopeOfWork.findUniqueOrThrow({ where: { agentId } })).id}:${tick.toISOString()}`,
+    );
     expect(first === "send-failed" || Array.isArray(first)).toBe(true);
 
     await fireDueScopes(now); // same tick again -> nothing new
-    await fireDueScopes(new Date("2026-09-20T10:09:00Z")); // still the 10:05 tick
+    await fireDueScopes(new Date(tick.getTime() + 4 * 60_000)); // still the same tick
     expect(await prisma.actionItem.count({ where: { agentId, trigger: "schedule" } })).toBe(1);
 
-    await fireDueScopes(new Date("2026-09-20T10:11:00Z")); // 10:10 is due
+    await fireDueScopes(new Date(tick.getTime() + TICK + 60_000)); // the next tick is due
     expect(await prisma.actionItem.count({ where: { agentId, trigger: "schedule" } })).toBe(2);
     await prisma.actionItem.deleteMany({ where: { agentId } });
   });

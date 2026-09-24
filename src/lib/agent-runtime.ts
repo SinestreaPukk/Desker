@@ -11,9 +11,11 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { publishAdminEvent } from "@/lib/events";
 import { toStringArray } from "@/lib/agent-fields";
-import { buildSystemPrompt } from "@/lib/agent-prompt";
+import { buildSystemPrompt, buildCompanyContextPrompt } from "@/lib/agent-prompt";
+import { effectiveContext } from "@/lib/work/context";
 import {
   getProvider,
+
   type ChatEvent,
   type ChatMessage,
   type ToolCall,
@@ -107,35 +109,48 @@ export interface RunTurnOptions {
   /** Preview runs skip persistence and admin notifications. */
   persist: boolean;
   signal?: AbortSignal;
+  /**
+   * "client": Live client conversation turn (default).
+   * "colleague": Platform user chatting/collaborating with their agent as a coworker.
+   * "company_context": Legacy platform user asking company-context questions.
+   */
+  mode?: "client" | "colleague" | "company_context";
 }
 
 export async function* runAgentTurn(
   options: RunTurnOptions,
 ): AsyncGenerator<RuntimeEvent> {
-  const { agent, conversationId, userMessage, persist, signal } = options;
+  const { agent, conversationId, userMessage, persist, signal, mode = "client" } = options;
+  const isCompanyContext = mode === "company_context";
+  const isColleague = mode === "colleague";
 
-  const allowedTools = toStringArray(agent.allowedTools);
+  const rawTools = toStringArray(agent.allowedTools);
+  const allowedTools = isCompanyContext
+    ? ["search_company_context"]
+    : isColleague
+      ? Array.from(new Set([...rawTools, "search_company_context"]))
+      : rawTools;
   const responsibilities = toStringArray(agent.responsibilities);
 
-  const [project, historyRows, documents, colleagues, recall] = await Promise.all([
+  const [project, historyRows, documents, colleagues, recall, scope] = await Promise.all([
     // The tenant to bill this turn to. An agent whose project is gone cannot
     // answer, so a missing project is an error rather than a free turn.
     prisma.project.findUniqueOrThrow({
       where: { id: agent.projectId },
-      select: { organizationId: true },
+      select: { organizationId: true, context: true },
     }),
     prisma.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: "asc" },
       select: { role: true, content: true, blocks: true },
     }),
-    allowedTools.includes("search_company_context")
+    isCompanyContext || allowedTools.includes("search_company_context")
       ? prisma.document.findMany({
           where: { agentId: agent.id, status: "ready" },
           select: { filename: true },
         })
       : Promise.resolve([]),
-    allowedTools.includes("transfer_to_agent")
+    !isCompanyContext && (isColleague || allowedTools.includes("transfer_to_agent"))
       ? prisma.agent.findMany({
           // Same project only. Offering another client's roster would be a
           // data leak, not merely a bad routing decision.
@@ -148,23 +163,53 @@ export async function* runAgentTurn(
           orderBy: { name: "asc" },
         })
       : Promise.resolve([]),
-    options.clientSessionId
+    !isCompanyContext && options.clientSessionId
       ? recallForSession(options.clientSessionId, conversationId, agent.projectId)
       : Promise.resolve(null),
+    prisma.scopeOfWork.findUnique({
+      where: { agentId: agent.id },
+      select: { context: true },
+    }),
   ]);
 
-  const systemPrompt = buildSystemPrompt({
-    name: agent.name,
-    jobTitle: agent.jobTitle,
-    department: agent.department,
-    personality: agent.personality,
-    responsibilities,
-    escalationRule: agent.escalationRule,
-    allowedTools,
-    documentNames: documents.map((document) => document.filename),
-    colleagues,
-    recall,
+  // Nothing uploaded means nothing to search: offering the tool anyway only
+  // buys empty lookups for context that is already in the system prompt.
+  const offeredTools =
+    documents.length > 0
+      ? allowedTools
+      : allowedTools.filter((tool) => tool !== "search_company_context");
+
+  const companyContext = effectiveContext({
+    projectContext: project.context,
+    agentContext: scope?.context,
   });
+
+  let systemPrompt: string;
+  if (isCompanyContext) {
+    systemPrompt = buildCompanyContextPrompt({
+      name: agent.name,
+      jobTitle: agent.jobTitle,
+      department: agent.department,
+      personality: agent.personality,
+      companyContext,
+      documentNames: documents.map((document) => document.filename),
+    });
+  } else {
+    systemPrompt = buildSystemPrompt({
+      name: agent.name,
+      jobTitle: agent.jobTitle,
+      department: agent.department,
+      personality: agent.personality,
+      responsibilities,
+      escalationRule: agent.escalationRule,
+      allowedTools: offeredTools,
+      documentNames: documents.map((document) => document.filename),
+      colleagues,
+      recall,
+      companyContext,
+      audience: isColleague ? "colleague" : "client",
+    });
+  }
 
   const history = messagesFromRows(historyRows);
   const messages: ChatMessage[] = [...history, { role: "user", content: userMessage }];
@@ -191,7 +236,7 @@ export async function* runAgentTurn(
         organizationId: project.organizationId,
         conversationId,
       },
-      allowedTools,
+      offeredTools,
     );
     effects.set(call.id, outcome.effect);
     return { content: outcome.content, ...(outcome.isError ? { isError: true } : {}) };
@@ -205,7 +250,7 @@ export async function* runAgentTurn(
       billing: { organizationId: project.organizationId, agentId: agent.id },
       systemPrompt,
       messages,
-      tools: toolDefinitionsFor(allowedTools),
+      tools: toolDefinitionsFor(offeredTools),
       executeTool,
       model: agent.model,
       signal,

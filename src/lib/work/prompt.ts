@@ -20,6 +20,7 @@ export interface RunPromptInput {
   hasPublishing: boolean;
   hasEmail: boolean;
   hasSearch: boolean;
+  colleagues?: { id: string; name: string; jobTitle: string; department?: string | null }[];
 }
 
 export function buildRunPrompt(input: RunPromptInput): string {
@@ -33,7 +34,10 @@ export function buildRunPrompt(input: RunPromptInput): string {
   );
   parts.push(`Personality and tone:\n${agent.personality.trim()}`);
 
-  if (scope.context.trim()) parts.push(`Project context:\n${scope.context.trim()}`);
+  if (scope.context.trim()) parts.push(
+      `Project context:\n${scope.context.trim()}\n\n` +
+        "This is everything the organisation has told you about itself. It is already in front of you, so do not search for it.",
+    );
   if (scope.objectives.length > 0) {
     parts.push(`Standing objectives:\n${scope.objectives.map((o) => `- ${o}`).join("\n")}`);
   }
@@ -42,6 +46,19 @@ export function buildRunPrompt(input: RunPromptInput): string {
     parts.push(
       `Context documents you can search with search_context: ${input.documentNames.join(", ")}. ` +
         "Prefer them over the public web for anything about this organisation.",
+    );
+  }
+
+  if (input.colleagues && input.colleagues.length > 0) {
+    parts.push(
+      `Your team roster (colleagues you can collaborate with):\n` +
+        input.colleagues
+          .map(
+            (c) =>
+              `- ${c.name} (${c.jobTitle}${c.department ? ` - ${c.department}` : ""}) — id: ${c.id}`,
+          )
+          .join("\n") +
+        "\n\nWhen a task or sub-objective is better handled by a specialized teammate (e.g. asking the Researcher for deep competitor intelligence, the Marketer to draft an announcement, or the Programmer to diagnose or fix a bug), use `delegate_to_colleague` with their id, clear task instructions, and findings.",
     );
   }
 
@@ -67,6 +84,8 @@ export function buildRunPrompt(input: RunPromptInput): string {
     input.autonomy === "draft_only"
       ? "This agent is in draft-only mode. publish_post and send_email pause the task for human approval instead of going out - that is expected. Call one when the content is final, then finish your report; the run resumes after a person decides."
       : "This agent is in auto mode: publish_post and send_email go out immediately. Only call them when the content is final.",
+    "Autonomous initiative & alerts: You are an active employee, not a passive script. If you discover breaking news, market trends, competitive shifts, business opportunities, or bugs/defects during your work, call `suggest_opportunity` immediately to notify the team and propose the next step.",
+    "Team delegation: When your findings call for action from another department or specialist on your roster, use `delegate_to_colleague` so they can run their own tasks in parallel.",
     "Use schedule_followup when the next step should happen later or as its own task - for example research now, drafting once findings are in.",
     "If something is impossible or the objective is unclear, say so in the report rather than guessing.",
     "When the work is done, reply with a report in Markdown, under 300 words: what you did, the key findings, what you drafted (with draft ids), and anything that needs a human.",
@@ -100,6 +119,17 @@ export function kickoffMessage(input: {
         `Objective for this task:\n${objective}\n\n` +
         (parent ? `Report from the task that scheduled it:\n${parent}\n\n` : "") +
         "Carry out this objective now."
+      );
+    }
+    case "delegation": {
+      const objective = String(input.payload.objective ?? "").trim();
+      const context = String(input.payload.context ?? "").trim();
+      const delegatedBy = String(input.payload.delegatedByAgentName ?? "A teammate");
+      return (
+        `Trigger: task delegated to you by ${delegatedBy} at ${when}.\n\n` +
+        `Objective:\n${objective}\n\n` +
+        (context ? `Context & findings provided by ${delegatedBy}:\n${context}\n\n` : "") +
+        "Carry out this delegated objective now and record your results."
       );
     }
     default:

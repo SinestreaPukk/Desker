@@ -1,16 +1,29 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api-client";
+import { toast } from "sonner";
+import { api, errorMessage } from "@/lib/api-client";
 import type { ScopeDto } from "@/lib/work/scope";
 import type { ScopeInputPayload, IntegrationInputPayload } from "@/lib/work/validation";
-import type { ActionItemDto, IntegrationDto } from "@/lib/work/serialize";
+import type {
+  ActionItemDto,
+  DigestDto,
+  IntegrationDto,
+  SuggestionDto,
+} from "@/lib/work/serialize";
+import type { SuggestionStatus } from "@/lib/work/types";
+import type { ContextAnswers } from "@/lib/work/context";
+import type { ProjectContextDto } from "@/lib/work/project-context";
+import type { ContextDraftResult } from "@/components/builder/context-questions";
 
 export const workKeys = {
   scope: (agentId: string) => ["scope", agentId] as const,
   actionItems: (filters: Record<string, string>) => ["action-items", filters] as const,
   actionItem: (id: string) => ["action-items", id] as const,
   integrations: (project: string) => ["integrations", project] as const,
+  projectContext: (project: string) => ["project-context", project] as const,
+  digests: (filters: Record<string, string>) => ["digests", filters] as const,
+  suggestions: (filters: Record<string, string>) => ["suggestions", filters] as const,
 };
 
 function query(filters: Record<string, string>): string {
@@ -76,12 +89,199 @@ function useDecision(verb: "approve" | "reject" | "reopen") {
         method: "POST",
         body: JSON.stringify(verb === "reject" ? { reason: reason ?? "" } : {}),
       }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: ["action-items"] }),
+    onMutate: async ({ id, reason }) => {
+      await client.cancelQueries({ queryKey: ["action-items"] });
+      const previousQueries = client.getQueriesData<ActionItemDto[]>({ queryKey: ["action-items"] });
+
+      client.setQueriesData<ActionItemDto[]>({ queryKey: ["action-items"] }, (old) => {
+        if (!old) return old;
+        return old.map((item) => {
+          if (item.id !== id) return item;
+          if (verb === "approve") {
+            return {
+              ...item,
+              status: "approved",
+              executedAt: new Date().toISOString(),
+              pendingAction: null,
+            };
+          }
+          if (verb === "reject") {
+            return {
+              ...item,
+              status: "rejected",
+              rejectionReason: reason ?? "",
+              pendingAction: null,
+            };
+          }
+          if (verb === "reopen") {
+            return {
+              ...item,
+              status: "needs_approval",
+              rejectionReason: null,
+            };
+          }
+          return item;
+        });
+      });
+
+      return { previousQueries };
+    },
+    onError: (err, _variables, context) => {
+      if (context?.previousQueries) {
+        for (const [key, val] of context.previousQueries) {
+          client.setQueryData(key, val);
+        }
+      }
+      toast.error(`Could not ${verb} action item: ${errorMessage(err)}`);
+    },
+    onSettled: () => {
+      void client.invalidateQueries({ queryKey: ["action-items"] });
+    },
   });
 }
 export const useApproveActionItem = () => useDecision("approve");
 export const useRejectActionItem = () => useDecision("reject");
 export const useReopenActionItem = () => useDecision("reopen" as "approve");
+
+// --- context ----------------------------------------------------------------
+
+/** The project's shared context, inherited by every agent in it. */
+export function useProjectContext(project: string) {
+  return useQuery({
+    queryKey: workKeys.projectContext(project),
+    queryFn: () =>
+      api<ProjectContextDto>(`/api/projects/${encodeURIComponent(project)}/context`),
+    enabled: Boolean(project),
+  });
+}
+
+export function useSaveProjectContext(project: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (answers: ContextAnswers) =>
+      api<ProjectContextDto>(`/api/projects/${encodeURIComponent(project)}/context`, {
+        method: "PUT",
+        body: JSON.stringify({ answers }),
+      }),
+    onSuccess: (context) => {
+      client.setQueryData(workKeys.projectContext(project), context);
+      // Every agent's prompt preview now reads differently.
+      void client.invalidateQueries({ queryKey: ["prompt"] });
+    },
+  });
+}
+
+/** Proposes answers from the project's documents. Nothing is saved. */
+export function useDraftProjectContext(project: string) {
+  return useMutation({
+    mutationFn: () =>
+      api<ContextDraftResult>(`/api/projects/${encodeURIComponent(project)}/context/draft`, {
+        method: "POST",
+      }),
+  });
+}
+
+/** The same, for one agent's own questions and its own documents. */
+export function useDraftAgentContext(agentId: string) {
+  return useMutation({
+    mutationFn: () =>
+      api<ContextDraftResult>(`/api/agents/${agentId}/scope/context-draft`, { method: "POST" }),
+  });
+}
+
+// --- digests and suggestions ------------------------------------------------
+
+/** The Inbox's Updates tab. Polled as a backstop for the live feed. */
+export function useDigests(filters: Record<string, string>) {
+  return useQuery({
+    queryKey: workKeys.digests(filters),
+    queryFn: () => api<DigestDto[]>(`/api/digests${query(filters)}`),
+    enabled: Boolean(filters.project),
+    refetchInterval: 60_000,
+  });
+}
+
+export function useSetDigestRead() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ digestId, read }: { digestId: string; read: boolean }) =>
+      api<DigestDto>(`/api/digests/${digestId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ read }),
+      }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ["digests"] }),
+  });
+}
+
+/** "Send me one now" from the agent's editor. */
+export function useGenerateDigest(agentId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<{ queued: true }>(`/api/agents/${agentId}/digest`, { method: "POST" }),
+    onSuccess: () => {
+      // The digest is written by a background job, so the list is refreshed a
+      // moment later rather than immediately.
+      setTimeout(() => void client.invalidateQueries({ queryKey: ["digests"] }), 4_000);
+    },
+  });
+}
+
+export function useSuggestions(filters: Record<string, string>) {
+  return useQuery({
+    queryKey: workKeys.suggestions(filters),
+    queryFn: () => api<SuggestionDto[]>(`/api/suggestions${query(filters)}`),
+    enabled: Boolean(filters.project),
+    refetchInterval: 30_000,
+  });
+}
+
+export interface SuggestionDecision extends SuggestionDto {
+  /** What accepting added to the agent's objectives, when it added anything. */
+  addedObjective: string | null;
+}
+
+export function useDecideSuggestion() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      suggestionId,
+      status,
+      snoozeDays,
+    }: {
+      suggestionId: string;
+      status: SuggestionStatus;
+      snoozeDays?: number;
+    }) =>
+      api<SuggestionDecision>(`/api/suggestions/${suggestionId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status, ...(snoozeDays ? { snoozeDays } : {}) }),
+      }),
+    onMutate: async ({ suggestionId, status }) => {
+      await client.cancelQueries({ queryKey: ["suggestions"] });
+      const previousQueries = client.getQueriesData<SuggestionDto[]>({ queryKey: ["suggestions"] });
+
+      client.setQueriesData<SuggestionDto[]>({ queryKey: ["suggestions"] }, (old) => {
+        if (!old) return old;
+        return old.map((item) => (item.id === suggestionId ? { ...item, status } : item));
+      });
+
+      return { previousQueries };
+    },
+    onError: (err, _variables, context) => {
+      if (context?.previousQueries) {
+        for (const [key, val] of context.previousQueries) {
+          client.setQueryData(key, val);
+        }
+      }
+      toast.error(`Could not update suggestion: ${errorMessage(err)}`);
+    },
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ["suggestions"] });
+      // Accepting writes an objective onto the scope of work.
+      void client.invalidateQueries({ queryKey: ["scope"] });
+    },
+  });
+}
 
 // --- integrations -----------------------------------------------------------
 

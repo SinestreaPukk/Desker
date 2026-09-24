@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { integrationInputSchema } from "@/lib/work/validation";
 import { splitIntegrationInput } from "@/lib/work/integrations";
 import { vaultConfigured } from "@/lib/vault";
+import { healthForIntegrations } from "@/lib/work/integration-health";
 import { toIntegrationDto } from "./serialize";
 
 export const runtime = "nodejs";
@@ -29,7 +30,8 @@ export async function GET(request: Request) {
       where: { organizationId },
       orderBy: { createdAt: "asc" },
     });
-    return rows.map(toIntegrationDto);
+    const health = await healthForIntegrations(rows, organizationId);
+    return rows.map((row) => toIntegrationDto(row, health.get(row.id)));
   });
 }
 

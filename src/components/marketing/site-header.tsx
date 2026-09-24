@@ -9,12 +9,6 @@ import { cn } from "@/lib/utils";
  * light type, sitting on the sky; once the page scrolls it frosts over and
  * the type turns to ink.
  *
- * This assumes every page in the public shell opens on a band of sky - the
- * landing page's hero or a PageHeader. That is the invariant: a public page
- * without one would put white type on white paper, so give it a PageHeader.
- * Server-rendered as the clear variant, which is what the top of the page
- * always is, so there is no flash.
- *
  * A section marked data-header-clear keeps it clear for as long as that
  * section's dark sky is under it - the landing hero, whose pinned demo keeps
  * the night on screen for a long stretch of scroll, where a frosted paper

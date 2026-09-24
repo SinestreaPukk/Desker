@@ -39,7 +39,7 @@ export default async function ClientChatPage({ params }: Props) {
   return (
     <div className="flex h-dvh flex-col bg-paper">
       <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col sm:py-6">
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-line bg-surface sm:rounded-panel sm:border sm:shadow-sm">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-line bg-surface sm:rounded-panel sm:border sm:shadow-xs dark:sm:shadow-none dark:sm:ring-1 dark:sm:ring-white/[0.04]">
           <ClientChat agentId={agentId} variant="page" />
         </div>
 

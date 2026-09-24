@@ -19,6 +19,8 @@ export const WORK_TOOL_IDS = [
   "publish_post",
   "send_email",
   "schedule_followup",
+  "delegate_to_colleague",
+  "suggest_opportunity",
   "escalate_to_human",
 ] as const;
 export type WorkToolId = (typeof WORK_TOOL_IDS)[number];
@@ -43,7 +45,9 @@ export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
   search_context: "read",
   web_research: "read",
   draft_content: "draft",
+  suggest_opportunity: "draft",
   schedule_followup: "internal",
+  delegate_to_colleague: "internal",
   escalate_to_human: "internal",
   publish_post: "external",
   send_email: "external",
@@ -51,7 +55,6 @@ export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
 
 /** The tools a person can move to auto mode independently of the agent. */
 export const GATED_TOOLS = ["publish_post", "send_email"] as const satisfies readonly WorkToolId[];
-export type GatedTool = (typeof GATED_TOOLS)[number];
 
 export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: string }> = {
   search_context: {
@@ -77,6 +80,14 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   schedule_followup: {
     label: "Schedule a follow-up",
     blurb: "Queue the next task this one depends on, now or later.",
+  },
+  delegate_to_colleague: {
+    label: "Delegate to colleague",
+    blurb: "Hand off a task or findings to a specialized teammate on your roster.",
+  },
+  suggest_opportunity: {
+    label: "Suggest opportunity or alert",
+    blurb: "Proactively post a news alert, market trend, bug, or idea to the team inbox.",
   },
   escalate_to_human: {
     label: "Escalate to a human",
@@ -176,6 +187,68 @@ export const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDe
         },
       },
       required: ["objective"],
+      additionalProperties: false,
+    },
+  },
+  delegate_to_colleague: {
+    name: "delegate_to_colleague",
+    description:
+      "Delegate a sub-task or related work item to another agent on your team roster. Use when a task matches a colleague's role (e.g. asking the Researcher for deep competitor intelligence, the Marketer to draft an announcement, or the Programmer to diagnose or fix a bug). The colleague will run their own autonomous task with the instructions and findings you provide.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        colleague_id: {
+          type: "string",
+          description: "The agent id of the colleague to delegate to, from your team roster.",
+        },
+        task: {
+          type: "string",
+          description: "Clear, specific objective and instructions for what the colleague should accomplish.",
+        },
+        context_findings: {
+          type: "string",
+          description: "Any relevant data, findings, snippets, or background context your colleague needs to complete the work.",
+        },
+      },
+      required: ["colleague_id", "task"],
+      additionalProperties: false,
+    },
+  },
+  suggest_opportunity: {
+    name: "suggest_opportunity",
+    description:
+      "Proactively raise an opportunity, breaking news event, market shift, or bug to the team inbox. Use this whenever you discover something noteworthy during your work (e.g. competitor pricing change, breaking industry news, an opportunity to improve the product, or a bug that needs fixing).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        title: {
+          type: "string",
+          description: "Short, crisp headline of what was discovered (under 120 characters).",
+        },
+        type: {
+          type: "string",
+          enum: ["opportunity", "news", "bug", "suggestion"],
+          description: "The nature of the item being raised.",
+        },
+        what_happened: {
+          type: "string",
+          description: "Specific details of what you observed, discovered, or reproduced.",
+        },
+        why_it_matters: {
+          type: "string",
+          description: "Strategic impact, importance, or risk for the company.",
+        },
+        recommended_action: {
+          type: "string",
+          description: "Concrete recommended next step or proposal for the team to take.",
+        },
+        severity: {
+          type: "string",
+          enum: ["low", "medium", "high", "critical"],
+          description: "Urgency level, especially for bugs or critical market alerts.",
+        },
+      },
+      required: ["title", "type", "what_happened", "why_it_matters", "recommended_action"],
       additionalProperties: false,
     },
   },

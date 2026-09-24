@@ -15,6 +15,7 @@ import { retrieveContext } from "@/lib/rag/retriever";
 import type { ToolCall } from "@/lib/llm/provider";
 import { inngest } from "@/lib/jobs/client";
 import { afterResponse } from "@/lib/after-response";
+import { notifyInBackground } from "@/lib/notify";
 import { researchTheWeb, type ResearchFindings } from "./research";
 import {
   deliverEmail,
@@ -92,6 +93,19 @@ const followupSchema = z.object({
 const escalateSchema = z.object({
   reason: z.string().trim().min(1).max(2000),
   summary: z.string().trim().min(1).max(120),
+});
+const delegateSchema = z.object({
+  colleague_id: z.string().trim().min(1),
+  task: z.string().trim().min(1).max(3000),
+  context_findings: z.string().trim().max(10_000).optional(),
+});
+const suggestSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  type: z.enum(["opportunity", "news", "bug", "suggestion"]),
+  what_happened: z.string().trim().min(1).max(5000),
+  why_it_matters: z.string().trim().min(1).max(5000),
+  recommended_action: z.string().trim().min(1).max(2000),
+  severity: z.enum(["low", "medium", "high", "critical"]).optional(),
 });
 
 function invalid(tool: string, error: z.ZodError): WorkToolOutcome {
@@ -362,6 +376,27 @@ async function scheduleFollowup(input: unknown, ctx: RunContext): Promise<WorkTo
  * The agent asks for a person. The run keeps going - the point is the flag,
  * not a halt - and the item is marked so the inbox and the report agree.
  */
+/** Puts an escalation on the record: an Issue for the inbox, and the flag on the task. */
+export async function recordEscalation(ctx: RunContext, summary: string, reason: string) {
+  await prisma.$transaction([
+    prisma.issue.create({
+      data: {
+        agentId: ctx.agent.id,
+        actionItemId: ctx.actionItemId,
+        source: "agent",
+        type: "escalation",
+        severity: "high",
+        summary,
+        details: reason,
+      },
+    }),
+    prisma.actionItem.update({
+      where: { id: ctx.actionItemId },
+      data: { escalatedAt: new Date(), escalationReason: reason },
+    }),
+  ]);
+}
+
 async function escalateToHuman(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
   const parsed = escalateSchema.safeParse(input);
   if (!parsed.success) return invalid("escalate_to_human", parsed.error);
@@ -372,26 +407,145 @@ async function escalateToHuman(input: unknown, ctx: RunContext): Promise<WorkToo
   if (existing.escalatedAt) {
     return { content: "This task is already escalated. Finish your report; a person will review it." };
   }
-  await prisma.$transaction([
-    prisma.issue.create({
-      data: {
-        agentId: ctx.agent.id,
-        actionItemId: ctx.actionItemId,
-        source: "agent",
-        type: "escalation",
-        severity: "high",
-        summary: parsed.data.summary,
-        details: parsed.data.reason,
-      },
-    }),
-    prisma.actionItem.update({
-      where: { id: ctx.actionItemId },
-      data: { escalatedAt: new Date(), escalationReason: parsed.data.reason },
-    }),
-  ]);
+  await recordEscalation(ctx, parsed.data.summary, parsed.data.reason);
   return {
     content:
       "Escalated: a person will see this in their inbox. Finish what you safely can and put what they need to decide in your report.",
+  };
+}
+
+async function delegateToColleague(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = delegateSchema.safeParse(input);
+  if (!parsed.success) return invalid("delegate_to_colleague", parsed.error);
+
+  const { colleague_id, task, context_findings } = parsed.data;
+
+  // Ensure colleague exists and belongs to the same organization/project
+  const colleague = await prisma.agent.findFirst({
+    where: {
+      id: colleague_id,
+      project: { organizationId: ctx.organizationId },
+    },
+    select: { id: true, name: true, jobTitle: true },
+  });
+
+  if (!colleague) {
+    return {
+      content: `No colleague found with id "${colleague_id}" in this project. Check your team roster for valid ids.`,
+      isError: true,
+    };
+  }
+
+  const delegatedItem = await prisma.actionItem.create({
+    data: {
+      organizationId: ctx.organizationId,
+      agentId: colleague.id,
+      type: "colleague_delegation",
+      trigger: "delegation",
+      parentId: ctx.actionItemId,
+      payload: {
+        objective: task,
+        context: context_findings ?? "",
+        delegatedByAgentId: ctx.agent.id,
+        delegatedByAgentName: ctx.agent.name,
+      },
+    },
+    select: { id: true },
+  });
+
+  await mergeResult(ctx.actionItemId, (current) => ({
+    ...current,
+    delegatedTaskIds: [...((current.delegatedTaskIds as string[] | undefined) ?? []), delegatedItem.id],
+  }));
+
+  try {
+    await inngest.send({
+      name: "work/action-item.run",
+      data: { actionItemId: delegatedItem.id, organizationId: ctx.organizationId },
+    });
+  } catch (error) {
+    console.warn("[delegateToColleague] inngest.send failed, running via afterResponse:", error);
+    afterResponse(async () => {
+      try {
+        const { runActionItem, inlineSteps } = await import("./runner");
+        await runActionItem(delegatedItem.id, inlineSteps);
+      } catch (err) {
+        console.error(`[delegateToColleague:afterResponse] execution failed for task ${delegatedItem.id}:`, err);
+      }
+    });
+  }
+
+  return {
+    content: `Delegated task to ${colleague.name} (${colleague.jobTitle}) as task ${delegatedItem.id}. They will carry out the objective autonomously.`,
+  };
+}
+
+async function suggestOpportunity(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = suggestSchema.safeParse(input);
+  if (!parsed.success) return invalid("suggest_opportunity", parsed.error);
+
+  const { title, type, what_happened, why_it_matters, recommended_action, severity } = parsed.data;
+
+  const prefix =
+    type === "opportunity"
+      ? "Opportunity"
+      : type === "news"
+        ? "News Alert"
+        : type === "bug"
+          ? "Bug Report"
+          : "Suggestion";
+  const formattedSummary = `[${prefix}] ${title}`;
+  const rationale = `What happened:\n${what_happened}\n\nWhy it matters:\n${why_it_matters}`;
+
+  const [suggestion] = await prisma.$transaction([
+    prisma.suggestion.create({
+      data: {
+        organizationId: ctx.organizationId,
+        agentId: ctx.agent.id,
+        actionItemId: ctx.actionItemId,
+        summary: formattedSummary,
+        rationale,
+        proposal: recommended_action,
+        status: "open",
+      },
+      select: { id: true },
+    }),
+    ...(type === "bug" || severity === "critical" || severity === "high"
+      ? [
+          prisma.issue.create({
+            data: {
+              agentId: ctx.agent.id,
+              actionItemId: ctx.actionItemId,
+              source: "agent",
+              type: type === "bug" ? "issue" : "suggestion",
+              severity: severity ?? "medium",
+              summary: title,
+              details: `${what_happened}\n\nImpact:\n${why_it_matters}\n\nRecommended Action:\n${recommended_action}`,
+              status: "open",
+            },
+            select: { id: true },
+          }),
+        ]
+      : []),
+  ]);
+
+  await mergeResult(ctx.actionItemId, (current) => ({
+    ...current,
+    suggestionIds: [...((current.suggestionIds as string[] | undefined) ?? []), suggestion.id],
+  }));
+
+  notifyInBackground({
+    kind: "feedback",
+    title: `${prefix}: ${title}`,
+    body: `${what_happened}\n\nProposed action: ${recommended_action}`,
+    agentName: ctx.agent.name,
+    severity: severity ?? "medium",
+  });
+
+  return {
+    content: `Logged ${type} to the team inbox as suggestion ${suggestion.id}${
+      type === "bug" ? " and created a tracked bug issue" : ""
+    }. The team has been notified.`,
   };
 }
 
@@ -421,6 +575,12 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
           break;
         case "schedule_followup":
           outcome = await scheduleFollowup(call.input, ctx);
+          break;
+        case "delegate_to_colleague":
+          outcome = await delegateToColleague(call.input, ctx);
+          break;
+        case "suggest_opportunity":
+          outcome = await suggestOpportunity(call.input, ctx);
           break;
         case "escalate_to_human":
           outcome = await escalateToHuman(call.input, ctx);

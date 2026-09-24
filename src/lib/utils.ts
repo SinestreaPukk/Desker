@@ -18,6 +18,14 @@ export function cn(...inputs: ClassValue[]) {
 export function formatRelativeTime(date: Date | string): string {
   const then = typeof date === "string" ? new Date(date) : date;
   const seconds = Math.round((Date.now() - then.getTime()) / 1000);
+  // Upcoming times (a next scheduled run) read forwards, not as "just now".
+  if (seconds <= -60) {
+    const ahead = -seconds;
+    if (ahead < 3600) return `in ${Math.round(ahead / 60)}m`;
+    if (ahead < 86_400) return `in ${Math.round(ahead / 3600)}h`;
+    if (ahead < 7 * 86_400) return `in ${Math.round(ahead / 86_400)}d`;
+    return then.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
   if (seconds < 60) return "just now";
   const minutes = Math.round(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;

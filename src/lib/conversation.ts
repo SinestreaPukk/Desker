@@ -10,10 +10,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 
-export type ActiveAgent = NonNullable<
-  Awaited<ReturnType<typeof resolveActiveAgent>>
->;
-
 export async function resolveActiveAgent(conversation: {
   agentId: string;
   activeAgentId: string | null;

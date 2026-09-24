@@ -268,7 +268,7 @@ export function DesignSystem() {
         <Panel>
           <PanelBody className="grid gap-4 sm:grid-cols-2">
             <Field label="Name" htmlFor="ds-name" required hint="What clients will call the agent.">
-              <Input id="ds-name" placeholder="Mia" />
+              <Input id="ds-name" placeholder="Bright" />
             </Field>
             <Field label="Email" htmlFor="ds-email" error="Enter a valid email address.">
               <Input id="ds-email" defaultValue="not-an-email" />

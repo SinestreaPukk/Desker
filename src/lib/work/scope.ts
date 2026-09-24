@@ -15,7 +15,14 @@ import { toStringArray } from "@/lib/agent-fields";
 import { afterResponse } from "@/lib/after-response";
 import { runActionItem, inlineSteps } from "./runner";
 import { canStartRun } from "@/lib/billing/limits";
-import type { AutonomyMode, ToolAutonomy, TriggerType } from "./types";
+import { isDigestCadence, type AutonomyMode, type DigestCadence, type ToolAutonomy, type TriggerType } from "./types";
+import {
+  AGENT_CONTEXT_QUESTIONS,
+  answersFor,
+  composeContext,
+  toContextAnswers,
+  type ContextAnswers,
+} from "./context";
 
 export class RunRefused extends Error {
   constructor(
@@ -29,7 +36,10 @@ export class RunRefused extends Error {
 
 export interface ScopeDto {
   agentId: string;
+  /** The composed string a run reads. Derived from `contextAnswers`. */
   context: string;
+  /** The guided answers behind it, which is what the editor edits. */
+  contextAnswers: ContextAnswers;
   objectives: string[];
   documentIds: string[];
   triggerType: TriggerType;
@@ -44,6 +54,12 @@ export interface ScopeDto {
   lastFiredAt: string | null;
   /** The next scheduled fire time, for the editor. Null unless cron. */
   nextFireAt: string | null;
+  /** How often the agent reports on itself. */
+  digestCadence: DigestCadence;
+  digestEmail: boolean;
+  /** Comma-separated addresses, or "" for the organisation's owners and admins. */
+  digestRecipients: string;
+  lastDigestAt: string | null;
 }
 
 export function validCron(cron: string, timezone = "UTC"): boolean {
@@ -96,7 +112,12 @@ export function toScopeDto(
     autonomy: string;
     toolAutonomy: unknown;
     tools: unknown;
+    contextAnswers: unknown;
     lastFiredAt: Date | null;
+    digestCadence: string;
+    digestEmail: boolean;
+    digestRecipients: string | null;
+    lastDigestAt: Date | null;
   } | null,
   agentId: string,
 ): ScopeDto {
@@ -104,6 +125,7 @@ export function toScopeDto(
     return {
       agentId,
       context: "",
+      contextAnswers: {},
       objectives: [],
       documentIds: [],
       triggerType: "manual",
@@ -116,11 +138,18 @@ export function toScopeDto(
       tools: null,
       lastFiredAt: null,
       nextFireAt: null,
+      digestCadence: "weekly",
+      digestEmail: false,
+      digestRecipients: "",
+      lastDigestAt: null,
     };
   }
   return {
     agentId: scope.agentId,
     context: scope.context,
+    // A scope written before the questions existed still opens with its text
+    // in the first field rather than with four empty boxes.
+    contextAnswers: answersFor(scope.contextAnswers, scope.context, AGENT_CONTEXT_QUESTIONS),
     objectives: toStringArray(scope.objectives),
     documentIds: toStringArray(scope.documentIds),
     triggerType: scope.triggerType as TriggerType,
@@ -136,11 +165,21 @@ export function toScopeDto(
       scope.triggerType === "cron" && scope.enabled
         ? (nextFire(scope.cron, scope.timezone)?.toISOString() ?? null)
         : null,
+    digestCadence: isDigestCadence(scope.digestCadence) ? scope.digestCadence : "weekly",
+    digestEmail: scope.digestEmail,
+    digestRecipients: scope.digestRecipients ?? "",
+    lastDigestAt: scope.lastDigestAt?.toISOString() ?? null,
   };
 }
 
 export interface ScopeInput {
+  /**
+   * The composed string. Ignored when `contextAnswers` is given: the answers
+   * are the source of truth and the string is derived from them, so the two
+   * cannot drift apart.
+   */
   context: string;
+  contextAnswers?: ContextAnswers;
   objectives: string[];
   documentIds: string[];
   triggerType: TriggerType;
@@ -150,6 +189,15 @@ export interface ScopeInput {
   autonomy: AutonomyMode;
   toolAutonomy: ToolAutonomy | null;
   tools: WorkToolId[] | null;
+  /**
+   * Digest settings are optional: a caller that does not manage them (a
+   * template, a test, a future importer) leaves what the agent already has
+   * rather than silently resetting it to the default.
+   */
+  digestCadence?: DigestCadence;
+  digestEmail?: boolean;
+  /** "" means the organisation's owners and admins. */
+  digestRecipients?: string;
 }
 
 export function newWebhookToken(): string {
@@ -162,8 +210,20 @@ export async function saveScope(agentId: string, input: ScopeInput) {
   // system's URL keeps working when the owner tweaks the objectives.
   const webhookToken =
     input.triggerType === "webhook" ? (existing?.webhookToken ?? newWebhookToken()) : existing?.webhookToken ?? null;
+  // The answers win when they are given, and are left alone when they are
+  // not: a caller that only knows about the composed string (a template, a
+  // test) must not wipe what the editor wrote.
+  const answers = input.contextAnswers
+    ? toContextAnswers(input.contextAnswers, AGENT_CONTEXT_QUESTIONS)
+    : null;
   const data = {
-    context: input.context,
+    // Answers given: compose. No answers but a string: a legacy caller setting
+    // it directly. Neither: leave what is there, so saving the rest of the
+    // scope does not silently empty the context.
+    context: answers
+      ? composeContext(answers, AGENT_CONTEXT_QUESTIONS)
+      : input.context || existing?.context || "",
+    ...(answers ? { contextAnswers: answers as Prisma.InputJsonValue } : {}),
     objectives: input.objectives as Prisma.InputJsonValue,
     documentIds: input.documentIds as Prisma.InputJsonValue,
     triggerType: input.triggerType,
@@ -174,6 +234,12 @@ export async function saveScope(agentId: string, input: ScopeInput) {
     autonomy: input.autonomy,
     toolAutonomy: (input.toolAutonomy ?? Prisma.JsonNull) as Prisma.InputJsonValue | typeof Prisma.JsonNull,
     tools: (input.tools ?? Prisma.JsonNull) as Prisma.InputJsonValue | typeof Prisma.JsonNull,
+    digestCadence: input.digestCadence ?? existing?.digestCadence ?? "weekly",
+    digestEmail: input.digestEmail ?? existing?.digestEmail ?? false,
+    digestRecipients:
+      input.digestRecipients === undefined
+        ? (existing?.digestRecipients ?? null)
+        : input.digestRecipients.trim() || null,
   };
   return prisma.scopeOfWork.upsert({
     where: { agentId },

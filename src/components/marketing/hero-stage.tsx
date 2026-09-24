@@ -17,15 +17,18 @@ import {
   Bug,
   Calendar,
   Check,
-  Code,
   FileSearch,
   Globe,
-  Headset,
   Mail,
-  Megaphone,
-  Search,
   Sparkles,
 } from "lucide-react";
+import {
+  CustomerSupportIcon,
+  DevSupportIcon,
+  MarketerIcon,
+  ResearcherIcon,
+  SecretaryIcon,
+} from "@/components/icons/role-icons";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,7 +69,7 @@ export const SCENES: readonly Scene[] = [
     role: "Support",
     agent: "Mia",
     seed: "mia",
-    icon: Headset,
+    icon: CustomerSupportIcon,
     frame: "Client chat · Mia",
     captions: [
       "A client asks about a broken drill",
@@ -81,7 +84,7 @@ export const SCENES: readonly Scene[] = [
     role: "Marketer",
     agent: "Nova",
     seed: "nova",
-    icon: Megaphone,
+    icon: MarketerIcon,
     frame: "Work · Nova · scheduled run",
     captions: [
       "Monday, 09:00: Nova's scheduled run starts",
@@ -96,7 +99,7 @@ export const SCENES: readonly Scene[] = [
     role: "Researcher",
     agent: "Sol",
     seed: "sol",
-    icon: Search,
+    icon: ResearcherIcon,
     frame: "Work · Sol · weekly brief",
     captions: [
       "A standing question, every Friday",
@@ -111,7 +114,7 @@ export const SCENES: readonly Scene[] = [
     role: "Dev support",
     agent: "Ada",
     seed: "ada",
-    icon: Code,
+    icon: DevSupportIcon,
     frame: "Client chat · Ada",
     captions: [
       "A developer pastes an error from your API",
@@ -126,7 +129,7 @@ export const SCENES: readonly Scene[] = [
     role: "Assistant",
     agent: "Kai",
     seed: "kai",
-    icon: Calendar,
+    icon: SecretaryIcon,
     frame: "Work · Kai · follow-ups",
     captions: [
       "A follow-up that would otherwise slip",
@@ -508,7 +511,7 @@ export function ResearcherScene({ beat }: { beat: number }) {
         week?
       </p>
       <Appear when={beat >= 1}>
-        <ToolChip icon={Globe}>web_research · 3 pages read</ToolChip>
+        <ToolChip icon={Globe}>Researched the web · 3 pages read</ToolChip>
         <ol className="mt-2 space-y-1.5">
           {SOURCES.map((source) => (
             <li key={source.n} className="flex items-center gap-2.5 text-sm">
@@ -529,7 +532,7 @@ export function ResearcherScene({ beat }: { beat: number }) {
         </div>
       </Appear>
       <Appear when={beat >= 3} className="flex flex-wrap items-center gap-2">
-        <ToolChip icon={Mail}>send_email · to you</ToolChip>
+        <ToolChip icon={Mail}>Emailed the summary · to you</ToolChip>
         <Badge tone="positive">
           <Check aria-hidden />3 sources cited
         </Badge>

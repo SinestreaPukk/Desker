@@ -25,7 +25,7 @@ export function DialogContent({
       <DialogPrimitive.Content
         className={cn(
           "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2",
-          "rounded-panel border border-line bg-surface p-6 shadow-md",
+          "rounded-panel border border-line bg-surface p-6 shadow-md dark:border-line dark:ring-1 dark:ring-white/[0.08] dark:shadow-2xl",
           "max-h-[calc(100dvh-2rem)] overflow-y-auto",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
@@ -54,7 +54,7 @@ export function DialogTitle({
 }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn("text-lg font-semibold text-ink pr-8", className)}
+      className={cn("text-lg font-semibold tracking-tight text-ink pr-8", className)}
       {...props}
     />
   );

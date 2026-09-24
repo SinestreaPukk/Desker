@@ -3,7 +3,7 @@
     {
       "id": "customer-support",
       "name": "Customer support",
-      "icon": "headset",
+      "icon": "life-buoy",
       "jobTitle": "Customer Support Lead",
       "team": "Customer Experience",
       "pitch": "Answers your clients from your own policies, logs bugs and requests, and hands off the moment a rule says a person should step in.",
@@ -21,7 +21,7 @@
         "Record feature requests clients raise"
       ],
       "allowedTools": ["search_company_context", "log_issue", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "escalate_to_human"],
+      "workTools": ["search_context", "suggest_opportunity", "delegate_to_colleague", "escalate_to_human"],
       "defaultObjectives": [
         "Answer customer questions accurately using official company policies and uploaded documentation",
         "Cite the specific document or section referenced in the response",
@@ -33,7 +33,7 @@
     {
       "id": "client-onboarding",
       "name": "Client onboarding",
-      "icon": "route",
+      "icon": "compass",
       "jobTitle": "Onboarding Specialist",
       "team": "Customer Success",
       "pitch": "Walks new clients through setup one step at a time, answers plan and configuration questions, and flags whatever blocks them.",
@@ -50,7 +50,7 @@
         "Flag anything that blocks a client from getting started"
       ],
       "allowedTools": ["search_company_context", "log_issue", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "schedule_followup", "send_email", "escalate_to_human"],
+      "workTools": ["search_context", "suggest_opportunity", "delegate_to_colleague", "schedule_followup", "send_email", "escalate_to_human"],
       "defaultObjectives": [
         "Guide new clients step-by-step through their setup journey",
         "Check that key integration steps are completed before progressing",
@@ -62,7 +62,7 @@
     {
       "id": "researcher",
       "name": "Researcher",
-      "icon": "search",
+      "icon": "file-search",
       "jobTitle": "Research Analyst",
       "team": "Strategy",
       "pitch": "Runs a standing research brief on a schedule - competitors, a market, a topic - and writes up findings with numbered sources you can check.",
@@ -79,9 +79,9 @@
         "Flag claims that cannot be verified"
       ],
       "allowedTools": ["search_company_context", "escalate_to_human"],
-      "workTools": ["web_research", "search_context", "schedule_followup", "escalate_to_human"],
+      "workTools": ["web_research", "search_context", "suggest_opportunity", "delegate_to_colleague", "schedule_followup", "escalate_to_human"],
       "defaultObjectives": [
-        "Research competitor product releases, pricing changes, and industry news from the past week",
+        "Research competitor product releases, pricing changes, and industry news from the past week, using suggest_opportunity to immediately alert the team when breaking news or shifts occur",
         "Synthesize findings into a concise briefing with numbered citations [1], [2] and direct links",
         "Flag any gaps in coverage or unverified rumours for human review"
       ],
@@ -92,7 +92,7 @@
     {
       "id": "marketer",
       "name": "Marketer / social media manager",
-      "icon": "megaphone",
+      "icon": "trending-up",
       "jobTitle": "Content Marketer",
       "team": "Marketing",
       "pitch": "Drafts posts, captions and announcements in your voice, on your schedule, and queues them for your approval before anything is published.",
@@ -109,9 +109,9 @@
         "Queue everything for approval before it is published"
       ],
       "allowedTools": ["search_company_context", "escalate_to_human"],
-      "workTools": ["web_research", "search_context", "draft_content", "publish_post", "schedule_followup", "escalate_to_human"],
+      "workTools": ["web_research", "search_context", "draft_content", "publish_post", "suggest_opportunity", "delegate_to_colleague", "schedule_followup", "escalate_to_human"],
       "defaultObjectives": [
-        "Research what competitors announced and key industry trends over the past week",
+        "Research what competitors announced and key industry trends over the past week, using suggest_opportunity to flag market opportunities to the team",
         "Draft a compelling social post highlighting our company values and products in our brand voice",
         "Queue the draft for approval before publishing"
       ],
@@ -122,7 +122,7 @@
     {
       "id": "secretary",
       "name": "Secretary / executive assistant",
-      "icon": "calendar",
+      "icon": "briefcase",
       "jobTitle": "Executive Assistant",
       "team": "Operations",
       "pitch": "Keeps the follow-ups moving: drafts the emails, schedules the next step, and never commits you to anything without asking.",
@@ -139,7 +139,7 @@
         "Keep a clear record of what was agreed"
       ],
       "allowedTools": ["search_company_context", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "draft_content", "send_email", "schedule_followup", "escalate_to_human"],
+      "workTools": ["search_context", "draft_content", "suggest_opportunity", "delegate_to_colleague", "send_email", "schedule_followup", "escalate_to_human"],
       "defaultObjectives": [
         "Review action items, meeting notes, and incoming requests",
         "Draft follow-up emails with specific dates, metrics, and next steps for human approval",
@@ -151,7 +151,7 @@
     {
       "id": "dev-support",
       "name": "Programmer / dev support",
-      "icon": "code",
+      "icon": "terminal",
       "jobTitle": "Developer Support Engineer",
       "team": "Engineering",
       "pitch": "Answers integration questions from your docs, reproduces bugs from what a developer reports, and researches the error nobody has seen before.",
@@ -168,11 +168,11 @@
         "Research unfamiliar errors before answering"
       ],
       "allowedTools": ["search_company_context", "log_issue", "log_suggestion", "escalate_to_human"],
-      "workTools": ["web_research", "search_context", "draft_content", "escalate_to_human"],
+      "workTools": ["web_research", "search_context", "draft_content", "suggest_opportunity", "delegate_to_colleague", "escalate_to_human"],
       "defaultObjectives": [
         "Analyze API questions and error logs submitted by developers",
-        "Search API documentation to explain root causes and provide verified code fixes",
-        "Log reproducible issue reports for engineering when bug fixes require codebase changes"
+        "Search API documentation and code to diagnose issues, providing verified fixes",
+        "Log reproducible bug reports and suggested fixes with suggest_opportunity for engineering"
       ],
       "defaultTriggerType": "manual",
       "defaultContext": "Developer support engineer providing precise code samples, headers, and reproduction steps for engineering."
@@ -180,7 +180,7 @@
     {
       "id": "sales-development",
       "name": "Sales development rep",
-      "icon": "handshake",
+      "icon": "target",
       "jobTitle": "Sales Development Representative",
       "team": "Sales",
       "pitch": "Qualifies inbound interest, answers the first round of questions, and books the meeting - without ever quoting a price you didn't approve.",
@@ -197,7 +197,7 @@
         "Book meetings for the sales team"
       ],
       "allowedTools": ["search_company_context", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "draft_content", "send_email", "schedule_followup", "escalate_to_human"],
+      "workTools": ["search_context", "draft_content", "suggest_opportunity", "delegate_to_colleague", "send_email", "schedule_followup", "escalate_to_human"],
       "defaultObjectives": [
         "Qualify inbound customer inquiries and identify team requirements",
         "Answer product and plan questions from documentation without quoting unauthorized discounts",
@@ -209,7 +209,7 @@
     {
       "id": "people-ops",
       "name": "HR / people ops",
-      "icon": "users",
+      "icon": "heart-handshake",
       "jobTitle": "People Operations Coordinator",
       "team": "People",
       "pitch": "Answers policy questions from your handbook, drafts the routine communications, and routes anything sensitive straight to a person.",
@@ -226,7 +226,7 @@
         "Route sensitive matters to a person straight away"
       ],
       "allowedTools": ["search_company_context", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "draft_content", "send_email", "escalate_to_human"],
+      "workTools": ["search_context", "draft_content", "suggest_opportunity", "delegate_to_colleague", "send_email", "escalate_to_human"],
       "defaultObjectives": [
         "Answer employee policy, leave, and benefit inquiries strictly from the company handbook",
         "Draft routine internal announcements and policy reminders for human approval",

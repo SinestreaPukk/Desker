@@ -26,13 +26,10 @@ export function LegalPage({
         title={title}
         eyebrow={`Version ${TERMS_VERSION}`}
         intro={intro}
-        className="pb-16 sm:pb-24"
       />
 
-      {/* The document floats on the sky the same way the product window does
-          on the landing page, which is what the band underneath is for. */}
-      <div className="relative z-10 mx-auto -mt-16 max-w-3xl px-4 pb-20 sm:-mt-24 sm:px-6 sm:pb-28">
-        <article className="window prose p-6 sm:p-10">{children}</article>
+      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+        <article className="rounded-panel border border-line bg-surface p-6 shadow-xs sm:p-10 prose">{children}</article>
 
         <div className="mt-8 rounded-panel border border-line bg-surface-2/50 px-6 py-5 text-sm leading-relaxed text-ink-muted">
           Questions about this document? Write to{" "}

@@ -22,12 +22,12 @@ export function Label({
 }
 
 const fieldStyles =
-  "w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink " +
-  "placeholder:text-ink-subtle shadow-xs transition-colors " +
+  "w-full rounded-lg border border-line-strong/80 bg-surface px-3 text-sm text-ink " +
+  "placeholder:text-ink-subtle shadow-2xs transition-all duration-150 " +
   "hover:border-ink-subtle " +
-  "focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent " +
+  "focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none " +
   "disabled:cursor-not-allowed disabled:bg-surface-2 disabled:opacity-70 " +
-  "aria-[invalid=true]:border-danger aria-[invalid=true]:outline-danger";
+  "aria-[invalid=true]:border-danger aria-[invalid=true]:ring-danger/20";
 
 export function Input({
   className,
@@ -56,6 +56,8 @@ export interface FieldProps {
   required?: boolean;
   /** Placed on the right of the label row - character counts, inline actions. */
   aside?: React.ReactNode;
+  /** Placed inline next to the control - action buttons, suffix addons. */
+  action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }
@@ -72,6 +74,7 @@ export function Field({
   error,
   required,
   aside,
+  action,
   children,
   className,
 }: FieldProps) {
@@ -79,7 +82,7 @@ export function Field({
   const errorId = error ? `${htmlFor}-error` : undefined;
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("space-y-1.5", className)}>
       <div className="flex items-baseline justify-between gap-3">
         <Label htmlFor={htmlFor}>
           {label}
@@ -93,15 +96,26 @@ export function Field({
       </div>
 
       {/* Children receive the aria wiring without each form repeating it. */}
-      {React.isValidElement<Record<string, unknown>>(children)
-        ? React.cloneElement(children, {
-            id: htmlFor,
-            "aria-describedby":
-              [hintId, errorId].filter(Boolean).join(" ") || undefined,
-            "aria-invalid": error ? true : undefined,
-            "aria-required": required || undefined,
-          })
-        : children}
+      {(() => {
+        const control = React.isValidElement<Record<string, unknown>>(children)
+          ? React.cloneElement(children, {
+              id: htmlFor,
+              "aria-describedby":
+                [hintId, errorId].filter(Boolean).join(" ") || undefined,
+              "aria-invalid": error ? true : undefined,
+              "aria-required": required || undefined,
+            })
+          : children;
+
+        if (!action) return control;
+
+        return (
+          <div className="flex items-center gap-2 [&>*:first-child]:min-w-0 [&>*:first-child]:flex-1">
+            {control}
+            {action}
+          </div>
+        );
+      })()}
 
       {hint && !error ? (
         <p id={hintId} className="text-xs text-ink-muted leading-relaxed">

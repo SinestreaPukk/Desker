@@ -43,8 +43,11 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="mb-4 flex size-12 items-center justify-center rounded-lg border border-accent-line bg-accent-soft">
-        <Icon className="size-5 text-accent-soft-fg" />
+      <div className="relative mb-4 flex items-center justify-center">
+        <div className="absolute size-16 rounded-full bg-accent-soft/40 blur-xs" aria-hidden />
+        <div className="relative flex size-12 items-center justify-center rounded-xl border border-accent-line/80 bg-accent-soft shadow-xs">
+          <Icon className="size-5 text-accent-soft-fg" />
+        </div>
       </div>
       <h3 className="text-base font-semibold text-ink">{title}</h3>
       <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-ink-muted">
@@ -76,15 +79,17 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        "flex flex-col items-start gap-3 rounded-panel border border-danger-line bg-danger-soft p-5",
+        "flex flex-col items-start gap-3 rounded-panel border border-danger-line bg-danger-soft/80 p-5 shadow-xs",
         "sm:flex-row sm:items-center sm:justify-between",
         className,
       )}
     >
       <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden />
+        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-danger-line bg-danger-soft">
+          <AlertTriangle className="size-4 text-danger" aria-hidden />
+        </div>
         <div>
-          <p className="text-sm font-medium text-danger">{title}</p>
+          <p className="text-sm font-semibold text-danger">{title}</p>
           <p className="mt-0.5 text-sm leading-relaxed text-danger/90">
             {message}
           </p>

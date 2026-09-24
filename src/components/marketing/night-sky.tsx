@@ -114,7 +114,21 @@ function len(band: typeof BAND) {
  * and the whole dissolves into the paper so the next section begins on the
  * page's own ground.
  */
-export function Dunes({ className, uid = "dunes" }: { className?: string; /** Unique per page - gradient ids. */ uid?: string }) {
+export function Dunes({
+  className,
+  uid = "dunes",
+  haze = true,
+}: {
+  className?: string;
+  /** Unique per page - gradient ids. */
+  uid?: string;
+  /**
+   * Fade the last rows into paper. True where the dunes hand over to the page
+   * (the hero); false where the sand is the end of the page (the closing CTA),
+   * which would otherwise wash out to white just above the footer.
+   */
+  haze?: boolean;
+}) {
   const id = (name: string) => `${uid}-${name}`;
   const url = (name: string) => `url(#${uid}-${name})`;
   // The product window covers the middle of the scene, so the shapes are
@@ -186,7 +200,7 @@ export function Dunes({ className, uid = "dunes" }: { className?: string; /** Un
       </g>
 
       {/* Into the paper */}
-      <rect x="0" y="400" width="1440" height="120" fill={url("haze")} />
+      {haze ? <rect x="0" y="400" width="1440" height="120" fill={url("haze")} /> : null}
     </svg>
   );
 }

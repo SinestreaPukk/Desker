@@ -138,4 +138,22 @@ console.log(`agent: Sam (${sam.id}) with a weekly scope of work`);
 const run = await (await call(`/api/agents/${sam.id}/scope/run`, { method: "POST" })).json();
 console.log(`run started: ${run.id ?? JSON.stringify(run)}`);
 
+// Wait for the run to settle so the digest below has something real to roll
+// up - a demo whose Updates tab says "nothing happened" teaches the wrong
+// thing. Give up after a couple of minutes and seed the digest anyway.
+if (run.id) {
+  const deadline = Date.now() + 120_000;
+  let status = "queued";
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
+    const items = await (await call(`/api/action-items?project=${project.slug}&agentId=${sam.id}`)).json();
+    status = items.find((item) => item.id === run.id)?.status ?? status;
+    if (["done", "failed", "needs_approval", "rejected"].includes(status)) break;
+  }
+  console.log(`run ${run.id}: ${status}`);
+}
+
+await call(`/api/agents/${sam.id}/digest`, { method: "POST" });
+console.log("digest requested: it lands in the Inbox's Updates tab");
+
 console.log(`\nDemo login: ${email} / ${password}\n${base}/p/${project.slug}/roster`);

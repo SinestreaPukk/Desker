@@ -56,9 +56,9 @@ export function PromptPreviewDialog({
       <DialogContent className="max-w-3xl">
         <DialogTitle>What this agent is told</DialogTitle>
         <DialogDescription>
-          The system prompt, assembled from the saved configuration exactly as the
-          runtime builds it. Tool definitions are sent alongside it.
-          {dirty ? " You have unsaved edits — they are not reflected here yet." : ""}
+          Everything this agent is told before it answers, built from the settings you saved.
+          The list of things it may do is sent alongside it.
+          {dirty ? " Your unsaved edits are not in here yet." : ""}
         </DialogDescription>
 
         <div className="mt-4 space-y-3">
@@ -76,15 +76,17 @@ export function PromptPreviewDialog({
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
                 <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
                   <TabsList>
-                    <TabsTrigger value="chat">Client chat prompt</TabsTrigger>
+                    <TabsTrigger value="chat">When a client writes</TabsTrigger>
                     {data?.workPrompt ? (
-                      <TabsTrigger value="work">Autonomous work prompt</TabsTrigger>
+                      <TabsTrigger value="work">When it works on its own</TabsTrigger>
                     ) : null}
                   </TabsList>
                 </Tabs>
                 <div className="flex items-center gap-2">
-                  <Badge tone="neutral" className="font-mono">
-                    ~{currentTokens} tokens
+                  {/* Length in words, not tokens: the point is whether this is
+                      a page or a pamphlet, which is all a person can act on. */}
+                  <Badge tone="neutral" title={`About ${currentTokens} model tokens`}>
+                    about {Math.round((currentTokens ?? 0) * 0.75).toLocaleString()} words
                   </Badge>
                   <Button type="button" variant="ghost" size="sm" onClick={() => void copy()}>
                     {copied ? <Check aria-hidden /> : <Copy aria-hidden />}

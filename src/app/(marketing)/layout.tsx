@@ -21,7 +21,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       </a>
       <SiteHeader>
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="focus-current inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-current">
+          <Link href="/" className="focus-current inline-flex min-h-[44px] items-center gap-2 text-lg font-semibold tracking-tight text-current">
             <BrandMark className="[[data-clear]_&]:bg-current" />
             {SITE.company.name}
           </Link>

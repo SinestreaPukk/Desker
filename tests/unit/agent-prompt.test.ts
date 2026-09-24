@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSystemPrompt } from "@/lib/agent-prompt";
+import { buildSystemPrompt, buildCompanyContextPrompt } from "@/lib/agent-prompt";
 
 const base = {
   name: "Mia",
@@ -135,4 +135,90 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("You are Mia, Customer Support Lead.");
     expect(prompt).not.toContain("on the  team");
   });
+
+  it("includes company context when provided", () => {
+    const prompt = buildSystemPrompt({
+      ...base,
+      companyContext: "Northwind Supply Co. sells hand tools and workwear.",
+    });
+    expect(prompt).toContain("Company context");
+    expect(prompt).toContain("Northwind Supply Co. sells hand tools and workwear.");
+  });
+
+  it("addresses an internal colleague and encourages proactive execution when audience is colleague", () => {
+    const prompt = buildSystemPrompt({
+      ...base,
+      audience: "colleague",
+    });
+    expect(prompt).toContain("collaborating directly with your teammate / manager");
+    expect(prompt).toContain("take initiative in these areas when collaborating with your colleague");
+    expect(prompt).not.toContain("Work that is not on this list is not yours to take on.");
+    expect(prompt).toMatch(/do your job proactively/i);
+    expect(prompt).toMatch(/do not artificially refuse tasks outside existing documents/i);
+  });
 });
+
+describe("buildCompanyContextPrompt", () => {
+  it("addresses an internal platform user and clarifies it is not an outside client", () => {
+    const prompt = buildCompanyContextPrompt({
+      name: "Mia",
+      jobTitle: "Customer Support Lead",
+      department: "Customer Experience",
+    });
+    expect(prompt).toContain("You are Mia, Customer Support Lead");
+    expect(prompt).toContain("Customer Experience");
+    expect(prompt).toMatch(/internal platform user \/ team member of the company/i);
+    expect(prompt).toMatch(/not an outside client or customer/i);
+  });
+
+  it("sets the purpose to company-context consultation and forbids client escalation/tickets", () => {
+    const prompt = buildCompanyContextPrompt({
+      name: "Mia",
+      jobTitle: "Customer Support Lead",
+    });
+    expect(prompt).toMatch(/company-context consultation mode/i);
+    expect(prompt).toMatch(/do not treat the user as an external client/i);
+    expect(prompt).toMatch(/do not offer client escalation/i);
+  });
+
+  it("embeds company and project context when provided", () => {
+    const prompt = buildCompanyContextPrompt({
+      name: "Mia",
+      jobTitle: "Support Lead",
+      companyContext: "Acme sells high-end coffee beans. Return policy is 30 days.",
+    });
+    expect(prompt).toContain("Acme sells high-end coffee beans");
+    expect(prompt).toContain("Company context");
+  });
+
+  it("lists searchable documents and search_company_context guidance", () => {
+    const prompt = buildCompanyContextPrompt({
+      name: "Mia",
+      jobTitle: "Support Lead",
+      documentNames: ["handbook.pdf", "pricing.md"],
+    });
+    expect(prompt).toContain("handbook.pdf");
+    expect(prompt).toContain("pricing.md");
+    expect(prompt).toContain("search_company_context");
+    expect(prompt).toMatch(/mention the document filename in plain words/i);
+  });
+
+  it("notes when no documents are uploaded yet", () => {
+    const prompt = buildCompanyContextPrompt({
+      name: "Mia",
+      jobTitle: "Support Lead",
+      documentNames: [],
+    });
+    expect(prompt).toMatch(/no documents have been indexed for this role yet/i);
+  });
+
+  it("instructs grounding answers and admitting missing information", () => {
+    const prompt = buildCompanyContextPrompt({
+      name: "Mia",
+      jobTitle: "Support Lead",
+    });
+    expect(prompt).toMatch(/ground your answers in the company context/i);
+    expect(prompt).toMatch(/do not make up facts, numbers, or policies/i);
+  });
+});
+

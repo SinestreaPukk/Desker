@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, FileText, PenLine } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, FileText, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label, Textarea } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { AvatarPicker } from "@/components/builder/avatar-picker";
 import { EscalationRuleHelper } from "@/components/builder/live-example";
+import { InheritedProjectContext } from "@/components/builder/context-questions";
 import {
   ScopeOfWorkForm,
   defaultScopeForm,
@@ -26,13 +26,16 @@ import {
 import { FormError } from "@/components/ui/states";
 import { useCreateAgent } from "@/hooks/use-admin-data";
 import { api, ApiError, errorMessage } from "@/lib/api-client";
-import { parseLines } from "@/lib/agent-fields";
+import { parseLines, randomAgentName } from "@/lib/agent-fields";
 import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
 import { TEMPLATES, templateById, type AgentTemplate } from "@/lib/content";
-import { TemplateIcon } from "@/components/marketing/template-icon";
+import { TemplateIcon, ScratchCuteIcon } from "@/components/marketing/template-icon";
 import { WORK_TOOL_IDS } from "@/lib/work/tools";
+import { AGENT_CONTEXT_QUESTIONS } from "@/lib/work/context";
 import type { TriggerType } from "@/lib/work/types";
 import { cn } from "@/lib/utils";
+
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 /**
  * The role templates come from content/templates.json - the same records the
@@ -71,7 +74,7 @@ export function NewAgentWizard({ project }: { project: string }) {
   // The scope of work is its own record; an untouched default one is not
   // worth saving, but a template's tool set is.
   const scopeTouched =
-    scope.context.trim() !== "" ||
+    Object.values(scope.contextAnswers).some((answer) => answer.trim() !== "") ||
     scope.objectivesText.trim() !== "" ||
     scope.triggerType !== "manual" ||
     scope.tools.length !== WORK_TOOL_IDS.length;
@@ -83,12 +86,16 @@ export function NewAgentWizard({ project }: { project: string }) {
     const preset = id === SCRATCH ? undefined : templateById(id);
     setTemplate(id);
     // Name and avatar are the admin's own; a new role swaps everything else.
-    setForm((current) => ({ ...formFromTemplate(preset), name: current.name, avatarUrl: current.avatarUrl }));
+    setForm((current) => ({
+      ...formFromTemplate(preset, current.name.trim() ? current.name : undefined),
+      avatarUrl: current.avatarUrl,
+    }));
     setScope((current) => {
       const templateScope = scopeFromTemplate(preset);
+      const typedSomething = Object.values(current.contextAnswers).some((a) => a.trim());
       return {
         ...templateScope,
-        context: current.context.trim() ? current.context : templateScope.context,
+        contextAnswers: typedSomething ? current.contextAnswers : templateScope.contextAnswers,
         objectivesText: current.objectivesText.trim() ? current.objectivesText : templateScope.objectivesText,
       };
     });
@@ -114,7 +121,6 @@ export function NewAgentWizard({ project }: { project: string }) {
         responsibilities: parseLines(form.responsibilitiesText),
         allowedTools: form.allowedTools,
         escalationRule: form.escalationRule.trim(),
-        welcomeMessage: form.welcomeMessage.trim(),
         status: "draft",
       });
       if (scopeTouched) {
@@ -122,7 +128,7 @@ export function NewAgentWizard({ project }: { project: string }) {
           await api(`/api/agents/${agent.id}/scope`, {
             method: "PUT",
             body: JSON.stringify({
-              context: scope.context.trim(),
+              contextAnswers: scope.contextAnswers,
               objectives: parseObjectives(scope.objectivesText),
               documentIds: [],
               triggerType: scope.triggerType,
@@ -153,7 +159,7 @@ export function NewAgentWizard({ project }: { project: string }) {
         if (fields.some((field) => ["name", "jobTitle", "avatarUrl"].includes(field))) setStep(1);
         else if (
           fields.some((field) =>
-            ["personality", "welcomeMessage", "escalationRule"].includes(field),
+            ["personality", "escalationRule"].includes(field),
           )
         )
           setStep(2);
@@ -166,14 +172,15 @@ export function NewAgentWizard({ project }: { project: string }) {
   return (
     <div className="paper-grid min-h-full">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-6">
-          <Link href={`/p/${project}/roster`}>
-            <ArrowLeft aria-hidden />
-            Roster
-          </Link>
-        </Button>
+        <Breadcrumbs
+          items={[
+            { label: "Roster", href: `/p/${project}/roster` },
+            { label: "Hire an AI employee" },
+          ]}
+          className="mb-4"
+        />
 
-        <h1 className="text-xl font-semibold text-ink">Hire an AI employee</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Hire an AI employee</h1>
         <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
           Pick a role, give them a name, check how they behave. About five minutes,
           then you&apos;ll add a document and publish.
@@ -246,7 +253,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                     key={role.id}
                     selected={template === role.id}
                     onSelect={() => pickTemplate(role.id)}
-                    icon={<TemplateIcon icon={role.icon} className="size-4" />}
+                    icon={<TemplateIcon icon={role.icon} className="size-5" />}
                     title={role.name}
                     subtitle={role.jobTitle}
                     body={role.pitch}
@@ -255,7 +262,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                 <TemplateCard
                   selected={template === SCRATCH}
                   onSelect={() => pickTemplate(SCRATCH)}
-                  icon={<PenLine className="size-4" />}
+                  icon={<ScratchCuteIcon className="size-5" />}
                   title="Start from scratch"
                   subtitle="Blank"
                   body="Every field empty. Best when none of the roles is close to the job."
@@ -271,12 +278,24 @@ export function NewAgentWizard({ project }: { project: string }) {
                     htmlFor="name"
                     required
                     error={fieldErrors.name?.[0]}
+                    action={
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => set("name", randomAgentName())}
+                        className="shrink-0"
+                        title="Randomize name"
+                      >
+                        <Shuffle aria-hidden />
+                        <span>Randomize</span>
+                      </Button>
+                    }
                   >
                     <Input
                       value={form.name}
                       autoFocus
                       onChange={(event) => set("name", event.target.value)}
-                      placeholder="Mia"
+                      placeholder="e.g. Bright"
                     />
                   </Field>
                   <Field
@@ -293,7 +312,11 @@ export function NewAgentWizard({ project }: { project: string }) {
                   </Field>
                 </div>
 
-                <Field label="Team" htmlFor="department" hint="Optional.">
+                <Field
+                  label="Team"
+                  htmlFor="department"
+                  hint="Optional. Only used to group the roster once you have a few agents."
+                >
                   <Input
                     value={form.department}
                     onChange={(event) => set("department", event.target.value)}
@@ -301,7 +324,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                   />
                 </Field>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label>Avatar</Label>
                   {/* Until a face is picked, the default follows the name - so
                       remount when it changes and the swatches stay in step
@@ -323,7 +346,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                   htmlFor="personality"
                   required
                   error={fieldErrors.personality?.[0]}
-                  hint="At least a sentence. This goes into the system prompt word for word."
+                  hint="How it speaks and what it is like to deal with. The agent follows this word for word."
                 >
                   <Textarea
                     value={form.personality}
@@ -337,7 +360,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                 <Field
                   label="Responsibilities"
                   htmlFor="responsibilities"
-                  hint="One per line. Anything not listed is out of scope."
+                  hint="One per line. Anything not on this list is out of scope for this agent."
                 >
                   <Textarea
                     value={form.responsibilitiesText}
@@ -350,22 +373,9 @@ export function NewAgentWizard({ project }: { project: string }) {
                 </Field>
 
                 <Field
-                  label="Opening message"
-                  htmlFor="welcomeMessage"
-                  hint="Optional. The first thing a client sees."
-                >
-                  <Textarea
-                    value={form.welcomeMessage}
-                    rows={2}
-                    onChange={(event) => set("welcomeMessage", event.target.value)}
-                    placeholder="Hi, I'm Mia. What can I help with?"
-                  />
-                </Field>
-
-                <Field
                   label="Escalation rule"
                   htmlFor="escalationRule"
-                  hint="Plain language. The model judges it from the conversation; nothing is keyword-matched."
+                  hint="Plain language. The agent judges it from what the client actually says, not from keywords."
                 >
                   <Textarea
                     value={form.escalationRule}
@@ -430,7 +440,12 @@ export function NewAgentWizard({ project }: { project: string }) {
                     schedule, or when an event arrives - and what it should know while doing
                     it.
                   </p>
-                  <ScopeOfWorkForm value={scope} onChange={setScope} idPrefix="new-scope" />
+                  <ScopeOfWorkForm
+                    value={scope}
+                    onChange={setScope}
+                    idPrefix="new-scope"
+                    inherited={<InheritedProjectContext project={project} />}
+                  />
                 </div>
               </>
             ) : null}
@@ -469,16 +484,15 @@ export function NewAgentWizard({ project }: { project: string }) {
   );
 }
 
-function formFromTemplate(preset: AgentTemplate | undefined) {
+function formFromTemplate(preset: AgentTemplate | undefined, defaultName?: string) {
   return {
-    name: "",
+    name: defaultName !== undefined ? defaultName : randomAgentName(),
     jobTitle: preset?.jobTitle ?? "",
     department: preset?.team ?? "",
     avatarUrl: null as string | null,
     personality: preset?.personality ?? "",
     responsibilitiesText: preset?.responsibilities.join("\n") ?? "",
     escalationRule: preset?.escalationRule ?? "",
-    welcomeMessage: preset?.welcomeMessage ?? "",
     allowedTools: (preset ? [...preset.allowedTools] : [...TOOL_IDS]) as ToolId[],
   };
 }
@@ -488,7 +502,11 @@ function scopeFromTemplate(preset: AgentTemplate | undefined): ScopeFormState {
   if (!preset) return base;
   return {
     ...base,
-    context: preset.defaultContext ?? "",
+    // A template's context is one paragraph; it opens as the answer to the
+    // first question, which is where the owner would have put it anyway.
+    contextAnswers: preset.defaultContext
+      ? { [AGENT_CONTEXT_QUESTIONS[0]!.id]: preset.defaultContext }
+      : {},
     objectivesText: preset.defaultObjectives ? preset.defaultObjectives.join("\n") : "",
     triggerType: (preset.defaultTriggerType as TriggerType) ?? "manual",
     cron: preset.defaultCron ?? base.cron,
@@ -517,20 +535,22 @@ function TemplateCard({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        "flex items-start gap-3 rounded-lg border p-3 text-left transition-colors",
-        selected ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-2",
+        "flex items-start gap-3 rounded-lg border p-3 text-left transition-all",
+        selected
+          ? "border-accent bg-accent-soft ring-1 ring-accent"
+          : "border-line bg-surface hover:border-line-strong hover:bg-surface-2",
       )}
     >
       <span
         className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-md",
+          "flex size-9 shrink-0 items-center justify-center rounded-xl transition-all",
           selected ? "bg-accent text-accent-fg" : "bg-surface-2 text-accent",
         )}
       >
         {icon}
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-ink">{title}</span>
+        <span className="block text-sm font-semibold text-ink">{title}</span>
         <span className="block text-xs text-ink-muted">{subtitle}</span>
         <span className="mt-1 block text-xs leading-relaxed text-ink-muted">{body}</span>
       </span>

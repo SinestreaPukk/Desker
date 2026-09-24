@@ -6,6 +6,7 @@
  * client browser, and a `select` that quietly grows is how that leaks.
  */
 import { toStringArray } from "@/lib/agent-fields";
+import type { RunMode } from "@/lib/work/cadence";
 
 export interface AgentSummaryDto {
   id: string;
@@ -18,10 +19,12 @@ export interface AgentSummaryDto {
   conversationCount: number;
   documentCount: number;
   openIssueCount: number;
+  /** Whether it works on its own, and when. */
+  runs: { mode: RunMode; cadence: string | null };
   updatedAt: string;
 }
 
-export interface AgentDetailDto extends Omit<AgentSummaryDto, "conversationCount" | "documentCount" | "openIssueCount"> {
+export interface AgentDetailDto extends Omit<AgentSummaryDto, "conversationCount" | "documentCount" | "openIssueCount" | "runs"> {
   personality: string;
   responsibilities: string[];
   allowedTools: string[];

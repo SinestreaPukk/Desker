@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -77,11 +77,10 @@ export function DuplicateAgentDialog({
           not reachable by clients until you publish it.
         </DialogDescription>
 
-        <div className="mt-5 space-y-4">
+        <div className="mt-5 space-y-5">
           <FormError message={error} />
 
-          <div className="space-y-2">
-            <Label htmlFor="duplicate-project">Into project</Label>
+          <Field label="Into project" htmlFor="duplicate-project">
             <Select value={target} onValueChange={setProjectId}>
               <SelectTrigger id="duplicate-project">
                 <SelectValue placeholder="Choose a project" />
@@ -95,7 +94,7 @@ export function DuplicateAgentDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
           <label htmlFor="duplicate-docs" className="flex cursor-pointer items-start gap-3">
             <Checkbox

@@ -8,7 +8,9 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Badge, StatusBadge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import {
@@ -30,6 +32,9 @@ import { cn, formatBytes } from "@/lib/utils";
 
 export function DocumentsPanel({ agentId }: { agentId: string }) {
   const { data: documents, isPending, error, refetch } = useDocuments(agentId);
+  // Deleting a document takes its text out of every future answer, and there
+  // is no copy of it here to restore - so it asks first.
+  const [removing, setRemoving] = React.useState<{ id: string; filename: string } | null>(null);
   const upload = useUploadDocument(agentId);
   const remove = useDeleteDocument(agentId);
 
@@ -53,10 +58,10 @@ export function DocumentsPanel({ agentId }: { agentId: string }) {
     <Panel>
       <PanelHeader>
         <div>
-          <PanelTitle>Company context</PanelTitle>
+          <PanelTitle>Reference documents</PanelTitle>
           <PanelDescription>
-            Documents this agent can search while answering. Everything is chunked
-            and indexed - the agent quotes what it finds rather than guessing.
+            Longer material this agent looks things up in - policies, specs, brand guidelines.
+            Short facts every agent should always know belong in Company context above.
           </PanelDescription>
         </div>
       </PanelHeader>
@@ -164,7 +169,7 @@ export function DocumentsPanel({ agentId }: { agentId: string }) {
                   size="icon-sm"
                   aria-label={`Remove ${document.filename}`}
                   loading={remove.isPending && remove.variables === document.id}
-                  onClick={() => remove.mutate(document.id)}
+                  onClick={() => setRemoving({ id: document.id, filename: document.filename })}
                 >
                   <Trash2 aria-hidden />
                 </Button>
@@ -178,6 +183,22 @@ export function DocumentsPanel({ agentId }: { agentId: string }) {
           disabled={!documents?.some((document) => document.status === "ready")}
         />
       </PanelBody>
+
+      <ConfirmDialog
+        open={removing !== null}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        title={`Remove ${removing?.filename ?? "this document"}?`}
+        description="The agent stops being able to answer from it straight away, and the file is not kept - you would have to upload it again."
+        confirmLabel="Remove"
+        onConfirm={async () => {
+          if (!removing) return;
+          await remove.mutateAsync(removing.id);
+          toast.success(`${removing.filename} removed`, {
+            description: "Answers from now on will not use it.",
+          });
+          setRemoving(null);
+        }}
+      />
     </Panel>
   );
 }

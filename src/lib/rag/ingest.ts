@@ -7,7 +7,7 @@
  */
 import "server-only";
 import { prisma } from "@/lib/db";
-import { getStorage } from "@/lib/storage";
+import { storage } from "@/lib/storage";
 import { chunkText } from "./chunk";
 import { embedBatch } from "./embeddings";
 import { extractText } from "./extract";
@@ -18,7 +18,7 @@ export async function ingestDocument(documentId: string): Promise<void> {
   if (!document) return;
 
   try {
-    const data = await getStorage().get(document.storageKey);
+    const data = await storage.get(document.storageKey);
     const text = await extractText(data, document.filename, document.mimeType);
     const chunks = chunkText(text);
 

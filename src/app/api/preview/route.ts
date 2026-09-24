@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 /**
- * Builder preview. Same runtime as the public endpoint, so what an admin sees
- * here is what a client gets - including draft agents, which the public
- * endpoint refuses.
+ * Builder collaboration chat. Allows platform users to chat directly with the
+ * agent as a teammate - performing tasks within their role (researching, drafting,
+ * coding, analyzing), finding answers grounded in company context, and testing
+ * capabilities, rather than simulating an external client chat.
  *
  * Preview conversations are real rows (the runtime needs somewhere to store
- * history) but are marked resolved and excluded from the inbox, and issue-
- * writing tools are disabled for them so testing does not pollute the backlog.
+ * history) but are marked resolved and excluded from the inbox by default.
  */
 export async function POST(request: Request) {
   return handle(async () => {
@@ -41,6 +41,7 @@ export async function POST(request: Request) {
         userMessage: input.message,
         persist: true,
         signal: request.signal,
+        mode: "colleague",
       }),
       { signal: request.signal },
     );

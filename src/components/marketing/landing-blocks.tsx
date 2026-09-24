@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BookOpenCheck,
   CalendarClock,
+  Check,
   ChevronDown,
   CircleCheckBig,
   FilePen,
@@ -11,6 +12,7 @@ import {
   LockKeyhole,
   ScrollText,
   UserCheck,
+  X,
 } from "lucide-react";
 import { LANDING_ICONS, TEMPLATES } from "@/lib/content";
 import { TemplateIcon } from "@/components/marketing/template-icon";
@@ -157,8 +159,8 @@ export function RoleGrid({ cta }: { cta: string }) {
             href={`/showcase#${role.id}`}
             className="group lift flex h-full flex-col rounded-panel border border-line bg-surface p-5 shadow-xs hover:border-accent-line hover:shadow-md"
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
-              <TemplateIcon icon={role.icon} className="size-4" />
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg transition-all duration-200 group-hover:scale-110 group-hover:bg-accent group-hover:text-accent-fg group-hover:shadow-sm">
+              <TemplateIcon icon={role.icon} className="size-6" />
             </span>
             <span className="mt-4 text-lg font-semibold tracking-tight text-ink">{role.name}</span>
             <span className="mt-2 text-sm leading-relaxed text-ink-muted">{role.pitch}</span>
@@ -170,6 +172,97 @@ export function RoleGrid({ cta }: { cta: string }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/* --- Comparison: Desker vs Generic AI -------------------------------------- */
+
+export interface ComparisonItem {
+  dimension: string;
+  generic: string;
+  desker: string;
+}
+
+export function ComparisonTable({
+  competitorLabel,
+  deskerLabel,
+  items,
+}: {
+  competitorLabel: string;
+  deskerLabel: string;
+  items: readonly ComparisonItem[];
+}) {
+  return (
+    <div className="sd-stagger mx-auto max-w-4xl">
+      {/* Desktop view (table) */}
+      <div className="hidden overflow-hidden rounded-panel border border-line bg-surface shadow-xs md:block">
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="border-b border-line bg-surface-2/60 text-xs font-semibold uppercase tracking-wider text-ink-muted">
+              <th scope="col" className="w-[26%] px-6 py-4">Capability</th>
+              <th scope="col" className="w-[37%] px-6 py-4 text-ink-subtle">{competitorLabel}</th>
+              <th scope="col" className="w-[37%] border-l border-line bg-accent-soft/40 px-6 py-4 text-accent">
+                <span className="flex items-center gap-2">
+                  <span className="font-bold">{deskerLabel}</span>
+                  <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-fg">
+                    24/7
+                  </span>
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line text-sm">
+            {items.map((item) => (
+              <tr key={item.dimension} className="transition-colors hover:bg-surface-2/40">
+                <th scope="row" className="align-top px-6 py-4 font-semibold text-ink">
+                  {item.dimension}
+                </th>
+                <td className="align-top px-6 py-4 leading-relaxed text-ink-muted">
+                  <div className="flex items-start gap-2.5">
+                    <X className="mt-0.5 size-4 shrink-0 text-ink-subtle" aria-hidden />
+                    <span>{item.generic}</span>
+                  </div>
+                </td>
+                <td className="align-top border-l border-line bg-accent-soft/15 px-6 py-4 font-medium leading-relaxed text-ink">
+                  <div className="flex items-start gap-2.5">
+                    <Check className="mt-0.5 size-4 shrink-0 text-positive" aria-hidden />
+                    <span>{item.desker}</span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile view (cards per capability) */}
+      <div className="space-y-4 md:hidden">
+        {items.map((item) => (
+          <div key={item.dimension} className="rounded-panel border border-line bg-surface p-5 shadow-xs">
+            <h3 className="text-base font-semibold text-ink">{item.dimension}</h3>
+            <div className="mt-3.5 space-y-2.5 text-sm">
+              <div className="rounded-lg bg-surface-2/70 p-3">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-ink-subtle">{competitorLabel}</p>
+                <div className="mt-1.5 flex items-start gap-2 text-ink-muted leading-relaxed">
+                  <X className="mt-0.5 size-3.5 shrink-0 text-ink-subtle" aria-hidden />
+                  <span>{item.generic}</span>
+                </div>
+              </div>
+              <div className="rounded-lg border border-accent-line bg-accent-soft/30 p-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-accent">{deskerLabel}</p>
+                  <span className="rounded-full bg-accent px-1.5 py-0.2 text-[9px] font-semibold text-accent-fg">24/7</span>
+                </div>
+                <div className="mt-1.5 flex items-start gap-2 font-medium text-ink leading-relaxed">
+                  <Check className="mt-0.5 size-3.5 shrink-0 text-positive" aria-hidden />
+                  <span>{item.desker}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

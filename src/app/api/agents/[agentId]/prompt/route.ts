@@ -4,6 +4,7 @@ import { toStringArray } from "@/lib/agent-fields";
 import { buildSystemPrompt } from "@/lib/agent-prompt";
 import { toolDefinitionsFor } from "@/lib/tools/registry";
 import { buildRunPrompt } from "@/lib/work/prompt";
+import { effectiveContext } from "@/lib/work/context";
 import { WORK_TOOL_IDS, WORK_TOOL_METADATA, scopeTools } from "@/lib/work/tools";
 import { findIntegration, resolveEmail } from "@/lib/work/integrations";
 import { hasSearchProvider } from "@/lib/work/research";
@@ -26,7 +27,7 @@ export async function GET(_request: Request, { params }: Params) {
 
     const agent = await prisma.agent.findUnique({
       where: { id: agentId },
-      include: { project: { select: { organizationId: true } } },
+      include: { project: { select: { organizationId: true, context: true } } },
     });
     if (!agent) throw new HttpError(404, "That agent no longer exists.");
 
@@ -49,6 +50,11 @@ export async function GET(_request: Request, { params }: Params) {
       resolveEmail(agent.project.organizationId),
     ]);
 
+    const companyContext = effectiveContext({
+      projectContext: agent.project.context,
+      agentContext: scope?.context,
+    });
+
     const prompt = buildSystemPrompt({
       name: agent.name,
       jobTitle: agent.jobTitle,
@@ -60,12 +66,18 @@ export async function GET(_request: Request, { params }: Params) {
       documentNames: documents.map((document) => document.filename),
       colleagues,
       recall: null,
+      companyContext,
     });
 
     const workPrompt = buildRunPrompt({
       agent,
       scope: {
-        context: scope?.context ?? "",
+        // Exactly what a run would read: the project's context, then this
+        // agent's. The preview is worthless if it shows less than that.
+        context: effectiveContext({
+          projectContext: agent.project.context,
+          agentContext: scope?.context,
+        }),
         objectives: scope ? toStringArray(scope.objectives) : [],
       },
       autonomy: (scope?.autonomy as AutonomyMode) ?? "draft_only",

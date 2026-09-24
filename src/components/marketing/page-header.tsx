@@ -3,16 +3,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * The top of every public page that is not the landing page.
- *
- * The landing page opens on a full morning sky; these open on a band of the
- * same one, so arriving at the showcase or the terms from the front door does
- * not feel like arriving at a different company.
- *
- * The band's horizon is anchored to its bottom edge rather than set as a
- * percentage, because a header's height swings by hundreds of pixels as the
- * title and intro rewrap - see .sky-band. Everything inside the bottom
- * padding is therefore on the deep plateau, which clears 4.5:1 against white
- * at every width. Put nothing below that padding.
+ * Grounded editorial minimalism: paper neutral background with clean hairline rule.
  */
 export function PageHeader({
   title,

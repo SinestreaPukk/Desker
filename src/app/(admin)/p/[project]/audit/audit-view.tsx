@@ -2,9 +2,23 @@
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, ScrollText } from "lucide-react";
+import {
+  BadgeDollarSign,
+  CalendarClock,
+  Download,
+  FileText,
+  Mail,
+  Megaphone,
+  PencilLine,
+  ScrollText,
+  Search,
+  Settings2,
+  ShieldCheck,
+  StickyNote,
+  UserRound,
+  Briefcase,
+} from "lucide-react";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
@@ -19,14 +33,15 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { useAgents } from "@/hooks/use-admin-data";
 import { api, errorMessage } from "@/lib/api-client";
 import type { AuditEntryDto } from "@/app/api/audit/route";
-import { formatRelativeTime } from "@/lib/utils";
-
-const ACTOR_TONE: Record<string, "neutral" | "accent" | "positive" | "warning"> = {
-  user: "accent",
-  agent: "positive",
-  schedule: "warning",
-  system: "neutral",
-};
+import { cn } from "@/lib/utils";
+import {
+  actorWords,
+  dayHeading,
+  describeAuditEntry,
+  timeOfDay,
+  type AuditIcon,
+  type AuditTone,
+} from "@/lib/audit-copy";
 
 function buildQuery(params: Record<string, string>): string {
   const search = new URLSearchParams(
@@ -36,9 +51,10 @@ function buildQuery(params: Record<string, string>): string {
 }
 
 /**
- * Every recorded action, newest first: what an agent did with which tool and
- * what came back, what a person approved or changed, what a schedule started.
- * Filters narrow it; Export gives the same rows as CSV.
+ * Every recorded action as a day-by-day timeline: what an agent did, what a
+ * person decided, what a schedule started - each in a sentence, with the raw
+ * row one disclosure away. Filters narrow it; Export gives the same rows as
+ * CSV, unchanged, for anyone who needs the machine-readable version.
  */
 export function AuditView({ project, initialAgentId }: { project: string; initialAgentId: string }) {
   const [agentId, setAgentId] = React.useState(initialAgentId);
@@ -63,7 +79,7 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
     <Page>
       <PageHeader
         title="Audit log"
-        description="Everything your agents did, tool by tool, and everything a person decided. Nothing here can be edited."
+        description="Everything your agents did and everything a person decided, newest first. Nothing here can be edited or deleted."
         actions={
           <Button asChild variant="secondary" size="sm">
             <a href={exportHref} download>
@@ -114,7 +130,7 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
             id="audit-action"
             value={action}
             onChange={(e) => setAction(e.target.value)}
-            placeholder="Action, e.g. tool.called"
+            placeholder="What happened…"
             className="w-48"
           />
           {/* These two were labelled sr-only, which left a sighted reader two
@@ -140,81 +156,132 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
         ) : query.data.length === 0 ? (
           <EmptyState
             icon={ScrollText}
-            title="No entries match"
-            description="Sign-ups, project changes, every tool an agent calls, and every approval are recorded here as they happen."
+            title="Nothing recorded in this range"
+            description="Every task an agent runs, everything it looks up or writes, and every decision a person makes is recorded here as it happens."
           />
         ) : (
-          <Panel className="overflow-x-auto">
-            <table className="w-full min-w-[56rem] table-fixed text-left text-sm">
-              <thead>
-                <tr className="border-b border-line">
-                  <th scope="col" className="w-20 px-3 py-2 meta font-medium">When</th>
-                  <th scope="col" className="w-40 px-3 py-2 meta font-medium">Who</th>
-                  <th scope="col" className="w-64 px-3 py-2 meta font-medium">Action</th>
-                  <th scope="col" className="w-44 px-3 py-2 meta font-medium">Target</th>
-                  <th scope="col" className="px-3 py-2 meta font-medium">Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {query.data.map((entry) => (
-                  <AuditRow key={entry.id} entry={entry} />
-                ))}
-              </tbody>
-            </table>
-          </Panel>
+          <Timeline entries={query.data} />
         )}
       </PageBody>
     </Page>
   );
 }
 
-function AuditRow({ entry }: { entry: AuditEntryDto }) {
-  const meta = entry.metadata ?? {};
-  const tool = typeof meta.tool === "string" ? meta.tool : null;
-  const ok = typeof meta.ok === "boolean" ? meta.ok : null;
-  const detail =
-    typeof meta.result === "string"
-      ? meta.result
-      : typeof meta.summary === "string"
-        ? meta.summary
-        : typeof meta.reason === "string"
-          ? meta.reason
-          : typeof meta.error === "string"
-            ? meta.error
-            : null;
+const TONE_CLASS: Record<AuditTone, string> = {
+  neutral: "border-line bg-surface-2 text-ink-muted",
+  accent: "border-accent-line/70 bg-accent-soft text-accent-soft-fg",
+  positive: "border-positive-line/70 bg-positive-soft text-positive",
+  warning: "border-warning-line/70 bg-warning-soft text-warning",
+  danger: "border-danger-line/70 bg-danger-soft text-danger",
+};
+
+const ICONS: Record<AuditIcon, typeof Search> = {
+  research: Search,
+  documents: FileText,
+  draft: PencilLine,
+  send: Mail,
+  publish: Megaphone,
+  approval: ShieldCheck,
+  person: UserRound,
+  task: Briefcase,
+  schedule: CalendarClock,
+  settings: Settings2,
+  billing: BadgeDollarSign,
+  note: StickyNote,
+};
+
+/**
+ * The log as a day-by-day timeline: what happened, in words, at what time.
+ * The row behind it - the verb, the target, the payload - is one disclosure
+ * away for whoever needs it, and nobody else has to read it.
+ */
+function Timeline({ entries }: { entries: AuditEntryDto[] }) {
+  const now = new Date();
+  const days: { heading: string; rows: AuditEntryDto[] }[] = [];
+  for (const entry of entries) {
+    const heading = dayHeading(entry.at, now);
+    const last = days.at(-1);
+    if (last?.heading === heading) last.rows.push(entry);
+    else days.push({ heading, rows: [entry] });
+  }
+
   return (
-    <tr className="align-top transition-colors hover:bg-surface-2/60">
-      <td className="whitespace-nowrap px-3 py-2 text-ink-muted" title={entry.at}>
-        {formatRelativeTime(entry.at)}
-      </td>
-      <td className="whitespace-nowrap px-3 py-2">
-        <Badge tone={ACTOR_TONE[entry.actorType] ?? "neutral"} className="mr-1.5">
-          {entry.actorType}
-        </Badge>
-        <span className="text-ink">{entry.actorName ?? entry.actorId ?? "—"}</span>
-      </td>
-      <td className="px-3 py-2">
-        <code className="font-mono text-xs text-ink">{entry.action}</code>
-        {tool ? (
-          <span className={`ml-1.5 font-mono text-xs ${ok === false ? "text-danger" : "text-ink-muted"}`}>
-            {tool}
-            {ok === false ? " ✗" : ""}
-            {meta.gated ? " · gated" : ""}
-          </span>
+    <div className="space-y-5">
+      {days.map((day) => (
+        <section key={day.heading}>
+          <h2 className="meta mb-2 px-1">{day.heading}</h2>
+          <Panel className="divide-y divide-line">
+            {day.rows.map((entry) => (
+              <AuditRow key={entry.id} entry={entry} />
+            ))}
+          </Panel>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function AuditRow({ entry }: { entry: AuditEntryDto }) {
+  const described = describeAuditEntry(entry);
+  const Icon = ICONS[described.icon];
+  const hasPayload = entry.metadata && Object.keys(entry.metadata).length > 0;
+
+  return (
+    <div className="flex items-start gap-3 px-4 py-3">
+      <span
+        aria-hidden
+        className={cn(
+          "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border [&_svg]:size-4",
+          TONE_CLASS[described.tone],
+        )}
+      >
+        <Icon />
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-sm text-ink">{described.title}</p>
+        {described.detail ? (
+          <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">{described.detail}</p>
         ) : null}
-      </td>
-      <td className="px-3 py-2 text-xs text-ink-muted">
-        {entry.targetType ? `${entry.targetType} ${entry.targetId?.slice(-6) ?? ""}` : "—"}
-        {typeof meta.trigger === "string" ? ` · ${meta.trigger}` : ""}
-      </td>
-      <td className="max-w-md px-3 py-2">
-        {meta.input && typeof meta.input === "object" ? (
-          <pre className="mb-1 whitespace-pre-wrap break-all font-mono text-xs text-ink-muted">
-            {JSON.stringify(meta.input)}
-          </pre>
+        <p className="mt-1 text-xs text-ink-subtle">{actorWords(entry)}</p>
+
+        {hasPayload ? (
+          <details className="mt-1.5">
+            <summary className="cursor-pointer text-xs text-ink-subtle hover:text-ink">
+              View technical details
+            </summary>
+            <dl className="mt-1.5 space-y-1 rounded-md border border-line bg-surface-2/60 p-2.5 text-xs">
+              <div className="flex gap-2">
+                <dt className="text-ink-subtle">Event</dt>
+                <dd className="font-mono text-ink">{entry.action}</dd>
+              </div>
+              {entry.targetType ? (
+                <div className="flex gap-2">
+                  <dt className="text-ink-subtle">Target</dt>
+                  <dd className="font-mono text-ink">
+                    {entry.targetType} {entry.targetId ?? ""}
+                  </dd>
+                </div>
+              ) : null}
+              <div className="flex gap-2">
+                <dt className="text-ink-subtle">Recorded</dt>
+                <dd className="text-ink">{new Date(entry.at).toISOString()}</dd>
+              </div>
+              <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-[0.7rem] text-ink-muted">
+                {JSON.stringify(entry.metadata, null, 2)}
+              </pre>
+            </dl>
+          </details>
         ) : null}
-        {detail ? <p className="line-clamp-3 whitespace-pre-wrap text-xs text-ink">{detail}</p> : null}
-      </td>
-    </tr>
+      </div>
+
+      <time
+        className="shrink-0 whitespace-nowrap text-xs tabular-nums text-ink-muted"
+        dateTime={entry.at}
+        title={new Date(entry.at).toLocaleString()}
+      >
+        {timeOfDay(entry.at)}
+      </time>
+    </div>
   );
 }

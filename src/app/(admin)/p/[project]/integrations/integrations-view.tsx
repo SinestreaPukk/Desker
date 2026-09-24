@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Mail, Plug, Trash2, Webhook } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Mail, MinusCircle, Plug, Trash2, Webhook } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import {
@@ -22,7 +23,10 @@ import {
   useIntegrations,
 } from "@/hooks/use-work-data";
 import { ApiError, errorMessage } from "@/lib/api-client";
-import { formatRelativeTime } from "@/lib/utils";
+import { integrationInputSchema } from "@/lib/work/validation";
+import { validate } from "@/lib/form-errors";
+import { cn, formatRelativeTime } from "@/lib/utils";
+import type { IntegrationDto } from "@/lib/work/serialize";
 
 /**
  * Where an organisation connects the outside world. Two connectors for now:
@@ -39,7 +43,7 @@ export function IntegrationsView({ project }: { project: string }) {
     <Page>
       <PageHeader
         title="Integrations"
-        description="Where agents deliver work that leaves the building. Shared by every project in your organisation."
+        description="The two ways work can leave Desker. Both are shared by every project in your organisation, and both wait for your approval first."
       />
       <PageBody className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-5">
@@ -50,8 +54,10 @@ export function IntegrationsView({ project }: { project: string }) {
         <Panel>
           <PanelHeader>
             <div>
-              <PanelTitle>Connected</PanelTitle>
-              <PanelDescription>Agents use the oldest enabled connector of each kind.</PanelDescription>
+              <PanelTitle>Your connections</PanelTitle>
+              <PanelDescription>
+                What each one means for your agents right now.
+              </PanelDescription>
             </div>
           </PanelHeader>
           <PanelBody>
@@ -60,29 +66,14 @@ export function IntegrationsView({ project }: { project: string }) {
             ) : list.error ? (
               <ErrorState message={errorMessage(list.error)} onRetry={() => void list.refetch()} />
             ) : list.data && list.data.length > 0 ? (
-              <ul className="divide-y divide-line">
+              <ul className="space-y-2">
                 {list.data.map((row) => (
-                  <li key={row.id} className="flex items-center gap-3 py-3 text-sm">
-                    {row.type === "webhook" ? (
-                      <Webhook className="size-4 text-accent" aria-hidden />
-                    ) : (
-                      <Mail className="size-4 text-accent" aria-hidden />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-ink">{row.name}</p>
-                      <p className="truncate text-xs text-ink-muted">
-                        {row.summary} · added {formatRelativeTime(row.createdAt)}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-label={`Remove ${row.name}`}
-                      onClick={() => setRemoving({ id: row.id, name: row.name })}
-                      disabled={remove.isPending}
-                    >
-                      <Trash2 aria-hidden />
-                    </Button>
+                  <li key={row.id}>
+                    <ConnectionRow
+                      row={row}
+                      onRemove={() => setRemoving({ id: row.id, name: row.name })}
+                      removing={remove.isPending}
+                    />
                   </li>
                 ))}
               </ul>
@@ -90,7 +81,7 @@ export function IntegrationsView({ project }: { project: string }) {
               <EmptyState
                 icon={Plug}
                 title="Nothing connected"
-                description="Until a connector exists, agents leave posts and emails as drafts and say so in their reports."
+                description="Until something is connected, agents write posts and emails as drafts and say so in their reports. Nothing breaks - it simply stays inside Desker."
               />
             )}
           </PanelBody>
@@ -100,7 +91,7 @@ export function IntegrationsView({ project }: { project: string }) {
         open={removing !== null}
         onOpenChange={(open) => !open && setRemoving(null)}
         title={`Remove ${removing?.name ?? "this integration"}?`}
-        description="Agents lose the ability to use it immediately. Any post or email already waiting for approval will fail to send until a replacement is connected."
+        description="Agents stop being able to use it straight away, and anything already waiting for your approval will fail to send until you connect another one."
         confirmLabel="Remove"
         onConfirm={async () => {
           if (!removing) return;
@@ -110,6 +101,84 @@ export function IntegrationsView({ project }: { project: string }) {
         }}
       />
     </Page>
+  );
+}
+
+const STATE_LOOK = {
+  connected: {
+    label: "Connected",
+    tone: "positive" as const,
+    icon: CheckCircle2,
+    className: "border-positive-line/70 bg-positive-soft text-positive",
+  },
+  attention: {
+    label: "Needs attention",
+    tone: "warning" as const,
+    icon: AlertTriangle,
+    className: "border-warning-line/70 bg-warning-soft text-warning",
+  },
+  disconnected: {
+    label: "Disconnected",
+    tone: "neutral" as const,
+    icon: MinusCircle,
+    className: "border-line bg-surface-2 text-ink-muted",
+  },
+};
+
+/**
+ * One connection, in one of three plain states, each saying what it costs the
+ * agents that use it. No status codes, no unexplained red dot.
+ */
+function ConnectionRow({
+  row,
+  onRemove,
+  removing,
+}: {
+  row: IntegrationDto;
+  onRemove: () => void;
+  removing: boolean;
+}) {
+  const look = STATE_LOOK[row.state];
+  const StateIcon = look.icon;
+  const KindIcon = row.type === "webhook" ? Webhook : Mail;
+
+  return (
+    <div className="rounded-xl border border-line p-3 transition-colors hover:bg-surface-2/50">
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 text-ink-muted"
+        >
+          <KindIcon className="size-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-semibold text-ink">{row.name}</p>
+            <Badge tone={look.tone}>
+              <StateIcon aria-hidden />
+              {look.label}
+            </Badge>
+          </div>
+          <p className={cn("mt-1 text-xs leading-relaxed", row.state === "connected" ? "text-ink-muted" : "text-ink")}>
+            {row.consequence}
+          </p>
+          <p className="mt-1 truncate text-xs text-ink-subtle">
+            {row.summary} · added {formatRelativeTime(row.createdAt)}
+            {row.lastDeliveryAt ? ` · last used ${formatRelativeTime(row.lastDeliveryAt)}` : ""}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={`Remove ${row.name}`}
+          onClick={onRemove}
+          disabled={removing}
+          className="text-ink-subtle hover:bg-danger-soft/50 hover:text-danger"
+        >
+          <Trash2 className="size-4" aria-hidden />
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -123,10 +192,19 @@ function WebhookForm({ project }: { project: string }) {
     event.preventDefault();
     setError(null);
     setFieldErrors({});
+    // The same schema the route parses, so the message is the one the server
+    // would have sent - just without the round trip.
+    const checked = validate(integrationInputSchema, { type: "webhook", ...form });
+    if (!checked.ok) {
+      setFieldErrors(checked.fieldErrors);
+      return;
+    }
     try {
       await create.mutateAsync({ type: "webhook", ...form });
       setForm({ name: "Publishing webhook", url: "", secret: "" });
-      toast.success("Publishing webhook connected", { description: "Agents can publish_post through it once you approve a draft." });
+      toast.success("Publishing connected", {
+        description: "Agents can publish through it as soon as you approve a post.",
+      });
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(caught.message);
@@ -140,21 +218,30 @@ function WebhookForm({ project }: { project: string }) {
       <form onSubmit={submit}>
         <PanelHeader>
           <div>
-            <PanelTitle>Publishing webhook</PanelTitle>
+            <PanelTitle>Publish posts</PanelTitle>
             <PanelDescription>
-              <code>publish_post</code> sends the approved draft here as JSON. Point a Zapier or
-              Make catch hook at it, or your own endpoint, and route it to X, LinkedIn or a CMS.
-              Give the endpoint only the permission to create a post - never a token that can
-              read or delete. Set a signing secret and verify it on your side.
+              Approved posts are sent to an address you choose, as JSON. Point a Zapier or Make
+              catch hook at it, or your own endpoint, and send it on to LinkedIn, X or a CMS.
             </PanelDescription>
           </div>
         </PanelHeader>
-        <PanelBody className="space-y-4">
+        <PanelBody className="space-y-5">
           <FormError message={error} />
-          <Field label="Name" htmlFor="wh-name" error={fieldErrors.name?.[0]}>
+          <Field
+            label="Name"
+            htmlFor="wh-name"
+            hint="How it appears in this list. For example: LinkedIn via Zapier."
+            error={fieldErrors.name?.[0]}
+          >
             <Input id="wh-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </Field>
-          <Field label="URL" htmlFor="wh-url" required error={fieldErrors.url?.[0]}>
+          <Field
+            label="Where to send posts"
+            htmlFor="wh-url"
+            required
+            hint="The address your automation listens on. Give it permission to post and nothing else."
+            error={fieldErrors.url?.[0]}
+          >
             <Input
               id="wh-url"
               value={form.url}
@@ -165,7 +252,7 @@ function WebhookForm({ project }: { project: string }) {
           <Field
             label="Signing secret"
             htmlFor="wh-secret"
-            hint="Optional. Deliveries carry an X-Desker-Signature header (HMAC-SHA256 of the body)."
+            hint="Optional. Set one and every delivery is signed, so your endpoint can ignore anything that is not from us."
             error={fieldErrors.secret?.[0]}
           >
             <Input
@@ -178,8 +265,8 @@ function WebhookForm({ project }: { project: string }) {
           </Field>
         </PanelBody>
         <PanelFooter className="flex justify-end">
-          <Button type="submit" size="sm" disabled={create.isPending || !form.url.trim()}>
-            Connect webhook
+          <Button type="submit" size="sm" loading={create.isPending} disabled={create.isPending}>
+            Connect it
           </Button>
         </PanelFooter>
       </form>
@@ -197,10 +284,17 @@ function EmailForm({ project }: { project: string }) {
     event.preventDefault();
     setError(null);
     setFieldErrors({});
+    const checked = validate(integrationInputSchema, { type: "email", ...form });
+    if (!checked.ok) {
+      setFieldErrors(checked.fieldErrors);
+      return;
+    }
     try {
       await create.mutateAsync({ type: "email", ...form });
       setForm({ name: "Resend", from: "", apiKey: "" });
-      toast.success("Email connected", { description: "Agents can send_email once you approve a draft." });
+      toast.success("Email connected", {
+        description: "Agents can send through it as soon as you approve an email.",
+      });
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(caught.message);
@@ -214,18 +308,22 @@ function EmailForm({ project }: { project: string }) {
       <form onSubmit={submit}>
         <PanelHeader>
           <div>
-            <PanelTitle>Email (Resend)</PanelTitle>
+            <PanelTitle>Send email</PanelTitle>
             <PanelDescription>
-              <code>send_email</code> goes through Resend. The from-address must be on a domain
-              verified in your Resend account. Create a key with <em>sending access</em> only,
-              restricted to that domain: it is stored encrypted, and even so it should not be
-              able to do more than send.
+              Approved emails go out through Resend, from an address on a domain you have
+              verified there.
             </PanelDescription>
           </div>
         </PanelHeader>
-        <PanelBody className="space-y-4">
+        <PanelBody className="space-y-5">
           <FormError message={error} />
-          <Field label="From" htmlFor="em-from" required error={fieldErrors.from?.[0]}>
+          <Field
+            label="Send from"
+            htmlFor="em-from"
+            required
+            hint="Must be on a domain you have verified in Resend, or nothing will send."
+            error={fieldErrors.from?.[0]}
+          >
             <Input
               id="em-from"
               value={form.from}
@@ -233,7 +331,13 @@ function EmailForm({ project }: { project: string }) {
               placeholder="Mia at Northwind <mia@northwind.example>"
             />
           </Field>
-          <Field label="API key" htmlFor="em-key" required error={fieldErrors.apiKey?.[0]}>
+          <Field
+            label="Resend API key"
+            htmlFor="em-key"
+            required
+            hint="Create one with sending access only. It is stored encrypted and never shown again."
+            error={fieldErrors.apiKey?.[0]}
+          >
             <Input
               id="em-key"
               type="password"
@@ -245,8 +349,8 @@ function EmailForm({ project }: { project: string }) {
           </Field>
         </PanelBody>
         <PanelFooter className="flex justify-end">
-          <Button type="submit" size="sm" disabled={create.isPending || !form.from.trim() || !form.apiKey.trim()}>
-            Connect email
+          <Button type="submit" size="sm" loading={create.isPending} disabled={create.isPending}>
+            Connect it
           </Button>
         </PanelFooter>
       </form>

@@ -147,10 +147,6 @@ export const DEFAULT_MAX_TOKENS = 8192;
 export const PROVIDER_IDS = ["anthropic", "openai"] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
-export function isProviderId(value: string): value is ProviderId {
-  return (PROVIDER_IDS as readonly string[]).includes(value);
-}
-
 /**
  * Lazily imported so that a deployment with only an Anthropic key never loads
  * (or needs) the OpenAI client, and vice versa.

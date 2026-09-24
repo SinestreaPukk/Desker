@@ -44,7 +44,7 @@ export default function ShowcasePage() {
                 href={`#${role.id}`}
                 className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-line bg-surface px-3 py-1.5 text-sm text-ink-muted transition-colors hover:border-accent-line hover:text-ink"
               >
-                <TemplateIcon icon={role.icon} className="size-3.5" />
+                <TemplateIcon icon={role.icon} className="size-4" />
                 {role.name}
               </Link>
             </li>
@@ -59,8 +59,8 @@ export default function ShowcasePage() {
               <Reveal>
                 <div className="grid gap-6 rounded-panel border border-line bg-surface p-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:p-8">
                   <div className="flex flex-col">
-                    <span className="flex size-10 items-center justify-center rounded-md bg-accent-soft text-accent-soft-fg">
-                      <TemplateIcon icon={role.icon} className="size-5" />
+                    <span className="flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg shadow-xs">
+                      <TemplateIcon icon={role.icon} className="size-6" />
                     </span>
                     <h2 className="mt-4 text-xl font-medium tracking-tight text-ink">{role.name}</h2>
                     <p className="mt-1 text-sm text-ink-muted">
@@ -107,8 +107,8 @@ export default function ShowcasePage() {
           somewhere rather than just stopping. */}
       <section className="sky relative overflow-hidden">
         <NightSky uid="cta-sky" />
-        <div className="relative mx-auto max-w-6xl px-4 pb-32 pt-20 text-center sm:px-6 sm:pb-40 sm:pt-24">
-          <h2 className="mx-auto max-w-3xl font-display text-title text-balance text-[var(--sky-ink)]">
+        <div className="relative mx-auto max-w-6xl px-4 pb-40 pt-24 text-center sm:px-6 sm:pb-56 sm:pt-32">
+          <h2 className="mx-auto max-w-3xl font-display text-hero text-balance text-[var(--sky-ink)]">
             {LANDING.cta.heading}
           </h2>
           <p className="mt-5 text-lg font-medium text-[var(--sky-ink)]">{LANDING.cta.body}</p>

@@ -80,29 +80,3 @@ export function Reveal({
     </ready.mod.MotionReveal>
   );
 }
-
-/** Decorative only: wraps background shapes so they drift as the page scrolls. */
-export function Parallax({
-  children,
-  distance = 120,
-  className,
-}: {
-  children: React.ReactNode;
-  distance?: number;
-  className?: string;
-}) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const ready = useMotion(ref);
-  if (!ready) {
-    return (
-      <div ref={ref} className={className} aria-hidden>
-        {children}
-      </div>
-    );
-  }
-  return (
-    <ready.mod.MotionParallax distance={distance} className={className}>
-      {children}
-    </ready.mod.MotionParallax>
-  );
-}

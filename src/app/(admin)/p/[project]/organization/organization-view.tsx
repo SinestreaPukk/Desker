@@ -5,6 +5,7 @@ import { Copy, CreditCard, Mail, Trash2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
+import { ProjectContextPanel } from "@/components/builder/project-context-panel";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -71,6 +72,8 @@ export function OrganizationView({
       />
       <PageBody className="grid gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="space-y-5">
+          {/* The same shared context as the roster's, edited from either place. */}
+          <ProjectContextPanel project={project} />
           <MembersPanel organizationId={organizationId} currentUserId={currentUserId} isOwner={isOwner} />
           {isAdmin ? <InvitesPanel organizationId={organizationId} isOwner={isOwner} /> : null}
         </div>
@@ -125,15 +128,18 @@ function MembersPanel({
         ) : members.error ? (
           <ErrorState message={errorMessage(members.error)} onRetry={() => void members.refetch()} />
         ) : (
-          <ul className="divide-y divide-line">
+          <ul className="space-y-1">
             {members.data.map((member) => {
               const isSelf = member.userId === currentUserId;
               return (
-                <li key={member.userId} className="flex flex-wrap items-center gap-3 py-3 text-sm">
+                <li key={member.userId} className="group flex flex-wrap items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-surface-2/60 text-sm">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-soft-fg ring-1 ring-accent-line">
+                    {(member.name ?? member.email).slice(0, 2).toUpperCase()}
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-ink">
+                    <p className="font-semibold text-ink">
                       {member.name ?? member.email}
-                      {isSelf ? <span className="ml-1.5 text-xs text-ink-muted">(you)</span> : null}
+                      {isSelf ? <span className="ml-1.5 text-xs text-ink-muted font-normal">(you)</span> : null}
                     </p>
                     <p className="truncate text-xs text-ink-muted">
                       {member.email} · joined {formatRelativeTime(member.joinedAt)}
@@ -172,6 +178,7 @@ function MembersPanel({
                         setRemoving({ userId: member.userId, label: member.name ?? member.email, self: isSelf })
                       }
                       disabled={remove.isPending}
+                      className="text-ink-subtle hover:bg-danger-soft/50 hover:text-danger"
                     >
                       <Trash2 aria-hidden />
                     </Button>
@@ -256,9 +263,9 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
             </PanelDescription>
           </div>
         </PanelHeader>
-        <PanelBody className="space-y-4">
+        <PanelBody className="space-y-5">
           <FormError message={error} />
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
             <Field label="Email" htmlFor="invite-email" error={fieldErrors.email?.[0]}>
               <Input
                 id="invite-email"
@@ -268,12 +275,9 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
                 placeholder="teammate@company.com"
               />
             </Field>
-            <div>
-              <label htmlFor="invite-role" className="text-sm font-medium text-ink">
-                Role
-              </label>
+            <Field label="Role" htmlFor="invite-role" hint={ROLE_BLURB[role]}>
               <Select value={role} onValueChange={setRole}>
-                <SelectTrigger id="invite-role" className="mt-1.5 w-36">
+                <SelectTrigger id="invite-role" className="w-36">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -282,8 +286,7 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
                   {isOwner ? <SelectItem value="owner">owner</SelectItem> : null}
                 </SelectContent>
               </Select>
-              <p className="mt-1 text-xs text-ink-muted">{ROLE_BLURB[role]}</p>
-            </div>
+            </Field>
           </div>
           {last ? (
             <div className="rounded-lg border border-positive-line bg-positive-soft/40 p-3 text-sm">
@@ -302,7 +305,15 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
             </div>
           ) : null}
 
-          {invites.data && invites.data.length > 0 ? (
+          {invites.isPending ? (
+            <LoadingRows count={1} />
+          ) : invites.error ? (
+            <ErrorState
+              message={errorMessage(invites.error)}
+              onRetry={() => void invites.refetch()}
+              retrying={invites.isRefetching}
+            />
+          ) : invites.data && invites.data.length > 0 ? (
             <ul className="divide-y divide-line border-t border-line pt-1">
               {invites.data.map((invite) => (
                 <li key={invite.id} className="flex items-center gap-3 py-2.5 text-sm">
@@ -330,10 +341,19 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
                 </li>
               ))}
             </ul>
-          ) : null}
+          ) : (
+            <p className="border-t border-line pt-3 text-xs text-ink-muted">
+              No invitations are outstanding. Anyone you invite appears here until they accept.
+            </p>
+          )}
         </PanelBody>
         <PanelFooter className="flex justify-end">
-          <Button type="submit" size="sm" disabled={create.isPending || !email.trim()}>
+          <Button
+            type="submit"
+            size="sm"
+            variant={email.trim() ? "primary" : "secondary"}
+            disabled={create.isPending || !email.trim()}
+          >
             <UserPlus aria-hidden />
             Send invitation
           </Button>
@@ -364,21 +384,21 @@ function Meter({ label, used, limit, money }: { label: string; used: number; lim
     return (
       <div className="flex items-baseline justify-between text-sm">
         <span className="text-ink">{label}</span>
-        <span className="tabular-nums text-ink-muted">{fmt(used)} · no limit</span>
+        <span className="tabular-nums font-mono text-xs text-ink-muted">{fmt(used)} · no limit</span>
       </div>
     );
   }
   return (
-    <div>
+    <div className="space-y-1.5">
       <div className="flex items-baseline justify-between text-sm">
         <span className="text-ink">{label}</span>
-        <span className={`tabular-nums ${ratio >= 1 ? "text-danger" : "text-ink-muted"}`}>
+        <span className={`tabular-nums font-mono text-xs ${ratio >= 1 ? "font-semibold text-danger" : "text-ink-muted"}`}>
           {fmt(used)} / {fmt(limit)}
         </span>
       </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-3">
+      <div className="h-2 overflow-hidden rounded-full bg-surface-3">
         <div
-          className={`h-full rounded-full ${ratio >= 1 ? "bg-danger" : ratio >= 0.8 ? "bg-warning" : "bg-accent"}`}
+          className={`h-full rounded-full transition-all duration-500 ${ratio >= 1 ? "bg-danger" : ratio >= 0.8 ? "bg-warning" : "bg-accent"}`}
           style={{ width: `${ratio * 100}%` }}
         />
       </div>
@@ -456,17 +476,29 @@ function BillingPanel({
       </PanelHeader>
       <PanelBody className="space-y-4">
         <FormError message={note} />
-        <p className="text-xs text-ink-muted">Usage this month ({usage.period}). Limits are enforced on the server.</p>
-        <Meter label="Published agents" used={usage.publishedAgents} limit={plan.limits.publishedAgents} />
-        <Meter label="Runs" used={usage.actionItems} limit={plan.limits.actionItemsPerMonth} />
-        <Meter label="Conversations" used={usage.conversations} limit={plan.limits.conversationsPerMonth} />
-        <Meter label="Model spend" used={usage.modelCostUsd} limit={plan.limits.modelCostUsdPerMonth} money />
         <p className="text-xs text-ink-muted">
-          {(usage.inputTokens + usage.outputTokens).toLocaleString()} tokens · {usage.searches} web searches
-          {plan.limits.runsPerHour < Number.MAX_SAFE_INTEGER
-            ? ` · rate: ${plan.limits.runsPerHour} runs/hour, ${plan.limits.chatMessagesPerMinute} client messages/minute`
-            : ""}
+          What you have used this month. Anything past a limit is refused rather than billed.
         </p>
+        <Meter label="Agents your clients can reach" used={usage.publishedAgents} limit={plan.limits.publishedAgents} />
+        <Meter label="Tasks done on their own" used={usage.actionItems} limit={plan.limits.actionItemsPerMonth} />
+        <Meter label="Client conversations" used={usage.conversations} limit={plan.limits.conversationsPerMonth} />
+        <Meter label="Estimated cost of the work" used={usage.modelCostUsd} limit={plan.limits.modelCostUsdPerMonth} money />
+        {plan.limits.runsPerHour < Number.MAX_SAFE_INTEGER ? (
+          <p className="text-xs text-ink-muted">
+            Busy periods are smoothed out: up to {plan.limits.runsPerHour} tasks an hour and{" "}
+            {plan.limits.chatMessagesPerMinute} client messages a minute.
+          </p>
+        ) : null}
+        {/* The figures behind the estimate, for whoever is checking an invoice. */}
+        <details className="text-xs">
+          <summary className="cursor-pointer text-ink-muted hover:text-ink">
+            View technical details
+          </summary>
+          <p className="mt-1.5 rounded-md border border-line bg-surface-2/60 p-2.5 text-ink-muted">
+            {usage.period} · {(usage.inputTokens + usage.outputTokens).toLocaleString()} model tokens ·{" "}
+            {usage.searches} web searches. Limits are enforced on the server.
+          </p>
+        </details>
 
         {isOwner ? (
           <div className="border-t border-line pt-4">
@@ -558,7 +590,12 @@ function RenamePanel({ organizationId, name }: { organizationId: string; name: s
           </Field>
         </PanelBody>
         <PanelFooter className="flex justify-end">
-          <Button type="submit" size="sm" disabled={rename.isPending || !value.trim() || value.trim() === name}>
+          <Button
+            type="submit"
+            size="sm"
+            variant={value.trim() && value.trim() !== name ? "primary" : "secondary"}
+            disabled={rename.isPending || !value.trim() || value.trim() === name}
+          >
             Save
           </Button>
         </PanelFooter>

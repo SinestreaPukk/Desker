@@ -44,14 +44,6 @@ export function useAgents(project: string) {
   });
 }
 
-export function useAgent(agentId: string | null) {
-  return useQuery({
-    queryKey: keys.agent(agentId ?? ""),
-    queryFn: () => api<AgentDetailDto>(`/api/agents/${agentId}`),
-    enabled: Boolean(agentId),
-  });
-}
-
 export function useCreateAgent(project: string) {
   const client = useQueryClient();
   return useMutation({
@@ -252,6 +244,8 @@ export function useSetConversationStatus() {
 
 export interface AnalyticsResponse {
   days: number;
+  /** The same counts over the window before this one, for the captions. */
+  previous: { conversations: number; runs: number };
   totals: {
     conversations: number;
     escalated: number;
@@ -411,6 +405,17 @@ export function useAdminLiveFeed() {
         return;
       }
       if (!payload?.type || payload.type === "ready") return;
+
+      // A suggestion or a digest touches only its own tab; everything else can
+      // move a conversation, an issue count and an agent row at once.
+      if (payload.type.startsWith("suggestion.")) {
+        void client.invalidateQueries({ queryKey: ["suggestions"] });
+        return;
+      }
+      if (payload.type.startsWith("digest.")) {
+        void client.invalidateQueries({ queryKey: ["digests"] });
+        return;
+      }
 
       void client.invalidateQueries({ queryKey: ["issues"] });
       void client.invalidateQueries({ queryKey: ["conversations"] });

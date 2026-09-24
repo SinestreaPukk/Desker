@@ -112,6 +112,23 @@ const landingSchema = z.object({
       .max(8),
   }),
   roles: z.object({ ...sectionHead, cta: z.string().min(1).max(24) }),
+  comparison: z
+    .object({
+      ...sectionHead,
+      competitorLabel: z.string().min(1).max(48),
+      deskerLabel: z.string().min(1).max(48),
+      items: z
+        .array(
+          z.object({
+            dimension: z.string().min(1).max(48),
+            generic: z.string().min(1).max(140),
+            desker: z.string().min(1).max(140),
+          }),
+        )
+        .min(3)
+        .max(8),
+    })
+    .optional(),
   /**
    * Outcome numbers. A value stays null until it is measured - the section is
    * not shown in production while any value is missing. Never an estimate.
@@ -134,12 +151,20 @@ const landingSchema = z.object({
     popularPlan: z.enum(PLAN_IDS),
     popularLabel: z.string().min(1).max(24),
     footnote: z.string(),
+    /** Under the cards, where the reader is deciding: the money reassurance. */
+    reassurance: z.string().max(140).optional(),
   }),
   faq: z.object({
     ...sectionHead,
     items: z.array(z.object({ q: z.string().min(1), a: z.string().min(1) })).min(3).max(10),
   }),
-  cta: z.object({ heading: z.string(), body: z.string(), button: link }),
+  cta: z.object({
+    heading: z.string(),
+    body: z.string(),
+    button: link,
+    secondary: link.optional(),
+    microcopy: z.string().max(90).optional(),
+  }),
 });
 
 const showcaseSchema = z.object({
@@ -182,6 +207,14 @@ export const TEMPLATE_ICONS = [
   "handshake",
   "users",
   "sparkles",
+  "life-buoy",
+  "compass",
+  "file-search",
+  "trending-up",
+  "briefcase",
+  "terminal",
+  "target",
+  "heart-handshake",
 ] as const;
 
 const templateSchema = z.object({

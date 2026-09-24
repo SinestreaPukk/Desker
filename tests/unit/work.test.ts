@@ -77,6 +77,8 @@ describe("work tools", () => {
     expect(WORK_TOOL_RISK.send_email).toBe("external");
     expect(WORK_TOOL_RISK.draft_content).toBe("draft");
     expect(WORK_TOOL_RISK.web_research).toBe("read");
+    expect(WORK_TOOL_RISK.delegate_to_colleague).toBe("internal");
+    expect(WORK_TOOL_RISK.suggest_opportunity).toBe("draft");
   });
 });
 

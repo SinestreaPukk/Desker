@@ -1,9 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
-  ArrowLeft,
   ArrowLeftRight,
   Bug,
   CheckCircle2,
@@ -20,6 +18,7 @@ import {
 } from "lucide-react";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, SeverityBadge } from "@/components/ui/badge";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/ui/states";
@@ -36,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
+import { EmptyState, ErrorState, LoadingRows, Skeleton } from "@/components/ui/states";
 import { MessageText } from "@/components/chat/message-text";
 import {
   type ConversationDetail,
@@ -99,12 +98,13 @@ export function ConversationDetail({
   return (
     <div className="flex min-h-full flex-col">
       <header className="border-b border-line px-4 py-4 sm:px-6">
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-3">
-          <Link href={`/p/${project}/inbox`}>
-            <ArrowLeft aria-hidden />
-            Inbox
-          </Link>
-        </Button>
+        <Breadcrumbs
+          items={[
+            { label: "Inbox", href: `/p/${project}/inbox` },
+            { label: `Conversation with ${conversation.agent.name}` },
+          ]}
+          className="mb-3"
+        />
 
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -468,7 +468,7 @@ function ReplyBox({ conversation }: { conversation: ConversationDetail }) {
  * callback Tuesday", "check with finance before refunding").
  */
 function NotesPanel({ conversationId }: { conversationId: string }) {
-  const { data: notes, isPending } = useNotes(conversationId);
+  const { data: notes, isPending, error: loadError, refetch } = useNotes(conversationId);
   const add = useAddNote(conversationId);
   const [draft, setDraft] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
@@ -498,7 +498,17 @@ function NotesPanel({ conversationId }: { conversationId: string }) {
       </PanelHeader>
       <PanelBody className="space-y-3">
         {isPending ? (
-          <p className="text-xs text-ink-muted">Loading…</p>
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-3/4" />
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-surface-2/50 p-3">
+            <p className="text-sm text-ink-muted">Notes could not be loaded.</p>
+            <Button type="button" size="sm" variant="secondary" onClick={() => void refetch()}>
+              Try again
+            </Button>
+          </div>
         ) : notes!.length === 0 ? (
           <p className="text-sm leading-relaxed text-ink-muted">
             Nothing yet. Leave context for whoever picks this up next — the

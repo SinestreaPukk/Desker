@@ -30,7 +30,12 @@ export function toActionItemDto(item: Row): ActionItemDto {
     status: item.status as ActionStatus,
     type: item.type,
     trigger: item.trigger,
-    summary: typeof result.summary === "string" ? result.summary : null,
+    headline: item.headline,
+    // The owner's summary is written a step after the run finishes, so a run
+    // still in flight falls back to the agent's own report rather than showing
+    // an empty row.
+    summary: item.summary ?? (typeof result.summary === "string" ? result.summary : null),
+    report: typeof result.summary === "string" ? result.summary : null,
     findings: (result.findings as ActionItemDto["findings"] | undefined) ?? [],
     external: (result.external as ActionItemDto["external"] | undefined) ?? null,
     pendingAction: (item.pendingAction as unknown as PendingAction | null) ?? null,

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { getStorage } from "@/lib/storage";
+import { storage } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -17,7 +17,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     // Remove the row first: an orphaned blob is recoverable, a chunk pointing at
     // a deleted file is not.
     await prisma.document.delete({ where: { id: documentId } });
-    await getStorage()
+    await storage
       .delete(document.storageKey)
       .catch((error) => console.error("[documents] blob cleanup failed", error));
 

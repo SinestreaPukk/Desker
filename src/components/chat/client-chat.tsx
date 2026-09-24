@@ -152,12 +152,14 @@ function ActiveChat({
 
   const initial = React.useMemo<ChatBubble[]>(
     () => [
-      ...(agent.welcomeMessage?.trim() && messages.length === 0
+      // The opening line is written from who the agent is, not configured:
+      // one less field to set up, and it can never go stale.
+      ...(messages.length === 0
         ? [
             {
               id: "greeting",
               role: "assistant" as const,
-              content: agent.welcomeMessage.trim(),
+              content: `Hi, I'm ${agent.name}${agent.jobTitle ? `, ${agent.jobTitle}` : ""}. How can I help?`,
             },
           ]
         : []),
@@ -173,7 +175,7 @@ function ActiveChat({
         rating: (message.rating === 1 ? 1 : message.rating === -1 ? -1 : null) as 1 | -1 | null,
       })),
     ],
-    [agent.welcomeMessage, messages],
+    [agent.name, agent.jobTitle, messages],
   );
 
   const rate = React.useCallback(

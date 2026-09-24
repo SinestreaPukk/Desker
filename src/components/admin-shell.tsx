@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { NewProjectDialog } from "@/components/new-project-dialog";
 import { FeedbackButton } from "@/components/feedback-dialog";
+import { HelpButton, HelpProvider } from "@/components/help/help-panel";
 import { UsageTracker } from "@/components/usage-tracker";
 import { useAdminLiveFeed, useIssues } from "@/hooks/use-admin-data";
 import { cn, initialsOf } from "@/lib/utils";
@@ -50,15 +51,30 @@ export interface OrganizationRef {
   role: string;
 }
 
-/** Section, not page: every nav item is a tab of the same workspace. */
-const NAV = [
-  { segment: "roster", label: "Roster", icon: Users },
-  { segment: "work", label: "Work", icon: Briefcase },
-  { segment: "inbox", label: "Inbox", icon: Inbox },
-  { segment: "insights", label: "Insights", icon: ChartNoAxesColumn },
-  { segment: "audit", label: "Audit log", icon: ScrollText },
-  { segment: "integrations", label: "Integrations", icon: Plug },
-  { segment: "organization", label: "Organisation", icon: Building2 },
+interface NavItem {
+  segment: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+}
+
+const NAV_GROUPS: { title: string; items: readonly NavItem[] }[] = [
+  {
+    title: "Workspace",
+    items: [
+      { segment: "roster", label: "Roster", icon: Users },
+      { segment: "work", label: "Work", icon: Briefcase },
+      { segment: "inbox", label: "Inbox", icon: Inbox },
+      { segment: "insights", label: "Insights", icon: ChartNoAxesColumn },
+    ],
+  },
+  {
+    title: "Configuration",
+    items: [
+      { segment: "integrations", label: "Integrations", icon: Plug },
+      { segment: "organization", label: "Organisation", icon: Building2 },
+      { segment: "audit", label: "Audit log", icon: ScrollText },
+    ],
+  },
 ] as const;
 
 export function AdminShell({
@@ -88,42 +104,56 @@ export function AdminShell({
   const base = `/p/${project.slug}`;
 
   const navLinks = (
-    <nav aria-label="Main" className="flex flex-col gap-1">
-      {NAV.map((item) => {
-        const Icon = item.icon;
-        const href = `${base}/${item.segment}`;
-        // The builder lives under /agents but belongs to the roster tab, so the
-        // highlight does not disappear when you open an agent.
-        const active =
-          pathname === href ||
-          pathname.startsWith(`${href}/`) ||
-          (item.segment === "roster" && pathname.startsWith(`${base}/agents`));
-        return (
-          <Link
-            key={item.segment}
-            href={href}
-            aria-current={active ? "page" : undefined}
-            onClick={() => setMobileNavOpen(false)}
-            className={cn(
-              "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-              active
-                ? "bg-accent-soft text-accent-soft-fg"
-                : "text-ink-muted hover:bg-surface hover:text-ink",
-            )}
-          >
-            <Icon className="size-4 shrink-0" aria-hidden />
-            {item.label}
-            {item.segment === "inbox" && openCount > 0 ? (
-              <span
-                className="ml-auto rounded-full bg-danger px-1.5 py-0.5 text-xs font-semibold text-danger-fg tabular-nums"
-                aria-label={`${openCount} open items`}
+    <nav aria-label="Main" className="flex flex-col gap-3">
+      {NAV_GROUPS.map((group, groupIdx) => (
+        <div key={group.title} className="space-y-1">
+          {groupIdx > 0 ? <div className="mb-2 border-t border-line/60" role="separator" /> : null}
+          <div className="px-2 pb-1 pt-0.5 text-[11px] font-semibold tracking-wider text-ink-muted uppercase">
+            {group.title}
+          </div>
+          {group.items.map((item) => {
+            const Icon = item.icon;
+            const href = `${base}/${item.segment}`;
+            // The builder lives under /agents but belongs to the roster tab, so the
+            // highlight does not disappear when you open an agent.
+            const active =
+              pathname === href ||
+              pathname.startsWith(`${href}/`) ||
+              (item.segment === "roster" && pathname.startsWith(`${base}/agents`));
+            return (
+              <Link
+                key={item.segment}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                onClick={() => setMobileNavOpen(false)}
+                className={cn(
+                  "relative flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150",
+                  active
+                    ? "bg-accent-soft font-semibold text-accent-soft-fg shadow-2xs before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-accent"
+                    : "text-ink-muted hover:bg-surface hover:text-ink",
+                )}
               >
-                {openCount > 99 ? "99+" : openCount}
-              </span>
-            ) : null}
-          </Link>
-        );
-      })}
+                <Icon
+                  className={cn(
+                    "size-4 shrink-0 transition-colors duration-150",
+                    active ? "text-accent-soft-fg" : "text-ink-subtle",
+                  )}
+                  aria-hidden
+                />
+                <span>{item.label}</span>
+                {item.segment === "inbox" && openCount > 0 ? (
+                  <span
+                    className="ml-auto rounded-full bg-danger px-1.5 py-0.5 text-xs font-bold text-danger-fg tabular-nums shadow-2xs"
+                    aria-label={`${openCount} open items`}
+                  >
+                    {openCount > 99 ? "99+" : openCount}
+                  </span>
+                ) : null}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 
@@ -137,7 +167,8 @@ export function AdminShell({
   );
 
   return (
-    <div className="flex min-h-dvh flex-col lg:flex-row">
+    <HelpProvider project={project.slug}>
+      <div className="flex min-h-dvh flex-col lg:flex-row">
       {/* Skip link: first tab stop on every admin page. */}
       <a
         href="#admin-main"
@@ -158,6 +189,7 @@ export function AdminShell({
           {BRAND.name}
         </Link>
         <div className="flex items-center gap-2">
+          <HelpButton />
           <ThemeToggle />
           <Button
             variant="ghost"
@@ -179,51 +211,62 @@ export function AdminShell({
         </div>
       ) : null}
 
-      {/* Desktop sidebar.
-
-          A ground of its own. The rail, the page and a panel used to be
-          white, near-white and white - two of the three the same colour - so
-          the whole app read as one pale field divided by hairlines and
-          nothing sat on top of anything. Three steps now: the rail is the
-          quietest, the page sits above it, and a panel is the brightest thing
-          on screen, which is what makes a card look like an object. */}
+      {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-rail p-4 lg:flex">
         <Link
           href={`${base}/roster`}
-          className="mb-4 flex items-center gap-2 px-1 text-base font-semibold tracking-tight text-ink"
+          className="group mb-4 flex items-center justify-between px-1 text-base font-semibold tracking-tight text-ink"
         >
-          <BrandMark />
-          {BRAND.name}
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-7 items-center justify-center rounded-lg border border-line bg-surface shadow-2xs transition-colors group-hover:border-accent-line">
+              <BrandMark className="size-4" />
+            </span>
+            <span className="font-semibold tracking-tight">{BRAND.name}</span>
+          </div>
+          <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+            Workspace
+          </span>
         </Link>
 
         <div className="mb-4">{projectSwitcher}</div>
 
         {navLinks}
 
-        {/* The foot of the sidebar is one group of full-width controls under a
-            rule, rather than three different shapes stacked: the theme
-            control used to sit in the middle as a small floating widget with
-            nothing aligned to it. */}
+        {/* The foot of the sidebar */}
         <div className="mt-auto space-y-2 border-t border-line pt-3">
-          <FeedbackButton project={project.slug} className="hover:bg-surface" />
+          {/* Always the same spot, on every screen in the app. */}
+          <HelpButton className="w-full justify-start hover:bg-surface" />
+          <FeedbackButton project={project.slug} className="w-full justify-start hover:bg-surface" />
           <ThemeToggle className="w-full [&>button]:flex-1" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(
-                  "flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors",
-                  "hover:bg-surface",
+                  "group flex w-full items-center gap-2.5 rounded-lg border border-line/70 bg-surface/60 p-2 text-left transition-all",
+                  "hover:border-line-strong hover:bg-surface hover:shadow-xs",
                 )}
               >
-                <span
-                  aria-hidden
-                  className="flex size-7 shrink-0 items-center justify-center rounded-md bg-surface-3 text-xs font-semibold text-ink-muted"
-                >
-                  {initialsOf(name || email) || "?"}
+                <span className="relative shrink-0">
+                  <span
+                    aria-hidden
+                    className="flex size-8 items-center justify-center rounded-full border border-line bg-surface-3 text-xs font-semibold text-ink shadow-2xs"
+                  >
+                    {initialsOf(name || email) || "?"}
+                  </span>
+                  <span
+                    className="absolute bottom-0 right-0 size-2.5 rounded-full bg-positive ring-2 ring-surface"
+                    aria-hidden
+                  />
                 </span>
-                <span className="min-w-0 flex-1 truncate text-sm text-ink">
-                  {name || email}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-semibold text-ink leading-tight">
+                    {name || email.split("@")[0]}
+                  </span>
+                  <span className="block truncate text-[11px] text-ink-muted leading-tight mt-0.5">
+                    {email}
+                  </span>
                 </span>
+                <ChevronsUpDown className="size-3.5 shrink-0 text-ink-subtle transition-colors group-hover:text-ink" aria-hidden />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -249,7 +292,8 @@ export function AdminShell({
         {children}
       </main>
       <UsageTracker project={project.slug} />
-    </div>
+      </div>
+    </HelpProvider>
   );
 }
 
@@ -294,17 +338,20 @@ function ProjectSwitcher({
           <button
             aria-label={`Switch project or organisation (${organization?.name ?? ""}: ${project.name})`}
             className={cn(
-              "flex w-full items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-2",
-              "text-left transition-colors hover:border-line-strong",
+              "group flex w-full items-center gap-2.5 rounded-lg border border-line bg-surface p-2 shadow-2xs",
+              "text-left transition-all hover:border-line-strong hover:shadow-xs",
             )}
           >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-accent-line/60 bg-accent-soft text-accent-soft-fg shadow-2xs">
+              <Building2 className="size-4" aria-hidden />
+            </span>
             <span className="min-w-0 flex-1">
-              <span className="meta block truncate">{organization?.name ?? "Project"}</span>
-              <span className="block truncate text-sm font-medium text-ink">
+              <span className="meta block truncate text-[10px] leading-tight text-ink-muted">{organization?.name ?? "Project"}</span>
+              <span className="block truncate text-sm font-semibold text-ink leading-tight mt-0.5 transition-colors group-hover:text-accent">
                 {project.name}
               </span>
             </span>
-            <ChevronsUpDown className="size-3.5 shrink-0 text-ink-subtle" aria-hidden />
+            <ChevronsUpDown className="size-3.5 shrink-0 text-ink-subtle transition-colors group-hover:text-ink" aria-hidden />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">

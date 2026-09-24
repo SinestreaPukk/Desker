@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import {
   AuditTrail,
+  ComparisonTable,
   Faq,
   MetricTiles,
   RoleGrid,
@@ -39,8 +40,8 @@ export const metadata: Metadata = pageMetadata({
 
 /**
  * The front door, in the order a visitor's questions arrive: what is it
- * (hero), can I believe it (built on), how (three steps), what exactly
- * (showcase), is it safe (trust), which one (roles),
+ * (hero), can I believe it (built on), why would I (problem), how (three
+ * steps), what exactly (showcase), is it safe (trust), which one (roles),
  * does it work (outcomes, quotes), what does it cost (pricing), but what
  * about (FAQ), and go (CTA).
  *
@@ -62,7 +63,7 @@ export default async function LandingPage({
     redirect(`/p/${project.slug}/roster`);
   }
 
-  const { hero, trustStrip, steps, features, trust, roles, metrics, testimonials, pricing, faq, cta } =
+  const { hero, trustStrip, steps, features, trust, roles, comparison, metrics, testimonials, pricing, faq, cta } =
     LANDING;
   // Placeholders are for review only: outside production an unmeasured number
   // shows as a marked TODO; in production the section waits for real values.
@@ -175,11 +176,30 @@ export default async function LandingPage({
 
       {/* Roles ------------------------------------------------------------- */}
       <Section id="roles" labelledBy="roles-heading">
-          <SectionHeader id="roles-heading" eyebrow={roles.eyebrow} heading={roles.heading} intro={roles.intro} />
+        <SectionHeader id="roles-heading" eyebrow={roles.eyebrow} heading={roles.heading} intro={roles.intro} />
         <div className="mt-12">
           <RoleGrid cta={roles.cta} />
         </div>
       </Section>
+
+      {/* Comparison: Desker vs Generic AI ---------------------------------- */}
+      {comparison ? (
+        <Section id="comparison" labelledBy="comparison-heading" className="border-t border-line bg-surface">
+          <SectionHeader
+            id="comparison-heading"
+            eyebrow={comparison.eyebrow}
+            heading={comparison.heading}
+            intro={comparison.intro}
+          />
+          <div className="mt-12">
+            <ComparisonTable
+              competitorLabel={comparison.competitorLabel}
+              deskerLabel={comparison.deskerLabel}
+              items={comparison.items}
+            />
+          </div>
+        </Section>
+      ) : null}
 
       {/* Outcomes ---------------------------------------------------------- */}
       {showMetrics ? (
@@ -261,6 +281,7 @@ export default async function LandingPage({
           })}
         </div>
         <p className="mt-8 text-center text-sm text-ink-muted">{pricing.footnote}</p>
+        <p className="mt-2 text-center text-sm text-ink-muted">{pricing.reassurance}</p>
       </Section>
 
       {/* FAQ ---------------------------------------------------------------- */}
@@ -272,22 +293,52 @@ export default async function LandingPage({
       </Section>
 
       {/* CTA ---------------------------------------------------------------- */}
+      {/* The page's bookend: it opens on the night sky and closes on it. The
+          sand runs to the bottom edge and settles into shadow rather than
+          fading to paper - a wash of near-white directly above a white footer
+          read as a printing fault rather than as a horizon. */}
       <section className="sky relative overflow-hidden">
         <NightSky uid="cta-sky" />
-        <div className="absolute inset-x-0 bottom-0 h-[45%]">
-          <Dunes uid="cta-dunes" />
+        {/* Masked at the top so the sand rises out of the night instead of
+            starting on a ruled line across the width of the page, and mirrored
+            so the closing band is the other side of the same landscape rather
+            than a repeat of the hero's. */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[46%] -scale-x-100 [mask-image:linear-gradient(to_bottom,transparent,black_22%)]"
+        >
+          <Dunes uid="cta-dunes" haze={false} />
         </div>
-        <div className="relative mx-auto max-w-6xl px-4 pb-40 pt-24 text-center sm:px-6 sm:pb-56 sm:pt-32">
+        {/* Night falling down the slope: the crest keeps the last of the light
+            and everything below it goes to shadow, so the sand reads as a
+            horizon rather than as a flat blue panel above the footer. */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-[46%] bg-linear-to-b from-transparent via-[var(--dune-deep)]/55 to-[var(--dune-deep)]"
+        />
+        {/* The last of the light along that edge. */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-[var(--dune-crest)] to-transparent opacity-40"
+        />
+        <div className="relative mx-auto max-w-6xl px-4 pb-32 pt-24 text-center sm:px-6 sm:pb-40 sm:pt-32">
           <Reveal>
             {/* A bookend, not a second hero: same serif, section scale. */}
             <h2 className="mx-auto max-w-3xl font-display text-title text-balance text-[var(--sky-ink)]">
               {cta.heading}
             </h2>
             <p className="mt-4 text-lg font-medium text-[var(--sky-ink)]">{cta.body}</p>
-            <Link href={cta.button.href} className={cn(GLASS_BUTTON, "mt-8")}>
-              {cta.button.label}
-              <ArrowRight aria-hidden />
-            </Link>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <Link href={cta.button.href} className={GLASS_BUTTON}>
+                {cta.button.label}
+                <ArrowRight aria-hidden />
+              </Link>
+              {cta.secondary ? (
+                <Link href={cta.secondary.href} className={SKY_LINK}>
+                  {cta.secondary.label}
+                </Link>
+              ) : null}
+            </div>
+            <p className="mt-4 text-sm font-medium text-[var(--sky-ink)]">{cta.microcopy}</p>
           </Reveal>
         </div>
       </section>

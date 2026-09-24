@@ -112,6 +112,9 @@ export async function GET(request: Request) {
       365,
     );
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    // The window immediately before this one, so every headline number can
+    // say which way it is going instead of standing there on its own.
+    const previousSince = new Date(since.getTime() - days * 24 * 60 * 60 * 1000);
 
     const realClients = { NOT: { clientSessionId: { startsWith: PREVIEW_PREFIX } } };
 
@@ -402,6 +405,19 @@ export async function GET(request: Request) {
       unpricedModels: [...unpriced],
     };
 
+    const [previousConversations, previousRuns] = await Promise.all([
+      prisma.conversation.count({
+        where: {
+          createdAt: { gte: previousSince, lt: since },
+          ...realClients,
+          agent: inProject,
+        },
+      }),
+      prisma.actionItem.count({
+        where: { createdAt: { gte: previousSince, lt: since }, agent: inProject },
+      }),
+    ]);
+
     const totals = {
       conversations: conversations.length,
       escalated: conversations.filter((c) => c.status === "escalated").length,
@@ -416,6 +432,8 @@ export async function GET(request: Request) {
     return {
       days,
       totals,
+      /** The same counts over the window before this one, for the captions. */
+      previous: { conversations: previousConversations, runs: previousRuns },
       agents: [...byAgent.values()].filter(
         (stats) => stats.conversations > 0 || stats.status === "published",
       ),

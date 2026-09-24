@@ -52,8 +52,8 @@ export function ChatComposer({
     >
       <div
         className={cn(
-          "flex items-end gap-2 rounded-lg border border-line-strong bg-surface px-3 py-2",
-          "transition-colors focus-within:border-accent focus-within:outline-2 focus-within:outline-accent",
+          "flex items-end gap-2 rounded-xl border border-line bg-surface px-3.5 py-2 shadow-xs",
+          "transition-all focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15",
           disabled && "opacity-60",
         )}
       >
@@ -89,7 +89,7 @@ export function ChatComposer({
             variant="subtle"
             onClick={onStop}
             aria-label="Stop generating"
-            className="mb-0.5 rounded-md"
+            className="mb-0.5 rounded-lg"
           >
             <Square className="fill-current" aria-hidden />
           </Button>
@@ -99,7 +99,7 @@ export function ChatComposer({
             size="icon-sm"
             disabled={!value.trim() || sending || disabled}
             aria-label="Send message"
-            className="mb-0.5 rounded-md"
+            className="mb-0.5 rounded-lg shadow-2xs"
           >
             <ArrowUp aria-hidden />
           </Button>

@@ -116,7 +116,7 @@ grounded answers immediately.
 3. **Upload a document** under *Company context*. It is chunked and indexed on
    the spot; the row shows Processing → Ready with a chunk count, and *Test
    retrieval* shows exactly what the agent will find.
-4. **Try it** in the live preview, which runs the same code path a client hits.
+4. **Test it** in the company-context pane, which lets you ask questions grounded in your documents and project context.
 5. **Publish.** The share panel gives you a link and an embed snippet.
 
 ---
@@ -216,11 +216,51 @@ all shared one workspace. On a fresh database every step is a no-op.
 ## Autonomous work
 
 An agent with a **scope of work** does things when nobody is talking to it.
-The scope is a standing brief per agent - project context, objectives, the
-documents it may search - plus a trigger: a cadence ("every Monday at 09:00,
+The scope is a standing brief per agent - context, objectives, the documents
+it may search - plus a trigger: a cadence ("every Monday at 09:00,
 Asia/Bangkok"), an inbound webhook (`POST /api/hooks/<token>` with any JSON),
 or only by hand. The wizard's third step and the editor's *Scope of work*
 panel edit the same record.
+
+**Context is asked, not demanded.** Instead of one blank textarea, an agent's
+context is four short questions - what it should know about the work, who it
+is working for, what a good week looks like, and anything it must never do -
+each with an example in its placeholder rather than prefilled text somebody
+has to delete first. The answers are stored as `ScopeOfWork.contextAnswers`
+and composed into the same single `context` string the prompt and retrieval
+have always read, so this is an authoring change and nothing downstream knows
+about it (`lib/work/context.ts`). A scope written before the questions existed
+opens with its text as the first answer.
+
+**Form by default, a picture when you want one.** The editor stays a guided
+form - identity, behaviour, model and context are a handful of independent
+settings, and a form is what those are for. The scope of work is the one part
+that is genuinely a pipeline, so it has a *Flow* toggle in the panel header:
+the same record drawn as a small diagram - the trigger, the agent, one node
+per allowed tool, an approval gate when any of those tools can reach the
+outside world, and where the result lands. Clicking a node opens the same
+control the form view has for that setting, bound to the same state, so the
+two views cannot disagree; the nodes themselves cannot be added, removed or
+rewired, because the shape comes from the configuration rather than the other
+way round (`lib/work/flow.ts` derives the nodes, `components/builder/
+scope-flow.tsx` draws them). Every agent opens in the form view.
+
+Two ways to get to an answer faster:
+
+- **Shared project context.** The same four-question shape, one level up:
+  what the business does, who its customers are, how its agents should sound,
+  and what none of them should ever do. It is edited once at the top of the
+  roster and inherited by every agent in the project - composed in at read
+  time, never copied into an agent, so editing it changes what all of them
+  read from the next run on. An agent's own questions are then only about what
+  is different for that role.
+- **"Draft this from my documents."** Once anything is uploaded, the agent
+  reads it and proposes answers to those same questions, which the owner edits
+  rather than writing from nothing (`lib/work/context-draft.ts`). It only
+  fills questions that are still empty, never overwrites what a person typed,
+  and leaves a question out entirely when the documents do not support an
+  answer - a missing answer beats a plausible one, since these become standing
+  instructions. Nothing is saved on the owner's behalf.
 
 A run is an **action item** moving through a fixed state machine:
 
@@ -249,6 +289,16 @@ a risk level that the runner gates on:
 | `publish_post` | external | Sends a draft to the organisation's publishing webhook |
 | `send_email` | external | Sends through Resend |
 
+When a run finishes, one more short model call turns its report into the
+account a person actually reads: three or four sentences in plain language -
+what it did, what it found, and what it thinks should happen next - plus a
+one-line headline for list rows. Both are kept: the plain-language version is
+`ActionItem.summary` and is what every surface shows first; the agent's own
+Markdown report stays underneath it in `result.summary`, one disclosure away.
+The call is its own durable step after the work is on the record, so losing it
+costs a summary and never the task, and an install with no provider key falls
+back to a summary composed from the record itself (`lib/work/summary.ts`).
+
 Every agent starts in **draft-only** mode: `external` tools do not reach their
 integration. The call is recorded as the item's `pendingAction`, the run ends
 in `needs_approval`, and nothing goes out until a person approves it under
@@ -270,9 +320,29 @@ Nothing an agent does publicly happens without a visible, reviewable trail.
   post or email shown in full. An owner can approve, edit the draft and then
   approve, or reject with a reason; each decision is an audit row. The
   Approvals tab and the Work page share one card.
+- **Inbox → Updates** is where each agent reports on itself without being
+  asked. A **digest** is one short roll-up per agent per period - weekly by
+  default, configurable down to daily or off on the scope of work, under
+  *Keeping you posted* - synthesised from that period's run summaries plus
+  anything still waiting on a person. It is capped at six bullets, ordered by
+  what needs a decision rather than by everything the agent touched, and a
+  period with nothing in it produces no digest at all. *Send one now* in the
+  editor generates one immediately; ticking *Email it as well* also sends it
+  through the organisation's email connector to named addresses, or to the
+  organisation's owners and admins. The scheduler is a quarter-hourly Inngest
+  function that fires each agent's cadence in its own timezone and catches up
+  a missed tick without replaying every period it slept through
+  (`lib/work/digest.ts`).
 - **Inbox → Issues & suggestions** now carries what agents flag about
   themselves as well as what clients report: an escalation rule that fired
-  during a run, or a run that failed. Agent-raised issues link to the run.
+  during a run, a run that failed, and **suggestions**. A suggestion is a
+  first-class record rather than a task result - what the agent noticed, why
+  it matters, and the next step it proposes - raised by the summariser when a
+  run leaves the agent with an opinion. It is decided rather than resolved:
+  *Accept* appends the proposal to that agent's standing objectives so the
+  next run carries it out, *Dismiss* closes it, and *Snooze* puts it back in
+  front of the owner in a week (a lapsed snooze simply reads as open again).
+  Agent-raised issues and suggestions link to the run behind them.
 - **Trust** lives on the scope of work: an agent-wide mode (draft only /
   auto) plus a per-tool override for `publish_post` and `send_email`, so posts
   can flow while emails still wait. Every new agent starts draft-only.
@@ -292,6 +362,66 @@ Nothing an agent does publicly happens without a visible, reviewable trail.
   models) applied to the usage counters. An unpriced model shows as unknown,
   never as free - the figure is what billing will meter.
 
+## Plain language
+
+The product speaks to owners, not to engineers, and three surfaces used to
+speak in implementation detail. Each has a small pure module behind it so the
+copy can be tested and cannot drift between two views:
+
+- **Insights** (`lib/insight-copy.ts`): every figure carries a caption that
+  says what it is, which way it moved against the previous period, and what to
+  do about it - "42 client conversations this week · up 14% · 90% finished
+  without needing a person". Token counts are gone from the page: the lead
+  numbers are an estimated *time saved* and an *estimated cost*, with cost per
+  task and conversation rather than per million tokens. Tables say "Tasks",
+  "Finished", "Waiting on you"; the raw token figures live behind *View
+  technical details* for whoever is checking an invoice.
+- **The audit log** (`lib/audit-copy.ts`): a day-by-day timeline of sentences -
+  "Researched competitor pricing — 9:03am", "Queued a post for your approval —
+  9:15am" - with the verb, the target and the payload behind *View technical
+  details* on every row. A unit test walks every action the product writes and
+  fails if one of them renders as a raw dotted verb or mentions a tool id.
+- **Integrations** (`lib/work/integration-health.ts`): three states -
+  *Connected*, *Needs attention*, *Disconnected* - each with the consequence
+  rather than a status code: "The last attempt came back an error: Endpoint
+  answered 410. Anything an agent sends will fail until it works again." The
+  verdict is read from the audit trail, so nothing extra is stored or polled.
+
+Alongside that, a sweep of the field labels, helper text and error messages
+across the hire wizard, the scope of work, billing and integration setup: the
+label says what the field is, one sentence underneath says why it matters or
+gives an example, and every validation message says what went wrong and what
+to do instead of restating a constraint.
+
+## Guides and in-app help
+
+Six short how-tos - hiring an agent, writing context, giving an agent work,
+approvals, Insights, integrations - live once in `content/guides/*.ts` as
+markdown, and are read in two places: the help panel inside the app and the
+public `/guides` pages. One source, two readers, so nothing is written twice
+and the two cannot drift apart. (They are TypeScript modules holding markdown
+rather than loose `.md` files, so the client-side help panel can import the
+same content the static pages do, with no filesystem read and no build step.)
+
+- **The "?" is always in the same place** - the foot of the sidebar, and the
+  mobile top bar. It opens a panel that searches titles, headings and body
+  text offline (`searchGuides` in `lib/guides.ts`) and opens a hit at the
+  heading it matched. `?` anywhere outside a text field opens it too.
+- **Contextual links** sit beside the controls that are not self-explanatory -
+  the escalation rule, the scope-of-work flow toggle, Trust, the webhook
+  trigger - and deep-link to that heading rather than to a help homepage.
+  Every one is named in `HELP_TOPICS`, and a unit test fails if a renamed
+  heading leaves one pointing at nothing.
+- **A setting-up checklist** on the roster covers the four things that make a
+  workspace work: hire an agent, tell it about the business, publish it, see a
+  run as a flow. Each step ticks itself off from what is actually there, it
+  can be dismissed, it never comes back once complete - and the help panel
+  brings it back on request. The dismissal lives in the browser, not on the
+  organisation.
+- **`/guides` is public and ungated**, in the sitemap, one static page per
+  guide. `components/markdown.tsx` renders the fixed subset the guides are
+  written in; there is no HTML passthrough.
+
 ## Design system
 
 Everything is built from tokens defined once in `app/globals.css` and
@@ -309,7 +439,7 @@ offer undo (unpublish, reject); fields that take plain language show a live
 reading and clickable examples (escalation rule, objectives, context); one
 `StatusBadge` for every status anywhere; one `ListRow` for every list item;
 one primary action per screen; the editor is sectioned so editing is one
-decision at a time with the live preview alongside.
+decision at a time with the company-context Q&A pane alongside.
 
 ## The landing page
 
@@ -416,6 +546,12 @@ served from `/api/inngest`. Nothing else talks to a scheduler or a queue.
 - `action-item-run` - executes one action item as durable steps, waiting
   first if it is a follow-up scheduled for later.
 - `action-item-execute-approved` - sends what a person approved.
+- `digest-scheduler` - every fifteen minutes, finds agents whose digest
+  cadence has come round in their own timezone since their last one and writes
+  exactly one digest each. Quarter-hourly rather than minutely because a
+  digest is due at a morning hour, and a few minutes of slack on "8am Monday"
+  is invisible to a reader.
+- `digest-generate` - one agent's digest on demand, behind *Send one now*.
 
 Locally, `INNGEST_DEV=1` and `npm run inngest:dev`. In the compose stack an
 `inngest` service does the same. In production, leave `INNGEST_DEV` unset and

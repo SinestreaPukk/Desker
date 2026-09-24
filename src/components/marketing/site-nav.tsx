@@ -64,8 +64,8 @@ export function SiteNav({ items }: { items: readonly { label: string; href: stri
             href={item.href}
             aria-current={here ? "location" : undefined}
             className={cn(
-              "focus-current relative text-sm transition-colors",
-              "after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left",
+              "focus-current relative inline-flex min-h-[44px] items-center text-sm transition-colors",
+              "after:absolute after:bottom-2.5 after:left-0 after:h-px after:w-full after:origin-left",
               "after:bg-current after:transition-transform after:duration-200",
               here ? "text-current after:scale-x-100" : "text-current/75 after:scale-x-0 hover:text-current",
             )}

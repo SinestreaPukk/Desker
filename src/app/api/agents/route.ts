@@ -4,6 +4,7 @@ import { agentInputSchema } from "@/lib/validation";
 import { findProject, projectsVisibleTo } from "@/lib/projects";
 import { canPublishAgent } from "@/lib/billing/limits";
 import { toAgentDetail, type AgentSummaryDto } from "@/lib/serialize";
+import { runModeOf } from "@/lib/work/cadence";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,6 +33,7 @@ export async function GET(request: Request) {
         modelProvider: true,
         updatedAt: true,
         _count: { select: { conversations: true, documents: true } },
+        scopeOfWork: { select: { triggerType: true, cron: true, timezone: true, enabled: true } },
       },
     });
 
@@ -62,6 +64,7 @@ export async function GET(request: Request) {
         conversationCount: agent._count.conversations,
         documentCount: agent._count.documents,
         openIssueCount: openIssuesByAgent.get(agent.id) ?? 0,
+        runs: runModeOf(agent.scopeOfWork),
         updatedAt: agent.updatedAt.toISOString(),
       }),
     );

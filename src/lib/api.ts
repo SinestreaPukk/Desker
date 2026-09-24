@@ -55,7 +55,8 @@ export async function handle<T>(fn: () => Promise<T>): Promise<Response> {
       return jsonError(403, error.message);
     }
     if (error instanceof ZodError) {
-      return jsonError(422, "Some fields need attention.", {
+      // The per-field messages say what to fix; this line says where to look.
+      return jsonError(422, "Check the highlighted fields and try again.", {
         fieldErrors: error.flatten().fieldErrors,
       });
     }
@@ -69,7 +70,7 @@ export async function parseJson<T>(request: Request, schema: ZodType<T>): Promis
   try {
     body = await request.json();
   } catch {
-    throw new HttpError(400, "Request body must be valid JSON.");
+    throw new HttpError(400, "That request could not be read. Reload the page and try again.");
   }
   return schema.parse(body);
 }

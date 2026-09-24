@@ -56,6 +56,21 @@ function clock(hour: number, minute: number): string {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
+/** How an agent gets started, as the roster shows it at a glance. */
+export type RunMode = "manual" | "scheduled" | "triggered" | "paused";
+
+export function runModeOf(
+  scope: { triggerType: string; cron: string | null; timezone: string; enabled: boolean } | null,
+): { mode: RunMode; cadence: string | null } {
+  if (!scope || scope.triggerType === "manual") return { mode: "manual", cadence: null };
+  if (!scope.enabled) return { mode: "paused", cadence: null };
+  if (scope.triggerType === "webhook") return { mode: "triggered", cadence: null };
+  if (scope.triggerType === "cron" && scope.cron) {
+    return { mode: "scheduled", cadence: describeCadence(scope.cron, scope.timezone) };
+  }
+  return { mode: "manual", cadence: null };
+}
+
 /** "Every Monday at 09:00 (Europe/London)". */
 export function describeCadence(cron: string | null | undefined, timezone?: string): string {
   const cadence = cronToCadence(cron);

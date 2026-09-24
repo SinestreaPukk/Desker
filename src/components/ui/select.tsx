@@ -15,9 +15,10 @@ export function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-line-strong",
-        "bg-surface px-3 text-sm text-ink shadow-xs transition-colors",
+        "flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-line-strong/80",
+        "bg-surface px-3 text-sm text-ink shadow-2xs transition-all duration-150",
         "hover:border-ink-subtle data-[placeholder]:text-ink-subtle",
+        "focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none",
         "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
@@ -25,7 +26,7 @@ export function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDown className="size-4 text-ink-subtle" aria-hidden />
+        <ChevronDown className="size-4 text-ink-subtle transition-transform duration-200 [[data-state=open]>&]:rotate-180" aria-hidden />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -42,14 +43,14 @@ export function SelectContent({
         position="popper"
         sideOffset={6}
         className={cn(
-          "z-50 min-w-[10rem] overflow-hidden rounded-md border border-line bg-surface shadow-md",
+          "z-50 min-w-[10rem] overflow-hidden rounded-xl border border-line/80 bg-surface/95 shadow-lg backdrop-blur-md",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
           className,
         )}
         {...props}
       >
-        <SelectPrimitive.Viewport className="p-1 max-h-72">
+        <SelectPrimitive.Viewport className="p-1.5 max-h-72">
           {children}
         </SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
@@ -65,9 +66,9 @@ export function SelectItem({
   return (
     <SelectPrimitive.Item
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-sm py-1.5 pl-2.5 pr-8",
-        "text-sm text-ink outline-none",
-        "data-[highlighted]:bg-surface-2 data-[state=checked]:font-medium",
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-3 pr-8",
+        "text-sm text-ink outline-none transition-colors",
+        "data-[highlighted]:bg-surface-2 data-[state=checked]:font-semibold text-ink",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
@@ -76,7 +77,7 @@ export function SelectItem({
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <span className="absolute right-2 flex size-4 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Check className="size-3.5 text-accent" strokeWidth={3} aria-hidden />
+          <Check className="size-3.5 text-accent" strokeWidth={2.5} aria-hidden />
         </SelectPrimitive.ItemIndicator>
       </span>
     </SelectPrimitive.Item>

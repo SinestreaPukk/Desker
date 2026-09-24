@@ -18,14 +18,8 @@ import {
 } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
+import { TRIGGER_LABELS } from "@/lib/work/types";
 import { formatRelativeTime, safeHttpUrl } from "@/lib/utils";
-
-const TRIGGER_LABEL: Record<string, string> = {
-  schedule: "scheduled run",
-  webhook: "webhook run",
-  manual: "manual run",
-  followup: "follow-up",
-};
 
 /**
  * One thing waiting on a person: what the agent wants to send, shown in full,
@@ -104,18 +98,20 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
   if (!pending) return null;
 
   return (
-    <Panel className="overflow-hidden">
-      <div className="flex items-start gap-3 border-b border-line bg-warning-soft/30 px-4 py-3">
-        <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" />
+    <Panel className="overflow-hidden shadow-sm">
+      <div className="flex items-start gap-3 border-b border-warning-line/60 bg-warning-soft/40 px-4 py-3.5">
+        <div className="shrink-0 rounded-full ring-1 ring-warning-line">
+          <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" />
+        </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm text-ink">
-            <span className="font-medium">{item.agent.name}</span> wants to{" "}
-            <span className="font-medium">
+            <span className="font-semibold">{item.agent.name}</span> wants to{" "}
+            <span className="font-semibold">
               {pending.tool === "publish_post" ? "publish a post" : "send an email"}
             </span>
             <span className="text-ink-muted">
               {" "}
-              · from a {TRIGGER_LABEL[item.trigger] ?? item.trigger} ·{" "}
+              · from a {(TRIGGER_LABELS[item.trigger] ?? item.trigger).toLowerCase()} run ·{" "}
               {formatRelativeTime(item.awaitingSince ?? item.createdAt)}
             </span>
           </p>
@@ -173,31 +169,38 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
                   To: {(pending.input.to as string[] | undefined)?.join(", ")}
                 </p>
               ) : null}
-              <p className="mt-0.5 text-sm font-medium text-ink">{draft.title}</p>
-              <pre className="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap rounded-sm border border-line bg-surface-2/60 p-3 font-sans text-sm leading-relaxed text-ink">
+              <p className="mt-0.5 text-sm font-semibold text-ink">{draft.title}</p>
+              <pre className="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap rounded-xl border border-line/80 bg-surface-2/70 p-4 font-sans text-sm leading-relaxed text-ink shadow-2xs">
                 {draft.body}
               </pre>
             </div>
           )
         ) : (
-          <pre className="whitespace-pre-wrap rounded-sm border border-line bg-surface-2/60 p-3 font-mono text-xs text-ink">
+          <pre className="whitespace-pre-wrap rounded-xl border border-line bg-surface-2/60 p-3.5 font-mono text-xs text-ink">
             {JSON.stringify(pending.input, null, 2)}
           </pre>
         )}
 
+        {/* Why this is in front of you, in the agent's own words, before the
+            detail of how it got there. */}
         {item.summary ? (
+          <section>
+            <h4 className="eyebrow mb-1">Why {item.agent.name} is asking</h4>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{item.summary}</p>
+          </section>
+        ) : null}
+
+        {item.report && item.report !== item.summary ? (
           <details>
-            <summary className="eyebrow cursor-pointer">
-              The agent&apos;s report
-            </summary>
+            <summary className="eyebrow cursor-pointer">The agent&apos;s full report</summary>
             <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-ink-muted">
-              {item.summary}
+              {item.report}
             </pre>
           </details>
         ) : null}
 
         {item.findings && item.findings.length > 0 ? (
-          <details className="rounded-sm border border-line bg-surface-2/40 p-2.5">
+          <details className="rounded-xl border border-line bg-surface-2/40 p-3">
             <summary className="eyebrow cursor-pointer text-ink">
               Research sources &amp; citations ({item.findings.length})
             </summary>
@@ -218,15 +221,13 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
                               <a
                                 href={href}
                                 target="_blank"
-                                rel="noreferrer noopener"
+                                rel="noreferrer"
                                 className="text-accent hover:underline"
                               >
-                                [{sIdx + 1}] {source.title}
+                                {source.title || source.url}
                               </a>
                             ) : (
-                              <span className="text-ink-muted">
-                                [{sIdx + 1}] {source.title}
-                              </span>
+                              <span className="text-ink-muted">{source.title || source.url}</span>
                             )}
                           </li>
                         );
@@ -258,24 +259,41 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
           </Field>
         </ConfirmDialog>
         {(
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" onClick={() => void decide("approve")} disabled={busy || editing}>
-              <Check aria-hidden />
+          <div className="flex flex-wrap items-center gap-2.5 pt-2 sm:gap-3">
+            <Button
+              size="md"
+              onClick={() => void decide("approve")}
+              disabled={busy || editing}
+              className="min-h-[44px] px-4 font-semibold shadow-xs hover:shadow-sm sm:min-h-0 sm:h-9"
+            >
+              <Check className="size-4" aria-hidden />
               Approve and send
             </Button>
             {draft ? (
-              <Button size="sm" variant="secondary" onClick={() => setEditing(true)} disabled={busy || editing}>
-                <Pencil aria-hidden />
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setEditing(true)}
+                disabled={busy || editing}
+                className="min-h-[44px] sm:min-h-0"
+              >
+                <Pencil className="size-3.5" aria-hidden />
                 Edit
               </Button>
             ) : null}
-            <Button size="sm" variant="secondary" onClick={() => setRejecting(true)} disabled={busy || editing}>
-              <X aria-hidden />
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setRejecting(true)}
+              disabled={busy || editing}
+              className="min-h-[44px] hover:border-danger-line hover:bg-danger-soft/40 hover:text-danger sm:min-h-0"
+            >
+              <X className="size-3.5" aria-hidden />
               Reject
             </Button>
             <Link
               href={`/p/${project}/work?agentId=${item.agent.id}`}
-              className="ml-auto text-xs text-accent hover:underline"
+              className="ml-auto flex min-h-[44px] items-center text-xs font-medium text-accent hover:underline sm:min-h-0"
             >
               Full run details
             </Link>

@@ -8,7 +8,7 @@
  * is never on the critical path and never in the HTML a crawler reads.
  */
 import * as React from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { motion } from "motion/react";
 
 /** The same curve as .glass and .lift in globals.css: ease-out, no overshoot. */
 const EASE = [0.2, 0.8, 0.2, 1] as const;
@@ -43,26 +43,6 @@ export function MotionReveal({
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: DURATION, ease: EASE, delay }}
     >
-      {children}
-    </motion.div>
-  );
-}
-
-/** Drifts its children by `distance` px over the first screen of scrolling. */
-export function MotionParallax({
-  children,
-  distance,
-  className,
-}: {
-  children: React.ReactNode;
-  distance: number;
-  className?: string;
-}) {
-  const reduced = useReducedMotion();
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 900], [0, reduced ? 0 : distance]);
-  return (
-    <motion.div className={className} style={{ y }} aria-hidden>
       {children}
     </motion.div>
   );

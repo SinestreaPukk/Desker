@@ -15,7 +15,7 @@ interface UserBubbleProps {
 const UserBubble = React.memo(function UserBubble({ content }: UserBubbleProps) {
   return (
     <li className="flex justify-end">
-      <div className="max-w-[85%] rounded-panel rounded-br-md bg-accent px-3.5 py-2.5 text-sm leading-relaxed text-accent-fg">
+      <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-accent px-4 py-2.5 text-sm leading-relaxed text-accent-fg shadow-2xs">
         <span className="sr-only">You said: </span>
         <div className="space-y-2">
           <MessageText content={content} />
@@ -47,7 +47,7 @@ const AssistantBubble = React.memo(function AssistantBubble({
         src={agentAvatarUrl}
         seed={agentSeed}
         size="sm"
-        className="mt-0.5"
+        className="mt-0.5 ring-1 ring-line/50"
       />
       <div className="min-w-0 max-w-[85%] space-y-2">
         <span className="sr-only">
@@ -64,7 +64,7 @@ const AssistantBubble = React.memo(function AssistantBubble({
         {message.content.trim() ? (
           <div
             className={cn(
-              "space-y-2 rounded-panel rounded-tl-md border border-line bg-surface px-3.5 py-2.5",
+              "space-y-2 rounded-2xl rounded-tl-sm border border-line bg-surface px-4 py-3 shadow-2xs",
               "text-sm leading-relaxed text-ink",
               message.streaming && "stream-caret",
             )}

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Play, Save, ShieldCheck } from "lucide-react";
+import { GitBranch, ListChecks, Newspaper, Play, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/badge";
@@ -16,12 +16,26 @@ import {
 } from "@/components/ui/panel";
 import { FormError, Skeleton } from "@/components/ui/states";
 import { useDocuments } from "@/hooks/use-admin-data";
-import { useActionItems, useRunScope, useSaveScope, useScope } from "@/hooks/use-work-data";
+import {
+  useActionItems,
+  useDraftAgentContext,
+  useGenerateDigest,
+  useRunScope,
+  useSaveScope,
+  useScope,
+} from "@/hooks/use-work-data";
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { describeCadence } from "@/lib/work/cadence";
 import type { ScopeDto } from "@/lib/work/scope";
 import { formatRelativeTime } from "@/lib/utils";
+import { ContextDraftButton, InheritedProjectContext } from "./context-questions";
+import { ScopeFlow } from "./scope-flow";
+import { HelpLink } from "@/components/help/help-panel";
+import { markFlowViewSeen } from "@/components/help/checklist-state";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AGENT_CONTEXT_QUESTIONS } from "@/lib/work/context";
 import {
+  DigestSettings,
   ScopeOfWorkForm,
   TrustSettings,
   browserTimezone,
@@ -29,10 +43,11 @@ import {
   type ScopeFormState,
 } from "./scope-of-work-form";
 import { WORK_TOOL_IDS } from "@/lib/work/tools";
+import { TRIGGER_LABELS } from "@/lib/work/types";
 
 function toForm(scope: ScopeDto): ScopeFormState {
   return {
-    context: scope.context,
+    contextAnswers: scope.contextAnswers,
     objectivesText: scope.objectives.join("\n"),
     documentIds: scope.documentIds,
     triggerType: scope.triggerType,
@@ -42,11 +57,23 @@ function toForm(scope: ScopeDto): ScopeFormState {
     autonomy: scope.autonomy,
     toolAutonomy: scope.toolAutonomy ?? {},
     tools: scope.tools ?? [...WORK_TOOL_IDS],
+    digestCadence: scope.digestCadence,
+    digestEmail: scope.digestEmail,
+    digestRecipients: scope.digestRecipients,
   };
 }
 
 /** Loads the scope, then hands a fully-known initial state to the editor below. */
-export function ScopeOfWorkPanel({ agentId, project }: { agentId: string; project: string }) {
+export function ScopeOfWorkPanel({
+  agentId,
+  project,
+  agent = { name: "", jobTitle: "" },
+}: {
+  agentId: string;
+  project: string;
+  /** Live from the editor's own fields, so the flow shows what is on screen. */
+  agent?: { name: string; jobTitle: string };
+}) {
   const scope = useScope(agentId);
   if (!scope.data) {
     return (
@@ -54,9 +81,7 @@ export function ScopeOfWorkPanel({ agentId, project }: { agentId: string; projec
         <PanelHeader>
           <div>
             <PanelTitle>Scope of work</PanelTitle>
-            <PanelDescription>
-              What this agent does on its own, and when.
-            </PanelDescription>
+            <PanelDescription>What this agent does on its own, and when.</PanelDescription>
           </div>
         </PanelHeader>
         <PanelBody className="space-y-3">
@@ -67,21 +92,33 @@ export function ScopeOfWorkPanel({ agentId, project }: { agentId: string; projec
       </Panel>
     );
   }
-  return <ScopeEditor key={agentId} agentId={agentId} project={project} scope={scope.data} />;
+  return (
+    <ScopeEditor
+      key={agentId}
+      agentId={agentId}
+      project={project}
+      agent={agent}
+      scope={scope.data}
+    />
+  );
 }
 
 function ScopeEditor({
   agentId,
   project,
+  agent,
   scope,
 }: {
+  agent: { name: string; jobTitle: string };
   agentId: string;
   project: string;
   scope: ScopeDto;
 }) {
   const documents = useDocuments(agentId);
+  const draftContext = useDraftAgentContext(agentId);
   const save = useSaveScope(agentId);
   const run = useRunScope(agentId);
+  const digestNow = useGenerateDigest(agentId);
   const recent = useActionItems({ project, agentId }, { refetchInterval: 5_000 });
 
   const [form, setForm] = React.useState<ScopeFormState>(() => toForm(scope));
@@ -89,6 +126,10 @@ function ScopeEditor({
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
   const [runNote, setRunNote] = React.useState<string | null>(null);
+  // Form is the default for every agent, every time: the picture is for
+  // owners who want the bird's-eye once they have a few tools wired up, not
+  // the way the configuration is meant to be read first.
+  const [view, setView] = React.useState<"form" | "flow">("form");
 
   const dirty = JSON.stringify(form) !== JSON.stringify(saved);
 
@@ -97,7 +138,8 @@ function ScopeEditor({
     setFieldErrors({});
     try {
       const result = await save.mutateAsync({
-        context: form.context.trim(),
+        context: "",
+        contextAnswers: form.contextAnswers,
         objectives: parseObjectives(form.objectivesText),
         documentIds: form.documentIds,
         triggerType: form.triggerType,
@@ -107,6 +149,9 @@ function ScopeEditor({
         autonomy: form.autonomy,
         toolAutonomy: Object.keys(form.toolAutonomy).length > 0 ? form.toolAutonomy : null,
         tools: form.tools,
+        digestCadence: form.digestCadence,
+        digestEmail: form.digestEmail,
+        digestRecipients: form.digestRecipients,
       });
       const next = toForm(result);
       setForm(next);
@@ -129,6 +174,18 @@ function ScopeEditor({
     }
   }
 
+  async function onDigestNow() {
+    try {
+      await digestNow.mutateAsync();
+      toast.success("Writing your update now", {
+        description:
+          "It covers everything since the last one and lands in the Inbox's Updates tab in a moment.",
+      });
+    } catch (caught) {
+      toast.error(errorMessage(caught));
+    }
+  }
+
   async function onRun() {
     setRunNote(null);
     try {
@@ -138,13 +195,19 @@ function ScopeEditor({
         toast.error("The run could not start", { description: item.error });
       } else {
         setRunNote("Run started. Progress shows below and under Work.");
-        toast.success("Run started", { description: "Progress shows in Recent runs and under Work." });
+        toast.success("Run started", {
+          description: "Progress shows in Recent runs and under Work.",
+        });
       }
     } catch (caught) {
       setRunNote(errorMessage(caught));
       toast.error(errorMessage(caught));
     }
   }
+
+  const readyDocuments = (documents.data ?? [])
+    .filter((doc) => doc.status === "ready")
+    .map((doc) => ({ id: doc.id, filename: doc.filename }));
 
   const webhookUrl =
     scope.webhookToken && typeof window !== "undefined"
@@ -155,37 +218,115 @@ function ScopeEditor({
     <Panel>
       <PanelHeader>
         <div>
-          <PanelTitle>Scope of work</PanelTitle>
+          <PanelTitle>Work &amp; schedule</PanelTitle>
           <PanelDescription>
-            What this agent does on its own, and when. Runs happen in the background whether
-            or not anyone is signed in.
+            When this agent works on its own and what it works on. Runs happen in the background
+            whether or not anyone is signed in.
           </PanelDescription>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <HelpLink topic="flowView" label="What is the flow view?" />
+          <Tabs
+            value={view}
+            onValueChange={(next) => {
+              setView(next as typeof view);
+              // One of the four setting-up steps is seeing this once.
+              if (next === "flow") markFlowViewSeen();
+            }}
+          >
+            <TabsList aria-label="How to view the scope of work">
+              <TabsTrigger value="form">
+                <ListChecks aria-hidden />
+                Form
+              </TabsTrigger>
+              <TabsTrigger value="flow">
+                <GitBranch aria-hidden />
+                Flow
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </PanelHeader>
 
       <PanelBody className="space-y-5">
         <FormError message={error} />
-        <ScopeOfWorkForm
-          value={form}
-          onChange={setForm}
-          documents={(documents.data ?? [])
-            .filter((doc) => doc.status === "ready")
-            .map((doc) => ({ id: doc.id, filename: doc.filename }))}
-          fieldErrors={fieldErrors}
-          webhookUrl={webhookUrl}
-          showModeNote={false}
-        />
 
-        <div className="border-t border-line pt-4">
-          <div className="mb-3 flex items-center gap-2">
-            <ShieldCheck className="size-4 text-accent" aria-hidden />
-            <h3 className="text-sm font-medium text-ink">Trust</h3>
-          </div>
-          <TrustSettings
-            value={{ autonomy: form.autonomy, toolAutonomy: form.toolAutonomy }}
-            onChange={(next) => setForm({ ...form, ...next })}
+        {view === "flow" ? (
+          <ScopeFlow
+            value={form}
+            onChange={setForm}
+            agent={agent}
+            fieldErrors={fieldErrors}
+            webhookUrl={webhookUrl}
+            documents={readyDocuments}
           />
-        </div>
+        ) : (
+          <>
+            <ScopeOfWorkForm
+              value={form}
+              onChange={setForm}
+              documents={readyDocuments}
+              fieldErrors={fieldErrors}
+              webhookUrl={webhookUrl}
+              showModeNote={false}
+              contextDraft={
+                <ContextDraftButton
+                  questions={AGENT_CONTEXT_QUESTIONS}
+                  value={form.contextAnswers}
+                  onChange={(contextAnswers) => setForm({ ...form, contextAnswers })}
+                  draft={() => draftContext.mutateAsync()}
+                  documentCount={readyDocuments.length}
+                />
+              }
+              inherited={<InheritedProjectContext project={project} />}
+            />
+
+            <div className="border-t border-line pt-4">
+              <div className="mb-3 flex items-center gap-2">
+                <ShieldCheck className="size-4 text-accent" aria-hidden />
+                <h3 className="text-sm font-medium text-ink">Trust</h3>
+              </div>
+              <TrustSettings
+                value={{
+                  autonomy: form.autonomy,
+                  toolAutonomy: form.toolAutonomy,
+                }}
+                onChange={(next) => setForm({ ...form, ...next })}
+              />
+            </div>
+
+            <div className="border-t border-line pt-4">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Newspaper className="size-4 text-accent" aria-hidden />
+                  <h3 className="text-sm font-medium text-ink">Keeping you posted</h3>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  loading={digestNow.isPending}
+                  onClick={() => void onDigestNow()}
+                >
+                  Send one now
+                </Button>
+              </div>
+              <DigestSettings
+                value={{
+                  digestCadence: form.digestCadence,
+                  digestEmail: form.digestEmail,
+                  digestRecipients: form.digestRecipients,
+                }}
+                onChange={(next) => setForm({ ...form, ...next })}
+              />
+              {scope.lastDigestAt ? (
+                <p className="mt-2 text-xs text-ink-muted">
+                  Last update {formatRelativeTime(scope.lastDigestAt)}.
+                </p>
+              ) : null}
+            </div>
+          </>
+        )}
 
         {scope.triggerType === "cron" && scope.nextFireAt ? (
           <p className="text-xs text-ink-muted">
@@ -207,22 +348,21 @@ function ScopeEditor({
           {recent.data && recent.data.length > 0 ? (
             <ul className="divide-y divide-line rounded-lg border border-line">
               {recent.data.slice(0, 5).map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                <li
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                >
                   <div className="min-w-0">
                     <span className="text-ink">
-                      {item.trigger === "schedule"
-                        ? "Scheduled run"
-                        : item.trigger === "webhook"
-                          ? "Webhook run"
-                          : item.trigger === "followup"
-                            ? "Follow-up"
-                            : "Manual run"}
+                      {TRIGGER_LABELS[item.trigger] ?? "Manual"} run
                     </span>
                     <span className="ml-2 text-xs text-ink-muted">
                       {formatRelativeTime(item.createdAt)}
                     </span>
-                    {item.summary ? (
-                      <p className="mt-0.5 truncate text-xs text-ink-muted">{item.summary}</p>
+                    {(item.headline ?? item.summary) ? (
+                      <p className="mt-0.5 truncate text-xs text-ink-muted">
+                        {item.headline ?? item.summary}
+                      </p>
                     ) : item.error ? (
                       <p className="mt-0.5 truncate text-xs text-danger">{item.error}</p>
                     ) : null}

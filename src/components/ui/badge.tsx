@@ -3,8 +3,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badge = cva(
-  "inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-xs font-medium " +
-    "leading-5 whitespace-nowrap [&_svg]:size-3",
+  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium " +
+    "leading-5 whitespace-nowrap shadow-2xs transition-colors [&_svg]:size-3",
   {
     variants: {
       tone: {
@@ -39,34 +39,42 @@ export function SeverityBadge({ severity }: { severity: string | null }) {
   const tone =
     SEVERITY_TONE[severity as keyof typeof SEVERITY_TONE] ?? "neutral";
   return (
-    <Badge tone={tone} className="uppercase tracking-wide">
+    <Badge tone={tone} className="uppercase tracking-wide text-[11px] font-semibold">
       {severity}
     </Badge>
   );
 }
+
+const STATUS_DOT_BG = {
+  neutral: "bg-ink-muted/70",
+  accent: "bg-accent",
+  positive: "bg-positive",
+  warning: "bg-warning",
+  danger: "bg-danger",
+} as const;
 
 /**
  * Every status in the product, one look. Agents, conversations, issues,
  * documents, action items, drafts, roles and invitations all go through
  * here, so a state reads the same in a list, a card and a detail page.
  */
-const STATUS: Record<string, { tone: "neutral" | "accent" | "positive" | "warning" | "danger"; label: string }> = {
+const STATUS: Record<string, { tone: "neutral" | "accent" | "positive" | "warning" | "danger"; label: string; pulse?: boolean }> = {
   // agents
-  published: { tone: "positive", label: "Published" },
+  published: { tone: "positive", label: "Published", pulse: true },
   draft: { tone: "warning", label: "Draft" },
   // conversations and issues
-  open: { tone: "accent", label: "Open" },
+  open: { tone: "accent", label: "Open", pulse: true },
   escalated: { tone: "danger", label: "Escalated" },
   resolved: { tone: "neutral", label: "Resolved" },
   // documents
   ready: { tone: "positive", label: "Ready" },
-  pending: { tone: "warning", label: "Processing" },
+  pending: { tone: "warning", label: "Processing", pulse: true },
   // action items
   queued: { tone: "neutral", label: "Queued" },
-  in_progress: { tone: "accent", label: "Running" },
+  in_progress: { tone: "accent", label: "Running", pulse: true },
   needs_approval: { tone: "warning", label: "Needs approval" },
   approved: { tone: "accent", label: "Approved" },
-  executing_external: { tone: "accent", label: "Sending" },
+  executing_external: { tone: "accent", label: "Sending", pulse: true },
   done: { tone: "positive", label: "Done" },
   failed: { tone: "danger", label: "Failed" },
   rejected: { tone: "neutral", label: "Rejected" },
@@ -78,10 +86,36 @@ const STATUS: Record<string, { tone: "neutral" | "accent" | "positive" | "warnin
   member: { tone: "neutral", label: "Member" },
 };
 
-export function StatusBadge({ status, className }: { status: string; className?: string }) {
+export function StatusBadge({
+  status,
+  withDot = true,
+  className,
+}: {
+  status: string;
+  withDot?: boolean;
+  className?: string;
+}) {
   const entry = STATUS[status] ?? { tone: "neutral" as const, label: status.replace(/_/g, " ") };
   return (
-    <Badge tone={entry.tone} className={className}>
+    <Badge tone={entry.tone} className={cn("gap-1.5 text-[11px] font-semibold", className)}>
+      {withDot ? (
+        <span className="relative flex size-1.5 shrink-0" aria-hidden>
+          {entry.pulse ? (
+            <span
+              className={cn(
+                "absolute inline-flex size-full animate-ping rounded-full opacity-60",
+                STATUS_DOT_BG[entry.tone],
+              )}
+            />
+          ) : null}
+          <span
+            className={cn(
+              "relative inline-flex size-1.5 rounded-full",
+              STATUS_DOT_BG[entry.tone],
+            )}
+          />
+        </span>
+      ) : null}
       {entry.label}
     </Badge>
   );

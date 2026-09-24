@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { env } from "@/lib/env";
-import { getStorage, safeFilename } from "@/lib/storage";
+import { safeFilename, storage } from "@/lib/storage";
 import { isAcceptedUpload, ACCEPTED_EXTENSIONS } from "@/lib/rag/extract";
 import { ingestDocument } from "@/lib/rag/ingest";
 import type { DocumentDto } from "@/lib/serialize";
@@ -74,7 +74,7 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     const data = Buffer.from(await file.arrayBuffer());
-    const stored = await getStorage().put(`agents/${agentId}`, file.name, data);
+    const stored = await storage.put(`agents/${agentId}`, file.name, data);
 
     const document = await prisma.document.create({
       data: {

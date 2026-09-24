@@ -139,7 +139,7 @@ export function AgentFigure({
           y="0"
           width={SIZE}
           height={SIZE}
-          rx={f.circle ? SIZE : SIZE / 6}
+          rx={f.circle ? SIZE : SIZE / 2.5}
           fill={field}
           transform={`translate(${f.wrapperX} ${f.wrapperY}) rotate(${f.wrapperRotate} ${SIZE / 2} ${SIZE / 2}) scale(${f.wrapperScale})`}
         />

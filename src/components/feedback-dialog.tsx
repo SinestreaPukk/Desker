@@ -51,18 +51,36 @@ function FeedbackDialog({
 }) {
   const pathname = usePathname();
   const [kind, setKind] = React.useState("idea");
+  const [heuristic, setHeuristic] = React.useState("general");
   const [message, setMessage] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [state, setState] = React.useState<"idle" | "sending" | "sent">("idle");
+
+  const HEURISTIC_LABELS: Record<string, string> = {
+    general: "General feedback",
+    visibility: "System status & feedback (Doherty)",
+    real_world: "Real-world phrasing & clarity",
+    control: "User control & undo",
+    consistency: "Consistency & navigation (Jakob's Law)",
+    error_prevention: "Error prevention & guardrails",
+    recognition: "Recognition over recall",
+    efficiency: "Speed & shortcuts",
+    minimalism: "Visual hierarchy & choices (Hick's Law)",
+    accessibility: "Accessibility & contrast (WCAG)",
+  };
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setState("sending");
+    const formattedMessage =
+      heuristic !== "general"
+        ? `[Heuristic: ${HEURISTIC_LABELS[heuristic]}]\n${message.trim()}`
+        : message.trim();
     try {
       await api("/api/feedback", {
         method: "POST",
-        body: JSON.stringify({ kind, message: message.trim(), path: pathname, project }),
+        body: JSON.stringify({ kind, message: formattedMessage, path: pathname, project }),
       });
       setState("sent");
       setMessage("");
@@ -79,7 +97,7 @@ function FeedbackDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="space-y-5">
           <div>
             <DialogTitle>Send feedback</DialogTitle>
             <DialogDescription>
@@ -88,22 +106,43 @@ function FeedbackDialog({
             </DialogDescription>
           </div>
           <FormError message={error} />
-          <div>
-            <label htmlFor="feedback-kind" className="text-sm font-medium text-ink">
-              This is
-            </label>
-            <Select value={kind} onValueChange={setKind}>
-              <SelectTrigger id="feedback-kind" className="mt-1.5 w-44">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bug">a bug</SelectItem>
-                <SelectItem value="idea">an idea</SelectItem>
-                <SelectItem value="question">a question</SelectItem>
-                <SelectItem value="other">something else</SelectItem>
-              </SelectContent>
-            </Select>
+
+          <div className="flex items-center justify-between rounded-md border border-line bg-surface-2/60 px-3 py-1.5 text-xs text-ink-muted">
+            <span>Tagged to screen:</span>
+            <code className="font-mono text-ink">{pathname}</code>
           </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="This is" htmlFor="feedback-kind">
+              <Select value={kind} onValueChange={setKind}>
+                <SelectTrigger id="feedback-kind">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bug">a bug</SelectItem>
+                  <SelectItem value="idea">an idea</SelectItem>
+                  <SelectItem value="question">a question</SelectItem>
+                  <SelectItem value="other">something else</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field label="Design &amp; usability area" htmlFor="feedback-heuristic">
+              <Select value={heuristic} onValueChange={setHeuristic}>
+                <SelectTrigger id="feedback-heuristic">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(HEURISTIC_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+
           <Field label="What happened, or what would help?" htmlFor="feedback-message" required>
             <Textarea
               id="feedback-message"

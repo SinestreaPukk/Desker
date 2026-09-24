@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { getStorage } from "@/lib/storage";
+import { storage } from "@/lib/storage";
 import { syncVectorColumn } from "@/lib/rag/retriever";
 import { toAgentDetail } from "@/lib/serialize";
 import { findProjectById } from "@/lib/projects";
@@ -78,7 +78,6 @@ export async function POST(request: Request, { params }: Params) {
 
     let copiedDocuments = 0;
     if (input.includeDocuments) {
-      const storage = getStorage();
       for (const document of source.documents) {
         let storageKey = document.storageKey;
         try {

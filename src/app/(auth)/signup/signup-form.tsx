@@ -73,15 +73,15 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
     <div className="space-y-6">
       <div>
         <BrandLockup />
-        <h1 className="mt-5 text-xl font-semibold text-ink">Create your account</h1>
+        <h1 className="mt-5 text-xl font-semibold tracking-tight text-ink sm:text-2xl">Create your account</h1>
         <p className="mt-1.5 text-sm text-ink-muted">
           One workspace, as many AI employees as you need.
         </p>
       </div>
 
-      <Panel>
-        <PanelBody className="pt-5">
-          <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      <Panel className="window shadow-xl shadow-ink/4">
+        <PanelBody className="p-6 sm:p-7">
+          <form onSubmit={onSubmit} className="space-y-5" noValidate>
             <FormError message={error} />
 
             <Field label="Your name" htmlFor="name" hint="Optional.">

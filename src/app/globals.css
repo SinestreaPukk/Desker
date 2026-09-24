@@ -541,21 +541,6 @@
   background: oklch(1 0 0 / 0.1);
 }
 
-/* The underline under a keyword (components/marketing/highlight.tsx), in the
-   sky's blue-indigo. A background bar rather than text-decoration, so it can
-   draw in from the left (see "Scroll reveals"); box-decoration-break keeps
-   it under every line when the phrase wraps. Decorative: the words read
-   without it. */
-.highlight-underline {
-  background-image: linear-gradient(var(--sky-deep), var(--sky-deep));
-  background-repeat: no-repeat;
-  background-position: 0 92%;
-  background-size: 100% 0.09em;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-  padding-bottom: 0.06em;
-}
-
 /* The cushion a product window sits on.
    The sky is the page's most distinctive asset and it was confined to the
    two ends, leaving the whole middle flat. This is the same light at a

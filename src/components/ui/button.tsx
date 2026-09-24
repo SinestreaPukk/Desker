@@ -8,20 +8,20 @@ import { cn } from "@/lib/utils";
 
 const button = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium " +
-    "transition-[background-color,border-color,color,box-shadow] duration-150 " +
+    "transition-all duration-150 " +
     "disabled:pointer-events-none disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         primary:
-          "bg-accent text-accent-fg hover:bg-accent-hover shadow-sm active:translate-y-px",
+          "bg-accent text-accent-fg hover:bg-accent-hover shadow-xs hover:shadow-sm active:scale-[0.98] ring-1 ring-inset ring-white/20 dark:ring-white/10",
         secondary:
-          "bg-surface text-ink border border-line-strong hover:bg-surface-2 active:translate-y-px",
-        ghost: "text-ink-muted hover:bg-surface-2 hover:text-ink",
-        subtle: "bg-surface-2 text-ink hover:bg-surface-3",
+          "bg-surface text-ink border border-line hover:border-line-strong hover:bg-surface-2 shadow-xs active:scale-[0.98]",
+        ghost: "text-ink-muted hover:bg-surface-2 hover:text-ink active:scale-[0.98]",
+        subtle: "bg-surface-2 text-ink hover:bg-surface-3 active:scale-[0.98]",
         danger:
-          "bg-danger text-danger-fg hover:brightness-110 shadow-sm active:translate-y-px",
+          "bg-danger text-danger-fg hover:brightness-110 shadow-xs hover:shadow-sm active:scale-[0.98] ring-1 ring-inset ring-white/20",
         link: "text-accent underline underline-offset-4 hover:text-accent-hover",
       },
       size: {
