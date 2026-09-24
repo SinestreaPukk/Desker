@@ -6,6 +6,7 @@
  * is required", never a blank hero in production.
  */
 import { z } from "zod";
+import { BRAND_LOGO_IDS } from "@/components/marketing/brand-logos";
 import site from "../../content/site.json";
 import landing from "../../content/landing.json";
 import showcase from "../../content/showcase.json";
@@ -73,17 +74,13 @@ const landingSchema = z.object({
     /** One line of reassurance under the buttons. */
     microcopy: z.string().max(90),
   }),
-  /** "Built on" facts. Names only - TODO: real logos only, with permission. */
+  /** "Built on" facts: the model providers, with their marks. */
   trustStrip: z.object({
     label: z.string(),
-    items: z.array(z.string().min(1).max(40)).min(1).max(6),
-  }),
-  problem: z.object({
-    eyebrow: sectionHead.eyebrow,
-    pains: z.array(z.string().min(1).max(120)).min(1).max(3),
-    promise: z.string().min(1).max(120),
-    /** The words in the promise that carry the underline. */
-    highlight: z.string().min(1),
+    items: z
+      .array(z.object({ name: z.string().min(1).max(40), logo: z.enum(BRAND_LOGO_IDS).optional() }))
+      .min(1)
+      .max(6),
   }),
   steps: z.object({
     ...sectionHead,

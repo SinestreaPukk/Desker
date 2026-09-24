@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { LANDING_ICONS, TEMPLATES } from "@/lib/content";
 import { TemplateIcon } from "@/components/marketing/template-icon";
+import { BrandLogo, type BrandLogoId } from "@/components/marketing/brand-logos";
 import { cn } from "@/lib/utils";
 
 /**
@@ -44,17 +45,25 @@ export function LandingIcon({ icon, className }: { icon: (typeof LANDING_ICONS)[
 /* --- Trust strip ------------------------------------------------------------ */
 
 /**
- * What the product is built on, as names. TODO: real logos only - provider
- * wordmarks need their brand permission, and customer logos need a customer.
+ * What the product is built on: the providers' own marks, in the page's ink
+ * tone. An item without a mark falls back to its name, so a new provider is
+ * a content change even before anyone draws a logo.
  */
-export function TrustStrip({ label, items }: { label: string; items: readonly string[] }) {
+export function TrustStrip({
+  label,
+  items,
+}: {
+  label: string;
+  items: readonly { name: string; logo?: BrandLogoId }[];
+}) {
   return (
-    <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center sm:gap-6">
+    <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-center sm:gap-8">
       <p className="eyebrow sd-rise">{label}</p>
-      <ul className="sd-stagger flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+      <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
         {items.map((item) => (
-          <li key={item} className="text-lg font-semibold tracking-tight text-ink-muted">
-            {item}
+          <li key={item.name} className="flex items-center gap-2 text-ink-muted">
+            {item.logo ? <BrandLogo id={item.logo} className="size-6" /> : null}
+            <span className="text-lg font-semibold tracking-tight">{item.name}</span>
           </li>
         ))}
       </ul>

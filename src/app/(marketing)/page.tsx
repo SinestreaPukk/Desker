@@ -19,7 +19,6 @@ import {
 } from "@/components/marketing/landing-blocks";
 import { GLASS_BUTTON, SKY_LINK } from "@/components/marketing/glass-button";
 import { HeroStage } from "@/components/marketing/hero-stage";
-import { Highlight } from "@/components/marketing/highlight";
 import { Dunes, NightSky } from "@/components/marketing/night-sky";
 import { HeroSnap } from "@/components/marketing/hero-snap";
 import { LinkButton } from "@/components/marketing/link-button";
@@ -40,8 +39,8 @@ export const metadata: Metadata = pageMetadata({
 
 /**
  * The front door, in the order a visitor's questions arrive: what is it
- * (hero), can I believe it (built on), why would I (problem), how (three
- * steps), what exactly (showcase), is it safe (trust), which one (roles),
+ * (hero), can I believe it (built on), how (three steps), what exactly
+ * (showcase), is it safe (trust), which one (roles),
  * does it work (outcomes, quotes), what does it cost (pricing), but what
  * about (FAQ), and go (CTA).
  *
@@ -63,7 +62,7 @@ export default async function LandingPage({
     redirect(`/p/${project.slug}/roster`);
   }
 
-  const { hero, trustStrip, problem, steps, features, trust, roles, metrics, testimonials, pricing, faq, cta } =
+  const { hero, trustStrip, steps, features, trust, roles, metrics, testimonials, pricing, faq, cta } =
     LANDING;
   // Placeholders are for review only: outside production an unmeasured number
   // shows as a marked TODO; in production the section waits for real values.
@@ -133,23 +132,6 @@ export default async function LandingPage({
       {/* Top padding clears the stage that hangs down from the hero. */}
       <Section containerClassName="pb-0 pt-32 sm:pb-0 sm:pt-44">
         <TrustStrip label={trustStrip.label} items={trustStrip.items} />
-      </Section>
-
-      {/* Problem -> promise -------------------------------------------- */}
-      <Section labelledBy="problem-heading">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="eyebrow sd-rise text-accent">{problem.eyebrow}</p>
-          <div className="sd-stagger mt-5 space-y-3">
-            {problem.pains.map((pain) => (
-              <p key={pain} className="text-xl leading-snug text-pretty text-ink-muted">
-                {pain}
-              </p>
-            ))}
-          </div>
-          <h2 id="problem-heading" className="sd-rise mt-8 text-title text-balance text-ink">
-            <Highlight text={problem.promise} phrase={problem.highlight} />
-          </h2>
-        </div>
       </Section>
 
       {/* How it works ----------------------------------------------------- */}

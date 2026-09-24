@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "AI staff for the work you never get to",
-    "description": "Desker's AI agents answer the repeat questions, run the weekly research and draft the posts and emails — from your own documents. Every draft waits for your OK. Free to start."
+    "title": "Autonomous AI agents that work for you 24/7",
+    "description": "A marketer, a researcher, developer support, personal assistant, you name it. Every agent has a job, your context, and tools that reach the outside world"
   },
   "hero": {
-    "headline": "You're answering the same questions again",
-    "subhead": "Desker's agents handle the repeat work from your own documents — research, replies, posts — and hand you a draft. Nothing sends without your OK.",
+    "headline": "Autonomous AI agents that work for you 24/7",
+    "subhead": "A marketer, a researcher, developer support, personal assistant, you name it. Every agent has a job, your context, and tools that reach the outside world",
     "primaryCta": {
       "label": "Start free",
       "href": "/signup"
@@ -19,24 +19,15 @@
   "trustStrip": {
     "label": "Built on models from",
     "items": [
-      "Anthropic Claude",
-      "OpenAI"
+      {
+        "name": "Anthropic",
+        "logo": "anthropic"
+      },
+      {
+        "name": "OpenAI",
+        "logo": "openai"
+      }
     ]
-  },
-  "problem": {
-    "eyebrow": "Sound familiar?",
-    "pains": [
-      "The same client questions, answered again from the same policy document.",
-      "Research, posts and follow-ups that only happen when someone finds a spare hour."
-    ],
-    "cost": [
-      "Monday's post doesn't get written.",
-      "Friday's competitor check never happens.",
-      "The follow-up you promised slips another week.",
-      "And the answer was in your documents the whole time."
-    ],
-    "promise": "Desker gives you staff for that work — and the final say on all of it.",
-    "highlight": "the final say"
   },
   "steps": {
     "eyebrow": "How it works",
@@ -145,19 +136,6 @@
     "heading": "Eight roles, ready to hire",
     "intro": "Pick one and change anything: its job, its voice, the documents it reads, when it asks you.",
     "cta": "Explore role"
-  },
-  "midCta": {
-    "heading": "Hire your first agent",
-    "body": "Five minutes from sign-up to an agent that works from your own documents.",
-    "primary": {
-      "label": "Start free",
-      "href": "/signup"
-    },
-    "secondary": {
-      "label": "See a role at work first",
-      "href": "/showcase"
-    },
-    "microcopy": "Free forever plan · No credit card · Cancel anytime"
   },
   "comparison": {
     "eyebrow": "The difference",
@@ -276,7 +254,7 @@
     ]
   },
   "cta": {
-    "heading": "Start with one agent",
+    "heading": "Start deploying your own agent now",
     "body": "Upload a document, pick a role, and see what it hands you tomorrow morning.",
     "button": {
       "label": "Start free",
