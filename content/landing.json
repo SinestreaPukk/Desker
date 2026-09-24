@@ -1,18 +1,18 @@
 {
   "meta": {
-    "title": "AI employees for real work",
-    "description": "Hire an AI employee with a role, a voice and your company's context. It answers clients, researches and drafts on a schedule, and nothing goes out without your approval."
+    "title": "AI staff for the work you never get to",
+    "description": "Desker's AI agents answer the repeat questions, run the weekly research and draft the posts and emails — from your own documents. Every draft waits for your OK. Free to start."
   },
   "hero": {
-    "headline": "AI employees that do real work",
-    "subhead": "A marketer, a researcher, developer support, an assistant, a support desk. Each one works from your documents, on a schedule, and asks before anything goes out.",
+    "headline": "You're answering the same questions again",
+    "subhead": "Desker's agents handle the repeat work from your own documents — research, replies, posts — and hand you a draft. Nothing sends without your OK.",
     "primaryCta": {
       "label": "Start free",
       "href": "/signup"
     },
     "secondaryCta": {
       "label": "See it work",
-      "href": "/#product"
+      "href": "/showcase"
     },
     "microcopy": "Free forever plan · No credit card · Nothing sends without your OK"
   },
@@ -24,97 +24,104 @@
     ]
   },
   "problem": {
-    "eyebrow": "Why Desker",
+    "eyebrow": "Sound familiar?",
     "pains": [
-      "Your team rewrites the same replies, posts and research every week.",
-      "Most AI tools either leave the work to you, or act without asking."
+      "The same client questions, answered again from the same policy document.",
+      "Research, posts and follow-ups that only happen when someone finds a spare hour."
     ],
-    "promise": "Desker gives you AI staff that does the work and waits for your OK.",
-    "highlight": "waits for your OK"
+    "cost": [
+      "Monday's post doesn't get written.",
+      "Friday's competitor check never happens.",
+      "The follow-up you promised slips another week.",
+      "And the answer was in your documents the whole time."
+    ],
+    "promise": "Desker gives you staff for that work — and the final say on all of it.",
+    "highlight": "the final say"
   },
   "steps": {
     "eyebrow": "How it works",
-    "heading": "Working in three steps",
+    "heading": "Working by Monday morning",
+    "intro": "Five minutes to set up. A step-by-step guide for each part lives in the app.",
     "items": [
       {
         "icon": "upload",
-        "title": "Upload your docs",
-        "body": "Policies, product guides, notes. Your agents answer from them and name the source."
+        "title": "Upload what you already know",
+        "body": "Policies, product guides, meeting notes. Your agents answer from them and name the file they used."
       },
       {
         "icon": "calendar",
-        "title": "Pick a role and a schedule",
-        "body": "Choose one of eight roles and when it works: every Monday, every Friday, or when a customer writes."
+        "title": "Give it a job and a time",
+        "body": "Pick one of eight roles and when it works: every Monday at nine, every Friday, or the moment a customer writes."
       },
       {
         "icon": "approve",
-        "title": "Approve, edit, or reject",
-        "body": "Finished drafts wait in one inbox. Nothing is sent until you say so."
+        "title": "Read it over coffee",
+        "body": "The work is done and waiting in one inbox. Approve it, edit it, or bin it. A weekly digest sums up the rest."
       }
     ]
   },
   "features": {
-    "eyebrow": "Product",
-    "heading": "Real work, ready for your review",
-    "intro": "Five roles and one inbox. Each agent works on its own schedule and hands you a finished draft.",
+    "eyebrow": "The work, done",
+    "heading": "One morning's output, before you start",
+    "intro": "Real drafts from real roles — a researcher, a marketer, an assistant and a support desk, each working from your documents.",
     "items": [
       {
         "label": "Approvals inbox",
-        "title": "You have the final say on everything",
-        "body": "Every post, email and ticket waits in one inbox. Approve, edit or reject in one click, and every decision is logged.",
+        "title": "Nothing goes out until you say so",
+        "body": "Every post, email and ticket waits here with its full text. Approve, edit or reject in one click. Every decision is logged.",
         "demo": "approval"
       },
       {
         "label": "Nova · Marketer",
-        "title": "Weekly posts in your voice",
-        "body": "Every Monday, Nova reads what changed this week and drafts the post for you to approve.",
+        "title": "Monday's post, written on Sunday night",
+        "body": "Nova reads what changed this week and drafts the post in your voice. You approve it before anyone sees it.",
         "demo": "marketer"
       },
       {
         "label": "Mia · Support",
-        "title": "Answers straight from your policies",
-        "body": "Mia answers customers from the documents you upload and names the source. Unsure? She hands off to you.",
+        "title": "The warranty question, answered at 2am",
+        "body": "Mia answers from the returns policy you uploaded and names the file. When it isn't in there, she hands it to you.",
         "demo": "support"
       },
       {
         "label": "Sol · Researcher",
-        "title": "Research briefs you can check",
-        "body": "Sol answers your standing questions every week, with numbered sources you can open.",
+        "title": "What three competitors did this week",
+        "body": "Sol runs your standing question every Friday and writes it up with numbered sources you can open and check.",
         "demo": "researcher"
       },
       {
         "label": "Ada · Dev support",
-        "title": "Bug reports engineers can act on",
-        "body": "Ada answers developers from your API docs, reproduces the problem and logs it with steps.",
+        "title": "A bug report engineers can act on",
+        "body": "Ada answers the developer from your API docs, reproduces the error, and logs it with the steps to repeat it.",
         "demo": "dev-support"
       },
       {
         "label": "Kai · Assistant",
-        "title": "Follow-ups that never slip",
-        "body": "Kai drafts the email from your meeting notes and proposes the next meeting. You confirm.",
+        "title": "The follow-up that didn't slip",
+        "body": "Kai drafts the email from your meeting notes and proposes the next date. It sends when you confirm.",
         "demo": "assistant"
       }
     ]
   },
   "trust": {
     "eyebrow": "Trust & control",
-    "heading": "Built to ask before it acts",
-    "intro": "One wrong email can cost you a customer. Desker is designed so nothing leaves without a person seeing it first.",
+    "heading": "It asks before it acts",
+    "intro": "Handing work to an AI is a bigger ask than trying another app. So an agent drafts, and a person decides.",
     "items": [
       {
         "icon": "draft",
         "title": "Draft-only by default",
-        "body": "Agents can't publish or send anything until you allow it, per agent and per tool."
+        "body": "A new agent cannot publish or send anything. You allow that yourself, per agent and per tool."
       },
       {
         "icon": "person",
-        "title": "A person approves every send",
-        "body": "Posts and emails wait in your inbox with the full text. You approve, edit or reject."
+        "title": "You approve every send",
+        "body": "Posts and emails wait in your inbox with the full text. Approve, edit or reject — from your phone."
       },
       {
         "icon": "source",
         "title": "Answers name their source",
-        "body": "Agents answer from your documents and cited web pages. When they don't know, they say so."
+        "body": "Agents answer from your documents and cited web pages. When the answer isn't there, they say so."
       },
       {
         "icon": "log",
@@ -123,21 +130,68 @@
       },
       {
         "icon": "lock",
-        "title": "Your data never trains models",
-        "body": "What you upload stays yours and is never used to train an AI model. Saved credentials are encrypted."
+        "title": "Your documents are yours",
+        "body": "Nothing you upload is used to train an AI model. Saved credentials are encrypted."
       },
       {
         "icon": "handoff",
-        "title": "Clear rules for handing off",
-        "body": "Each agent has an escalation rule. When it applies, the agent stops and brings in a person."
+        "title": "It knows when to stop",
+        "body": "Each agent has a rule for handing off. When it applies, the agent stops and brings in a person."
       }
     ]
   },
   "roles": {
     "eyebrow": "Roles",
     "heading": "Eight roles, ready to hire",
-    "intro": "Pick a role and change anything. Each one knows when to ask a person.",
+    "intro": "Pick one and change anything: its job, its voice, the documents it reads, when it asks you.",
     "cta": "Explore role"
+  },
+  "midCta": {
+    "heading": "Hire your first agent",
+    "body": "Five minutes from sign-up to an agent that works from your own documents.",
+    "primary": {
+      "label": "Start free",
+      "href": "/signup"
+    },
+    "secondary": {
+      "label": "See a role at work first",
+      "href": "/showcase"
+    },
+    "microcopy": "Free forever plan · No credit card · Cancel anytime"
+  },
+  "comparison": {
+    "eyebrow": "The difference",
+    "heading": "Why prompt windows aren't coworkers",
+    "intro": "ChatGPT and Claude answer quick prompts. Desker gives you autonomous staff that work on your schedule, know your business, and stop for your OK.",
+    "competitorLabel": "Generic AI (ChatGPT / Claude)",
+    "deskerLabel": "Desker Autonomous Agents",
+    "items": [
+      {
+        "dimension": "Schedule & initiative",
+        "generic": "Reactive only — sits idle in a browser tab until you manually prompt it",
+        "desker": "Autonomous 24/7 — runs on schedules, events, and background triggers"
+      },
+      {
+        "dimension": "Company context",
+        "generic": "Forgotten between sessions or re-pasted into prompt windows repeatedly",
+        "desker": "Permanent company context, structured profile, and reference documents"
+      },
+      {
+        "dimension": "Taking real action",
+        "generic": "Outputs text in a chat bubble; cannot reach external tools or workflows",
+        "desker": "Searches the web, drafts emails, and prepares ready-to-send action items"
+      },
+      {
+        "dimension": "Safety & approvals",
+        "generic": "No review gate — you manually copy-paste or risk unverified automations",
+        "desker": "Draft-only by default — every post and email waits for your 1-click OK"
+      },
+      {
+        "dimension": "Job specialization",
+        "generic": "One generic chat window with no defined role, tools, or boundaries",
+        "desker": "8 tailored roles with assigned responsibilities and escalation rules"
+      }
+    ]
   },
   "metrics": {
     "eyebrow": "Outcomes",
@@ -168,48 +222,70 @@
   },
   "pricing": {
     "eyebrow": "Pricing",
-    "heading": "Pricing that follows the work",
-    "intro": "Pay for agents that are live and the work they do. Start free. Upgrade when one is earning its keep.",
+    "heading": "Start free. Pay when it earns it.",
+    "intro": "Priced on how many agents are live and how much they do. The free plan doesn't expire.",
     "popularPlan": "starter",
     "popularLabel": "Most popular",
-    "footnote": "Every plan includes every role, unlimited teammates, the audit log and email support."
+    "footnote": "Every plan includes all 8 roles, unlimited teammates, the full audit log and email support.",
+    "reassurance": "No credit card to start · Change or cancel anytime, in one click"
   },
   "faq": {
     "eyebrow": "FAQ",
-    "heading": "Frequently asked questions",
+    "heading": "Before you start",
     "items": [
       {
         "q": "What can an agent actually do?",
-        "a": "Answer clients on a chat link or a widget on your site, log bugs and requests, research the web with sources, draft posts and emails, schedule its own follow-ups, and escalate to a person when its rule says so."
+        "a": "It answers your clients on a chat link or a widget on your site, searches the documents you upload, researches the web with citations, drafts posts and emails, logs bugs and requests, and schedules its own follow-ups. It can work on a schedule or the moment someone writes in."
       },
       {
-        "q": "Will it send something I haven't seen?",
-        "a": "No. Every agent starts in draft-only mode: publishing a post or sending an email waits for your approval in the Inbox. You can loosen that per agent, per tool, once it has earned it."
+        "q": "Will it ever send something I haven't seen?",
+        "a": "No. Every agent starts in draft-only mode, so posts and emails wait for your approval in the Inbox. You can loosen that per agent and per tool once one has earned it."
+      },
+      {
+        "q": "What happens if an agent gets it wrong?",
+        "a": "You catch it in the inbox, because the draft is the thing you approve: reject it, or edit it and send the version you want. Every agent also has an escalation rule that stops it and brings in a person, and the audit log shows what it did and which sources it used."
       },
       {
         "q": "Where do its answers come from?",
-        "a": "From the documents you upload and from cited web research. When it doesn't know, it says so rather than guessing."
+        "a": "From the documents you upload (PDF, Word, Markdown, text) and from cited web pages. When the answer is in neither, the agent says it doesn't know rather than inventing one."
       },
       {
-        "q": "Is Desker free?",
-        "a": "Yes to start: one live agent with enough runs and conversations to see it work. Paid plans add agents, runs and a larger model budget."
+        "q": "Is my data secure?",
+        "a": "Nothing you upload is used to train an AI model, and your documents are readable only inside your organisation. Integration credentials such as API keys are encrypted at rest with AES-256-GCM. TODO: confirm the hosting, backup and deletion details you want stated here before launch."
+      },
+      {
+        "q": "Can I connect my own tools?",
+        "a": "Today an agent can send email through your own Resend account, post notifications to Slack or any webhook, take work in through an inbound webhook, and talk to clients through a hosted link or the embed widget. Direct Gmail, LinkedIn and Slack posting are not built yet."
       },
       {
         "q": "How long does setup take?",
-        "a": "About five minutes. Pick a role, name it, upload a document, test it live, publish."
+        "a": "About five minutes: pick a role, upload a document, test it live in the playground, publish. The app has a step-by-step guide for each part, from hiring an agent to reading the audit log."
       },
       {
-        "q": "Does my data train anyone's model?",
-        "a": "No. Integration credentials are encrypted at rest, and nothing you upload is used for training."
+        "q": "Can I cancel anytime?",
+        "a": "Yes, in one click, with no notice period and no cancellation fee. You drop back to the free plan and keep your agents and your documents rather than losing the work."
+      },
+      {
+        "q": "Do you have a plan for a bigger team?",
+        "a": "Every plan already includes unlimited teammates, with roles and invitations. If you need more agents, more volume, or a security review before you can buy, get in touch and we'll size it with you."
+      },
+      {
+        "q": "What languages does it work in?",
+        "a": "An agent reads your documents and replies in the language you write its job in, and the models behind it handle the major languages well. The Desker interface itself is English only today. TODO: confirm the language list you want to state before launch."
       }
     ]
   },
   "cta": {
-    "heading": "Put an agent to work today",
-    "body": "Five minutes. Free to start.",
+    "heading": "Start with one agent",
+    "body": "Upload a document, pick a role, and see what it hands you tomorrow morning.",
     "button": {
       "label": "Start free",
       "href": "/signup"
-    }
+    },
+    "secondary": {
+      "label": "See it work first",
+      "href": "/showcase"
+    },
+    "microcopy": "Free forever plan · No credit card · Nothing sends without your OK"
   }
 }
