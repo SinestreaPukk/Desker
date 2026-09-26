@@ -25,6 +25,9 @@ import {
 } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { useCreateAgent } from "@/hooks/use-admin-data";
+import { useIntegrations, useOAuthProviders } from "@/hooks/use-work-data";
+import { ConnectorCard } from "@/components/integrations/connector-card";
+import { connectorById } from "@/lib/integrations/catalog";
 import { api, ApiError, errorMessage } from "@/lib/api-client";
 import { parseLines, randomAgentName } from "@/lib/agent-fields";
 import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
@@ -44,7 +47,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
  */
 const SCRATCH = "scratch";
 
-const STEPS = ["Pick a role", "Who they are", "How they behave", "What they can do"] as const;
+const STEPS = ["Pick a role", "Who they are", "How they behave", "What they can do", "Connect tools"] as const;
 
 /**
  * The one chat capability the wizard exposes. Everything else in the chat
@@ -105,6 +108,7 @@ export function NewAgentWizard({ project }: { project: string }) {
     template !== null,
     form.name.trim() && form.jobTitle.trim(),
     form.personality.trim().length >= 10,
+    true,
     true,
   ][step];
 
@@ -237,6 +241,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                     "Give them a name, a job and a face. Clients see all three.",
                     "How they talk, what falls to them, and when they fetch a human.",
                     "What they can draw on, and what they do on their own.",
+                    "Optional. Connect the tools this role works with - now, or any time later from Integrations.",
                   ][step]
                 }
               </PanelDescription>
@@ -449,6 +454,12 @@ export function NewAgentWizard({ project }: { project: string }) {
                 </div>
               </>
             ) : null}
+            {step === 4 ? (
+              <SuggestedConnections
+                project={project}
+                suggested={template && template !== SCRATCH ? (templateById(template)?.suggestedIntegrations ?? []) : []}
+              />
+            ) : null}
           </PanelBody>
 
           <PanelFooter>
@@ -555,5 +566,50 @@ function TemplateCard({
         <span className="mt-1 block text-xs leading-relaxed text-ink-muted">{body}</span>
       </span>
     </button>
+  );
+}
+
+/**
+ * The role's suggested connections, as an optional last step: a useful agent
+ * is never blocked on a connection the owner is not ready to make. Connect
+ * opens in a new tab so this half-filled wizard survives the round trip, and
+ * the list refreshes when the owner comes back.
+ */
+function SuggestedConnections({ project, suggested }: { project: string; suggested: string[] }) {
+  const list = useIntegrations(project);
+  const providers = useOAuthProviders();
+  const connectors = suggested
+    .map((id) => connectorById(id))
+    .filter((connector): connector is NonNullable<typeof connector> => Boolean(connector));
+  const byType = new Map((list.data ?? []).map((row) => [row.type, row]));
+
+  if (connectors.length === 0) {
+    return (
+      <p className="text-sm text-ink-muted">
+        No particular tools for this role. Browse everything under Integrations whenever you like.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      <ul className="grid gap-3">
+        {connectors.map((connector) => (
+          <li key={connector.id}>
+            <ConnectorCard
+              connector={connector}
+              connection={byType.get(connector.id)}
+              providers={providers.data}
+              project={project}
+              returnTo={`/p/${project}/integrations`}
+              newTab
+            />
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs leading-relaxed text-ink-muted">
+        Skip any of these. Without a connection the agent still works: it does what it can and says in
+        its report what connecting the tool would let it finish.
+      </p>
+    </div>
   );
 }

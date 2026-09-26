@@ -5,6 +5,7 @@ import { findProject, projectsVisibleTo } from "@/lib/projects";
 import { canPublishAgent } from "@/lib/billing/limits";
 import { toAgentDetail, type AgentSummaryDto } from "@/lib/serialize";
 import { runModeOf } from "@/lib/work/cadence";
+import { assertProjectGrounded } from "@/lib/work/project-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
 
     // Born published counts the same as published later.
     if (input.status === "published") {
+      await assertProjectGrounded(project.id);
       const check = await canPublishAgent(project.organizationId, "");
       if (!check.allowed) throw new HttpError(402, check.reason!);
     }

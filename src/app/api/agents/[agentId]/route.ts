@@ -4,6 +4,7 @@ import { agentInputSchema } from "@/lib/validation";
 import { toAgentDetail } from "@/lib/serialize";
 import { findAgentFor } from "@/lib/projects";
 import { canPublishAgent } from "@/lib/billing/limits";
+import { assertProjectGrounded } from "@/lib/work/project-context";
 import { track } from "@/lib/product-events";
 import { audit } from "@/lib/audit";
 
@@ -14,10 +15,11 @@ type Params = { params: Promise<{ agentId: string }> };
 
 export async function GET(_request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { agentId } = await params;
 
-    const agent = await prisma.agent.findUnique({ where: { id: agentId } });
+    // Scoped to the caller's organisations: the detail carries the passcode.
+    const agent = await findAgentFor(agentId, userId);
     if (!agent) throw new HttpError(404, "That agent no longer exists.");
 
     return toAgentDetail(agent);
@@ -36,6 +38,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     // Going live is where a plan's agent count is enforced.
     if (input.status === "published" && existing.status !== "published") {
+      await assertProjectGrounded(existing.project.id);
       const check = await canPublishAgent(existing.project.organizationId, agentId);
       if (!check.allowed) throw new HttpError(402, check.reason!);
     }

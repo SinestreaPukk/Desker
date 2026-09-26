@@ -78,6 +78,7 @@ const STATUS: Record<string, { tone: "neutral" | "accent" | "positive" | "warnin
   done: { tone: "positive", label: "Done" },
   failed: { tone: "danger", label: "Failed" },
   rejected: { tone: "neutral", label: "Rejected" },
+  cancelled: { tone: "neutral", label: "Cancelled" },
   // drafts
   sent: { tone: "positive", label: "Sent" },
   // roles

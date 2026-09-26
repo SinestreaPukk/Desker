@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, CheckCircle2, Mail, MinusCircle, Plug, Trash2, Webhook } from "lucide-react";
+import { Blocks, CheckCircle2, ChevronRight, Mail, MinusCircle, Plug, Trash2, TriangleAlert, Webhook } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
@@ -21,7 +22,12 @@ import {
   useCreateIntegration,
   useDeleteIntegration,
   useIntegrations,
+  useOAuthProviders,
 } from "@/hooks/use-work-data";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ConnectorCard } from "@/components/integrations/connector-card";
+import { CONNECTORS, CONNECTOR_CATEGORIES, connectorById } from "@/lib/integrations/catalog";
+import { TEMPLATES } from "@/lib/content";
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { integrationInputSchema } from "@/lib/work/validation";
 import { validate } from "@/lib/form-errors";
@@ -29,35 +35,63 @@ import { cn, formatRelativeTime } from "@/lib/utils";
 import type { IntegrationDto } from "@/lib/work/serialize";
 
 /**
- * Where an organisation connects the outside world. Two connectors for now:
- * a generic webhook that receives published posts (point Zapier, Make, or
- * your own endpoint at it) and an email provider. Keys are write-only: the
- * list never shows them back.
+ * Where an organisation connects the tools its agents work with: a library of
+ * connectors grouped by what they are for, each tagged with the roles that
+ * need it and saying exactly what it can and cannot do. OAuth wherever the
+ * provider offers it; a key or a webhook only where it does not. Keys are
+ * write-only: nothing here ever shows one back.
  */
 export function IntegrationsView({ project }: { project: string }) {
   const list = useIntegrations(project);
+  const providers = useOAuthProviders();
   const remove = useDeleteIntegration(project);
   const [removing, setRemoving] = React.useState<{ id: string; name: string } | null>(null);
+  const [role, setRole] = React.useState<string>("all");
+  const [openForm, setOpenForm] = React.useState<string | null>(null);
+  const router = useRouter();
+  const search = useSearchParams();
+  const returnTo = `/p/${project}/integrations`;
+
+  // Coming back from a provider: say how it went once, then tidy the address.
+  React.useEffect(() => {
+    const connected = search.get("connected");
+    const failed = search.get("connectError");
+    if (!connected && !failed) return;
+    if (connected) toast.success(`${connectorById(connected)?.name ?? "Connection"} connected`);
+    if (failed) toast.error(failed);
+    router.replace(returnTo, { scroll: false });
+  }, [search, router, returnTo]);
+
+  // The hire wizard links to #<connector>: open its collapsed section and scroll to it.
+  React.useEffect(() => {
+    const target = window.location.hash && document.getElementById(window.location.hash.slice(1));
+    if (!target) return;
+    const section = target.closest("details");
+    if (section) section.open = true;
+    target.scrollIntoView({ block: "center" });
+  }, []);
+
+  const byType = new Map((list.data ?? []).map((row) => [row.type, row]));
+  const shown = CONNECTORS.filter((connector) => role === "all" || connector.roles.includes(role));
+  // The library is for choosing: an OAuth connector already set up lives in
+  // "Your connections" above. Key and webhook ones stay, since you can add another.
+  const library = shown.filter(
+    (connector) => connector.status === "available" && !(connector.auth === "oauth" && byType.has(connector.id)),
+  );
+  const planned = shown.filter((connector) => connector.status === "planned");
 
   return (
     <Page>
       <PageHeader
         title="Integrations"
-        description="The two ways work can leave Desker. Both are shared by every project in your organisation, and both wait for your approval first."
+        description="Connect the tools your agents work with. Each asks for the least access it needs, and anything that reaches outside Desker waits for your approval first. Shared by every project in your organisation."
       />
-      <PageBody className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="space-y-5">
-          <WebhookForm project={project} />
-          <EmailForm project={project} />
-        </div>
-
+      <PageBody className="space-y-8">
         <Panel>
           <PanelHeader>
             <div>
               <PanelTitle>Your connections</PanelTitle>
-              <PanelDescription>
-                What each one means for your agents right now.
-              </PanelDescription>
+              <PanelDescription>What each one means for your agents right now.</PanelDescription>
             </div>
           </PanelHeader>
           <PanelBody>
@@ -66,7 +100,7 @@ export function IntegrationsView({ project }: { project: string }) {
             ) : list.error ? (
               <ErrorState message={errorMessage(list.error)} onRetry={() => void list.refetch()} />
             ) : list.data && list.data.length > 0 ? (
-              <ul className="space-y-2">
+              <ul className="grid gap-2 lg:grid-cols-2">
                 {list.data.map((row) => (
                   <li key={row.id}>
                     <ConnectionRow
@@ -79,19 +113,117 @@ export function IntegrationsView({ project }: { project: string }) {
               </ul>
             ) : (
               <EmptyState
-                icon={Plug}
+                icon={Blocks}
                 title="Nothing connected"
-                description="Until something is connected, agents write posts and emails as drafts and say so in their reports. Nothing breaks - it simply stays inside Desker."
+                description="Agents still work without connections: they do what they can, keep anything outbound as a draft, and say in their report what connecting a tool would let them finish."
               />
             )}
           </PanelBody>
         </Panel>
+
+        <div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="connector-role" className="text-sm text-ink-muted">
+              Show connectors for
+            </label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger id="connector-role" className="w-56">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All roles</SelectItem>
+                {TEMPLATES.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.jobTitle}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {CONNECTOR_CATEGORIES.map((category) => {
+            const connectors = library.filter((connector) => connector.category === category.id);
+            if (connectors.length === 0) return null;
+            const formHere = connectors.find((connector) => connector.id === openForm);
+            return (
+              // Collapsed by default so the page scans as a list of categories; a
+              // role filter opens them, since then you are looking for something.
+              <details
+                key={`${category.id}-${role}`}
+                open={role !== "all"}
+                className="group mt-4 rounded-xl border border-line bg-surface"
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                  <ChevronRight className="size-4 shrink-0 text-ink-subtle transition-transform group-open:rotate-90" aria-hidden />
+                  <h2 className="text-sm font-semibold text-ink">{category.label}</h2>
+                  <span className="min-w-0 truncate text-xs text-ink-muted">
+                    {connectors.map((connector) => connector.name).join(", ")}
+                  </span>
+                </summary>
+                <div className="border-t border-line p-4">
+                  <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {connectors.map((connector) => (
+                      <li key={connector.id} id={connector.id}>
+                        <ConnectorCard
+                          connector={connector}
+                          connection={byType.get(connector.id)}
+                          providers={providers.data}
+                          project={project}
+                          returnTo={returnTo}
+                          showRoles
+                          {...(connector.auth === "webhook" || connector.auth === "api_key"
+                            ? {
+                                onSetUp: () => setOpenForm((open) => (open === connector.id ? null : connector.id)),
+                                setUpOpen: openForm === connector.id,
+                              }
+                            : {})}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                  {formHere?.id === "webhook" ? (
+                    <div className="mt-3 max-w-2xl">
+                      <WebhookForm project={project} onDone={() => setOpenForm(null)} />
+                    </div>
+                  ) : null}
+                  {formHere?.id === "email" ? (
+                    <div className="mt-3 max-w-2xl">
+                      <EmailForm project={project} onDone={() => setOpenForm(null)} />
+                    </div>
+                  ) : null}
+                </div>
+              </details>
+            );
+          })}
+
+          {planned.length > 0 ? (
+            <details className="group mt-8 rounded-xl border border-dashed border-line">
+              <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                <ChevronRight className="size-4 shrink-0 text-ink-subtle transition-transform group-open:rotate-90" aria-hidden />
+                <h2 className="text-sm font-semibold text-ink-muted">Coming soon</h2>
+                <span className="min-w-0 truncate text-xs text-ink-subtle">
+                  {planned.map((connector) => connector.name).join(", ")}
+                </span>
+              </summary>
+              <div className="border-t border-dashed border-line p-4">
+                <p className="mb-3 text-xs text-ink-subtle">Not connectable yet - listed so you know what is on the way.</p>
+                <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {planned.map((connector) => (
+                    <li key={connector.id} id={connector.id}>
+                      <ConnectorCard connector={connector} project={project} returnTo={returnTo} showRoles />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </details>
+          ) : null}
+        </div>
       </PageBody>
       <ConfirmDialog
         open={removing !== null}
         onOpenChange={(open) => !open && setRemoving(null)}
         title={`Remove ${removing?.name ?? "this integration"}?`}
-        description="Agents stop being able to use it straight away, and anything already waiting for your approval will fail to send until you connect another one."
+        description="Agents stop being able to use it straight away, and anything already waiting for your approval will fail to send until you connect it again."
         confirmLabel="Remove"
         onConfirm={async () => {
           if (!removing) return;
@@ -114,7 +246,7 @@ const STATE_LOOK = {
   attention: {
     label: "Needs attention",
     tone: "warning" as const,
-    icon: AlertTriangle,
+    icon: TriangleAlert,
     className: "border-warning-line/70 bg-warning-soft text-warning",
   },
   disconnected: {
@@ -140,7 +272,7 @@ function ConnectionRow({
 }) {
   const look = STATE_LOOK[row.state];
   const StateIcon = look.icon;
-  const KindIcon = row.type === "webhook" ? Webhook : Mail;
+  const KindIcon = row.type === "webhook" ? Webhook : row.type === "email" ? Mail : Plug;
 
   return (
     <div className="rounded-xl border border-line p-3 transition-colors hover:bg-surface-2/50">
@@ -182,9 +314,12 @@ function ConnectionRow({
   );
 }
 
-function WebhookForm({ project }: { project: string }) {
+/** The platforms a publishing webhook can be named for; a draft's platform picks the matching one. */
+const PUBLISH_PLATFORMS = ["LinkedIn", "X", "Instagram", "YouTube", "CMS"] as const;
+
+function WebhookForm({ project, onDone }: { project: string; onDone: () => void }) {
   const create = useCreateIntegration(project);
-  const [form, setForm] = React.useState({ name: "Publishing webhook", url: "", secret: "" });
+  const [form, setForm] = React.useState({ name: "Publishing webhook", url: "", secret: "", platform: "" });
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
 
@@ -201,10 +336,11 @@ function WebhookForm({ project }: { project: string }) {
     }
     try {
       await create.mutateAsync({ type: "webhook", ...form });
-      setForm({ name: "Publishing webhook", url: "", secret: "" });
+      setForm({ name: "Publishing webhook", url: "", secret: "", platform: "" });
       toast.success("Publishing connected", {
         description: "Agents can publish through it as soon as you approve a post.",
       });
+      onDone();
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(caught.message);
@@ -234,6 +370,25 @@ function WebhookForm({ project }: { project: string }) {
             error={fieldErrors.name?.[0]}
           >
             <Input id="wh-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </Field>
+          <Field
+            label="Platform"
+            htmlFor="wh-platform"
+            hint="Which platform this address posts to. Posts drafted for that platform go here; add one per platform."
+          >
+            <Select value={form.platform || "any"} onValueChange={(next) => setForm({ ...form, platform: next === "any" ? "" : next })}>
+              <SelectTrigger id="wh-platform">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any platform</SelectItem>
+                {PUBLISH_PLATFORMS.map((platform) => (
+                  <SelectItem key={platform} value={platform}>
+                    {platform}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
           <Field
             label="Where to send posts"
@@ -274,7 +429,7 @@ function WebhookForm({ project }: { project: string }) {
   );
 }
 
-function EmailForm({ project }: { project: string }) {
+function EmailForm({ project, onDone }: { project: string; onDone: () => void }) {
   const create = useCreateIntegration(project);
   const [form, setForm] = React.useState({ name: "Resend", from: "", apiKey: "" });
   const [error, setError] = React.useState<string | null>(null);
@@ -295,6 +450,7 @@ function EmailForm({ project }: { project: string }) {
       toast.success("Email connected", {
         description: "Agents can send through it as soon as you approve an email.",
       });
+      onDone();
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(caught.message);

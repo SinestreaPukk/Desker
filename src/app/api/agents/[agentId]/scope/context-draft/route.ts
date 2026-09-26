@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { limitOrganization } from "@/lib/rate-limit";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { findAgentFor } from "@/lib/projects";
 import { AGENT_CONTEXT_QUESTIONS } from "@/lib/work/context";
@@ -26,6 +27,7 @@ export async function POST(_request: Request, { params }: Params) {
       select: { modelProvider: true, model: true },
     });
 
+    await limitOrganization(agent.project.organizationId, "model");
     try {
       return await draftContextFromDocuments({
         organizationId: agent.project.organizationId,

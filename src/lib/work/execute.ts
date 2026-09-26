@@ -16,15 +16,22 @@ import type { ToolCall } from "@/lib/llm/provider";
 import { inngest } from "@/lib/jobs/client";
 import { afterResponse } from "@/lib/after-response";
 import { notifyInBackground } from "@/lib/notify";
+import { canStartRun } from "@/lib/billing/limits";
+import { connectorAccess } from "@/lib/integrations/oauth";
+import {
+  createCalendarEvent,
+  listCalendarEvents,
+  postSlackMessage,
+  readGithub,
+} from "@/lib/integrations/providers";
 import { researchTheWeb, type ResearchFindings } from "./research";
 import {
   deliverEmail,
   deliverWebhook,
-  findIntegration,
+  findPublishing,
   parseRecipients,
   resolveEmail,
   type DeliveryResult,
-  type WebhookConfig,
 } from "./integrations";
 import { WORK_TOOL_RISK, isWorkToolId, type WorkToolId } from "./tools";
 import {
@@ -107,6 +114,42 @@ const suggestSchema = z.object({
   recommended_action: z.string().trim().min(1).max(2000),
   severity: z.enum(["low", "medium", "high", "critical"]).optional(),
 });
+
+const isoTime = z.string().trim().refine((v) => !Number.isNaN(Date.parse(v)), "an ISO 8601 date-time");
+const calendarListSchema = z.object({ from: isoTime, to: isoTime });
+const calendarCreateSchema = z.object({
+  summary: z.string().trim().min(1).max(300),
+  start: isoTime,
+  end: isoTime,
+  attendees: z.string().trim().max(2000).optional(),
+  description: z.string().trim().max(8000).optional(),
+  note: z.string().trim().max(500).optional(),
+});
+const slackSchema = z.object({
+  channel: z.string().trim().min(1).max(100),
+  text: z.string().trim().min(1).max(8000),
+  note: z.string().trim().max(500).optional(),
+});
+const githubSchema = z.object({
+  action: z.enum(["list_repos", "list_issues", "get_issue", "read_file", "search_code"]),
+  repo: z.string().trim().max(200).optional(),
+  number: z.number().int().positive().optional(),
+  path: z.string().trim().max(500).optional(),
+  query: z.string().trim().max(300).optional(),
+});
+
+/**
+ * The same answer for every missing connection: say what is missing, and tell
+ * the agent to carry on and report it - the way publishing already degrades.
+ */
+function notConnected(what: string): WorkToolOutcome {
+  return {
+    content:
+      `${what} is not connected for this organisation, so this cannot be done. ` +
+      "Do what you can without it and say plainly in your report that connecting it under Integrations would let you finish.",
+    isError: true,
+  };
+}
 
 function invalid(tool: string, error: z.ZodError): WorkToolOutcome {
   const issues = error.issues.map((i) => `${i.path.join(".") || "input"}: ${i.message}`).join("; ");
@@ -250,7 +293,7 @@ async function gateOrDeliver(
 async function publishPost(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
   const parsed = publishSchema.safeParse(input);
   if (!parsed.success) return invalid("publish_post", parsed.error);
-  const webhook = await findIntegration<WebhookConfig>(ctx.organizationId, "webhook");
+  const webhook = await findPublishing(ctx.organizationId);
   if (!webhook) {
     return {
       content:
@@ -414,26 +457,66 @@ async function escalateToHuman(input: unknown, ctx: RunContext): Promise<WorkToo
   };
 }
 
+/** How many times one task may be handed on: A -> B -> C, and C finishes it. */
+const MAX_HANDOFFS = 2;
+
 async function delegateToColleague(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
   const parsed = delegateSchema.safeParse(input);
   if (!parsed.success) return invalid("delegate_to_colleague", parsed.error);
 
   const { colleague_id, task, context_findings } = parsed.data;
 
-  // Ensure colleague exists and belongs to the same organization/project
+  // The same roster the prompt offers: published agents in this project.
+  const self = await prisma.agent.findUniqueOrThrow({
+    where: { id: ctx.agent.id },
+    select: { projectId: true },
+  });
   const colleague = await prisma.agent.findFirst({
-    where: {
-      id: colleague_id,
-      project: { organizationId: ctx.organizationId },
-    },
+    where: { id: colleague_id, projectId: self.projectId, status: "published" },
     select: { id: true, name: true, jobTitle: true },
   });
 
-  if (!colleague) {
+  if (!colleague || colleague.id === ctx.agent.id) {
     return {
       content: `No colleague found with id "${colleague_id}" in this project. Check your team roster for valid ids.`,
       isError: true,
     };
+  }
+
+  // Walk back up the chain of hand-offs that led here. Two agents passing a
+  // task back and forth - or an endless relay - would run up a bill with
+  // nobody watching, so both are refused.
+  const upstream = new Set<string>();
+  let handoffs = 0;
+  let cursor: string | null = ctx.actionItemId;
+  while (cursor) {
+    const row: { agentId: string; type: string; parentId: string | null } | null =
+      await prisma.actionItem.findUnique({
+        where: { id: cursor },
+        select: { agentId: true, type: true, parentId: true },
+      });
+    if (!row) break;
+    upstream.add(row.agentId);
+    if (row.type === "colleague_delegation") handoffs++;
+    cursor = row.parentId;
+  }
+  if (upstream.has(colleague.id)) {
+    return {
+      content: `${colleague.name} is already part of this chain of work - the task came to you through them. Finish it yourself, or escalate if you cannot.`,
+      isError: true,
+    };
+  }
+  if (handoffs >= MAX_HANDOFFS) {
+    return {
+      content: `This task has already been handed on ${handoffs} times. Finish it yourself, or escalate if you cannot.`,
+      isError: true,
+    };
+  }
+
+  // A hand-off is a run like any other, so it counts against the plan.
+  const allowed = await canStartRun(ctx.organizationId);
+  if (!allowed.allowed) {
+    return { content: `Could not hand this on: ${allowed.reason}`, isError: true };
   }
 
   const delegatedItem = await prisma.actionItem.create({
@@ -551,6 +634,49 @@ async function suggestOpportunity(input: unknown, ctx: RunContext): Promise<Work
 
 // --- dispatch ---------------------------------------------------------------
 
+async function calendarListEvents(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = calendarListSchema.safeParse(input);
+  if (!parsed.success) return invalid("calendar_list_events", parsed.error);
+  const { from, to } = parsed.data;
+  if (Date.parse(to) - Date.parse(from) > 31 * 86_400_000 || Date.parse(to) <= Date.parse(from)) {
+    return { content: "The window must run forwards and be at most 31 days.", isError: true };
+  }
+  const access = await connectorAccess(ctx.organizationId, "google_calendar");
+  if (!access) return notConnected("Google Calendar");
+  return { content: await listCalendarEvents(access.accessToken, { from, to }) };
+}
+
+async function calendarCreateEvent(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = calendarCreateSchema.safeParse(input);
+  if (!parsed.success) return invalid("calendar_create_event", parsed.error);
+  if (Date.parse(parsed.data.end) <= Date.parse(parsed.data.start)) {
+    return { content: "The event has to end after it starts.", isError: true };
+  }
+  if (!(await connectorAccess(ctx.organizationId, "google_calendar"))) return notConnected("Google Calendar");
+  const { note, attendees, ...event } = parsed.data;
+  return gateOrDeliver(ctx, {
+    tool: "calendar_create_event",
+    input: { ...event, attendees: attendees ? parseRecipients(attendees) : [] },
+    note,
+  });
+}
+
+async function slackPostMessage(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = slackSchema.safeParse(input);
+  if (!parsed.success) return invalid("slack_post_message", parsed.error);
+  if (!(await connectorAccess(ctx.organizationId, "slack"))) return notConnected("Slack");
+  const { note, ...message } = parsed.data;
+  return gateOrDeliver(ctx, { tool: "slack_post_message", input: message, note });
+}
+
+async function githubRead(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = githubSchema.safeParse(input);
+  if (!parsed.success) return invalid("github_read", parsed.error);
+  const access = await connectorAccess(ctx.organizationId, "github");
+  if (!access) return notConnected("GitHub");
+  return { content: await readGithub(access.accessToken, parsed.data) };
+}
+
 export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<WorkToolOutcome> {
   let outcome: WorkToolOutcome;
   if (!isWorkToolId(call.name)) {
@@ -584,6 +710,18 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
           break;
         case "escalate_to_human":
           outcome = await escalateToHuman(call.input, ctx);
+          break;
+        case "calendar_list_events":
+          outcome = await calendarListEvents(call.input, ctx);
+          break;
+        case "calendar_create_event":
+          outcome = await calendarCreateEvent(call.input, ctx);
+          break;
+        case "slack_post_message":
+          outcome = await slackPostMessage(call.input, ctx);
+          break;
+        case "github_read":
+          outcome = await githubRead(call.input, ctx);
           break;
       }
     } catch (error) {
@@ -637,9 +775,10 @@ export async function executePendingAction(
 
   let delivery: DeliveryResult;
   if (action.tool === "publish_post") {
-    const webhook = await findIntegration<WebhookConfig>(organizationId, "webhook");
-    if (!webhook) return { ok: false, status: 0, detail: "No publishing integration is connected." };
     if (!draft) return { ok: false, status: 0, detail: "The draft no longer exists." };
+    const platform = (draft.metadata as { platform?: string } | null)?.platform;
+    const webhook = await findPublishing(organizationId, platform);
+    if (!webhook) return { ok: false, status: 0, detail: "No publishing integration is connected." };
     const item = await prisma.actionItem.findUnique({
       where: { id: actionItemId },
       select: { agent: { select: { name: true, jobTitle: true } } },
@@ -656,6 +795,23 @@ export async function executePendingAction(
         body: draft.body,
         metadata: draft.metadata,
       },
+    });
+  } else if (action.tool === "calendar_create_event") {
+    const access = await connectorAccess(organizationId, "google_calendar");
+    if (!access) return { ok: false, status: 0, detail: "Google Calendar is not connected." };
+    delivery = await createCalendarEvent(access.accessToken, {
+      summary: String(action.input.summary ?? ""),
+      start: String(action.input.start ?? ""),
+      end: String(action.input.end ?? ""),
+      description: action.input.description ? String(action.input.description) : undefined,
+      attendees: Array.isArray(action.input.attendees) ? (action.input.attendees as string[]) : [],
+    });
+  } else if (action.tool === "slack_post_message") {
+    const access = await connectorAccess(organizationId, "slack");
+    if (!access) return { ok: false, status: 0, detail: "Slack is not connected." };
+    delivery = await postSlackMessage(access.accessToken, {
+      channel: String(action.input.channel ?? ""),
+      text: String(action.input.text ?? ""),
     });
   } else {
     const email = await resolveEmail(organizationId);

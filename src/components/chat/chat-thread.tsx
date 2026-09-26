@@ -222,7 +222,7 @@ function RatingControls({
   );
 }
 
-function TypingIndicator({ agentName }: { agentName: string }) {
+export function TypingIndicator({ agentName }: { agentName: string }) {
   return (
     <div className="inline-flex items-center gap-1.5 rounded-panel rounded-tl-md border border-line bg-surface px-3.5 py-3">
       <span className="sr-only">{agentName} is typing…</span>

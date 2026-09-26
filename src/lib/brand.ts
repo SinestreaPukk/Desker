@@ -25,9 +25,9 @@ export const BRAND = {
  */
 export const TOKEN_HEX = {
   paper: "#F9FAFC",
-  "paper@dark": "#0C0E15",
-  ink: "#161922",
-  "ink-muted": "#575B64",
-  "ink-subtle": "#7D8089",
-  "accent-soft": "#E7EFFF",
+  "paper@dark": "#18191B",
+  ink: "#1C2024",
+  "ink-muted": "#60646C",
+  "ink-subtle": "#80838D",
+  "accent-soft": "#F0F1FE",
 } as const;

@@ -2,7 +2,17 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Bug, CalendarClock, FileText, Hand, MessageSquare, Pause, Plus, Search, UserRoundPlus, Zap } from "lucide-react";
+import {
+  AlertCircle,
+  BookOpen,
+  BotMessageSquare,
+  CalendarClock,
+  Hand,
+  Pause,
+  Search,
+  UserRoundPlus,
+  Zap,
+} from "lucide-react";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -22,7 +32,7 @@ import { ProjectContextPanel } from "@/components/builder/project-context-panel"
 import { SetupChecklist } from "@/components/help/setup-checklist";
 import { errorMessage } from "@/lib/api-client";
 import type { AgentSummaryDto } from "@/lib/serialize";
-import { formatRelativeTime } from "@/lib/utils";
+import { cn, formatRelativeTime } from "@/lib/utils";
 
 export function RosterView({ project }: { project: string }) {
   const { data: agents, isPending, error, refetch, isRefetching } = useAgents(project);
@@ -57,7 +67,7 @@ export function RosterView({ project }: { project: string }) {
         actions={
           <Button asChild>
             <Link href={`/p/${project}/agents/new`}>
-              <Plus aria-hidden />
+              <UserRoundPlus aria-hidden />
               New agent
             </Link>
           </Button>
@@ -152,7 +162,7 @@ export function RosterView({ project }: { project: string }) {
             action={
               <Button asChild>
                 <Link href={`/p/${project}/agents/new`}>
-                  <Plus aria-hidden />
+                  <UserRoundPlus aria-hidden />
                   Hire your first agent
                 </Link>
               </Button>
@@ -234,7 +244,7 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
       {/* What it has done, in words, not icons. */}
       <dl className="mx-5 flex flex-wrap gap-2 border-t border-line py-3 text-xs text-ink-muted">
         <div className="flex items-center gap-1.5 rounded-md bg-surface-2/60 px-2.5 py-1">
-          <MessageSquare className="size-3.5 text-ink-subtle" aria-hidden />
+          <BotMessageSquare className="size-3.5 text-ink-subtle" aria-hidden />
           <dt className="sr-only">Conversations</dt>
           <dd>
             <span className="font-semibold tabular-nums text-ink">{agent.conversationCount}</span>{" "}
@@ -242,7 +252,7 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
           </dd>
         </div>
         <div className="flex items-center gap-1.5 rounded-md bg-surface-2/60 px-2.5 py-1">
-          <FileText className="size-3.5 text-ink-subtle" aria-hidden />
+          <BookOpen className="size-3.5 text-ink-subtle" aria-hidden />
           <dt className="sr-only">Context documents</dt>
           <dd>
             <span className="font-semibold tabular-nums text-ink">{agent.documentCount}</span>{" "}
@@ -255,7 +265,7 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
             <dt className="sr-only">Open issues</dt>
             <dd>
               <Badge tone="danger">
-                <Bug aria-hidden />
+                <AlertCircle aria-hidden />
                 {agent.openIssueCount} open
               </Badge>
             </dd>
@@ -268,9 +278,12 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
           {agent.department ? `${agent.department} · ` : ""}
           Updated {formatRelativeTime(agent.updatedAt)}
         </p>
-        <span className="text-xs font-semibold text-accent opacity-0 transition-all duration-150 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-within:opacity-100">
+        <Link
+          href={`/p/${project}/agents/${agent.id}`}
+          className="relative z-10 text-xs font-semibold text-accent opacity-0 transition-all duration-150 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-accent-hover"
+        >
           {live ? "Open editor →" : "Finish setting up →"}
-        </span>
+        </Link>
       </div>
     </Panel>
   );

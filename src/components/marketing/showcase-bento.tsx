@@ -1,4 +1,4 @@
-import { Bug, CalendarClock, FileSearch, Globe } from "lucide-react";
+import { AlertCircle, CalendarClock, FileSearch, Globe } from "lucide-react";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/badge";
 import { ApprovalScene, Frame } from "@/components/marketing/hero-stage";
@@ -162,7 +162,7 @@ function MiniTicket() {
     <Mini>
       <span className="flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted">
-          <Bug className="size-3.5" aria-hidden />
+          <AlertCircle className="size-3.5" aria-hidden />
           Issue · engineering
         </span>
         <StatusBadge status="open" />

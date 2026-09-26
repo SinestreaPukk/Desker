@@ -19,6 +19,8 @@ export interface RunPromptInput {
   documentNames: string[];
   hasPublishing: boolean;
   hasEmail: boolean;
+  /** Connectors this run's tools depend on that the organisation has not connected, by name. */
+  missingConnections?: string[];
   hasSearch: boolean;
   colleagues?: { id: string; name: string; jobTitle: string; department?: string | null }[];
 }
@@ -81,6 +83,11 @@ export function buildRunPrompt(input: RunPromptInput): string {
     input.hasEmail
       ? "An email provider is connected, so send_email is available."
       : "No email provider is connected: do not call send_email; leave emails as drafts and say so in the report.",
+    ...(input.missingConnections?.length
+      ? [
+          `Not connected: ${input.missingConnections.join(", ")}. Do not call the tools that need them; do what you can without them and say in the report which connection would let you finish.`,
+        ]
+      : []),
     input.autonomy === "draft_only"
       ? "This agent is in draft-only mode. publish_post and send_email pause the task for human approval instead of going out - that is expected. Call one when the content is final, then finish your report; the run resumes after a person decides."
       : "This agent is in auto mode: publish_post and send_email go out immediately. Only call them when the content is final.",
@@ -132,7 +139,14 @@ export function kickoffMessage(input: {
         "Carry out this delegated objective now and record your results."
       );
     }
-    default:
-      return `Trigger: started by hand by an owner at ${when}.\n\nCarry out your standing objectives now.`;
+    default: {
+      const instruction = String(input.payload.instruction ?? "").trim();
+      return (
+        `Trigger: started by hand by an owner at ${when}.\n\n` +
+        (instruction
+          ? `The owner asked for this, on top of your standing objectives:\n${instruction}`
+          : "Carry out your standing objectives now.")
+      );
+    }
   }
 }

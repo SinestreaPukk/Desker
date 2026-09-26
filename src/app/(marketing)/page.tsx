@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { hasCoreContext } from "@/lib/work/context";
 import { ArrowRight, Check } from "lucide-react";
 import { currentUser } from "@/lib/auth";
 import { defaultProject } from "@/lib/projects";
@@ -57,8 +59,13 @@ export default async function LandingPage({
     const project = await defaultProject(user.id);
     // A role chosen on the showcase goes straight into the hire wizard.
     const { template } = await searchParams;
-    if (template && templateById(template)) {
-      redirect(`/p/${project.slug}/agents/new?template=${encodeURIComponent(template)}`);
+    const picked = template && templateById(template) ? template : null;
+    // A brand-new workspace starts by describing the business, then hires.
+    if (!hasCoreContext(project) && (await prisma.agent.count({ where: { projectId: project.id } })) === 0) {
+      redirect(`/p/${project.slug}/welcome${picked ? `?template=${encodeURIComponent(picked)}` : ""}`);
+    }
+    if (picked) {
+      redirect(`/p/${project.slug}/agents/new?template=${encodeURIComponent(picked)}`);
     }
     redirect(`/p/${project.slug}/roster`);
   }
@@ -89,11 +96,10 @@ export default async function LandingPage({
         </div>
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 top-[calc(100svh+6rem)] bg-[linear-gradient(to_bottom,transparent,var(--dune-deep)_14rem)]"
+          className="hero-dissolve absolute inset-x-0 bottom-0 top-[calc(100svh-4rem)]"
         />
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-b from-transparent to-paper" />
 
-        <div className="relative mx-auto max-w-6xl px-4 pt-24 text-center sm:px-6 sm:pt-36">
+        <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-24 text-center sm:px-6 sm:pb-14 sm:pt-36">
           {/* hero-copy rises and fades as the window rises, gone by the time
               it pins, so nothing is left under the clear header. */}
           <div className="hero-copy">
@@ -121,7 +127,7 @@ export default async function LandingPage({
               for a stretch of scroll while the reel plays, then the page
               moves on. HeroSnap finishes a scroll that stops on the way, so
               the window lands whole (globals.css, "The hero's stage"). */}
-          <div className="stage-track relative z-10 mx-auto -mb-24 mt-10 max-w-4xl [perspective:1600px] sm:-mb-32 sm:mt-12">
+          <div className="stage-track relative z-10 mx-auto mt-10 max-w-4xl [perspective:1600px] sm:mt-12">
             <HeroStage data-header-solid className="stage-rise stage-pin text-left" />
             <div className="stage-hold" aria-hidden />
           </div>
@@ -130,14 +136,13 @@ export default async function LandingPage({
       </section>
 
       {/* Built on ------------------------------------------------------- */}
-      {/* Top padding clears the stage that hangs down from the hero. */}
-      <Section containerClassName="pb-0 pt-32 sm:pb-0 sm:pt-44">
+      <Section containerClassName="py-8 sm:py-10">
         <TrustStrip label={trustStrip.label} items={trustStrip.items} />
       </Section>
 
       {/* How it works ----------------------------------------------------- */}
-      <Section id="how-it-works" labelledBy="steps-heading" className="border-t border-line bg-surface">
-          <SectionHeader id="steps-heading" eyebrow={steps.eyebrow} heading={steps.heading} intro={steps.intro} />
+      <Section id="how-it-works" labelledBy="steps-heading" containerClassName="pt-2 sm:pt-4">
+        <SectionHeader id="steps-heading" eyebrow={steps.eyebrow} heading={steps.heading} intro={steps.intro} />
         <div className="mt-14">
           <Steps items={steps.items} />
         </div>

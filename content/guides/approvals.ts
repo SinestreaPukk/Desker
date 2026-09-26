@@ -31,9 +31,9 @@ An escalation rule is a plain sentence about when to fetch a person:
 
 > Escalate if the client is angry, asks for a refund over $200, or mentions legal action.
 
-The agent judges it from what actually happens in the conversation or the run, not from keywords. When it fires, the item lands in **Inbox → Issues & suggestions** marked *Escalated*, with the agent's reason - and the run carries on with whatever is still safe to do.
+The agent judges it from what actually happens in the conversation or the run, not from keywords. When it fires, the item lands in **Inbox → Issues** marked *Escalated*, with the agent's reason - and the run carries on with whatever is still safe to do.
 
 ## If nothing is waiting
 
-An empty Approvals tab means no agent is holding anything. Anything an agent proposes on its own - a next step it thinks you should take - shows up as a suggestion instead.`,
+An empty Approvals tab means no agent is holding anything. Anything an agent proposes on its own - a next step it thinks you should take - shows up in **Inbox → Suggestions** instead.`,
 } as const;

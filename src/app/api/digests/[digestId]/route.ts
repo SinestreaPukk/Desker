@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { agentsVisibleTo } from "@/lib/projects";
+import { audit } from "@/lib/audit";
 import { digestPatchSchema } from "@/lib/work/validation";
 import { digestInclude, toDigestDto } from "../serialize";
 
@@ -27,5 +28,27 @@ export async function PATCH(request: Request, { params }: Params) {
       include: digestInclude,
     });
     return toDigestDto(digest);
+  });
+}
+
+export async function DELETE(_request: Request, { params }: Params) {
+  return handle(async () => {
+    const { userId } = await requireAdmin();
+    const { digestId } = await params;
+    const row = await prisma.digest.findFirst({
+      where: { id: digestId, agent: agentsVisibleTo(userId) },
+      select: { id: true, organizationId: true },
+    });
+    if (!row) throw new HttpError(404, "That update no longer exists.");
+    await prisma.digest.delete({ where: { id: digestId } });
+    await audit({
+      organizationId: row.organizationId,
+      actorType: "user",
+      actorId: userId,
+      action: "digest.deleted",
+      targetType: "digest",
+      targetId: digestId,
+    });
+    return { ok: true };
   });
 }

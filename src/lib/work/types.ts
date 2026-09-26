@@ -12,13 +12,15 @@ export const ACTION_STATUSES = [
   "done",
   "failed",
   "rejected",
+  "cancelled",
 ] as const;
 export type ActionStatus = (typeof ACTION_STATUSES)[number];
 
 /** The only moves the state machine allows. Everything else is a bug. */
 export const TRANSITIONS: Record<ActionStatus, readonly ActionStatus[]> = {
-  queued: ["in_progress", "failed"],
-  in_progress: ["done", "failed", "needs_approval"],
+  // An owner can call off work that has not reached the outside world yet.
+  queued: ["in_progress", "failed", "cancelled"],
+  in_progress: ["done", "failed", "needs_approval", "cancelled"],
   needs_approval: ["approved", "rejected"],
   approved: ["executing_external", "failed"],
   executing_external: ["done", "failed"],
@@ -26,6 +28,7 @@ export const TRANSITIONS: Record<ActionStatus, readonly ActionStatus[]> = {
   failed: [],
   // A rejection can be undone; the item simply waits for a decision again.
   rejected: ["needs_approval"],
+  cancelled: [],
 };
 
 export function canTransition(from: string, to: ActionStatus): boolean {
@@ -39,12 +42,21 @@ export const AUTONOMY_MODES = ["draft_only", "auto"] as const;
 export type AutonomyMode = (typeof AUTONOMY_MODES)[number];
 
 /** Per-tool overrides on top of the agent-level mode. */
-export type ToolAutonomy = Partial<Record<"publish_post" | "send_email", AutonomyMode>>;
+/** The tools that reach outside the product, and so can stop for approval. */
+export const GATED_TOOL_IDS = [
+  "publish_post",
+  "send_email",
+  "calendar_create_event",
+  "slack_post_message",
+] as const;
+export type GatedToolId = (typeof GATED_TOOL_IDS)[number];
+
+export type ToolAutonomy = Partial<Record<GatedToolId, AutonomyMode>>;
 
 export function effectiveAutonomy(
   agentMode: AutonomyMode,
   overrides: ToolAutonomy | null | undefined,
-  tool: "publish_post" | "send_email",
+  tool: GatedToolId,
 ): AutonomyMode {
   return overrides?.[tool] ?? agentMode;
 }
@@ -59,6 +71,7 @@ export const TRIGGER_LABELS: Record<string, string> = {
   webhook: "Triggered",
   manual: "Manual",
   followup: "Follow-up",
+  delegation: "Delegated",
 };
 
 /** Human copy for statuses, used by the rough Work table now and the Inbox later. */
@@ -71,6 +84,7 @@ export const STATUS_LABELS: Record<ActionStatus, string> = {
   done: "Done",
   failed: "Failed",
   rejected: "Rejected",
+  cancelled: "Cancelled",
 };
 
 /** A tool call as recorded on ActionItem.steps. */
@@ -86,7 +100,7 @@ export interface WorkStep {
 
 /** The external call an approval releases. Stored on ActionItem.pendingAction. */
 export interface PendingAction {
-  tool: "publish_post" | "send_email";
+  tool: GatedToolId;
   input: Record<string, unknown>;
   draftId?: string;
   /** What the agent said it was doing, for the approver. */

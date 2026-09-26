@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Copy, CreditCard, Mail, Trash2, UserPlus, Users } from "lucide-react";
+import { Building, Copy, CreditCard, Mail, Trash2, UserRoundPlus } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
@@ -354,7 +354,7 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
             variant={email.trim() ? "primary" : "secondary"}
             disabled={create.isPending || !email.trim()}
           >
-            <UserPlus aria-hidden />
+            <UserRoundPlus aria-hidden />
             Send invitation
           </Button>
         </PanelFooter>
@@ -579,7 +579,7 @@ function RenamePanel({ organizationId, name }: { organizationId: string; name: s
         <PanelHeader>
           <div>
             <PanelTitle>
-              <Users className="mr-1.5 inline size-4 text-accent" aria-hidden />
+              <Building className="mr-1.5 inline size-4 text-accent" aria-hidden />
               Name
             </PanelTitle>
           </div>

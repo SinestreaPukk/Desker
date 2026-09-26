@@ -1,4 +1,5 @@
 import { handle, requireAdmin, HttpError } from "@/lib/api";
+import { limitOrganization } from "@/lib/rate-limit";
 import { findAgentFor } from "@/lib/projects";
 import { inngest } from "@/lib/jobs/client";
 import { generateDigest } from "@/lib/work/digest";
@@ -21,6 +22,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ ag
     const { agentId } = await params;
     const agent = await findAgentFor(agentId, userId);
     if (!agent) throw new HttpError(404, "That agent no longer exists.");
+    await limitOrganization(agent.project.organizationId, "model");
 
     // Whether the job runtime is actually there decides who does the work.
     // A queued event nobody consumes is indistinguishable from a broken

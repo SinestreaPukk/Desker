@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import {
-  ArrowLeftRight,
-  Bug,
+  AlertCircle,
+  ArrowRightLeft,
   CheckCircle2,
-  Lightbulb,
   Send,
+  Sparkles,
   StickyNote,
   ThumbsDown,
   ThumbsUp,
@@ -128,7 +128,7 @@ export function ConversationDetail({
                 ) : null}
                 {conversation.originalAgent ? (
                   <Badge tone="accent">
-                    <ArrowLeftRight aria-hidden />
+                    <ArrowRightLeft aria-hidden />
                     Transferred from {conversation.originalAgent.name}
                   </Badge>
                 ) : null}
@@ -290,8 +290,8 @@ export function ConversationDetail({
                     const resolved = issue.status === "resolved";
                     const kind = ISSUE_KINDS[issueKind(issue.type)];
                     const Icon = {
-                      bug: Bug,
-                      lightbulb: Lightbulb,
+                      bug: AlertCircle,
+                      lightbulb: Sparkles,
                       handoff: UserRoundCheck,
                       alert: TriangleAlert,
                     }[kind.icon];

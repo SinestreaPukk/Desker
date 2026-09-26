@@ -4,16 +4,16 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
+  AlertCircle,
   ArrowLeft,
-  ArrowLeftRight,
-  Bug,
+  ArrowRightLeft,
+  BookOpen,
+  BotMessageSquare,
   CalendarClock,
   Check,
   Copy,
   FileCode2,
   Hand,
-  Lightbulb,
-  MessageSquare,
   MoreVertical,
   Pause,
   Play,
@@ -21,8 +21,11 @@ import {
   Search,
   Shuffle,
   Sliders,
+  Sparkles,
   Trash2,
+  UserCheck,
   UserRoundCheck,
+  Workflow,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -87,10 +90,10 @@ import { cn, formatRelativeTime } from "@/lib/utils";
 
 const TOOL_ICONS = {
   search: Search,
-  bug: Bug,
-  lightbulb: Lightbulb,
+  bug: AlertCircle,
+  lightbulb: Sparkles,
   handoff: UserRoundCheck,
-  transfer: ArrowLeftRight,
+  transfer: ArrowRightLeft,
 } as const;
 
 interface FormState {
@@ -152,11 +155,16 @@ function toPayload(form: FormState) {
 
 export type EditorSection = "work" | "knowledge" | "profile" | "settings";
 
-const SECTIONS: { id: EditorSection; label: string; hint: string }[] = [
-  { id: "work", label: "Work & schedule", hint: "When it runs, what it works on, what needs approval" },
-  { id: "knowledge", label: "Knowledge", hint: "Company context and reference documents" },
-  { id: "profile", label: "Profile", hint: "Name, character, responsibilities, chat abilities" },
-  { id: "settings", label: "Sharing & model", hint: "Public link, widget, passcode, model" },
+const SECTIONS: {
+  id: EditorSection;
+  label: string;
+  hint: string;
+  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+}[] = [
+  { id: "work", label: "Work & schedule", hint: "When it runs, what it works on, what needs approval", icon: Workflow },
+  { id: "knowledge", label: "Knowledge", hint: "Company context and reference documents", icon: BookOpen },
+  { id: "profile", label: "Profile", hint: "Name, character, responsibilities, chat abilities", icon: UserCheck },
+  { id: "settings", label: "Sharing & model", hint: "Public link, widget, passcode, model", icon: Sliders },
 ];
 
 /** Fields the server can reject, and the section that owns each. */
@@ -181,6 +189,7 @@ function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next
       <ul className="inline-flex min-w-max items-center gap-1 rounded-lg border border-line bg-surface-2/80 p-1 shadow-2xs">
         {SECTIONS.map((item) => {
           const active = item.id === value;
+          const Icon = item.icon;
           return (
             <li key={item.id}>
               <button
@@ -189,12 +198,13 @@ function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next
                 onClick={() => onChange(item.id)}
                 title={item.hint}
                 className={cn(
-                  "rounded-md px-3.5 py-1.5 text-sm font-medium transition-all duration-150",
+                  "inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm font-medium transition-all duration-150",
                   active
                     ? "bg-surface font-semibold text-ink shadow-xs"
                     : "text-ink-muted hover:bg-surface/40 hover:text-ink",
                 )}
               >
+                <Icon className={cn("size-4 shrink-0", active ? "text-accent" : "text-ink-subtle")} aria-hidden />
                 {item.label}
               </button>
             </li>
@@ -466,7 +476,7 @@ export function AgentBuilder({
                 Configure
               </TabsTrigger>
               <TabsTrigger value="preview" className="flex-1">
-                <MessageSquare aria-hidden />
+                <BotMessageSquare aria-hidden />
                 Chat
               </TabsTrigger>
             </TabsList>

@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Briefcase, ChevronRight, Play } from "lucide-react";
+import { ChevronRight, Play, Workflow } from "lucide-react";
 import { toast } from "sonner";
-import { ApprovalCard } from "@/components/work/approval-card";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -26,50 +25,70 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
+import { CollabTag, runTitle } from "@/components/work/run-detail";
+import { CancelRunButton, RemoveButton } from "@/components/work/row-actions";
 import { useAgents } from "@/hooks/use-admin-data";
-import { useActionItems, useRunScope, useScope } from "@/hooks/use-work-data";
+import { FINISHED, useActionItems, useRunScope, useScope, useSuggestions } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
-import { ACTION_STATUSES, STATUS_LABELS, TRIGGER_LABELS } from "@/lib/work/types";
-import { cn, formatRelativeTime, safeHttpUrl } from "@/lib/utils";
+import { TRIGGER_LABELS } from "@/lib/work/types";
+import { formatRelativeTime } from "@/lib/utils";
 
 /**
- * The rough table. Every action item in the project, newest first, with the
- * one control that must exist now: approve or reject what is waiting. The
- * Inbox's Approvals tab replaces this surface; the routes stay.
+ * Every run in the project on one page: what is still active (waiting on
+ * you, running, queued) at the top, finished work below it by day. A row
+ * says what the work was; a run that has done something opens on its own
+ * page, while queued work - which has nothing to show yet - stays in the list.
  */
 export function WorkView({
   project,
   initialAgentId,
-  initialStatus,
-  focusItemId,
 }: {
   project: string;
   initialAgentId: string;
-  initialStatus: string;
-  /** From a link in the inbox: open this item on arrival. */
-  focusItemId?: string;
 }) {
   const [agentId, setAgentId] = React.useState(initialAgentId);
-  const [status, setStatus] = React.useState(initialStatus);
   const agents = useAgents(project);
   const items = useActionItems(
-    { project, agentId: agentId === "all" ? undefined : agentId, status: status === "all" ? undefined : status },
+    { project, agentId: agentId === "all" ? undefined : agentId },
     { refetchInterval: 5_000 },
   );
 
-  const waiting = items.data?.filter((item) => item.status === "needs_approval").length ?? 0;
+  const all = items.data ?? [];
+  const active = all.filter((item) => !FINISHED.has(item.status));
+  const finished = all.filter((item) => FINISHED.has(item.status));
+
+  // One fetch for the project; each row counts the suggestions its run raised.
+  const suggestions = useSuggestions({ project });
+  const openSuggestionsByRun = React.useMemo(() => {
+    const map = new Map<string, number>();
+    for (const suggestion of suggestions.data ?? []) {
+      if (suggestion.actionItemId && suggestion.pending) {
+        map.set(suggestion.actionItemId, (map.get(suggestion.actionItemId) ?? 0) + 1);
+      }
+    }
+    return map;
+  }, [suggestions.data]);
+
+  const row = (item: ActionItemDto) => (
+    <RunRow key={item.id} item={item} project={project} openSuggestions={openSuggestionsByRun.get(item.id) ?? 0} />
+  );
 
   return (
     <Page>
       <PageHeader
         title="Work"
         description="Everything your agents have done on their own, and what is waiting on you."
+        actions={<RunAgentDialog agents={agents.data ?? []} defaultAgentId={agentId} />}
       />
 
       <PageToolbar>
         <div className="flex w-full flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-ink-muted">
+            <span className="font-medium text-ink">{active.length}</span> active ·{" "}
+            <span className="font-medium text-ink">{finished.length}</span> finished
+          </p>
+          <div>
             <label htmlFor="work-agent" className="sr-only">
               Agent
             </label>
@@ -86,26 +105,7 @@ export function WorkView({
                 ))}
               </SelectContent>
             </Select>
-            <label htmlFor="work-status" className="sr-only">
-              Status
-            </label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger id="work-status" className="w-44">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                {ACTION_STATUSES.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {STATUS_LABELS[value]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {waiting > 0 ? <Badge tone="warning">{waiting} waiting for approval</Badge> : null}
           </div>
-
-          <RunAgentDialog agents={agents.data ?? []} defaultAgentId={agentId} />
         </div>
       </PageToolbar>
 
@@ -114,191 +114,141 @@ export function WorkView({
           <LoadingRows count={4} />
         ) : items.error ? (
           <ErrorState message={errorMessage(items.error)} onRetry={() => void items.refetch()} />
-        ) : items.data && items.data.length > 0 ? (
-          <Panel className="divide-y divide-line">
-            {items.data.map((item) => (
-              <ActionItemRow key={item.id} item={item} project={project} initiallyOpen={item.id === focusItemId} />
-            ))}
-          </Panel>
-        ) : (
+        ) : all.length === 0 ? (
           <EmptyState
-            icon={Briefcase}
+            icon={Workflow}
             title="Nothing has run yet"
             description="Give an agent a scope of work with a schedule or a webhook trigger, or press Run now in its editor. Runs and anything awaiting approval land here."
           />
+        ) : (
+          <div className="space-y-6">
+            {groupActive(active).map((group) => (
+              <RunGroup key={group.label} label={group.label} count={group.items.length}>
+                {group.items.map(row)}
+              </RunGroup>
+            ))}
+
+            {finished.length > 0 ? (
+              <div className={active.length > 0 ? "space-y-6 border-t border-line pt-6" : "space-y-6"}>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-base font-semibold text-ink">Finished</h2>
+                  <RemoveButton
+                    targets={finished.map((item) => ({ kind: "run" as const, id: item.id }))}
+                    what={`all ${finished.length} finished run${finished.length === 1 ? "" : "s"}${agentId === "all" ? "" : " for this agent"}`}
+                    label="Clear finished"
+                  />
+                </div>
+                {groupByDay(finished).map((group) => (
+                  <RunGroup key={group.label} label={group.label} count={group.items.length}>
+                    {group.items.map(row)}
+                  </RunGroup>
+                ))}
+              </div>
+            ) : null}
+          </div>
         )}
       </PageBody>
     </Page>
   );
 }
 
-function ActionItemRow({
-  item,
-  project,
-  initiallyOpen,
-}: {
-  item: ActionItemDto;
-  project: string;
-  initiallyOpen: boolean;
-}) {
-  const [open, setOpen] = React.useState(initiallyOpen || item.status === "needs_approval");
+function RunGroup({ label, count, children }: { label: string; count: number; children: React.ReactNode }) {
+  const id = `work-${label.replace(/\s+/g, "-").toLowerCase()}`;
+  return (
+    <section aria-labelledby={id}>
+      <h3 id={id} className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink">
+        {label}
+        <span className="font-normal text-ink-subtle">{count}</span>
+      </h3>
+      <Panel className="divide-y divide-line">{children}</Panel>
+    </section>
+  );
+}
+
+/**
+ * One run. Queued work has nothing to open yet, so it shows its whole task in
+ * place; anything else opens on its own page. The row's link sits beside the
+ * buttons rather than around them, so a click on Remove or Cancel (or in their
+ * dialogs) never opens the run.
+ */
+function RunRow({ item, project, openSuggestions }: { item: ActionItemDto; project: string; openSuggestions: number }) {
+  const queued = item.status === "queued";
+  const title = runTitle(item);
+  const removable = !["in_progress", "approved", "executing_external"].includes(item.status);
 
   return (
-    <div className="transition-colors">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="group flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 hover:bg-surface-2/60"
-      >
-        <ChevronRight
-          className={cn(
-            "size-4 shrink-0 text-ink-subtle transition-transform duration-200",
-            open && "rotate-90",
-          )}
-          aria-hidden
-        />
-        <div className="shrink-0 rounded-full ring-1 ring-line/80">
-          <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-sm">
-            <span className="font-semibold text-ink">{item.agent.name}</span>
-            <Badge tone="neutral" className="text-[10px] py-0 px-2 font-normal">
-              {TRIGGER_LABELS[item.trigger] ?? item.trigger}
-            </Badge>
-            <span className="text-xs text-ink-muted">{formatRelativeTime(item.createdAt)}</span>
-          </div>
-          <p className="mt-0.5 truncate text-xs text-ink-muted">
-            {item.headline ??
-              item.summary ??
-              item.error ??
-              (item.status === "in_progress" ? "Working…" : "Not started")}
-          </p>
-        </div>
-        {item.escalatedAt ? <Badge tone="danger">Escalated</Badge> : null}
-        <StatusBadge status={item.status} />
-      </button>
-
-      {open ? (
-        <div className="space-y-4 border-t border-line bg-surface-2/30 px-5 py-4 text-sm">
-          {item.status === "needs_approval" && item.pendingAction ? (
-            <ApprovalCard item={item} project={project} />
-          ) : null}
-
-          {item.escalatedAt && item.status !== "needs_approval" ? (
-            <p className="rounded-sm border border-danger-line bg-danger-soft/40 px-3 py-2 text-danger">
-              Escalated by the agent: {item.escalationReason}
-            </p>
-          ) : null}
-
-          {item.error ? <p className="text-danger">{item.error}</p> : null}
-
-          {/* The owner's account first; the agent's own report is underneath it
-              for anyone who wants the detail. */}
-          {item.summary ? (
-            <section>
-              <h4 className="eyebrow mb-1">What happened</h4>
-              <p className="whitespace-pre-wrap leading-relaxed text-ink">{item.summary}</p>
-            </section>
-          ) : null}
-
-          {item.report && item.report !== item.summary ? (
-            <details>
-              <summary className="eyebrow cursor-pointer">The agent&apos;s full report</summary>
-              <pre className="mt-2 whitespace-pre-wrap font-sans leading-relaxed text-ink-muted">
-                {item.report}
-              </pre>
-            </details>
-          ) : null}
-
-          {item.findings.length > 0 ? (
-            <section>
-              <h4 className="eyebrow mb-1">Findings</h4>
-              {item.findings.map((finding, index) => (
-                <details key={index} className="mb-2 rounded-sm border border-line bg-surface p-3">
-                  <summary className="cursor-pointer text-ink">{finding.query}</summary>
-                  <pre className="mt-2 whitespace-pre-wrap font-sans leading-relaxed text-ink-muted">
-                    {finding.findings}
-                  </pre>
-                  <ul className="mt-2 space-y-0.5 text-xs">
-                    {finding.sources.map((source, i) => {
-                      const href = safeHttpUrl(source.url);
-                      return (
-                        <li key={i}>
-                          {href ? (
-                            <a href={href} target="_blank" rel="noreferrer noopener" className="text-accent hover:underline">
-                              [{i + 1}] {source.title}
-                            </a>
-                          ) : (
-                            <span className="text-ink-muted">
-                              [{i + 1}] {source.title} <span className="text-ink-muted">(unlinked: not an http URL)</span>
-                            </span>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </details>
-              ))}
-            </section>
-          ) : null}
-
-          {item.drafts.length > 0 ? (
-            <section>
-              <h4 className="eyebrow mb-1">Drafts</h4>
-              {item.drafts.map((draft) => (
-                <details key={draft.id} className="mb-2 rounded-sm border border-line bg-surface p-3">
-                  <summary className="cursor-pointer text-ink">
-                    <StatusBadge status={draft.status} className="mr-2" />
-                    {draft.title}
-                    <span className="ml-2 text-xs text-ink-muted">{draft.kind.replace("_", " ")}</span>
-                  </summary>
-                  <pre className="mt-2 whitespace-pre-wrap font-sans leading-relaxed text-ink">{draft.body}</pre>
-                </details>
-              ))}
-            </section>
-          ) : null}
-
-          {item.external ? (
-            <p className={item.external.ok ? "text-positive" : "text-danger"}>
-              Delivery: {item.external.detail}
-            </p>
-          ) : null}
-
-          {item.steps.length > 0 ? (
-            <details>
-              <summary className="eyebrow cursor-pointer">
-                {item.steps.length} tool call{item.steps.length === 1 ? "" : "s"}
-              </summary>
-              <ol className="mt-2 space-y-1.5">
-                {item.steps.map((step, index) => (
-                  <li key={index} className="rounded-sm border border-line bg-surface p-2 text-xs">
-                    <span className={step.ok ? "text-ink" : "text-danger"}>
-                      <code className="font-mono">{step.tool}</code>
-                    </span>
-                    <span className="ml-2 text-ink-muted">{formatRelativeTime(step.at)}</span>
-                    <pre className="mt-1 whitespace-pre-wrap font-mono text-xs text-ink-muted">
-                      {JSON.stringify(step.input)}
-                    </pre>
-                    <p className="mt-1 whitespace-pre-wrap text-ink-muted">{step.output}</p>
-                  </li>
-                ))}
-              </ol>
-            </details>
-          ) : null}
-
-          <p className="text-xs text-ink-muted">
-            {item.inputTokens + item.outputTokens > 0
-              ? `${item.inputTokens.toLocaleString()} in / ${item.outputTokens.toLocaleString()} out tokens · `
-              : ""}
-            <Link href={`/p/${project}/agents/${item.agent.id}`} className="text-accent hover:underline">
-              Open {item.agent.name}
-            </Link>
-          </p>
-        </div>
-      ) : null}
+    <div className="relative flex w-full items-center gap-3 px-4 py-3.5 transition-colors duration-150 has-[a:hover]:bg-surface-2/60">
+      {queued ? null : (
+        <Link href={`/p/${project}/work/${item.id}`} className="absolute inset-0" aria-label={`Open: ${title}`} />
+      )}
+      <div className="shrink-0 rounded-full ring-1 ring-line/80">
+        <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className={queued ? "line-clamp-2 text-sm font-medium text-ink" : "truncate text-sm font-medium text-ink"}>
+          {title}
+        </p>
+        <p className="mt-0.5 truncate text-xs text-ink-muted">
+          {item.agent.name}
+          {item.agent.jobTitle ? `, ${item.agent.jobTitle}` : ""} · {TRIGGER_LABELS[item.trigger] ?? item.trigger} ·{" "}
+          {queued && item.scheduledFor
+            ? `starts ${new Date(item.scheduledFor).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`
+            : formatRelativeTime(item.createdAt)}
+          {openSuggestions > 0 ? ` · ${openSuggestions} suggestion${openSuggestions === 1 ? "" : "s"} to review` : ""}
+        </p>
+      </div>
+      <CollabTag item={item} />
+      {item.escalatedAt ? <Badge tone="danger">Escalated</Badge> : null}
+      <StatusBadge status={item.status} />
+      <div className="relative z-10 flex items-center gap-1">
+        {item.status === "in_progress" ? <CancelRunButton id={item.id} /> : null}
+        {removable ? <RemoveButton targets={[{ kind: "run", id: item.id }]} what={queued ? "this queued run" : "this run"} /> : null}
+      </div>
+      {queued ? (
+        <span className="size-4 shrink-0" aria-hidden />
+      ) : (
+        <ChevronRight className="size-4 shrink-0 text-ink-subtle" aria-hidden />
+      )}
     </div>
+  );
+}
+
+type Group = { label: string; items: ActionItemDto[] };
+
+function collect(items: ActionItemDto[], labelOf: (item: ActionItemDto) => string, order: string[]): Group[] {
+  const groups = new Map<string, ActionItemDto[]>();
+  for (const item of items) {
+    const key = labelOf(item);
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  return order.filter((key) => groups.has(key)).map((key) => ({ label: key, items: groups.get(key)! }));
+}
+
+/** What needs you first, then what is moving, then what has not started. */
+function groupActive(items: ActionItemDto[]): Group[] {
+  return collect(
+    items,
+    (item) => (item.status === "needs_approval" ? "Waiting on you" : item.status === "queued" ? "Queued" : "Running"),
+    ["Waiting on you", "Running", "Queued"],
+  );
+}
+
+/** Newest first within each day (the API already sorts). */
+function groupByDay(items: ActionItemDto[]): Group[] {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const today = startOfToday.getTime();
+  const day = 86_400_000;
+  return collect(
+    items,
+    (item) => {
+      const at = new Date(item.completedAt ?? item.createdAt).getTime();
+      if (at >= today) return "Today";
+      if (at >= today - day) return "Yesterday";
+      if (at >= today - 6 * day) return "Earlier this week";
+      return "Older";
+    },
+    ["Today", "Yesterday", "Earlier this week", "Older"],
   );
 }
 

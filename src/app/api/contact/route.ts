@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip") ||
       "unknown";
-    const limit = checkRateLimit(`contact:${ip}`, 5, 10 * 60_000);
+    const limit = await checkRateLimit(`contact:${ip}`, 5, 10 * 60_000);
     if (!limit.allowed) throw new HttpError(429, `Too many messages from this address. Try again in ${limit.retryAfterSeconds}s.`);
 
     const input = await parseJson(request, schema);

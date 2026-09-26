@@ -14,54 +14,60 @@
    up in redesign/COLOR.md.
    Every colour is defined here in both themes - nothing may be declared only
    inside a dark block, or the light theme inherits a hole.
+
+   Neutrals and status colours are Radix Colors steps (slate, iris, teal,
+   amber, red), inlined as oklch so scripts/check-contrast.mjs can read them.
+   The step is noted beside each value; the roles follow Radix: 1-2 app
+   backgrounds, 3-5 component fills, 6-8 borders, 9-10 solids, 11 muted text,
+   12 body text. The brand indigo, avatars and the landing sky are our own.
    --------------------------------------------------------------------------- */
 
 :root {
   /* surfaces - a hint of the brand hue keeps the neutrals from going muddy
      next to the indigo */
-  --paper: oklch(0.985 0.003 270);
+  --paper: oklch(0.983 0.003 286.4); /* slate-2 */
   --surface: oklch(1 0 0);
-  --surface-2: oklch(0.968 0.004 270);
-  --surface-3: oklch(0.941 0.006 270);
+  --surface-2: oklch(0.956 0.004 286.3); /* slate-3 */
+  --surface-3: oklch(0.932 0.005 286.3); /* slate-4 */
   /* The app's navigation rail, and only that.
      It needs to sit a step below the page in both themes so the chrome
      recedes and a panel is the brightest thing on screen. No existing surface
      does that: --surface-2 is darker than the page in light and lighter than
      it in dark, so a rail painted with it receded in one theme and advanced
      in the other. This one is defined as "below paper" in each. */
-  --rail: oklch(0.957 0.004 270);
+  --rail: oklch(0.956 0.004 286.3); /* slate-3 */
 
   /* text */
-  --ink: oklch(0.215 0.018 270);
-  --ink-muted: oklch(0.470 0.016 270);
-  --ink-subtle: oklch(0.600 0.014 270);
+  --ink: oklch(0.241 0.010 248.2); /* slate-12 */
+  --ink-muted: oklch(0.502 0.014 264.4); /* slate-11 */
+  --ink-subtle: oklch(0.611 0.015 272.6); /* slate-10 */
 
   /* lines */
-  --line: oklch(0.905 0.006 270);
+  --line: oklch(0.887 0.010 286.2); /* slate-6 */
   /* Interactive component borders must clear 3:1 (WCAG 1.4.11). */
-  --line-strong: oklch(0.640 0.012 270);
+  --line-strong: oklch(0.645 0.016 277.7); /* slate-9 */
 
   /* accent - the Desker indigo, #1800AD, taken from the logo artwork */
   --accent: oklch(0.345 0.229 268.5);
   --accent-hover: oklch(0.290 0.205 268.5);
   --accent-fg: oklch(0.995 0.002 270);
-  --accent-soft: oklch(0.953 0.032 270);
-  --accent-soft-fg: oklch(0.330 0.200 268.5);
-  --accent-line: oklch(0.875 0.060 270);
+  --accent-soft: oklch(0.961 0.017 282.5); /* iris-3 */
+  --accent-soft-fg: oklch(0.511 0.174 279.8); /* iris-11 */
+  --accent-line: oklch(0.863 0.069 283.0); /* iris-6 */
 
   /* semantic */
-  --positive: oklch(0.44 0.085 172);
+  --positive: oklch(0.500 0.092 178.8); /* teal-11, darkened: Radix tunes for APCA and the badge missed WCAG 4.5:1 */
   --positive-fg: oklch(0.995 0.002 172);
-  --positive-soft: oklch(0.955 0.028 172);
-  --positive-line: oklch(0.865 0.055 172);
+  --positive-soft: oklch(0.960 0.026 181.9); /* teal-3 */
+  --positive-line: oklch(0.856 0.064 181.2); /* teal-6 */
   /* Toward yellow (hue 85/92) so caution reads as caution, never as brand. */
-  --warning: oklch(0.480 0.099 85);
-  --warning-soft: oklch(0.962 0.050 92);
-  --warning-line: oklch(0.880 0.080 92);
-  --danger: oklch(0.475 0.175 27);
+  --warning: oklch(0.520 0.117 63.9); /* amber-11, darkened for the same reason */
+  --warning-soft: oklch(0.970 0.068 100.4); /* amber-3 */
+  --warning-line: oklch(0.880 0.123 93.4); /* amber-6 */
+  --danger: oklch(0.557 0.197 25.2); /* red-11 */
   --danger-fg: oklch(0.995 0.002 27);
-  --danger-soft: oklch(0.958 0.028 27);
-  --danger-line: oklch(0.880 0.055 27);
+  --danger-soft: oklch(0.955 0.021 13.9); /* red-3 */
+  --danger-line: oklch(0.857 0.074 17.7); /* red-6 */
 
   --focus: oklch(0.345 0.229 268.5);
   --shadow-color: 268 18% 12%;
@@ -122,18 +128,18 @@
 }
 
 :root.dark {
-  --paper: oklch(0.165 0.014 270);
-  --surface: oklch(0.207 0.015 270);
-  --surface-2: oklch(0.245 0.016 270);
-  --surface-3: oklch(0.288 0.017 270);
-  --rail: oklch(0.138 0.013 270);
+  --paper: oklch(0.213 0.004 264.5); /* slate-2 */
+  --surface: oklch(0.252 0.006 271.2); /* slate-3 */
+  --surface-2: oklch(0.283 0.007 248.1); /* slate-4 */
+  --surface-3: oklch(0.312 0.008 255.6); /* slate-5 */
+  --rail: oklch(0.179 0.004 286.0); /* slate-1 */
 
-  --ink: oklch(0.958 0.006 270);
-  --ink-muted: oklch(0.745 0.011 270);
-  --ink-subtle: oklch(0.618 0.013 270);
+  --ink: oklch(0.949 0.003 264.5); /* slate-12 */
+  --ink-muted: oklch(0.769 0.010 258.3); /* slate-11 */
+  --ink-subtle: oklch(0.583 0.015 266.6); /* slate-10 */
 
-  --line: oklch(0.302 0.015 270);
-  --line-strong: oklch(0.530 0.016 270);
+  --line: oklch(0.347 0.010 254.0); /* slate-6 */
+  --line-strong: oklch(0.537 0.015 262.3); /* slate-9 */
 
   /* The logo indigo is far too dark to read on a dark ground, so the dark
      theme lifts it to a periwinkle at the same hue - recognisably the same
@@ -141,22 +147,22 @@
   --accent: oklch(0.720 0.170 268.5);
   --accent-hover: oklch(0.790 0.145 268.5);
   --accent-fg: oklch(0.180 0.045 268.5);
-  --accent-soft: oklch(0.292 0.072 268.5);
-  --accent-soft-fg: oklch(0.845 0.110 268.5);
-  --accent-line: oklch(0.402 0.090 268.5);
+  --accent-soft: oklch(0.272 0.069 278.5); /* iris-3 */
+  --accent-soft-fg: oklch(0.774 0.122 287.5); /* iris-11 */
+  --accent-line: oklch(0.400 0.112 279.5); /* iris-6 */
 
-  --positive: oklch(0.775 0.105 172);
-  --positive-fg: oklch(0.195 0.040 172);
-  --positive-soft: oklch(0.275 0.045 172);
-  --positive-line: oklch(0.375 0.060 172);
-  --warning: oklch(0.830 0.120 92);
-  --warning-soft: oklch(0.300 0.048 90);
-  --warning-line: oklch(0.395 0.065 90);
-  --danger: oklch(0.735 0.155 27);
+  --positive: oklch(0.789 0.147 175.7); /* teal-11 */
+  --positive-fg: oklch(0.187 0.012 186.7); /* teal-1 */
+  --positive-soft: oklch(0.273 0.038 186.8); /* teal-3 */
+  --positive-line: oklch(0.414 0.066 184.7); /* teal-6 */
+  --warning: oklch(0.862 0.173 89.0); /* amber-11 */
+  --warning-soft: oklch(0.258 0.044 74.5); /* amber-3 */
+  --warning-line: oklch(0.386 0.078 75.3); /* amber-6 */
+  --danger: oklch(0.780 0.128 22.1); /* red-11 */
   /* White on this lifted red was 2.5:1 - the dark danger button was unreadable. */
-  --danger-fg: oklch(0.195 0.040 27);
-  --danger-soft: oklch(0.295 0.055 27);
-  --danger-line: oklch(0.400 0.080 27);
+  --danger-fg: oklch(0.188 0.013 18.4); /* red-1 */
+  --danger-soft: oklch(0.251 0.065 12.7); /* red-3 */
+  --danger-line: oklch(0.381 0.111 16.8); /* red-6 */
 
   --focus: oklch(0.760 0.150 268.5);
   --shadow-color: 268 40% 2%;
@@ -475,6 +481,22 @@
   color: var(--sky-ink);
 }
 
+/* Smoothly dissolves the hero's dunes and deep shadow into the page's paper ground.
+   Uses color-mix in oklch between --dune-deep and --paper so it creates a silky
+   twilight transition in light mode, and maintains uniform lightness in dark mode. */
+.hero-dissolve {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--dune-deep) 6rem,
+    var(--dune-deep) calc(100% - 18rem),
+    color-mix(in oklch, var(--dune-deep) 80%, var(--paper)) calc(100% - 13rem),
+    color-mix(in oklch, var(--dune-deep) 50%, var(--paper)) calc(100% - 8rem),
+    color-mix(in oklch, var(--dune-deep) 20%, var(--paper)) calc(100% - 3.5rem),
+    var(--paper) 100%
+  );
+}
+
 /* Cluely-style glass button: a blue gradient, a light rim and a soft blue drop. */
 .glass {
   background:
@@ -596,11 +618,11 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .stage-hold {
-    height: 70vh;
+    height: 18vh;
   }
   @media (min-width: 640px) {
     .stage-hold {
-      height: 100vh;
+      height: 25vh;
     }
   }
 }

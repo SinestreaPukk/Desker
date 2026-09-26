@@ -4,19 +4,19 @@ import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   BadgeDollarSign,
+  BookOpen,
   CalendarClock,
   Download,
-  FileText,
+  History,
   Mail,
   Megaphone,
   PencilLine,
-  ScrollText,
   Search,
   Settings2,
   ShieldCheck,
   StickyNote,
   UserRound,
-  Briefcase,
+  Workflow,
 } from "lucide-react";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -155,7 +155,7 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
           <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
         ) : query.data.length === 0 ? (
           <EmptyState
-            icon={ScrollText}
+            icon={History}
             title="Nothing recorded in this range"
             description="Every task an agent runs, everything it looks up or writes, and every decision a person makes is recorded here as it happens."
           />
@@ -177,13 +177,13 @@ const TONE_CLASS: Record<AuditTone, string> = {
 
 const ICONS: Record<AuditIcon, typeof Search> = {
   research: Search,
-  documents: FileText,
+  documents: BookOpen,
   draft: PencilLine,
   send: Mail,
   publish: Megaphone,
   approval: ShieldCheck,
   person: UserRound,
-  task: Briefcase,
+  task: Workflow,
   schedule: CalendarClock,
   settings: Settings2,
   billing: BadgeDollarSign,

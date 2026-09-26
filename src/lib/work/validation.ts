@@ -42,6 +42,8 @@ export const scopeInputSchema = z.object({
     .object({
       publish_post: z.enum(AUTONOMY_MODES).optional(),
       send_email: z.enum(AUTONOMY_MODES).optional(),
+      calendar_create_event: z.enum(AUTONOMY_MODES).optional(),
+      slack_post_message: z.enum(AUTONOMY_MODES).optional(),
     })
     .nullable()
     .default(null),
@@ -82,6 +84,7 @@ export const integrationInputSchema = z.discriminatedUnion("type", [
       .max(2000, "That address is too long.")
       .refine((u) => /^https?:\/\//.test(u), "The address has to start with https:// (or http:// for a local test)."),
     secret: z.string().trim().max(200, "A signing secret of up to 200 characters.").optional().or(z.literal("")),
+    platform: z.string().trim().max(40, "Keep the platform name short.").optional().or(z.literal("")),
   }),
   z.object({
     type: z.literal(INTEGRATION_TYPES[1]),

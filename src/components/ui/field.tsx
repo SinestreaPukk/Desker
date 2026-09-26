@@ -25,7 +25,7 @@ const fieldStyles =
   "w-full rounded-lg border border-line-strong/80 bg-surface px-3 text-sm text-ink " +
   "placeholder:text-ink-subtle shadow-2xs transition-all duration-150 " +
   "hover:border-ink-subtle " +
-  "focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-none " +
+  "focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent focus-visible:ring-2 focus-visible:ring-accent/20 " +
   "disabled:cursor-not-allowed disabled:bg-surface-2 disabled:opacity-70 " +
   "aria-[invalid=true]:border-danger aria-[invalid=true]:ring-danger/20";
 

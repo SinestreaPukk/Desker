@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { RefreshCw, TriangleAlert } from "lucide-react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
 
@@ -86,7 +86,7 @@ export function ErrorState({
     >
       <div className="flex items-start gap-3">
         <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-danger-line bg-danger-soft">
-          <AlertTriangle className="size-4 text-danger" aria-hidden />
+          <TriangleAlert className="size-4 text-danger" aria-hidden />
         </div>
         <div>
           <p className="text-sm font-semibold text-danger">{title}</p>
@@ -119,7 +119,7 @@ export function FormError({ message }: { message: string | null }) {
       role="alert"
       className="flex items-start gap-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2.5 text-sm leading-relaxed text-danger"
     >
-      <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+      <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
       {message}
     </p>
   );

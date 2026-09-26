@@ -6,6 +6,19 @@ import type { ActionStatus, PendingAction, WorkStep } from "@/lib/work/types";
 export const actionItemInclude = {
   agent: { select: { id: true, name: true, jobTitle: true, avatarUrl: true } },
   drafts: { orderBy: { createdAt: "asc" as const } },
+  parent: { select: { agent: { select: { id: true, name: true, avatarUrl: true } } } },
+  followups: {
+    where: { type: "colleague_delegation" },
+    orderBy: { createdAt: "asc" as const },
+    select: {
+      id: true,
+      status: true,
+      headline: true,
+      summary: true,
+      payload: true,
+      agent: { select: { id: true, name: true, avatarUrl: true } },
+    },
+  },
 } satisfies Prisma.ActionItemInclude;
 
 type Row = Prisma.ActionItemGetPayload<{ include: typeof actionItemInclude }>;
@@ -31,6 +44,7 @@ export function toActionItemDto(item: Row): ActionItemDto {
     type: item.type,
     trigger: item.trigger,
     headline: item.headline,
+    task: taskOf(item.payload) || null,
     // The owner's summary is written a step after the run finishes, so a run
     // still in flight falls back to the agent's own report rather than showing
     // an empty row.
@@ -43,6 +57,19 @@ export function toActionItemDto(item: Row): ActionItemDto {
     drafts: item.drafts.map(toDraftDto),
     followupIds: (result.followupIds as string[] | undefined) ?? [],
     parentId: item.parentId,
+    collab: {
+      askedBy:
+        item.type === "colleague_delegation" && item.parent
+          ? { agent: item.parent.agent, task: taskOf(item.payload), context: contextOf(item.payload) }
+          : null,
+      handoffs: item.followups.map((handoff) => ({
+        id: handoff.id,
+        agent: handoff.agent,
+        task: taskOf(handoff.payload),
+        status: handoff.status as ActionStatus,
+        reply: handoff.headline ?? handoff.summary,
+      })),
+    },
     error: item.error,
     inputTokens: item.inputTokens,
     outputTokens: item.outputTokens,
@@ -55,4 +82,14 @@ export function toActionItemDto(item: Row): ActionItemDto {
     startedAt: item.startedAt?.toISOString() ?? null,
     completedAt: item.completedAt?.toISOString() ?? null,
   };
+}
+
+function taskOf(payload: Prisma.JsonValue): string {
+  const value = (payload as Record<string, unknown> | null)?.objective;
+  return typeof value === "string" ? value : "";
+}
+
+function contextOf(payload: Prisma.JsonValue): string {
+  const value = (payload as Record<string, unknown> | null)?.context;
+  return typeof value === "string" ? value : "";
 }

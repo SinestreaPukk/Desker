@@ -33,6 +33,7 @@ import {
   PROJECT_CONTEXT_QUESTIONS,
 } from "./context";
 import { missingGrounding } from "./preflight";
+import { connectorForTool } from "@/lib/integrations/catalog";
 import { summarizeRun } from "./summary";
 import { WORK_TOOL_IDS, scopeTools, workToolDefinitions } from "./tools";
 import { executeWorkTool, executePendingAction, recordEscalation, type RunContext } from "./execute";
@@ -77,7 +78,7 @@ export async function transition(
       status: to,
       ...(to === "in_progress" ? { startedAt: new Date() } : {}),
       ...(to === "needs_approval" ? { awaitingSince: new Date(), completedAt: null } : {}),
-      ...(["done", "failed", "rejected"].includes(to) ? { completedAt: new Date() } : {}),
+      ...(["done", "failed", "rejected", "cancelled"].includes(to) ? { completedAt: new Date() } : {}),
     },
   });
 }
@@ -117,7 +118,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
     (d) => documentIds.length === 0 || documentIds.includes(d.id),
   );
 
-  const [publishing, email, colleagues] = await Promise.all([
+  const [publishing, email, colleagues, connectedTypes] = await Promise.all([
     findIntegration(item.organizationId, "webhook"),
     resolveEmail(item.organizationId),
     prisma.agent.findMany({
@@ -129,7 +130,22 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       select: { id: true, name: true, jobTitle: true, department: true },
       orderBy: { name: "asc" },
     }),
+    prisma.integration.findMany({
+      where: { organizationId: item.organizationId, enabled: true, secret: { not: null } },
+      select: { type: true },
+    }),
   ]);
+  // The connectors this run's own tools need but nobody has connected yet, so the
+  // agent hears it once up front instead of discovering it one refused call at a time.
+  const connected = new Set(connectedTypes.map((row) => row.type));
+  const missingConnections = [
+    ...new Set(
+      (tools ?? [...WORK_TOOL_IDS])
+        .map((tool) => connectorForTool(tool))
+        .filter((connector) => connector && connector.oauthProvider && !connected.has(connector.id))
+        .map((connector) => connector!.name),
+    ),
+  ];
 
   await transition(actionItemId, "in_progress");
 
@@ -168,6 +184,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       documentNames: documents.map((d) => d.filename),
       hasPublishing: Boolean(publishing),
       hasEmail: Boolean(email),
+      missingConnections,
       hasSearch: hasSearchProvider(),
       colleagues,
     }),
@@ -225,7 +242,7 @@ async function finishRun(
       title: "A scheduled task failed",
       body: outcome.error,
       agentName: agent?.name ?? "Agent",
-      path: agent ? `/p/${agent.project.slug}/work?item=${actionItemId}` : undefined,
+      path: agent ? `/p/${agent.project.slug}/work/${actionItemId}` : undefined,
       severity: "medium",
     });
     await prisma.issue

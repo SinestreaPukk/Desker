@@ -3,22 +3,22 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  AlertTriangle,
-  Bug,
-  CheckCircle2,
+  ArrowRight,
+  ArrowRightLeft,
   Clock,
-  Coins,
-  FileQuestion,
-  MessageSquare,
-  Search,
-  ThumbsDown,
-  ThumbsUp,
-  TrendingUp,
-  XCircle,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
+import {
+  InsightCollaborationIcon,
+  InsightTasksRunIcon,
+  InsightTelemetryEmptyIcon,
+  InsightTimeSavedIcon,
+  InsightCostIcon,
+} from "@/components/icons/insights-icons";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Badge, StatusBadge } from "@/components/ui/badge";
 import {
   Panel,
   PanelBody,
@@ -35,85 +35,85 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingKpis, LoadingRows } from "@/components/ui/states";
-import { useAnalytics, type AnalyticsResponse } from "@/hooks/use-admin-data";
+import { useAnalytics } from "@/hooks/use-admin-data";
 import { errorMessage } from "@/lib/api-client";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime } from "@/lib/utils";
 import {
-  awaitingCaption,
-  conversationsCaption,
   costCaption,
-  escalationCaption,
-  failedCaption,
   formatHours,
-  helpfulCaption,
-  humanCost,
   humanDuration,
-  issuesCaption,
-  searchesCaption,
   tasksCaption,
   timeSaved,
 } from "@/lib/insight-copy";
 
-function percent(value: number | null): string {
-  return value === null ? "—" : `${Math.round(value * 100)}%`;
-}
-
-/** Escalation is bad above a threshold; retrieval is bad below one. */
-function rateTone(
-  value: number | null,
-  kind: "escalation" | "retrieval",
-): "neutral" | "positive" | "warning" | "danger" {
-  if (value === null) return "neutral";
-  if (kind === "escalation") {
-    if (value >= 0.4) return "danger";
-    if (value >= 0.2) return "warning";
-    return "positive";
-  }
-  if (value < 0.5) return "danger";
-  if (value < 0.75) return "warning";
-  return "positive";
+function money(value: number | null): string {
+  if (value === null) return "—";
+  return value < 0.01 && value > 0 ? "<$0.01" : `$${value.toFixed(2)}`;
 }
 
 export function InsightsView({ project }: { project: string }) {
   const [days, setDays] = React.useState("30");
   const { data, isPending, error, refetch, isRefetching } = useAnalytics(project, Number(days));
 
+  const saved = React.useMemo(() => {
+    if (!data) return { hours: 0, caption: "" };
+    return timeSaved(data.totals.conversations, data.work.totals.done);
+  }, [data]);
+
+  const totalTokens = React.useMemo(() => {
+    if (!data) return 0;
+    return data.work.totals.inputTokens + data.work.totals.outputTokens;
+  }, [data]);
+
   return (
     <Page>
       <PageHeader
         title="Insights"
-        description="How your agents are doing, and what they keep being asked that your documents cannot answer."
+        description="Executive summary of your autonomous AI workforce: time saved, tasks done on their own, multi-agent collaboration, and what it cost."
+        actions={
+          <Button asChild variant="secondary" size="sm">
+            <Link href={`/p/${project}/insights/detailed`} className="inline-flex items-center gap-1.5">
+              Detailed Insights
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </Button>
+        }
       />
 
-      {/* The range picker lives in the toolbar rather than the header, so this
-          tab has the same two-row chrome as the roster and the inbox. */}
       <PageToolbar>
         <p className="text-sm text-ink-muted">
-          Figures cover real client conversations only; builder previews are
-          excluded.
+          Autonomous execution and resource metrics for the active workspace.
         </p>
-        <div className="w-40">
-          <label htmlFor="range" className="sr-only">
-            Time range
-          </label>
-          <Select value={days} onValueChange={setDays}>
-            <SelectTrigger id="range">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-3">
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Link href={`/p/${project}/insights/detailed`} className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline">
+              Detailed breakdown
+              <ExternalLink className="size-3" aria-hidden />
+            </Link>
+          </Button>
+          <div className="w-40">
+            <label htmlFor="range" className="sr-only">
+              Time range
+            </label>
+            <Select value={days} onValueChange={setDays}>
+              <SelectTrigger id="range">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </PageToolbar>
 
-      <PageBody className="space-y-5">
+      <PageBody className="space-y-6">
         {isPending ? (
           <>
             <LoadingKpis />
-            <LoadingRows count={2} />
+            <LoadingRows count={3} />
           </>
         ) : error ? (
           <ErrorState
@@ -121,11 +121,11 @@ export function InsightsView({ project }: { project: string }) {
             onRetry={() => void refetch()}
             retrying={isRefetching}
           />
-        ) : data!.totals.conversations === 0 && data!.work.totals.runs === 0 ? (
+        ) : data!.work.totals.runs === 0 && totalTokens === 0 ? (
           <EmptyState
-            icon={TrendingUp}
+            icon={InsightTelemetryEmptyIcon}
             title="Nothing to measure yet"
-            description="Insights fill in once a published agent has talked to a client or run a task on its own. Conversations, escalations, ratings, tasks and cost per agent all land here."
+            description="Insights populate once your published agents run autonomous tasks on a schedule, trigger workflows, or collaborate with each other."
             action={
               <Button asChild variant="secondary">
                 <Link href={`/p/${project}/roster`}>Go to the roster</Link>
@@ -134,114 +134,173 @@ export function InsightsView({ project }: { project: string }) {
           />
         ) : (
           <>
-            <KpiRow
-              lead={{
-                label: "Questions answered for clients",
-                value: data!.totals.conversations,
-                caption: conversationsCaption({
-                  conversations: data!.totals.conversations,
-                  previousConversations: data!.previous.conversations,
-                  escalated: data!.totals.escalated,
-                  days: data!.days,
-                }),
-                icon: MessageSquare,
-              }}
-              stats={[
-                {
-                  label: "Handed to a person",
-                  value: data!.totals.escalated,
-                  ratio:
-                    data!.totals.conversations > 0
-                      ? data!.totals.escalated / data!.totals.conversations
-                      : null,
-                  tone: "danger",
-                  caption: escalationCaption(data!.totals.escalated, data!.totals.conversations),
-                  icon: AlertTriangle,
-                },
-                {
-                  label: "Clients said it helped",
-                  value: data!.totals.ratedUp,
-                  ratio:
-                    data!.totals.ratedUp + data!.totals.ratedDown > 0
-                      ? data!.totals.ratedUp / (data!.totals.ratedUp + data!.totals.ratedDown)
-                      : null,
-                  tone: "positive",
-                  caption: helpfulCaption(data!.totals.ratedUp, data!.totals.ratedDown),
-                  icon: ThumbsUp,
-                },
-                {
-                  label: "Raised for you to deal with",
-                  value: data!.totals.issues + data!.totals.suggestions,
-                  caption: issuesCaption(data!.totals.issues, data!.totals.suggestions),
-                  icon: Bug,
-                },
-                {
-                  label: "Answered from your documents",
-                  value: data!.totals.searches - data!.totals.searchMisses,
-                  ratio:
-                    data!.totals.searches > 0
-                      ? 1 - data!.totals.searchMisses / data!.totals.searches
-                      : null,
-                  tone: "accent",
-                  caption: searchesCaption(data!.totals.searches, data!.totals.searchMisses),
-                  icon: Search,
-                },
-              ]}
-            />
+            {/* Primary KPI Grid: Time Saved, Tasks on Own, Agent Collaboration, Cost */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {/* 1. Time Saved - the headline: the number that says whether this was worth it */}
+              <Panel className="flex flex-col p-5 transition-all hover:border-line-strong hover:shadow-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="meta font-semibold">Hours saved for your team</p>
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-positive-line/70 bg-positive-soft text-positive shadow-2xs">
+                    <InsightTimeSavedIcon className="size-4.5" />
+                  </span>
+                </div>
+                <div className="mt-auto pt-4">
+                  <p className="text-display font-bold leading-none tracking-tight text-ink tabular-nums">
+                    {formatHours(saved.hours)}
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-1.5 text-xs text-ink-muted">
+                    <Clock className="size-3 text-ink-subtle" aria-hidden />
+                    <span>Decision turnaround: {humanDuration(data!.work.totals.approvalTurnaroundMs)}</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+                    {saved.caption}
+                  </p>
+                </div>
+              </Panel>
 
-            {/* Work: what the agents did on their own, and what it cost. -------- */}
-            <WorkSection
-              work={data!.work}
-              days={data!.days}
-              previousRuns={data!.previous.runs}
-              conversations={data!.totals.conversations}
-            />
+              {/* 2. Tasks Done on Their Own */}
+              <Panel className="flex flex-col p-5 transition-all hover:border-line-strong hover:shadow-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="meta font-semibold">Tasks done on their own</p>
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-accent-line/70 bg-accent-soft text-accent-soft-fg shadow-2xs">
+                    <InsightTasksRunIcon className="size-4.5" />
+                  </span>
+                </div>
+                <div className="mt-auto pt-4">
+                  <p className="text-display font-bold leading-none tracking-tight text-ink tabular-nums">
+                    {data!.work.totals.runs.toLocaleString()}
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-2 text-xs text-ink-muted">
+                    <span className="text-positive font-medium">{data!.work.totals.done} finished</span>
+                    <span>·</span>
+                    <span className={data!.work.totals.failed > 0 ? "text-danger" : ""}>{data!.work.totals.failed} stopped</span>
+                    <span>·</span>
+                    <span>{data!.work.totals.awaiting} waiting</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+                    {tasksCaption({
+                      runs: data!.work.totals.runs,
+                      previousRuns: data!.previous.runs,
+                      done: data!.work.totals.done,
+                      failed: data!.work.totals.failed,
+                      awaiting: data!.work.totals.awaiting,
+                      days: data!.days,
+                    })}
+                  </p>
+                </div>
+              </Panel>
 
-            {/* Content gaps first: it is the only panel here that tells an
-                admin what to actually go and do. */}
+              {/* 3. Collaboration Between Agents */}
+              <Panel className="flex flex-col p-5 transition-all hover:border-line-strong hover:shadow-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="meta font-semibold">Collaboration between agents</p>
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-accent-line/70 bg-accent-soft text-accent-soft-fg shadow-2xs">
+                    <InsightCollaborationIcon className="size-4.5" />
+                  </span>
+                </div>
+                <div className="mt-auto pt-4">
+                  <p className="text-display font-bold leading-none tracking-tight text-ink tabular-nums">
+                    {data!.collab.total.toLocaleString()}
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-2 text-xs text-ink-muted">
+                    <span>{data!.collab.delegations} task handoffs</span>
+                    <span>·</span>
+                    <span>{data!.collab.transfers} chat transfers</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+                    Autonomous tasks and client inquiries routed between specialized team members.
+                  </p>
+                </div>
+              </Panel>
+
+              {/* 4. Estimated cost - deliberately quieter than the three above: what it
+                  cost matters, but it is not the headline. Raw tokens are the fine print. */}
+              <Panel className="flex flex-col p-5 transition-all hover:border-line-strong hover:shadow-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="meta font-semibold">Estimated cost</p>
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 text-ink-muted shadow-2xs">
+                    <InsightCostIcon className="size-4.5" />
+                  </span>
+                </div>
+                <div className="mt-auto pt-4">
+                  <p className="text-xl font-semibold leading-none tracking-tight text-ink tabular-nums">
+                    {money(data!.work.totals.costUsd)}
+                  </p>
+                  <p className="mt-2.5 text-xs leading-relaxed text-ink-muted">
+                    {costCaption({
+                      costUsd: data!.work.totals.costUsd,
+                      runs: data!.work.totals.runs,
+                      conversations: data!.totals.conversations,
+                      unpricedModels: data!.work.totals.unpricedModels,
+                      days: data!.days,
+                    })}
+                  </p>
+                  <p className="mt-2 font-mono text-xs text-ink-subtle tabular-nums">
+                    {totalTokens.toLocaleString()} tokens · {data!.work.totals.inputTokens.toLocaleString()} in /{" "}
+                    {data!.work.totals.outputTokens.toLocaleString()} out
+                  </p>
+                </div>
+              </Panel>
+            </div>
+
+            {/* Collaboration Between Agents Section */}
             <Panel>
               <PanelHeader>
                 <div>
-                  <PanelTitle>Questions your documents can&apos;t answer</PanelTitle>
+                  <PanelTitle>Collaboration between agents</PanelTitle>
                   <PanelDescription>
-                    Searches that came back empty, most asked first. Each one is a
-                    document worth writing.
+                    Work handed off between specialized roles: research delegated to analysts, copy requests to marketers, and customer transfers.
                   </PanelDescription>
                 </div>
               </PanelHeader>
               <PanelBody>
-                {data!.contentGaps.length === 0 ? (
+                {data!.collab.handoffs.length === 0 ? (
                   <EmptyState
-                    icon={FileQuestion}
-                    title="No gaps found"
-                    description="Every search your agents ran returned something. Upload more context as new topics come up."
-                    /* Already inside a titled panel; a second border around it
-                       is a box in a box. */
-                    className="border-0 bg-transparent py-10"
+                    icon={InsightCollaborationIcon}
+                    title="No agent collaborations recorded in this window"
+                    description="When an agent uses delegate_to_colleague during an autonomous run, or transfers a client conversation to a specialist on your roster, their teamwork is logged here."
+                    className="py-8"
                   />
                 ) : (
                   <ul className="divide-y divide-line rounded-lg border border-line">
-                    {data!.contentGaps.map((gap) => (
-                      <li
-                        key={`${gap.agentName}:${gap.query}`}
-                        className="flex items-start gap-3 p-3"
-                      >
-                        <Search
-                          className="mt-0.5 size-4 shrink-0 text-ink-subtle"
-                          aria-hidden
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm text-ink">
-                            &ldquo;{gap.query}&rdquo;
-                          </p>
-                          <p className="mt-1 meta">
-                            {gap.agentName} · last asked{" "}
-                            {formatRelativeTime(gap.lastAskedAt)}
-                          </p>
+                    {data!.collab.handoffs.map((handoff) => (
+                      <li key={handoff.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <AgentAvatar
+                              name={handoff.fromAgent.name}
+                              src={handoff.fromAgent.avatarUrl}
+                              seed={handoff.fromAgent.id}
+                              size="sm"
+                            />
+                            <span className="text-xs font-medium text-ink">{handoff.fromAgent.name}</span>
+                          </div>
+
+                          <ArrowRightLeft className="size-3.5 text-ink-subtle" aria-hidden />
+
+                          <div className="flex items-center gap-1.5">
+                            <AgentAvatar
+                              name={handoff.toAgent.name}
+                              src={handoff.toAgent.avatarUrl}
+                              seed={handoff.toAgent.id}
+                              size="sm"
+                            />
+                            <span className="text-xs font-medium text-ink">{handoff.toAgent.name}</span>
+                          </div>
+
+                          <Badge tone={handoff.type === "delegation" ? "accent" : "neutral"} className="ml-1 text-[11px]">
+                            {handoff.type === "delegation" ? "Delegated task" : "Transferred chat"}
+                          </Badge>
                         </div>
-                        <Badge tone={gap.misses > 2 ? "danger" : "warning"}>
-                          {gap.misses}×
-                        </Badge>
+
+                        <div className="min-w-0 flex-1 px-2 sm:max-w-md">
+                          <p className="truncate text-xs text-ink">{handoff.summary}</p>
+                        </div>
+
+                        <div className="flex items-center gap-3 text-right">
+                          <StatusBadge status={handoff.status} />
+                          <span className="meta text-xs">{formatRelativeTime(handoff.createdAt)}</span>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -249,464 +308,109 @@ export function InsightsView({ project }: { project: string }) {
               </PanelBody>
             </Panel>
 
-            {data!.dislikedReplies.length > 0 ? (
-              <Panel>
-                <PanelHeader>
-                  <div>
-                    <PanelTitle>Replies clients marked unhelpful</PanelTitle>
-                    <PanelDescription>
-                      The question, and the answer that missed. Most recent first.
-                    </PanelDescription>
-                  </div>
-                </PanelHeader>
-                <PanelBody>
-                  <ul className="divide-y divide-line rounded-lg border border-line">
-                    {data!.dislikedReplies.map((item) => (
-                      <li key={item.messageId} className="flex items-start gap-3 p-3">
-                        <ThumbsDown
-                          className="mt-0.5 size-4 shrink-0 text-danger"
-                          aria-hidden
-                        />
-                        <div className="min-w-0 flex-1 space-y-1">
-                          {item.question ? (
-                            <p className="text-sm font-medium text-ink">
-                              &ldquo;{item.question}&rdquo;
-                            </p>
-                          ) : null}
-                          <p className="line-clamp-2 text-sm leading-relaxed text-ink-muted">
-                            {item.reply}
-                          </p>
-                          <p className="meta">
-                            {item.agentName} · {formatRelativeTime(item.ratedAt)} ·{" "}
-                            <Link
-                              href={`/p/${project}/inbox/${item.conversationId}`}
-                              className="text-accent hover:underline"
-                            >
-                              View conversation
-                            </Link>
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </PanelBody>
-              </Panel>
-            ) : null}
-
+            {/* What each agent did on its own */}
             <Panel>
               <PanelHeader>
                 <div>
-                  <PanelTitle>How each agent is doing with clients</PanelTitle>
+                  <PanelTitle>What each agent did on its own</PanelTitle>
                   <PanelDescription>
-                    An agent that often needs a person, or often cannot answer from your
-                    documents, is usually missing a document rather than a better personality.
+                    Autonomous work in the last {days} days. Includes task counts, completion states, tokens used, and approval turnaround.
                   </PanelDescription>
                 </div>
               </PanelHeader>
               <PanelBody>
-                {data!.agents.length === 0 ? (
+                {data!.work.agents.length === 0 ? (
                   <EmptyState
-                    icon={TrendingUp}
-                    title="Nothing to measure yet"
-                    description="Once clients start talking to a published agent, its numbers show up here."
-                    className="py-10"
+                    icon={InsightTelemetryEmptyIcon}
+                    title="No autonomous work yet"
+                    description="Give an agent a scope of work with a schedule, webhook, or initiate a run to see independent activity here."
+                    className="py-8"
                   />
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[42rem] text-left text-sm">
+                    <table className="w-full min-w-[50rem] text-left text-sm">
                       <thead>
                         <tr className="border-b border-line">
-                          <th scope="col" className="pb-2 pr-3 meta font-medium">
-                            Agent
-                          </th>
-                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">
-                            Conversations
-                          </th>
-                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">
-                            Needed a person
-                          </th>
-                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">
-                            Raised
-                          </th>
-                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">
-                            Look-ups
-                          </th>
-                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">
-                            Answered from documents
-                          </th>
-                          <th scope="col" className="pb-2 pl-3 meta font-medium text-right">
-                            Said it helped
-                          </th>
+                          <th scope="col" className="pb-2 pr-3 meta font-medium">Agent</th>
+                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">Tasks</th>
+                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">Finished</th>
+                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">Stopped</th>
+                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">Waiting on you</th>
+                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">You decide in</th>
+                          <th scope="col" className="pb-2 px-3 meta font-medium text-right">Tokens used</th>
+                          <th scope="col" className="pb-2 pl-3 meta font-medium text-right">Cost</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-line">
-                        {data!.agents.map((agent) => (
-                          <tr key={agent.id} className="transition-colors hover:bg-surface-2/60">
-                            <td className="py-2.5 pr-3">
-                              <Link
-                                href={`/p/${project}/agents/${agent.id}`}
-                                className="flex items-center gap-2.5 hover:underline"
-                              >
-                                <AgentAvatar
-                                  name={agent.name}
-                                  src={agent.avatarUrl}
-                                  seed={agent.id}
-                                  size="sm"
-                                />
-                                <span className="min-w-0">
-                                  <span className="block truncate text-sm font-medium text-ink">
-                                    {agent.name}
+                        {data!.work.agents.map((agent) => {
+                          const agentTokens = agent.inputTokens + agent.outputTokens;
+                          return (
+                            <tr key={agent.id} className="transition-colors hover:bg-surface-2/60">
+                              <td className="py-2.5 pr-3">
+                                <Link
+                                  href={`/p/${project}/agents/${agent.id}`}
+                                  className="flex items-center gap-2.5 hover:underline"
+                                >
+                                  <AgentAvatar
+                                    name={agent.name}
+                                    src={agent.avatarUrl}
+                                    seed={agent.id}
+                                    size="sm"
+                                  />
+                                  <span className="min-w-0">
+                                    <span className="block truncate font-medium text-ink">{agent.name}</span>
+                                    <span className="block truncate text-xs text-ink-muted">{agent.jobTitle}</span>
                                   </span>
-                                  <span className="block truncate text-xs text-ink-muted">
-                                    {agent.jobTitle}
-                                  </span>
-                                </span>
-                              </Link>
-                            </td>
-                            <td className="px-3 text-right tabular-nums text-ink">
-                              {agent.conversations}
-                            </td>
-                            <td className="px-3 text-right">
-                              <span
-                                className={cn(
-                                  "tabular-nums",
-                                  rateTone(agent.escalationRate, "escalation") === "danger" &&
-                                    "text-danger",
-                                  rateTone(agent.escalationRate, "escalation") === "warning" &&
-                                    "text-warning",
-                                )}
-                              >
-                                {percent(agent.escalationRate)}
-                              </span>
-                            </td>
-                            <td className="px-3 text-right tabular-nums text-ink-muted">
-                              {agent.issues}
-                            </td>
-                            <td className="px-3 text-right tabular-nums text-ink-muted">
-                              {agent.searches}
-                            </td>
-                            <td className="px-3 text-right">
-                              <span
-                                className={cn(
-                                  "tabular-nums",
-                                  rateTone(agent.retrievalHitRate, "retrieval") === "danger" &&
-                                    "text-danger",
-                                  rateTone(agent.retrievalHitRate, "retrieval") === "warning" &&
-                                    "text-warning",
-                                )}
-                              >
-                                {percent(agent.retrievalHitRate)}
-                              </span>
-                            </td>
-                            <td className="pl-3 text-right">
-                              <span
-                                className={cn(
-                                  "tabular-nums",
-                                  rateTone(agent.satisfaction, "retrieval") === "danger" &&
-                                    "text-danger",
-                                  rateTone(agent.satisfaction, "retrieval") === "warning" &&
-                                    "text-warning",
-                                )}
-                                title={
-                                  agent.satisfaction === null
-                                    ? "No client has rated a reply from this agent yet"
-                                    : `${agent.ratedUp} said it helped, ${agent.ratedDown} said it did not`
-                                }
-                              >
-                                {percent(agent.satisfaction)}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
+                                </Link>
+                              </td>
+                              <td className="py-2.5 px-3 text-right tabular-nums">{agent.runs}</td>
+                              <td className="py-2.5 px-3 text-right tabular-nums text-positive">{agent.done}</td>
+                              <td className={`py-2.5 px-3 text-right tabular-nums ${agent.failed > 0 ? "text-danger" : ""}`}>
+                                {agent.failed}
+                              </td>
+                              <td className="py-2.5 px-3 text-right tabular-nums">{agent.awaiting}</td>
+                              <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted">
+                                {humanDuration(agent.approvalTurnaroundMs)}
+                              </td>
+                              <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted font-mono text-xs">
+                                {agentTokens.toLocaleString()}
+                              </td>
+                              <td className="py-2.5 pl-3 text-right tabular-nums font-medium text-ink">
+                                {money(agent.costUsd)}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
                 )}
               </PanelBody>
             </Panel>
+
+            {/* Gateway Card to Detailed Insights */}
+            <Panel className="border-accent-line/60 bg-accent-soft/30 p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="size-4 text-accent" aria-hidden />
+                    <h3 className="text-sm font-semibold text-ink">Need deeper diagnostics?</h3>
+                  </div>
+                  <p className="text-xs text-ink-muted max-w-xl">
+                    Explore document retrieval hit rates, questions your documents cannot answer (content gaps), unhelpful client reply ratings, and model pricing telemetry.
+                  </p>
+                </div>
+                <Button asChild variant="primary" size="sm" className="shrink-0">
+                  <Link href={`/p/${project}/insights/detailed`} className="inline-flex items-center gap-1.5">
+                    View Detailed Insights
+                    <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                </Button>
+              </div>
+            </Panel>
           </>
         )}
       </PageBody>
     </Page>
-  );
-}
-
-function money(value: number | null): string {
-  if (value === null) return "—";
-  return value < 0.01 && value > 0 ? "<$0.01" : `$${value.toFixed(2)}`;
-}
-
-function WorkSection({
-  work,
-  days,
-  previousRuns,
-  conversations,
-}: {
-  work: AnalyticsResponse["work"];
-  days: number;
-  previousRuns: number;
-  conversations: number;
-}) {
-  const { totals, agents } = work;
-  const saved = timeSaved(conversations, totals.done);
-  return (
-    <>
-      <KpiRow
-        lead={{
-          label: "Time your team did not spend",
-          value: formatHours(saved.hours),
-          caption: saved.caption,
-          icon: Clock,
-        }}
-        stats={[
-          {
-            label: "Tasks done on their own",
-            value: totals.runs,
-            caption: tasksCaption({
-              runs: totals.runs,
-              previousRuns,
-              done: totals.done,
-              failed: totals.failed,
-              awaiting: totals.awaiting,
-              days,
-            }),
-            icon: TrendingUp,
-          },
-          {
-            label: "Stopped before finishing",
-            value: totals.failed,
-            ratio: totals.runs > 0 ? totals.failed / totals.runs : null,
-            tone: "danger",
-            caption: failedCaption(totals.failed, totals.runs),
-            icon: XCircle,
-          },
-          {
-            label: "Waiting for your approval",
-            value: totals.awaiting,
-            tone: "warning",
-            caption: awaitingCaption(totals.awaiting, totals.approvalTurnaroundMs),
-            icon: CheckCircle2,
-          },
-          {
-            label: "Estimated cost",
-            value: humanCost(totals.costUsd),
-            tone: "accent",
-            caption: costCaption({
-              costUsd: totals.costUsd,
-              runs: totals.runs,
-              conversations,
-              unpricedModels: totals.unpricedModels,
-              days,
-            }),
-            icon: Coins,
-          },
-        ]}
-      />
-
-      <Panel>
-        <PanelHeader>
-          <div>
-            <PanelTitle>What each agent did on its own</PanelTitle>
-            <PanelDescription>
-              Tasks in the last {days} days. Cost is an estimate of what the work cost to run,
-              and it is what billing will charge for.
-            </PanelDescription>
-          </div>
-        </PanelHeader>
-        <PanelBody>
-          {agents.length === 0 ? (
-            <EmptyState
-              icon={TrendingUp}
-              title="No autonomous work yet"
-              description="Give an agent a scope of work with a schedule or webhook, or run one by hand, and its tasks and cost show up here."
-              className="py-10"
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[48rem] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-line">
-                    <th scope="col" className="pb-2 pr-3 meta font-medium">Agent</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Tasks</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Finished</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Stopped</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Waiting on you</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">You decide in</th>
-                    <th scope="col" className="pb-2 px-3 meta font-medium text-right">Look-ups</th>
-                    <th scope="col" className="pb-2 pl-3 meta font-medium text-right">Cost</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {agents.map((agent) => (
-                    <tr key={agent.id} className="transition-colors hover:bg-surface-2/60">
-                      <td className="py-2.5 pr-3">
-                        <span className="font-medium text-ink">{agent.name}</span>
-                        <span className="ml-2 text-xs text-ink-muted">{agent.jobTitle}</span>
-                        {agent.escalated > 0 ? (
-                          <span className="ml-2 text-xs text-danger">
-                            asked for a person {agent.escalated}×
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="py-2.5 px-3 text-right tabular-nums">{agent.runs}</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums">{agent.done}</td>
-                      <td className={`py-2.5 px-3 text-right tabular-nums ${agent.failed > 0 ? "text-danger" : ""}`}>{agent.failed}</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums">{agent.awaiting}</td>
-                      <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted">
-                        {humanDuration(agent.approvalTurnaroundMs)}
-                      </td>
-                      <td className="py-2.5 px-3 text-right tabular-nums text-ink-muted">{agent.searches}</td>
-                      <td className="py-2.5 pl-3 text-right tabular-nums font-medium text-ink">{money(agent.costUsd)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* For whoever is reconciling an invoice. Nobody else has to know
-              what a token is to read this page. */}
-          {agents.length > 0 ? (
-            <details className="mt-4">
-              <summary className="cursor-pointer text-xs text-ink-muted hover:text-ink">
-                View technical details
-              </summary>
-              <div className="mt-2 rounded-lg border border-line bg-surface-2/50 p-3 text-xs text-ink-muted">
-                <p>
-                  {(totals.inputTokens + totals.outputTokens).toLocaleString()} model tokens over{" "}
-                  {totals.periods.length === 1
-                    ? totals.periods[0]
-                    : `${totals.periods[0]} to ${totals.periods.at(-1)}`}
-                  {totals.unpricedModels.length > 0
-                    ? ` · no published price for ${totals.unpricedModels.join(", ")}`
-                    : ""}
-                  .
-                </p>
-                <ul className="mt-1.5 space-y-0.5">
-                  {agents.map((agent) => (
-                    <li key={agent.id}>
-                      {agent.name}: {(agent.inputTokens + agent.outputTokens).toLocaleString()} tokens
-                      {" · "}
-                      {money(agent.costUsd)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </details>
-          ) : null}
-        </PanelBody>
-      </Panel>
-    </>
-  );
-}
-
-const STAT_ICON_TONE = {
-  neutral: "border-line bg-surface-2 text-ink-muted",
-  accent: "border-accent-line/70 bg-accent-soft text-accent-soft-fg",
-  positive: "border-positive-line/70 bg-positive-soft text-positive",
-  warning: "border-warning-line/70 bg-warning-soft text-warning",
-  danger: "border-danger-line/70 bg-danger-soft text-danger",
-} as const;
-
-/**
- * One KPI style for the whole dashboard: a lead card with the number that
- * matters most, and the numbers that explain it beside it - each with the
- * same slim ratio bar where a share is the point. No equally-sized tiles.
- */
-function KpiRow({
-  lead,
-  stats,
-}: {
-  lead: {
-    label: string;
-    value: number | string;
-    /** One line saying what the number means and which way it is going. */
-    caption?: string;
-    hint?: string;
-    icon?: React.ComponentType<{ className?: string }>;
-  };
-  stats: {
-    label: string;
-    value: number | string;
-    caption?: string;
-    hint?: string;
-    ratio?: number | null;
-    tone?: "accent" | "positive" | "warning" | "danger";
-    icon?: React.ComponentType<{ className?: string }>;
-  }[];
-}) {
-  const LeadIcon = lead.icon;
-  return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-      <Panel className="flex flex-col p-5 transition-all duration-150 hover:border-line-strong hover:shadow-xs">
-        <div className="flex items-start justify-between gap-2">
-          <p className="meta font-semibold">{lead.label}</p>
-          {LeadIcon ? (
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-accent-line/60 bg-accent-soft text-accent-soft-fg shadow-2xs">
-              <LeadIcon className="size-4" />
-            </span>
-          ) : null}
-        </div>
-        <div className="mt-auto pt-6">
-          <p className="text-display font-bold leading-none tracking-tight text-ink tabular-nums">
-            {typeof lead.value === "number" ? lead.value.toLocaleString() : lead.value}
-          </p>
-          {lead.caption ? (
-            <p className="mt-2 text-sm leading-relaxed text-ink-muted">{lead.caption}</p>
-          ) : null}
-          {lead.hint ? <p className="mt-1 text-xs text-ink-subtle">{lead.hint}</p> : null}
-        </div>
-      </Panel>
-      <dl className="grid gap-3 sm:grid-cols-2">
-        {stats.map((stat) => {
-          const hasRatio = stat.ratio !== null && stat.ratio !== undefined;
-          const StatIcon = stat.icon;
-          return (
-            <Panel key={stat.label} className="flex flex-col p-5 transition-all duration-150 hover:border-line-strong hover:shadow-xs">
-              <div className="flex items-start justify-between gap-2">
-                <dt className="meta font-semibold">{stat.label}</dt>
-                {StatIcon ? (
-                  <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-md border shadow-2xs", STAT_ICON_TONE[stat.tone ?? "neutral"])}>
-                    <StatIcon className="size-3.5" />
-                  </span>
-                ) : null}
-              </div>
-              <dd className="mt-3 flex items-baseline gap-2">
-                <span className="text-xl font-bold leading-none tabular-nums text-ink">
-                  {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-                </span>
-                {hasRatio ? (
-                  <span className="text-sm font-medium tabular-nums text-ink-muted">{percent(stat.ratio!)}</span>
-                ) : null}
-              </dd>
-              {hasRatio ? <RatioBar value={stat.ratio!} tone={stat.tone ?? "accent"} /> : null}
-              {/* Every bar says in words what it would otherwise leave the
-                  reader to infer from its length. */}
-              {stat.caption ? (
-                <dd className="mt-2.5 text-xs leading-relaxed text-ink-muted">{stat.caption}</dd>
-              ) : null}
-              {stat.hint ? <dd className="mt-auto pt-3 text-xs text-ink-subtle">{stat.hint}</dd> : null}
-            </Panel>
-          );
-        })}
-      </dl>
-    </div>
-  );
-}
-
-const BAR_TONE = {
-  accent: "bg-accent",
-  positive: "bg-positive",
-  warning: "bg-warning",
-  danger: "bg-danger",
-} as const;
-
-/** The one chart shape here: a share of a whole, as a bar. */
-function RatioBar({ value, tone }: { value: number; tone: keyof typeof BAR_TONE }) {
-  const width = Math.max(0, Math.min(1, value)) * 100;
-  return (
-    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-2 border border-line/40" aria-hidden>
-      <div className={`h-full rounded-full transition-all duration-300 ${BAR_TONE[tone]}`} style={{ width: `${width}%` }} />
-    </div>
   );
 }

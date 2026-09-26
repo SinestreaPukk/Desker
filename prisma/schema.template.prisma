@@ -705,3 +705,15 @@ model Heartbeat {
 
   @@index([source, createdAt])
 }
+
+/// One fixed rate-limit window, shared by every server instance: the counter
+/// lives in the database, not in one process's memory, so a limit means the
+/// same thing on one instance or twenty.
+model RateLimitWindow {
+  /// bucket:subject, e.g. "org-model:<organizationId>" or "signup:<ip>".
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}

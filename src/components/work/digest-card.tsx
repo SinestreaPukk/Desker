@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { RemoveButton } from "@/components/work/row-actions";
 import { Panel } from "@/components/ui/panel";
 import { useSetDigestRead } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
@@ -81,9 +82,12 @@ export function DigestCard({ digest, project }: { digest: DigestDto; project: st
           </div>
           <p className="mt-0.5 text-sm text-ink">{digest.headline}</p>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => void toggleRead()} loading={setRead.isPending}>
-          {unread ? "Mark read" : "Mark unread"}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => void toggleRead()} loading={setRead.isPending}>
+            {unread ? "Mark read" : "Mark unread"}
+          </Button>
+          <RemoveButton targets={[{ kind: "update", id: digest.id }]} what="this update" />
+        </div>
       </div>
 
       <ul className="space-y-2 border-t border-line px-4 py-3">

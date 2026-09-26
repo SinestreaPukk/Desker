@@ -5,21 +5,15 @@
  * reviewable line per route rather than a pattern each route reimplements.
  */
 import "server-only";
+import { HttpError } from "@/lib/http-error";
+import { OrganizationRateLimited } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
 import { currentUser } from "@/lib/auth";
 import { Forbidden } from "@/lib/organizations";
 import { captureError } from "@/lib/monitoring";
 
-export class HttpError extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-    readonly details?: unknown,
-  ) {
-    super(message);
-  }
-}
+export { HttpError };
 
 export interface AdminSession {
   userId: string;
@@ -50,6 +44,11 @@ export async function handle<T>(fn: () => Promise<T>): Promise<Response> {
   } catch (error) {
     if (error instanceof HttpError) {
       return jsonError(error.status, error.message, error.details);
+    }
+    if (error instanceof OrganizationRateLimited) {
+      const response = jsonError(429, error.message);
+      response.headers.set("retry-after", String(error.retryAfterSeconds));
+      return response;
     }
     if (error instanceof Forbidden) {
       return jsonError(403, error.message);

@@ -39,6 +39,8 @@ test("hire an agent from a role template", async ({ page }) => {
   // The template fills the personality; nothing more is needed to continue.
   await expect(page.getByLabel("Personality and tone")).not.toHaveValue("");
   await page.getByRole("button", { name: "Continue" }).click();
+  // The optional connections step: skipped.
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Create agent" }).click();
 
   // Not /agents/new: that is the wizard this test just came from, and it

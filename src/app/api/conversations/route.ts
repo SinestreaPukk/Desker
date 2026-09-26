@@ -36,7 +36,8 @@ export async function GET(request: Request) {
     const where: Prisma.ConversationWhereInput = {
       agent: project ? { projectId: project.id } : { project: projectsVisibleTo(userId) },
       ...(agentId ? { agentId } : {}),
-      ...(status && status !== "all" ? { status } : {}),
+      // "active" is the inbox's working view: open and escalated, not resolved.
+      ...(status === "active" ? { status: { not: "resolved" } } : status && status !== "all" ? { status } : {}),
       ...(withIssues ? { issues: { some: {} } } : {}),
       // Free-text search over what was said and what it was about. Prisma's
       // `contains` is case-insensitive on SQLite already; Postgres needs to be

@@ -18,8 +18,44 @@ import {
 } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
-import { TRIGGER_LABELS } from "@/lib/work/types";
+import { TRIGGER_LABELS, type GatedToolId } from "@/lib/work/types";
 import { formatRelativeTime, safeHttpUrl } from "@/lib/utils";
+
+/** What each outbound action is called on the card and in its toasts. */
+const PENDING_COPY: Record<GatedToolId, { verb: string; noun: string }> = {
+  publish_post: { verb: "publish a post", noun: "post" },
+  send_email: { verb: "send an email", noun: "email" },
+  calendar_create_event: { verb: "add a calendar event", noun: "event" },
+  slack_post_message: { verb: "post to Slack", noun: "message" },
+};
+
+/** The event or message exactly as it would go out: there is no draft to show for these. */
+function ActionPreview({ tool, input }: { tool: GatedToolId; input: Record<string, unknown> }) {
+  const text = (key: string) => (typeof input[key] === "string" ? (input[key] as string) : "");
+  const when = (key: string) =>
+    text(key) ? new Date(text(key)).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "";
+  return (
+    <div className="rounded-xl border border-line bg-surface-2/60 p-3.5 text-sm">
+      {tool === "calendar_create_event" ? (
+        <>
+          <p className="font-semibold text-ink">{text("summary")}</p>
+          <p className="mt-0.5 text-xs text-ink-muted">
+            {when("start")} – {when("end")}
+          </p>
+          {Array.isArray(input.attendees) && input.attendees.length > 0 ? (
+            <p className="mt-1 text-xs text-ink-muted">Invites: {(input.attendees as string[]).join(", ")}</p>
+          ) : null}
+          {text("description") ? <p className="mt-2 whitespace-pre-wrap text-ink">{text("description")}</p> : null}
+        </>
+      ) : (
+        <>
+          <p className="text-xs text-ink-muted">To {text("channel")}</p>
+          <p className="mt-1 whitespace-pre-wrap text-ink">{text("text")}</p>
+        </>
+      )}
+    </div>
+  );
+}
 
 /**
  * One thing waiting on a person: what the agent wants to send, shown in full,
@@ -63,7 +99,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
     }
   }
 
-  const what = pending?.tool === "publish_post" ? "post" : "email";
+  const what = pending ? PENDING_COPY[pending.tool].noun : "draft";
 
   async function decide(verb: "approve" | "reject") {
     setNote(null);
@@ -107,7 +143,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
           <p className="text-sm text-ink">
             <span className="font-semibold">{item.agent.name}</span> wants to{" "}
             <span className="font-semibold">
-              {pending.tool === "publish_post" ? "publish a post" : "send an email"}
+              {PENDING_COPY[pending.tool].verb}
             </span>
             <span className="text-ink-muted">
               {" "}
@@ -175,6 +211,8 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
               </pre>
             </div>
           )
+        ) : pending.tool === "calendar_create_event" || pending.tool === "slack_post_message" ? (
+          <ActionPreview tool={pending.tool} input={pending.input} />
         ) : (
           <pre className="whitespace-pre-wrap rounded-xl border border-line bg-surface-2/60 p-3.5 font-mono text-xs text-ink">
             {JSON.stringify(pending.input, null, 2)}

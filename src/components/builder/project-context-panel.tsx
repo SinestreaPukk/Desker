@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Building2, Check, ChevronRight, Save } from "lucide-react";
+import { Building, Check, ChevronRight, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -261,7 +261,7 @@ function ContextHeading({ description }: { description: string }) {
         aria-hidden
         className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-accent-line/60 bg-accent-soft/60 text-accent-soft-fg shadow-2xs [&_svg]:size-5"
       >
-        <Building2 />
+        <Building />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold tracking-tight text-ink">Company context</span>

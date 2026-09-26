@@ -11,6 +11,9 @@
  */
 import "server-only";
 import { prisma } from "@/lib/db";
+import { connectorById, connectorForTool } from "@/lib/integrations/catalog";
+import { GATED_TOOL_IDS } from "./types";
+
 
 export const INTEGRATION_STATES = ["connected", "attention", "disconnected"] as const;
 export type IntegrationState = (typeof INTEGRATION_STATES)[number];
@@ -39,8 +42,17 @@ interface Row {
   createdAt: Date;
 }
 
+/** What agents lose when this connection is not working, as a verb phrase. */
+const WHAT_IT_DOES: Record<string, string> = {
+  webhook: "publish posts",
+  email: "send email",
+  google_calendar: "use the calendar",
+  slack: "post to Slack",
+  github: "read your code",
+};
+
 function whatItDoes(type: string): string {
-  return type === "email" ? "send email" : "publish posts";
+  return WHAT_IT_DOES[type] ?? `use ${connectorById(type)?.name ?? type}`;
 }
 
 function hasCredentials(row: Row): boolean {
@@ -62,12 +74,7 @@ export async function healthForIntegrations(
     where: {
       organizationId,
       action: {
-        in: [
-          "publish_post.delivered",
-          "publish_post.failed",
-          "send_email.delivered",
-          "send_email.failed",
-        ],
+        in: GATED_TOOL_IDS.flatMap((tool) => [`${tool}.delivered`, `${tool}.failed`]),
       },
     },
     orderBy: { createdAt: "desc" },
@@ -79,7 +86,7 @@ export async function healthForIntegrations(
   const latest = new Map<string, { ok: boolean; at: Date; detail: string | null }>();
   for (const row of deliveries) {
     const [tool, outcome] = row.action.split(".");
-    const type = tool === "send_email" ? "email" : "webhook";
+    const type = connectorForTool(tool ?? "")?.id ?? "webhook";
     if (latest.has(type)) continue;
     const metadata = (row.metadata as Record<string, unknown> | null) ?? {};
     latest.set(type, {
@@ -120,7 +127,7 @@ export async function healthForIntegrations(
       health.set(row.id, {
         ...base,
         state: "attention",
-        consequence: `No ${row.type === "email" ? "API key" : "endpoint"} is stored, so anything an agent tries to ${whatItDoes(row.type).replace(/s$/, "")} will fail. Connect it again to fix it.`,
+        consequence: `Nothing is stored for it, so agents cannot ${whatItDoes(row.type)} through it. Connect it again to fix it.`,
       });
       continue;
     }

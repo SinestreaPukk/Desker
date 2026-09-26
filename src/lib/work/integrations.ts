@@ -32,7 +32,7 @@ export interface EmailConfig {
 /** Splits what an owner submitted into the displayable part and the sealed part. */
 export function splitIntegrationInput(
   input:
-    | { type: "webhook"; url: string; secret?: string }
+    | { type: "webhook"; url: string; secret?: string; platform?: string }
     | { type: "email"; from: string; apiKey: string },
 ): { config: Record<string, string>; secret: string } {
   if (input.type === "webhook") {
@@ -43,7 +43,11 @@ export function splitIntegrationInput(
       /* validated upstream */
     }
     return {
-      config: { host, ...(input.secret ? { signed: "true" } : {}) },
+      config: {
+        host,
+        ...(input.secret ? { signed: "true" } : {}),
+        ...(input.platform ? { platform: input.platform } : {}),
+      },
       secret: seal({ url: input.url, ...(input.secret ? { secret: input.secret } : {}) }),
     };
   }
@@ -86,6 +90,26 @@ export async function findIntegration<T>(organizationId: string, type: "webhook"
     data: { config: split.config as Prisma.InputJsonValue, secret: split.secret },
   });
   return { id: row.id, name: row.name, config: open<T>(split.secret) };
+}
+
+/**
+ * The publishing webhook for a post: the one named for the draft's platform
+ * when there is one, otherwise the first connected. An owner with a LinkedIn
+ * hook and an X hook gets each post to the right place.
+ */
+export async function findPublishing(organizationId: string, platform?: string | null) {
+  if (platform) {
+    const rows = await prisma.integration.findMany({
+      where: { organizationId, type: "webhook", enabled: true },
+      orderBy: { createdAt: "asc" },
+    });
+    const wanted = platform.trim().toLowerCase();
+    const match = rows.find(
+      (row) => row.secret && ((row.config as Record<string, string> | null)?.platform ?? "").toLowerCase() === wanted,
+    );
+    if (match?.secret) return { id: match.id, name: match.name, config: open<WebhookConfig>(match.secret) };
+  }
+  return findIntegration<WebhookConfig>(organizationId, "webhook");
 }
 
 /** Email falls back to the deployment's key so a single-tenant install needs no UI. */

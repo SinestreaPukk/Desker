@@ -14,7 +14,7 @@
  */
 import * as React from "react";
 import {
-  Bug,
+  AlertCircle,
   Calendar,
   Check,
   FileSearch,
@@ -562,7 +562,7 @@ export function DevScene({ beat }: { beat: number }) {
         </AgentBubble>
       </Appear>
       <Appear when={beat >= 2} className="pl-9">
-        <ToolChip icon={Bug}>Reproduced with your steps · Chrome 129, Node 22</ToolChip>
+        <ToolChip icon={AlertCircle}>Reproduced with your steps · Chrome 129, Node 22</ToolChip>
       </Appear>
       <Appear when={beat >= 3} className="pl-9">
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm">

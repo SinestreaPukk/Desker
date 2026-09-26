@@ -29,6 +29,14 @@ describe("action item state machine", () => {
     expect(TRANSITIONS.rejected).toEqual(["needs_approval"]);
     expect(canTransition("rejected", "approved")).toBe(false);
   });
+
+  it("an owner can cancel work only before it reaches the outside world", () => {
+    expect(canTransition("queued", "cancelled")).toBe(true);
+    expect(canTransition("in_progress", "cancelled")).toBe(true);
+    expect(canTransition("approved", "cancelled")).toBe(false);
+    expect(canTransition("executing_external", "cancelled")).toBe(false);
+    expect(TRANSITIONS.cancelled).toEqual([]);
+  });
 });
 
 describe("trust settings", () => {

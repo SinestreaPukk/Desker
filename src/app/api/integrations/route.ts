@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     const { config, secret } = splitIntegrationInput(
       input.type === "webhook"
-        ? { type: "webhook", url: input.url, secret: input.secret || undefined }
+        ? { type: "webhook", url: input.url, secret: input.secret || undefined, platform: input.platform || undefined }
         : { type: "email", from: input.from, apiKey: input.apiKey },
     );
     const row = await prisma.integration.create({

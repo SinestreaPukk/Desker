@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ANONYMOUS, currentProjectSlug, signUp, uniqueAdmin } from "./helpers";
+import { ANONYMOUS, COMPANY_CONTEXT, currentProjectSlug, signUp, uniqueAdmin } from "./helpers";
 
 /**
  * The stranger's path: an owner invites, the invitee creates an account from
@@ -61,6 +61,12 @@ test("the free plan stops a second agent from being published", async ({ browser
         status,
       },
     });
+  // Nothing is published before the company is described.
+  const early = await make("Too soon", "published");
+  expect(early.status()).toBe(409);
+  const grounded = await request.put(`/api/projects/${project}/context`, { data: { answers: COMPANY_CONTEXT } });
+  expect(grounded.ok(), await grounded.text()).toBe(true);
+
   const first = await make("Limit A", "published");
   expect(first.ok(), await first.text()).toBe(true);
   const second = await make("Limit B", "published");

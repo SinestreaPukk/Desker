@@ -4,7 +4,7 @@ import { headingId } from "@/lib/guides";
 import { cn } from "@/lib/utils";
 
 /**
- * The small subset of markdown the guides are written in.
+ * The small subset of markdown the guides - and agents' reports - are written in.
  *
  * Deliberately not a markdown library: the input is our own content, the
  * subset is fixed (headings, paragraphs, lists, quotes, links, bold, code),
@@ -16,10 +16,10 @@ import { cn } from "@/lib/utils";
 
 type Inline = React.ReactNode;
 
-/** `**bold**`, `` `code` ``, `[text](href)`. Everything else is literal. */
+/** `**bold**`, `*italic*`, `` `code` ``, `[text](href)`. Everything else is literal. */
 function renderInline(text: string, keyPrefix: string): Inline[] {
   const nodes: Inline[] = [];
-  const pattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
+  const pattern = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
   let last = 0;
   let match: RegExpExecArray | null;
   let index = 0;
@@ -35,6 +35,8 @@ function renderInline(text: string, keyPrefix: string): Inline[] {
           {token.slice(2, -2)}
         </strong>,
       );
+    } else if (token.startsWith("*")) {
+      nodes.push(<em key={key}>{token.slice(1, -1)}</em>);
     } else if (token.startsWith("`")) {
       nodes.push(
         <code
@@ -46,8 +48,11 @@ function renderInline(text: string, keyPrefix: string): Inline[] {
       );
     } else {
       const [, label, href] = /\[([^\]]+)\]\(([^)]+)\)/.exec(token) ?? [];
-      if (label && href) {
-        const external = /^https?:\/\//.test(href);
+      // Agent reports come through here too, and they can repeat what a web
+      // page said: only site-relative paths and http(s) become links.
+      const external = href ? /^https?:\/\//i.test(href) : false;
+      const internal = href ? href.startsWith("/") && !href.startsWith("//") : false;
+      if (label && href && (external || internal)) {
         nodes.push(
           external ? (
             <a
@@ -66,7 +71,7 @@ function renderInline(text: string, keyPrefix: string): Inline[] {
           ),
         );
       } else {
-        nodes.push(token);
+        nodes.push(label ?? token);
       }
     }
     last = match.index + token.length;
@@ -76,7 +81,7 @@ function renderInline(text: string, keyPrefix: string): Inline[] {
 }
 
 interface Block {
-  type: "h2" | "h3" | "p" | "ul" | "ol" | "quote";
+  type: "h2" | "h3" | "p" | "ul" | "ol" | "quote" | "hr";
   lines: string[];
 }
 
@@ -94,10 +99,16 @@ function toBlocks(markdown: string): Block[] {
       push();
       continue;
     }
-    const heading = /^(#{2,3})\s+(.*)$/.exec(line);
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+      push();
+      blocks.push({ type: "hr", lines: [] });
+      continue;
+    }
+    // Guides use ## and ###; agents also write # and ####, folded onto the same two.
+    const heading = /^(#{1,4})\s+(.*)$/.exec(line);
     if (heading) {
       push();
-      blocks.push({ type: heading[1]!.length === 2 ? "h2" : "h3", lines: [heading[2]!] });
+      blocks.push({ type: heading[1]!.length <= 2 ? "h2" : "h3", lines: [heading[2]!] });
       continue;
     }
     const bullet = /^[-*]\s+(.*)$/.exec(line);
@@ -186,6 +197,8 @@ export function Markdown({
                 {renderInline(block.lines[0]!, key)}
               </h3>
             );
+          case "hr":
+            return <hr key={key} className="border-line" />;
           case "ul":
             return (
               <ul key={key} className="ml-4 list-disc space-y-1.5 marker:text-ink-subtle">

@@ -18,10 +18,12 @@ export function toIntegrationDto(
   const config = (row.config as Record<string, string> | null) ?? {};
   let summary = "";
   if (row.type === "webhook") {
-    summary = config.host ?? "webhook";
+    summary = `${config.platform ? `${config.platform} · ` : ""}${config.host ?? "webhook"}`;
     if (config.signed === "true" || config.secret) summary += " · signed";
   } else if (row.type === "email") {
     summary = `from ${config.from ?? "?"} · Resend`;
+  } else {
+    summary = config.account ?? "";
   }
   return {
     id: row.id,

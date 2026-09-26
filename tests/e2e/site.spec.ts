@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ANONYMOUS, signUp, uniqueAdmin } from "./helpers";
+import { ANONYMOUS, signUp, uniqueAdmin, answerCompanyContext } from "./helpers";
 import landing from "../../content/landing.json";
 import templates from "../../content/templates.json";
 
@@ -105,7 +105,10 @@ test.describe("a role chosen on the showcase", () => {
     await expect(page).toHaveURL(/\/signup\?template=researcher/);
 
     await signUp(page, uniqueAdmin(), page.url());
-    await expect(page).toHaveURL(/\/agents\/new\?template=researcher/);
+    // The company questions come first, and the chosen role waits for them.
+    await expect(page).toHaveURL(/\/welcome\?template=researcher/);
+    await answerCompanyContext(page);
+    await expect(page).toHaveURL(/\/agents\/new\?template=researcher/, { timeout: 30_000 });
     // The wizard opens past the picker with the role's job filled in.
     await expect(page.getByLabel("Job title")).toHaveValue(/Research/);
   });

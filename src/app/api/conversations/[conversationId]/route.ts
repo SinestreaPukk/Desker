@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { publishAdminEvent } from "@/lib/events";
+import { audit } from "@/lib/audit";
+import { agentsVisibleTo } from "@/lib/projects";
 import { conversationPatchSchema } from "@/lib/validation";
 import type { IssueDto, MessageDto } from "@/lib/serialize";
 
@@ -108,5 +110,28 @@ export async function PATCH(request: Request, { params }: Params) {
     });
 
     return conversation;
+  });
+}
+
+/** Removes a conversation with its messages, notes and issues. */
+export async function DELETE(_request: Request, { params }: Params) {
+  return handle(async () => {
+    const { userId } = await requireAdmin();
+    const { conversationId } = await params;
+    const conversation = await prisma.conversation.findFirst({
+      where: { id: conversationId, agent: agentsVisibleTo(userId) },
+      select: { id: true, agent: { select: { project: { select: { organizationId: true } } } } },
+    });
+    if (!conversation) throw new HttpError(404, "That conversation no longer exists.");
+    await prisma.conversation.delete({ where: { id: conversationId } });
+    await audit({
+      organizationId: conversation.agent.project.organizationId,
+      actorType: "user",
+      actorId: userId,
+      action: "conversation.deleted",
+      targetType: "conversation",
+      targetId: conversationId,
+    });
+    return { ok: true };
   });
 }

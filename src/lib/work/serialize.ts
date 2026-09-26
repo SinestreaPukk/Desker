@@ -19,6 +19,12 @@ export interface DraftDto {
   createdAt: string;
 }
 
+export interface CollabAgent {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
 export interface ActionItemDto {
   id: string;
   agent: { id: string; name: string; jobTitle: string; avatarUrl: string | null };
@@ -27,6 +33,8 @@ export interface ActionItemDto {
   trigger: string;
   /** One line for a list row. Null on runs that finished before digests existed. */
   headline: string | null;
+  /** What the run was asked to do; names a run that has not produced a headline yet. */
+  task: string | null;
   /** The plain-language account, written for the owner. Shown first. */
   summary: string | null;
   /** The agent's own technical report. Kept underneath the summary. */
@@ -38,6 +46,11 @@ export interface ActionItemDto {
   drafts: DraftDto[];
   followupIds: string[];
   parentId: string | null;
+  /** Agents working together on this run: who handed it here, whom it handed on to. */
+  collab: {
+    askedBy: { agent: CollabAgent; task: string; context: string } | null;
+    handoffs: { id: string; agent: CollabAgent; task: string; status: ActionStatus; reply: string | null }[];
+  };
   error: string | null;
   inputTokens: number;
   outputTokens: number;

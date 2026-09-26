@@ -82,6 +82,13 @@ export const env = {
   /** Sign-ups per client address per ten minutes. */
   signupRateLimit: int("SIGNUP_RATE_LIMIT", 20),
   chatRateLimitWindowMs: int("CHAT_RATE_LIMIT_WINDOW_MS", 60_000),
+  /** Fairness, not billing: how fast one organisation may draw on shared capacity. */
+  orgModelCallsPerMinute: int("ORG_MODEL_CALLS_PER_MINUTE", 120),
+  orgRunsPerMinute: int("ORG_RUNS_PER_MINUTE", 30),
+  /** At most this many autonomous runs execute at once across the whole platform. */
+  workMaxConcurrentRuns: int("WORK_MAX_CONCURRENT_RUNS", 50),
+  /** A run still going after this long is reported as over budget. */
+  runTimeBudgetMs: int("RUN_TIME_BUDGET_MS", 15 * 60_000),
 
   /** Max accepted upload size for a single context document. */
   maxUploadBytes: 20 * 1024 * 1024,

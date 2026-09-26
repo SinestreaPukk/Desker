@@ -214,6 +214,23 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       };
     case "action_item.reopened":
       return { title: `${who} put a rejected item back in the queue`, detail: null, tone: "neutral", icon: "approval" };
+    case "action_item.cancelled":
+      return { title: `${who} cancelled a task`, detail: "Nothing further ran.", tone: "neutral", icon: "task" };
+    case "action_item.deleted":
+      return {
+        title: `${who} removed a task from Work`,
+        detail: text(meta.headline) ? clip(text(meta.headline)!, 140) : null,
+        tone: "neutral",
+        icon: "task",
+      };
+    case "conversation.deleted":
+      return { title: `${who} removed a conversation`, detail: null, tone: "neutral", icon: "note" };
+    case "issue.deleted":
+      return { title: `${who} removed an issue`, detail: null, tone: "neutral", icon: "note" };
+    case "suggestion.deleted":
+      return { title: `${who} removed a suggestion`, detail: null, tone: "neutral", icon: "note" };
+    case "digest.deleted":
+      return { title: `${who} removed an update`, detail: null, tone: "neutral", icon: "note" };
     case "action_item.refused":
       return {
         title: "A task was refused before it started",

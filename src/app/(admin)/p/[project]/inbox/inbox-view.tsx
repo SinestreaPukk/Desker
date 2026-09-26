@@ -3,14 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  Bug,
+  AlertCircle,
+  BotMessageSquare,
   CheckCircle2,
-  ClipboardCheck,
   Inbox as InboxIcon,
-  Lightbulb,
-  MessageSquare,
-  Newspaper,
+  Radio,
   Search,
+  ShieldCheck,
+  Sparkles,
   TriangleAlert,
   Undo2,
   UserRound,
@@ -19,6 +19,8 @@ import {
 import { ApprovalCard } from "@/components/work/approval-card";
 import { DigestCard } from "@/components/work/digest-card";
 import { SuggestionRow } from "@/components/work/suggestion-row";
+import { RemoveButton } from "@/components/work/row-actions";
+import type { RemoveTarget } from "@/hooks/use-work-data";
 import { useActionItems, useDigests, useSuggestions } from "@/hooks/use-work-data";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
@@ -56,29 +58,72 @@ function TabCount({ value, tone, label }: { value: number; tone: "accent" | "dan
   );
 }
 
+/** What Active and Done mean on each tab, in the status words its API speaks. */
+const STATUS_FOR = {
+  conversations: { active: "active", done: "resolved" },
+  approvals: { active: "all", done: "all" },
+  issues: { active: "open", done: "resolved" },
+  suggestions: { active: "open", done: "resolved" },
+  updates: { active: "unread", done: "read" },
+} as const;
+
+function DoneEmpty({ what }: { what: string }) {
+  return (
+    <EmptyState
+      icon={CheckCircle2}
+      title="Nothing here yet"
+      description={`${what} move here once they are dealt with, so the Active list only holds what still needs you.`}
+    />
+  );
+}
+
+/** Empties the Done list on screen - only what is shown, so a search or agent filter narrows it. */
+function ClearAll({ targets, noun }: { targets: RemoveTarget[]; noun: string }) {
+  return (
+    <div className="flex justify-end">
+      <RemoveButton
+        targets={targets}
+        what={`${targets.length} ${noun}${targets.length === 1 ? "" : "s"}`}
+        label="Clear all"
+      />
+    </div>
+  );
+}
+
 export function InboxView({ project }: { project: string }) {
-  const [tab, setTab] = React.useState<"conversations" | "updates" | "issues" | "approvals">(
+  // Tabs are ordered by usage frequency: Conversations is first, followed by Approvals, Issues, Suggestions, and Updates.
+  const [tab, setTab] = React.useState<"conversations" | "approvals" | "issues" | "suggestions" | "updates">(
     "conversations",
   );
-  // Every tab carries the count that matters for it - what is open, what is
-  // waiting - so the tab bar is a status line, not just navigation.
+
   const awaiting = useActionItems({ project, status: "needs_approval" }, { refetchInterval: 10_000 });
   const openConversations = useConversations({ project, status: "open" });
   const openIssues = useIssues({ project, status: "open" });
   const openSuggestions = useSuggestions({ project, status: "open" });
   const unreadDigests = useDigests({ project, status: "unread" });
-  const counts = {
-    conversations: openConversations.data?.length ?? 0,
-    updates: unreadDigests.data?.length ?? 0,
-    // Suggestions share this tab, so they share its count: the number is what
-    // is waiting on a person, whichever shape it arrived in.
-    issues: (openIssues.data?.length ?? 0) + (openSuggestions.data?.length ?? 0),
-    approvals: awaiting.data?.length ?? 0,
-  };
+
+  const counts = React.useMemo(() => {
+    const rawOpenIssues = (openIssues.data ?? []).filter((i) => i.type !== "suggestion").length;
+    const rawSuggestions = (openSuggestions.data ?? []).filter((s) => s.pending).length;
+    const issueSuggestions = (openIssues.data ?? []).filter((i) => i.type === "suggestion").length;
+
+    return {
+      conversations: openConversations.data?.length ?? 0,
+      approvals: awaiting.data?.length ?? 0,
+      issues: rawOpenIssues,
+      suggestions: rawSuggestions + issueSuggestions,
+      updates: unreadDigests.data?.length ?? 0,
+    };
+  }, [openIssues.data, openSuggestions.data, openConversations.data, awaiting.data, unreadDigests.data]);
+
   const [agentId, setAgentId] = React.useState("all");
-  const [status, setStatus] = React.useState("all");
+  // Active is the working inbox; Done is where resolved, dismissed and read
+  // things go, so they stop crowding what still needs you.
+  const [view, setView] = React.useState<"active" | "done">("active");
+  const status = STATUS_FOR[tab][view];
   const [includePreviews, setIncludePreviews] = React.useState(false);
   const [search, setSearch] = React.useState("");
+
   // Debounced, so typing does not fire a query per keystroke.
   const [query, setQuery] = React.useState("");
   React.useEffect(() => {
@@ -99,17 +144,17 @@ export function InboxView({ project }: { project: string }) {
     [project, agentId, status, query, includePreviews],
   );
 
+  const showSearch = tab === "conversations" || tab === "issues" || tab === "suggestions";
+  const showPreviews = tab === "conversations" || tab === "issues";
+
   return (
     <Page>
       <PageHeader
         title="Inbox"
-        description="Everything your agents have handled, and everything they've handed back to you."
+        description="Everything your agents have handled, action items awaiting review, and feedback."
       />
 
-      {/* Four tabs and four filters never fit one row, so they get one each. */}
       <PageToolbar stack>
-        {/* Four tabs are wider than a phone. The strip scrolls sideways on its
-            own rather than making the whole page do it. */}
         <Tabs
           value={tab}
           onValueChange={(value) => setTab(value as typeof tab)}
@@ -117,47 +162,59 @@ export function InboxView({ project }: { project: string }) {
         >
           <TabsList className="w-max">
             <TabsTrigger value="conversations">
-              <MessageSquare aria-hidden />
+              <BotMessageSquare aria-hidden />
               Conversations
               <TabCount value={counts.conversations} tone="accent" label="open" />
             </TabsTrigger>
-            <TabsTrigger value="updates">
-              <Newspaper aria-hidden />
-              Updates
-              <TabCount value={counts.updates} tone="accent" label="unread" />
-            </TabsTrigger>
-            <TabsTrigger value="issues" className="whitespace-nowrap">
-              <Bug aria-hidden />
-              Issues &amp; suggestions
-              <TabCount value={counts.issues} tone="danger" label="open" />
-            </TabsTrigger>
             <TabsTrigger value="approvals">
-              <ClipboardCheck aria-hidden />
+              <ShieldCheck aria-hidden />
               Approvals
               <TabCount value={counts.approvals} tone="warning" label="waiting" />
+            </TabsTrigger>
+            <TabsTrigger value="issues" className="whitespace-nowrap">
+              <AlertCircle aria-hidden />
+              Issues
+              <TabCount value={counts.issues} tone="danger" label="open" />
+            </TabsTrigger>
+            <TabsTrigger value="suggestions" className="whitespace-nowrap">
+              <Sparkles aria-hidden />
+              Suggestions
+              <TabCount value={counts.suggestions} tone="accent" label="open" />
+            </TabsTrigger>
+            <TabsTrigger value="updates">
+              <Radio aria-hidden />
+              Updates
+              <TabCount value={counts.updates} tone="accent" label="unread" />
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Both of these read transcripts, which the Updates tab has none of. */}
-          <div className={tab === "updates" ? "hidden" : "relative w-full sm:w-56"}>
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-subtle"
-              aria-hidden
-            />
-            <label htmlFor="inbox-search" className="sr-only">
-              Search conversations
-            </label>
-            <Input
-              id="inbox-search"
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search transcripts…"
-              className="pl-9"
-            />
-          </div>
+          {showSearch ? (
+            <div className="relative w-full sm:w-56">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-subtle"
+                aria-hidden
+              />
+              <label htmlFor="inbox-search" className="sr-only">
+                Search
+              </label>
+              <Input
+                id="inbox-search"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={
+                  tab === "conversations"
+                    ? "Search transcripts…"
+                    : tab === "issues"
+                      ? "Search issues…"
+                      : "Search suggestions…"
+                }
+                className="pl-9"
+              />
+            </div>
+          ) : null}
 
           <div className="w-44">
             <label htmlFor="inbox-agent" className="sr-only">
@@ -178,61 +235,43 @@ export function InboxView({ project }: { project: string }) {
             </Select>
           </div>
 
-          <div className="w-40">
-            <label htmlFor="inbox-status" className="sr-only">
-              Filter by status
-            </label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger id="inbox-status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                {tab === "conversations" ? (
-                  <>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="escalated">Escalated</SelectItem>
-                    <SelectItem value="resolved">Resolved</SelectItem>
-                  </>
-                ) : tab === "updates" ? (
-                  <>
-                    <SelectItem value="unread">Unread</SelectItem>
-                    <SelectItem value="read">Read</SelectItem>
-                  </>
-                ) : (
-                  <>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="resolved">Resolved</SelectItem>
-                  </>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+          {tab !== "approvals" ? (
+            <Tabs value={view} onValueChange={(value) => setView(value as typeof view)}>
+              <TabsList aria-label="Show active or done">
+                <TabsTrigger value="active" className="px-3 py-1 text-xs">
+                  Active
+                </TabsTrigger>
+                <TabsTrigger value="done" className="px-3 py-1 text-xs">
+                  Done
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          ) : null}
 
-          <label
-            className={
-              tab === "updates" ? "hidden" : "flex items-center gap-2 text-xs text-ink-muted"
-            }
-          >
-            <Switch
-              checked={includePreviews}
-              onCheckedChange={setIncludePreviews}
-              aria-label="Include builder preview chats"
-            />
-            Include previews
-          </label>
+          {showPreviews ? (
+            <label className="flex items-center gap-2 text-xs text-ink-muted">
+              <Switch
+                checked={includePreviews}
+                onCheckedChange={setIncludePreviews}
+                aria-label="Include builder preview chats"
+              />
+              Include previews
+            </label>
+          ) : null}
         </div>
       </PageToolbar>
 
       <PageBody>
         {tab === "conversations" ? (
           <ConversationList filters={filters} project={project} />
-        ) : tab === "updates" ? (
-          <UpdatesList project={project} agentId={agentId} status={status} />
+        ) : tab === "approvals" ? (
+          <ApprovalList project={project} agentId={agentId} />
         ) : tab === "issues" ? (
           <IssueList filters={filters} project={project} />
+        ) : tab === "suggestions" ? (
+          <SuggestionList filters={filters} project={project} />
         ) : (
-          <ApprovalList project={project} agentId={agentId} />
+          <UpdatesList project={project} agentId={agentId} status={status} />
         )}
       </PageBody>
     </Page>
@@ -265,6 +304,8 @@ function ConversationList({
         title="Nothing matches that search"
         description={`No transcript or summary in this project contains “${filters.q}”.`}
       />
+    ) : filters.status === "resolved" ? (
+      <DoneEmpty what="Resolved conversations" />
     ) : (
       <EmptyState
         icon={InboxIcon}
@@ -275,13 +316,21 @@ function ConversationList({
   }
 
   return (
-    <ul className="space-y-2.5">
-      {data!.map((conversation) => (
-        <li key={conversation.id}>
-          <ConversationRow conversation={conversation} project={project} />
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-2.5">
+      {filters.status === "resolved" ? (
+        <ClearAll
+          targets={data!.map((conversation) => ({ kind: "conversation" as const, id: conversation.id }))}
+          noun="conversation"
+        />
+      ) : null}
+      <ul className="space-y-2.5">
+        {data!.map((conversation) => (
+          <li key={conversation.id}>
+            <ConversationRow conversation={conversation} project={project} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -330,7 +379,7 @@ function ConversationRow({
           ) : null}
           {conversation.openIssueCount > 0 ? (
             <Badge tone="danger">
-              <Bug aria-hidden />
+              <AlertCircle aria-hidden />
               {conversation.openIssueCount} open
             </Badge>
           ) : conversation.issueCount > 0 ? (
@@ -347,24 +396,18 @@ function ConversationRow({
       }
       meta={
         <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-2/70 px-2 py-0.5 text-xs text-ink-muted">
-          <MessageSquare className="size-3 text-ink-subtle" aria-hidden />
+          <BotMessageSquare className="size-3 text-ink-subtle" aria-hidden />
           {conversation.messageCount} messages
         </span>
       }
-      /* When it last moved, at the right edge, so a list of these can be
-         scanned down one column instead of hunting for it mid-line. */
       aside={formatRelativeTime(conversation.lastMessageAt)}
+      trailing={<RemoveButton targets={[{ kind: "conversation", id: conversation.id }]} what="this conversation" />}
     />
   );
 }
 
 /**
- * Issues and suggestions in one list, newest first.
- *
- * They are different records - an issue is reported and resolved, a suggestion
- * is proposed and decided - but they are the same thing to the person reading
- * this tab: something that arrived on its own and wants an answer. Merging
- * them here is what the tab was always for.
+ * The Issues tab: reported bugs, problems, run failures, and escalations.
  */
 function IssueList({
   filters,
@@ -374,83 +417,73 @@ function IssueList({
   project: string;
 }) {
   const { data, isPending, error, refetch, isRefetching } = useIssues(filters);
-  const suggestions = useSuggestions({ project, agentId: filters.agentId ?? "all" });
   const setStatus = useSetIssueStatus();
 
-  const shown = React.useMemo(() => {
-    const status = filters.status;
+  const filteredIssues = React.useMemo(() => {
     const query = (filters.q ?? "").toLowerCase();
-    return (suggestions.data ?? [])
-      .filter((suggestion) =>
-        status === "open" ? suggestion.pending : status === "resolved" ? !suggestion.pending : true,
-      )
-      .filter((suggestion) =>
+    return (data ?? [])
+      .filter((issue) => issue.type !== "suggestion")
+      .filter((issue) =>
         query
-          ? [suggestion.summary, suggestion.rationale, suggestion.proposal]
+          ? [issue.summary, issue.details ?? ""]
               .join(" ")
               .toLowerCase()
               .includes(query)
           : true,
       );
-  }, [suggestions.data, filters.status, filters.q]);
+  }, [data, filters.q]);
 
-  // Both lists feed this tab, so neither may fail quietly behind the other.
-  if (isPending || suggestions.isPending) return <LoadingRows count={4} />;
-  if (error || suggestions.error) {
+  if (isPending) return <LoadingRows count={4} />;
+  if (error) {
     return (
       <ErrorState
-        message={errorMessage(error ?? suggestions.error)}
-        onRetry={() => {
-          if (error) void refetch();
-          if (suggestions.error) void suggestions.refetch();
-        }}
-        retrying={isRefetching || suggestions.isRefetching}
+        message={errorMessage(error)}
+        onRetry={() => void refetch()}
+        retrying={isRefetching}
       />
     );
   }
-  if (data!.length === 0 && shown.length === 0) {
-    return (
+  if (filteredIssues.length === 0) {
+    return filters.q ? (
+      <EmptyState
+        icon={Search}
+        title="Nothing matches that search"
+        description={`No issue in this project contains “${filters.q}”.`}
+      />
+    ) : filters.status === "resolved" ? (
+      <DoneEmpty what="Resolved issues" />
+    ) : (
       <EmptyState
         icon={CheckCircle2}
-        title="Nothing needs you right now"
-        description="When a client reports a bug or an idea, or an agent escalates, cannot finish a task, hits its escalation rule, or has something it thinks you should do next, it shows up here the moment it happens."
+        title="No issues found"
+        description="When a client reports a problem, an agent hits its escalation rule, or an autonomous task stops, it appears here immediately."
       />
     );
   }
 
-  // One list, ordered by when each thing arrived, so a suggestion raised this
-  // morning is not buried under last week's resolved issues.
-  const rows = [
-    ...shown.map((suggestion) => ({
-      key: `suggestion-${suggestion.id}`,
-      at: suggestion.createdAt,
-      node: <SuggestionRow suggestion={suggestion} project={project} />,
-    })),
-    ...data!.map((issue) => ({
-      key: `issue-${issue.id}`,
-      at: issue.createdAt,
-      node: (
-        <IssueRow
-          issue={issue}
-          project={project}
-          pending={setStatus.isPending && setStatus.variables?.issueId === issue.id}
-          onToggle={() =>
-            setStatus.mutate({
-              issueId: issue.id,
-              status: issue.status === "open" ? "resolved" : "open",
-            })
-          }
-        />
-      ),
-    })),
-  ].sort((a, b) => b.at.localeCompare(a.at));
-
   return (
-    <ul className="space-y-2.5">
-      {rows.map((row) => (
-        <li key={row.key}>{row.node}</li>
-      ))}
-    </ul>
+    <div className="space-y-2.5">
+      {filters.status === "resolved" ? (
+        <ClearAll targets={filteredIssues.map((issue) => ({ kind: "issue" as const, id: issue.id }))} noun="issue" />
+      ) : null}
+      <ul className="space-y-2.5">
+        {filteredIssues.map((issue) => (
+          <li key={`issue-${issue.id}`}>
+            <IssueRow
+              issue={issue}
+              project={project}
+              pending={setStatus.isPending && setStatus.variables?.issueId === issue.id}
+              onToggle={() =>
+                setStatus.mutate({
+                  issueId: issue.id,
+                  status: issue.status === "open" ? "resolved" : "open",
+                })
+              }
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -467,7 +500,7 @@ function IssueRow({
 }) {
   const resolved = issue.status === "resolved";
   const kind = ISSUE_KINDS[issueKind(issue.type)];
-  const Icon = { bug: Bug, lightbulb: Lightbulb, handoff: UserRoundCheck, alert: TriangleAlert }[kind.icon];
+  const Icon = { bug: AlertCircle, lightbulb: Sparkles, handoff: UserRoundCheck, alert: TriangleAlert }[kind.icon];
 
   return (
     <ListRow
@@ -484,8 +517,6 @@ function IssueRow({
             <Icon aria-hidden />
             {kind.label}
           </Badge>
-          {/* An escalation is high-severity by construction; the badge would
-              just repeat what "Escalated" already says. */}
           {issue.type === "escalation" ? null : <SeverityBadge severity={issue.severity} />}
           {resolved ? <StatusBadge status="resolved" /> : null}
         </>
@@ -506,34 +537,166 @@ function IssueRow({
               View conversation
             </Link>
           ) : issue.actionItemId ? (
-            <Link href={`/p/${project}/work?item=${issue.actionItemId}`} className="text-accent hover:underline">
+            <Link href={`/p/${project}/work/${issue.actionItemId}`} className="text-accent hover:underline">
               View the run
             </Link>
           ) : null}
         </>
       }
       trailing={
-        <Button variant={resolved ? "ghost" : "secondary"} size="sm" loading={pending} onClick={onToggle}>
-          {resolved ? (
-            <>
-              <Undo2 aria-hidden />
-              Reopen
-            </>
-          ) : (
-            <>
-              <CheckCircle2 aria-hidden />
-              Resolve
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant={resolved ? "ghost" : "secondary"} size="sm" loading={pending} onClick={onToggle}>
+            {resolved ? (
+              <>
+                <Undo2 aria-hidden />
+                Reopen
+              </>
+            ) : (
+              <>
+                <CheckCircle2 aria-hidden />
+                Resolve
+              </>
+            )}
+          </Button>
+          {/* Resolving is the everyday move; removing is for tidying up what is done. */}
+          {resolved ? <RemoveButton targets={[{ kind: "issue", id: issue.id }]} what="this issue" /> : null}
+        </div>
       }
     />
   );
 }
 
 /**
- * The Updates tab: what each agent has reported about itself, newest first.
- * An owner who never opens a transcript reads this and knows where they are.
+ * The Suggestions tab: agent-initiated proposals, recommendations from autonomous runs,
+ * and ideas raised by agents or clients.
+ */
+function SuggestionList({
+  filters,
+  project,
+}: {
+  filters: Record<string, string>;
+  project: string;
+}) {
+  const suggestions = useSuggestions({ project, agentId: filters.agentId ?? "all" });
+  const {
+    data: issueData,
+    isPending: issuePending,
+    error: issueError,
+    refetch: issueRefetch,
+    isRefetching: issueRefetching,
+  } = useIssues(filters);
+  const setStatus = useSetIssueStatus();
+
+  const shownSuggestions = React.useMemo(() => {
+    const status = filters.status;
+    const query = (filters.q ?? "").toLowerCase();
+    return (suggestions.data ?? [])
+      .filter((suggestion) =>
+        status === "open" ? suggestion.pending : status === "resolved" ? !suggestion.pending : true,
+      )
+      .filter((suggestion) =>
+        query
+          ? [suggestion.summary, suggestion.rationale, suggestion.proposal]
+              .join(" ")
+              .toLowerCase()
+              .includes(query)
+          : true,
+      );
+  }, [suggestions.data, filters.status, filters.q]);
+
+  const shownIssueSuggestions = React.useMemo(() => {
+    const query = (filters.q ?? "").toLowerCase();
+    return (issueData ?? [])
+      .filter((issue) => issue.type === "suggestion")
+      .filter((issue) =>
+        query
+          ? [issue.summary, issue.details ?? ""]
+              .join(" ")
+              .toLowerCase()
+              .includes(query)
+          : true,
+      );
+  }, [issueData, filters.q]);
+
+  if (suggestions.isPending || issuePending) return <LoadingRows count={4} />;
+  if (suggestions.error || issueError) {
+    return (
+      <ErrorState
+        message={errorMessage(suggestions.error ?? issueError)}
+        onRetry={() => {
+          if (suggestions.error) void suggestions.refetch();
+          if (issueError) void issueRefetch();
+        }}
+        retrying={suggestions.isRefetching || issueRefetching}
+      />
+    );
+  }
+
+  if (shownSuggestions.length === 0 && shownIssueSuggestions.length === 0) {
+    return filters.q ? (
+      <EmptyState
+        icon={Search}
+        title="Nothing matches that search"
+        description={`No suggestion in this project contains “${filters.q}”.`}
+      />
+    ) : filters.status === "resolved" ? (
+      <DoneEmpty what="Accepted, dismissed and snoozed suggestions" />
+    ) : (
+      <EmptyState
+        icon={Sparkles}
+        title="Nothing waiting for review"
+        description="When an agent proposes an objective, identifies an improvement idea, or recommends a next step, it lands here for you to accept, snooze, or dismiss."
+      />
+    );
+  }
+
+  const rows = [
+    ...shownSuggestions.map((suggestion) => ({
+      key: `suggestion-${suggestion.id}`,
+      at: suggestion.createdAt,
+      node: <SuggestionRow suggestion={suggestion} project={project} />,
+    })),
+    ...shownIssueSuggestions.map((issue) => ({
+      key: `issue-suggestion-${issue.id}`,
+      at: issue.createdAt,
+      node: (
+        <IssueRow
+          issue={issue}
+          project={project}
+          pending={setStatus.isPending && setStatus.variables?.issueId === issue.id}
+          onToggle={() =>
+            setStatus.mutate({
+              issueId: issue.id,
+              status: issue.status === "open" ? "resolved" : "open",
+            })
+          }
+        />
+      ),
+    })),
+  ].sort((a, b) => b.at.localeCompare(a.at));
+
+  return (
+    <div className="space-y-2.5">
+      {filters.status === "resolved" ? (
+        <ClearAll
+          targets={[
+            ...shownSuggestions.map((suggestion) => ({ kind: "suggestion" as const, id: suggestion.id })),
+            ...shownIssueSuggestions.map((issue) => ({ kind: "issue" as const, id: issue.id })),
+          ]}
+          noun="suggestion"
+        />
+      ) : null}
+      <ul className="space-y-2.5">
+        {rows.map((row) => (
+          <li key={row.key}>{row.node}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * The Updates tab: periodic digests and reports agents write on their own cadence.
  */
 function UpdatesList({
   project,
@@ -547,7 +710,6 @@ function UpdatesList({
   const { data, isPending, error, refetch, isRefetching } = useDigests({
     project,
     agentId,
-    // The tab's status filter means read/unread here; anything else is "all".
     status: status === "unread" || status === "read" ? status : "all",
   });
 
@@ -564,9 +726,11 @@ function UpdatesList({
         title="You're up to date"
         description="Every update your agents have sent has been read. New ones arrive on each agent's digest cadence - weekly by default."
       />
+    ) : status === "read" ? (
+      <DoneEmpty what="Updates you have read" />
     ) : (
       <EmptyState
-        icon={Newspaper}
+        icon={Radio}
         title="No updates yet"
         description="Each agent writes you a short update on its own cadence - what it got done, what is pending, and anything it thinks you should know. Set the cadence in an agent's scope of work, or press Send one now there to see one immediately."
       />
@@ -575,6 +739,9 @@ function UpdatesList({
 
   return (
     <div className="space-y-3">
+      {status === "read" ? (
+        <ClearAll targets={data!.map((digest) => ({ kind: "update" as const, id: digest.id }))} noun="update" />
+      ) : null}
       {data!.map((digest) => (
         <DigestCard key={digest.id} digest={digest} project={project} />
       ))}
@@ -597,7 +764,7 @@ function ApprovalList({ project, agentId }: { project: string; agentId: string }
   if (data!.length === 0) {
     return (
       <EmptyState
-        icon={ClipboardCheck}
+        icon={ShieldCheck}
         title="Nothing waiting for approval"
         description="When an agent in draft-only mode is ready to publish a post or send an email, it lands here with the full text for you to approve, edit, or reject."
       />

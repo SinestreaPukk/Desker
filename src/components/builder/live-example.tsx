@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Lightbulb } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -34,7 +34,7 @@ function Reading({ label, children, className }: { label: string; children: Reac
   return (
     <div className={cn("rounded-md border border-dashed border-line bg-surface-2/60 px-3 py-2 text-sm", className)} aria-live="polite">
       <span className="eyebrow mr-1.5 inline-flex items-center gap-1">
-        <Lightbulb className="size-3" aria-hidden />
+        <Sparkles className="size-3" aria-hidden />
         {label}
       </span>
       <span className="text-ink-muted">{children}</span>
@@ -71,7 +71,9 @@ export function EscalationRuleHelper({
   );
 }
 
+/** Empty-state only: once there are objectives the textarea above already shows them. */
 export function ObjectivesHelper({ objectives, onPick }: { objectives: string[]; onPick?: (text: string) => void }) {
+  if (objectives.length > 0) return null;
   const examples = [
     "Research what our three main competitors announced this week",
     "Draft one LinkedIn post about the lifetime warranty and queue it for approval",
@@ -80,17 +82,9 @@ export function ObjectivesHelper({ objectives, onPick }: { objectives: string[];
   return (
     <div className="space-y-2">
       <Reading label="Each run will try to">
-        {objectives.length > 0 ? (
-          <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-ink">
-            {objectives.map((objective, index) => (
-              <li key={index}>{objective}</li>
-            ))}
-          </ol>
-        ) : (
-          "Nothing yet. One outcome per line; the agent works down the list and reports on each. For example:"
-        )}
+        Nothing yet. One outcome per line; the agent works down the list and reports on each. For example:
       </Reading>
-      {objectives.length === 0 && onPick ? (
+      {onPick ? (
         <div className="flex flex-wrap gap-1.5">
           {examples.map((example) => (
             <Chip key={example} onClick={() => onPick(example)}>

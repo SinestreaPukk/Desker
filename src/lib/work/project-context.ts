@@ -9,11 +9,13 @@
 import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { HttpError } from "@/lib/http-error";
 import { audit } from "@/lib/audit";
 import {
   ALL_PROJECT_CONTEXT_QUESTIONS,
   PROJECT_CONTEXT_QUESTIONS,
   answeredCount,
+  hasCoreContext,
   answersFor,
   composeContext,
   toContextAnswers,
@@ -81,4 +83,21 @@ export async function saveProjectContext(
   });
 
   return readProjectContext(updated);
+}
+
+/**
+ * Refuses to put an agent in front of clients before the company is
+ * described. An agent published without it works blind - the gap this closes.
+ */
+export async function assertProjectGrounded(projectId: string): Promise<void> {
+  const project = await prisma.project.findUniqueOrThrow({
+    where: { id: projectId },
+    select: { context: true, contextAnswers: true },
+  });
+  if (!hasCoreContext(project)) {
+    throw new HttpError(
+      409,
+      "Answer the four Company context questions before publishing - every agent needs them to work from.",
+    );
+  }
 }

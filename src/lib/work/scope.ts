@@ -3,6 +3,7 @@
  * its triggers. The cron scheduler and the webhook route both end up in
  * `startRun`, which is the only place an action item is born.
  */
+import { OrganizationRateLimited, limitOrganization } from "@/lib/rate-limit";
 import { scopeTools, type WorkToolId } from "./tools";
 import "server-only";
 import { randomBytes } from "node:crypto";
@@ -269,6 +270,19 @@ export async function startRun(input: StartRunInput) {
   });
   if (!agent) return null;
 
+  // Fairness: a person or an outside system starting runs in a burst is
+  // refused past the organisation's share. Schedules and follow-ups are not -
+  // the job runtime throttles them per organisation instead, delaying rather
+  // than dropping, so a busy 9am never silently loses a run.
+  if (input.trigger === "manual" || input.trigger === "webhook") {
+    try {
+      await limitOrganization(agent.project.organizationId, "runs");
+    } catch (error) {
+      if (error instanceof OrganizationRateLimited) throw new RunRefused(error.message, error.retryAfterSeconds);
+      throw error;
+    }
+  }
+
   // Plan limits are enforced here, where every run is born, so a schedule, a
   // webhook and a button all hit the same wall. The refusal is on the record.
   const check = await canStartRun(agent.project.organizationId);
@@ -333,42 +347,87 @@ export async function startRun(input: StartRunInput) {
   return item;
 }
 
+/** One schedule tick that is due and has been claimed, ready to become a run. */
+export interface DueScope {
+  scopeId: string;
+  agentId: string;
+  organizationId: string;
+  /** ISO time of the tick being fired. */
+  due: string;
+}
+
 /**
- * Called every minute by the scheduler function. Every enabled cron scope
- * whose most recent fire time has not been run yet gets exactly one run.
- * A missed minute (a deploy, a cold start) is caught up on the next tick;
- * an outage never replays every tick it missed.
+ * Finds every schedule whose last tick has not produced a run yet, and claims
+ * each tick with a conditional update so that two overlapping scheduler runs -
+ * or two instances - can never both fire it. Cheap: one read for all
+ * schedules, one small write per due one.
  */
-export async function fireDueScopes(now = new Date()): Promise<string[]> {
+export async function claimDueScopes(now = new Date()): Promise<DueScope[]> {
   const scopes = await prisma.scopeOfWork.findMany({
     where: { triggerType: "cron", enabled: true, cron: { not: null } },
-    select: { id: true, agentId: true, cron: true, timezone: true, lastFiredAt: true, createdAt: true },
+    select: {
+      id: true,
+      agentId: true,
+      cron: true,
+      timezone: true,
+      lastFiredAt: true,
+      createdAt: true,
+      agent: { select: { project: { select: { organizationId: true } } } },
+    },
   });
 
-  const started: string[] = [];
+  const claimed: DueScope[] = [];
   for (const scope of scopes) {
     const due = previousFire(scope.cron!, scope.timezone, now);
     if (!due) continue;
     // Never fire a time that predates the schedule itself or the last run.
     const floor = scope.lastFiredAt ?? scope.createdAt;
     if (due <= floor) continue;
+    const won = await prisma.scopeOfWork.updateMany({
+      where: {
+        id: scope.id,
+        OR: [{ lastFiredAt: null }, { lastFiredAt: { lt: due } }],
+      },
+      data: { lastFiredAt: due },
+    });
+    if (won.count === 0) continue;
+    claimed.push({
+      scopeId: scope.id,
+      agentId: scope.agentId,
+      organizationId: scope.agent.project.organizationId,
+      due: due.toISOString(),
+    });
+  }
+  return claimed;
+}
 
-    let item = null;
-    try {
-      item = await startRun({
-        agentId: scope.agentId,
-        trigger: "schedule",
-        payload: { firedAt: due.toISOString() },
-        dedupeKey: `${scope.id}:${due.toISOString()}`,
-        actor: { type: "schedule" },
-      });
-    } catch (error) {
-      // Over the plan's quota or rate: the tick is consumed (no catch-up
-      // storm later) and the refusal is already in the audit log.
-      if (!(error instanceof RunRefused)) throw error;
-    }
-    await prisma.scopeOfWork.update({ where: { id: scope.id }, data: { lastFiredAt: due } });
-    if (item) started.push(item.id);
+/**
+ * Turns one claimed tick into a run. Safe to retry: the dedupe key makes a
+ * second attempt for the same tick a no-op. A plan refusal consumes the tick
+ * (no catch-up storm later) and is already on the audit record.
+ */
+export async function fireScope(tick: DueScope): Promise<string | null> {
+  try {
+    const item = await startRun({
+      agentId: tick.agentId,
+      trigger: "schedule",
+      payload: { firedAt: tick.due },
+      dedupeKey: `${tick.scopeId}:${tick.due}`,
+      actor: { type: "schedule" },
+    });
+    return item?.id ?? null;
+  } catch (error) {
+    if (error instanceof RunRefused) return null;
+    throw error;
+  }
+}
+
+/** Claim and fire in one go, for tests and deployments without the job runtime's fan-out. */
+export async function fireDueScopes(now = new Date()): Promise<string[]> {
+  const started: string[] = [];
+  for (const tick of await claimDueScopes(now)) {
+    const id = await fireScope(tick);
+    if (id) started.push(id);
   }
   return started;
 }

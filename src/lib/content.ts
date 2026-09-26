@@ -231,6 +231,8 @@ const templateSchema = z.object({
   responsibilities: z.array(z.string().min(1)).max(8),
   allowedTools: z.array(z.enum(TOOL_IDS)),
   workTools: z.array(z.enum(WORK_TOOL_IDS)),
+  /** Catalog connector ids that make this role more useful; offered, never required, when hiring. */
+  suggestedIntegrations: z.array(z.string()).max(4).default([]),
   defaultObjectives: z.array(z.string().min(1)).optional(),
   defaultTriggerType: z.enum(["manual", "cron", "webhook"]).optional(),
   defaultCron: z.string().nullable().optional(),

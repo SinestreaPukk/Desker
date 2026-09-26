@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { MessageSquareText, RefreshCw } from "lucide-react";
+import { BotMessageSquare, RefreshCw } from "lucide-react";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChatComposer } from "./chat-composer";
@@ -146,7 +146,7 @@ export const ChatSurface = React.memo(function ChatSurface({
               {agent.department ? ` · ${agent.department}` : ""}
             </p>
             <p className="mt-3 flex items-center justify-center gap-1.5 text-sm leading-relaxed text-ink-muted">
-              <MessageSquareText className="size-3.5 shrink-0" aria-hidden />
+              <BotMessageSquare className="size-3.5 shrink-0" aria-hidden />
               Ask a question to get started.
             </p>
           </div>

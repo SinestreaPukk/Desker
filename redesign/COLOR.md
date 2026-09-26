@@ -27,6 +27,14 @@ B aqua, C lime, D sun gold). **A was chosen.**
 | ~5% | Warmth, once: the sun in the hero | `--sun-*` |
 | — | Semantic only: positive, warning, danger | never used for emphasis |
 
+**Neutrals and semantic colours are Radix Colors steps** (slate; iris for the
+soft accent tints; teal, amber and red for status), inlined as oklch with the
+step beside each value. Roles follow Radix: 1-2 app backgrounds, 3-5 component
+fills, 6-8 borders, 9-10 solids, 11 muted text, 12 body text. The one exception:
+light-theme `--positive` and `--warning` are step 11 darkened a little, because
+Radix tunes for APCA and those two badges missed WCAG's 4.5:1. The logo indigo
+(`--accent`), avatars and the sky stay our own.
+
 ### The sky (tonal, identical in both themes)
 
 | Token | Value | Role |

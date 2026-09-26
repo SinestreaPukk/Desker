@@ -539,12 +539,25 @@ served from `/api/inngest`. Nothing else talks to a scheduler or a queue.
   two intervals have passed without one. Point an uptime monitor at that field
   specifically - an agent that silently never runs is the worst failure this
   product can have.
-- `scope-scheduler` - every minute, finds cron scopes whose latest fire time
-  has not run and starts exactly one run each, deduplicated by
-  `ActionItem.dedupeKey`. A missed minute is caught up on the next tick; an
-  outage never replays every tick it missed.
+- `scope-scheduler` - every minute, claims every cron scope whose latest fire
+  time has not run (a conditional update, so overlapping ticks or instances
+  can never both claim one) and fans them out as `work/scope.due` events. Its
+  own work stays one query plus one small write per due scope, however many
+  agents share "weekdays at 9am". A missed minute is caught up on the next
+  tick; an outage never replays every tick it missed.
+- `scope-fire` - turns one claimed tick into a run, 25 at a time, retry-safe
+  through `ActionItem.dedupeKey`.
 - `action-item-run` - executes one action item as durable steps, waiting
-  first if it is a follow-up scheduled for later.
+  first if it is a follow-up scheduled for later. Capped at
+  `WORK_MAX_CONCURRENT_RUNS` across the platform and 3 per organisation, and
+  throttled to `ORG_RUNS_PER_MINUTE` starts per organisation: a tenant with
+  fifty 9am agents queues behind itself, not in front of everyone else.
+- `work-watchdog` - every five minutes: tells an owner once when their run
+  passes `RUN_TIME_BUDGET_MS`, ends a run stuck at 4x the budget as a visible
+  failure, and raises a platform alert (Sentry, plus `OPS_ALERT_WEBHOOK_URL`)
+  for a queue backlog, a spike in failed runs, a spike in escalations, or many
+  runs over budget at once - each at most once an hour. `/api/health/jobs`
+  also reports queue depth and turns 503 while work is backed up.
 - `action-item-execute-approved` - sends what a person approved.
 - `digest-scheduler` - every fifteen minutes, finds agents whose digest
   cadence has come round in their own timezone since their last one and writes
@@ -800,6 +813,25 @@ docker run --rm -v "$PWD":/w -w /w node:22-slim \
 
 `npm install` on macOS afterwards is fine; it adds the darwin binaries without
 dropping the Linux ones.
+
+### Load test
+
+`npm run test:load` fires 100 organisations x 3 scheduled agents in one tick,
+each doing seven tool calls against a scripted model with realistic latency,
+through the real claim, fan-out and runner under production's limits - and
+reports claim time, run-start latency, queue depth and drain time. It needs a
+database of its own (a running app's scheduler would fire the test's
+schedules): for Postgres,
+
+```bash
+docker run -d --rm --name desker-load-pg -e POSTGRES_PASSWORD=load -e POSTGRES_DB=desker_load -p 55432:5432 pgvector/pgvector:pg16
+export LOAD_DATABASE_URL=postgresql://postgres:load@localhost:55432/desker_load
+DATABASE_PROVIDER=postgresql DATABASE_URL=$LOAD_DATABASE_URL npm run db:push
+DATABASE_PROVIDER=postgresql npm run test:load
+```
+
+`LOAD_ORGS`, `LOAD_AGENTS_PER_ORG` and `LOAD_MODEL_LATENCY_MS` resize it.
+Regenerate the client for your usual provider afterwards (`npm run db:generate`).
 
 ### Switching database provider
 

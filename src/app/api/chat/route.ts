@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { handle, parseJson, HttpError } from "@/lib/api";
 import { chatRequestSchema } from "@/lib/validation";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, limitOrganization } from "@/lib/rate-limit";
 import { canAcceptClientMessage } from "@/lib/billing/limits";
 import { audit } from "@/lib/audit";
 import { runAgentTurn } from "@/lib/agent-runtime";
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     }
 
     // Keyed per agent+session: one abusive session cannot exhaust another's quota.
-    const limit = checkRateLimit(`chat:${agent.id}:${input.sessionId}`);
+    const limit = await checkRateLimit(`chat:${agent.id}:${input.sessionId}`);
     if (!limit.allowed) {
       throw new HttpError(
         429,
@@ -72,6 +72,8 @@ export async function POST(request: Request) {
       where: { agentId_clientSessionId: { agentId: agent.id, clientSessionId: input.sessionId } },
       select: { id: true },
     });
+    // One organisation's traffic cannot crowd out everyone else's replies.
+    await limitOrganization(owner.organizationId, "model");
     const quota = await canAcceptClientMessage(owner.organizationId, !existingConversation);
     if (!quota.allowed) {
       if (shouldRecordRefusal(owner.organizationId)) {

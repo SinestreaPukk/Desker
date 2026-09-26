@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api, errorMessage } from "@/lib/api-client";
+import type { OAuthProvider } from "@/lib/integrations/catalog";
 import type { ScopeDto } from "@/lib/work/scope";
 import type { ScopeInputPayload, IntegrationInputPayload } from "@/lib/work/validation";
 import type {
@@ -78,6 +79,54 @@ export function useActionItems(
     queryFn: () => api<ActionItemDto[]>(`/api/action-items${query(clean)}`),
     enabled: Boolean(filters.project),
     refetchInterval: options.refetchInterval,
+  });
+}
+
+/** One run, polled while it is still moving. Shares the "action-items" prefix, so decisions refresh it. */
+export function useActionItem(id: string) {
+  return useQuery({
+    queryKey: workKeys.actionItem(id),
+    queryFn: () => api<ActionItemDto>(`/api/action-items/${id}`),
+    refetchInterval: (q) => (q.state.data && FINISHED.has(q.state.data.status) ? false : 5_000),
+  });
+}
+
+/** A run in one of these has nothing left to do; everything else is still active. */
+export const FINISHED = new Set<string>(["done", "failed", "rejected", "cancelled"]);
+
+export function useCancelRun() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api<ActionItemDto>(`/api/action-items/${id}/cancel`, { method: "POST" }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ["action-items"] }),
+  });
+}
+
+/** Every removable thing in Work and the Inbox, by the API path it lives under. */
+const REMOVABLE = {
+  run: { path: "action-items", key: "action-items" },
+  conversation: { path: "conversations", key: "conversations" },
+  issue: { path: "issues", key: "issues" },
+  suggestion: { path: "suggestions", key: "suggestions" },
+  update: { path: "digests", key: "digests" },
+} as const;
+export type Removable = keyof typeof REMOVABLE;
+
+export type RemoveTarget = { kind: Removable; id: string };
+
+/** Deletes one item or several, of any kinds ("Clear all" in a Done list mixes them). */
+export function useRemove() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (targets: RemoveTarget[]) =>
+      Promise.all(
+        targets.map(({ kind, id }) => api<{ ok: true }>(`/api/${REMOVABLE[kind].path}/${id}`, { method: "DELETE" })),
+      ),
+    onSettled: (_data, _error, targets) => {
+      for (const kind of new Set(targets.map((target) => target.kind))) {
+        void client.invalidateQueries({ queryKey: [REMOVABLE[kind].key] });
+      }
+    },
   });
 }
 
@@ -291,6 +340,15 @@ export function useIntegrations(project: string) {
     queryFn: () =>
       api<IntegrationDto[]>(`/api/integrations?project=${encodeURIComponent(project)}`),
     enabled: Boolean(project),
+  });
+}
+
+/** Which OAuth providers this server can connect; changes only with a redeploy. */
+export function useOAuthProviders() {
+  return useQuery({
+    queryKey: ["integrations", "providers"],
+    queryFn: () => api<Record<OAuthProvider, boolean>>("/api/integrations/providers"),
+    staleTime: Infinity,
   });
 }
 

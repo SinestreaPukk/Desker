@@ -87,6 +87,23 @@ export interface ContentGap {
   lastAskedAt: string;
 }
 
+export interface CollabHandoff {
+  id: string;
+  fromAgent: { id: string; name: string; avatarUrl: string | null };
+  toAgent: { id: string; name: string; avatarUrl: string | null };
+  type: "delegation" | "transfer";
+  summary: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface CollabStats {
+  total: number;
+  delegations: number;
+  transfers: number;
+  handoffs: CollabHandoff[];
+}
+
 /**
  * Roster analytics.
  *
@@ -137,7 +154,15 @@ export async function GET(request: Request) {
           ...realClients,
           agent: inProject,
         },
-        select: { id: true, agentId: true, activeAgentId: true, status: true },
+        select: {
+          id: true,
+          agentId: true,
+          activeAgentId: true,
+          status: true,
+          createdAt: true,
+          agent: { select: { id: true, name: true, avatarUrl: true } },
+          activeAgent: { select: { id: true, name: true, avatarUrl: true } },
+        },
       }),
       prisma.issue.findMany({
         where: {
@@ -306,12 +331,21 @@ export async function GET(request: Request) {
       prisma.actionItem.findMany({
         where: { createdAt: { gte: since }, agent: inProject },
         select: {
+          id: true,
           agentId: true,
           status: true,
           awaitingSince: true,
           approvedAt: true,
           completedAt: true,
           escalatedAt: true,
+          type: true,
+          parentId: true,
+          parent: { select: { agent: { select: { id: true, name: true, avatarUrl: true } } } },
+          agent: { select: { id: true, name: true, avatarUrl: true } },
+          headline: true,
+          summary: true,
+          payload: true,
+          createdAt: true,
         },
       }),
       prisma.usageCounter.findMany({
@@ -429,6 +463,59 @@ export async function GET(request: Request) {
       ratedDown: rated.filter((message) => message.rating === -1).length,
     };
 
+    const delegations = items.filter((i) => i.type === "colleague_delegation");
+    const transfers = conversations.filter(
+      (c) => c.activeAgentId && c.activeAgentId !== c.agentId,
+    );
+
+    const handoffs: CollabHandoff[] = [
+      ...delegations.map((d) => {
+        const payload = (d.payload as Record<string, unknown> | null) ?? {};
+        const task =
+          (typeof payload.objective === "string" ? payload.objective : null) ??
+          d.headline ??
+          d.summary ??
+          "Delegated task";
+        const delegatedBy = typeof payload.delegatedByAgentId === "string" ? payload.delegatedByAgentId : "";
+        const fromAgent = d.parent?.agent ?? {
+          id: delegatedBy || "unknown",
+          name: agentNames.get(delegatedBy) ?? "Colleague",
+          avatarUrl: null,
+        };
+        return {
+          id: d.id,
+          fromAgent,
+          toAgent: d.agent,
+          type: "delegation" as const,
+          summary: task,
+          status: d.status,
+          createdAt: d.createdAt.toISOString(),
+        };
+      }),
+      ...transfers.map((t) => ({
+        id: `transfer-${t.id}`,
+        fromAgent: t.agent,
+        toAgent: t.activeAgent ?? {
+          id: t.activeAgentId!,
+          name: agentNames.get(t.activeAgentId!) ?? "Colleague",
+          avatarUrl: null,
+        },
+        type: "transfer" as const,
+        summary: "Customer conversation transfer",
+        status: t.status,
+        createdAt: t.createdAt.toISOString(),
+      })),
+    ]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 20);
+
+    const collab: CollabStats = {
+      total: delegations.length + transfers.length,
+      delegations: delegations.length,
+      transfers: transfers.length,
+      handoffs,
+    };
+
     return {
       days,
       totals,
@@ -442,6 +529,7 @@ export async function GET(request: Request) {
         .slice(0, 25),
       dislikedReplies,
       work: { totals: workTotals, agents: workAgents },
+      collab,
     };
   });
 }

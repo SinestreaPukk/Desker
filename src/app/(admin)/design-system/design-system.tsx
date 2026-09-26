@@ -255,7 +255,7 @@ export function DesignSystem() {
           <PanelBody className="flex flex-wrap items-center gap-2">
             {[
               "draft", "published", "open", "escalated", "resolved", "ready", "pending",
-              "queued", "in_progress", "needs_approval", "approved", "executing_external", "done", "failed", "rejected",
+              "queued", "in_progress", "needs_approval", "approved", "executing_external", "done", "failed", "rejected", "cancelled",
               "sent", "owner", "admin", "member",
             ].map((status) => (
               <StatusBadge key={status} status={status} />

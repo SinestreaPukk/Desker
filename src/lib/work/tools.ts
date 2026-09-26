@@ -10,7 +10,7 @@
  * agent has been moved to auto mode.
  */
 import type { ToolDefinition } from "@/lib/llm/provider";
-import { DRAFT_KINDS } from "./types";
+import { DRAFT_KINDS, GATED_TOOL_IDS } from "./types";
 
 export const WORK_TOOL_IDS = [
   "search_context",
@@ -18,6 +18,10 @@ export const WORK_TOOL_IDS = [
   "draft_content",
   "publish_post",
   "send_email",
+  "calendar_list_events",
+  "calendar_create_event",
+  "slack_post_message",
+  "github_read",
   "schedule_followup",
   "delegate_to_colleague",
   "suggest_opportunity",
@@ -51,10 +55,14 @@ export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
   escalate_to_human: "internal",
   publish_post: "external",
   send_email: "external",
+  calendar_list_events: "read",
+  github_read: "read",
+  calendar_create_event: "external",
+  slack_post_message: "external",
 };
 
 /** The tools a person can move to auto mode independently of the agent. */
-export const GATED_TOOLS = ["publish_post", "send_email"] as const satisfies readonly WorkToolId[];
+export const GATED_TOOLS = GATED_TOOL_IDS satisfies readonly WorkToolId[];
 
 export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: string }> = {
   search_context: {
@@ -76,6 +84,22 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   send_email: {
     label: "Send an email",
     blurb: "Send a draft or a message through the connected email provider. Waits for approval in draft-only mode.",
+  },
+  calendar_list_events: {
+    label: "Check the calendar",
+    blurb: "See events on the connected Google Calendar. Needs Google Calendar connected.",
+  },
+  calendar_create_event: {
+    label: "Add calendar events",
+    blurb: "Put a meeting on the connected calendar. Waits for approval in draft-only mode.",
+  },
+  slack_post_message: {
+    label: "Post to Slack",
+    blurb: "Post a message to a Slack channel the app is in. Waits for approval in draft-only mode.",
+  },
+  github_read: {
+    label: "Read GitHub",
+    blurb: "Read code, issues and pull requests in the repositories you shared. Never writes.",
   },
   schedule_followup: {
     label: "Schedule a follow-up",
@@ -170,6 +194,73 @@ export const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDe
         body: { type: "string", description: "Plain text or Markdown." },
         note: { type: "string", description: "One line for the approver: what this is and why now." },
       },
+      additionalProperties: false,
+    },
+  },
+  calendar_list_events: {
+    name: "calendar_list_events",
+    description:
+      "List events on the organisation's connected Google Calendar between two times. Use it before proposing a meeting, to find free slots. Only usable when Google Calendar is connected.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        from: { type: "string", description: "Start of the window, ISO 8601 with a time zone offset." },
+        to: { type: "string", description: "End of the window, ISO 8601 with a time zone offset. At most 31 days after from." },
+      },
+      required: ["from", "to"],
+      additionalProperties: false,
+    },
+  },
+  calendar_create_event: {
+    name: "calendar_create_event",
+    description:
+      "Add an event to the connected Google Calendar, inviting the attendees. In draft-only mode this queues the event for human approval and nothing is created until it is approved. Check the calendar first so it does not clash.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        summary: { type: "string", description: "The event title." },
+        start: { type: "string", description: "Start, ISO 8601 with a time zone offset." },
+        end: { type: "string", description: "End, ISO 8601 with a time zone offset." },
+        attendees: { type: "string", description: "Attendee email addresses, comma-separated. Optional." },
+        description: { type: "string", description: "Agenda or notes. Optional." },
+        note: { type: "string", description: "One line for the approver: what this is and why now." },
+      },
+      required: ["summary", "start", "end"],
+      additionalProperties: false,
+    },
+  },
+  slack_post_message: {
+    name: "slack_post_message",
+    description:
+      "Post a message to a Slack channel through the connected Slack workspace. In draft-only mode this queues the message for human approval and nothing is posted until it is approved. The Desker app can only post in channels it has been invited to.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        channel: { type: "string", description: 'The channel, as "#name" or a channel id.' },
+        text: { type: "string", description: "The message, in Slack's plain-text formatting." },
+        note: { type: "string", description: "One line for the approver: what this is and why now." },
+      },
+      required: ["channel", "text"],
+      additionalProperties: false,
+    },
+  },
+  github_read: {
+    name: "github_read",
+    description:
+      "Read from the GitHub repositories the organisation shared with Desker. Read-only: it cannot push, comment or change anything. Actions: list_repos (what is shared), list_issues (open issues and PRs in a repo), get_issue (one issue or PR with its comments), read_file (a file, or a directory listing), search_code (find files mentioning something).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: ["list_repos", "list_issues", "get_issue", "read_file", "search_code"],
+        },
+        repo: { type: "string", description: 'The repository as "owner/name". Not needed for list_repos.' },
+        number: { type: "integer", description: "For get_issue: the issue or PR number." },
+        path: { type: "string", description: "For read_file: the path inside the repo; empty for the root listing." },
+        query: { type: "string", description: "For search_code: what to search for." },
+      },
+      required: ["action"],
       additionalProperties: false,
     },
   },

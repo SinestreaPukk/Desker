@@ -46,3 +46,20 @@ export async function signUp(
   // so asserting on either one alone makes the test order-dependent.
   await expect(page).toHaveURL(/\/p\/[^/]+\//, { timeout: 30_000 });
 }
+
+/** The four core Company context answers, as a new organisation writes them on the welcome step. */
+export const COMPANY_CONTEXT = {
+  business: "Northwind Supply Co. sells hand tools and workwear to tradespeople.",
+  audience: "Self-employed tradespeople and small site crews.",
+  tone: "Plain, direct, no hype.",
+  never: "Never quote a discount or a delivery date.",
+};
+
+/** Fills the welcome step and moves on to the hire wizard. */
+export async function answerCompanyContext(page: Page) {
+  await page.getByLabel("What does this business do?").fill(COMPANY_CONTEXT.business);
+  await page.getByLabel("Who are your customers?").fill(COMPANY_CONTEXT.audience);
+  await page.getByLabel("How should your agents sound?").fill(COMPANY_CONTEXT.tone);
+  await page.getByLabel("Anything no agent should ever do or say?").fill(COMPANY_CONTEXT.never);
+  await page.getByRole("button", { name: "Choose your first agent" }).click();
+}

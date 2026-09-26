@@ -1,6 +1,6 @@
 import { expect, test as setup } from "@playwright/test";
 import { PrismaClient } from "@prisma/client";
-import { ADMIN, ADMIN_STATE } from "./helpers";
+import { ADMIN, ADMIN_STATE, COMPANY_CONTEXT } from "./helpers";
 
 /**
  * Authenticates once and saves the session, so every spec starts signed in.
@@ -36,6 +36,14 @@ setup("authenticate", async ({ page, request }) => {
   // same thing the Stripe webhook would write.
   const prisma = new PrismaClient();
   try {
+    // The shared admin is past onboarding: its projects have the four answers.
+    await prisma.project.updateMany({
+      where: { organization: { memberships: { some: { user: { email: ADMIN.email } } } } },
+      data: {
+        contextAnswers: COMPANY_CONTEXT,
+        context: `The business: ${COMPANY_CONTEXT.business}\n\nCustomers: ${COMPANY_CONTEXT.audience}\n\nHouse style: ${COMPANY_CONTEXT.tone}\n\nNever: ${COMPANY_CONTEXT.never}`,
+      },
+    });
     await prisma.organization.updateMany({
       where: { memberships: { some: { user: { email: ADMIN.email } } } },
       data: { plan: "growth" },

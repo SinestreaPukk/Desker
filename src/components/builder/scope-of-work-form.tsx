@@ -266,8 +266,10 @@ function CadencePicker({
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
-        <div>
+      {/* Wraps on the column's width, not the viewport's: beside the chat preview
+          the column is narrow even on a desktop screen. */}
+      <div className="flex flex-wrap gap-3">
+        <div className="min-w-40 flex-1">
           <Label htmlFor="cadence-kind">Cadence</Label>
           <Select
             value={cadence.kind}

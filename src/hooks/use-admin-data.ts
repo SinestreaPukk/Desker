@@ -292,6 +292,7 @@ export interface AnalyticsResponse {
     totals: import("@/app/api/analytics/route").WorkTotals;
     agents: import("@/app/api/analytics/route").AgentWorkStats[];
   };
+  collab: import("@/app/api/analytics/route").CollabStats;
 }
 
 export function useAnalytics(project: string, days = 30) {

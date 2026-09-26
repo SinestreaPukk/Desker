@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, Clock, Lightbulb, Undo2, X } from "lucide-react";
+import { Check, Clock, Sparkles, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
-import { Badge, StatusBadge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListRow, RowIcon } from "@/components/ui/list-row";
+import { RemoveButton } from "@/components/work/row-actions";
 import { useDecideSuggestion } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { SuggestionDto } from "@/lib/work/serialize";
@@ -26,9 +27,12 @@ import { formatRelativeTime } from "@/lib/utils";
 export function SuggestionRow({
   suggestion,
   project,
+  inRun = false,
 }: {
   suggestion: SuggestionDto;
   project: string;
+  /** Shown inside its own run: no link back to it. */
+  inRun?: boolean;
 }) {
   const decide = useDecideSuggestion();
   const pending = decide.isPending && decide.variables?.suggestionId === suggestion.id;
@@ -81,20 +85,20 @@ export function SuggestionRow({
       muted={decided}
       leading={
         <RowIcon>
-          <Lightbulb />
+          <Sparkles />
         </RowIcon>
       }
       title={suggestion.summary}
       badges={
         <>
           <Badge tone="accent">
-            <Lightbulb aria-hidden />
+            <Sparkles aria-hidden />
             Suggestion
           </Badge>
           {suggestion.status === "accepted" ? (
             <Badge tone="positive">Accepted</Badge>
           ) : suggestion.status === "dismissed" ? (
-            <StatusBadge status="resolved" />
+            <Badge tone="neutral">Dismissed</Badge>
           ) : suggestion.status === "snoozed" && !suggestion.pending ? (
             <Badge tone="neutral">
               <Clock aria-hidden />
@@ -119,11 +123,11 @@ export function SuggestionRow({
           <span>raised by the agent</span>
           <span aria-hidden>·</span>
           <span>{formatRelativeTime(suggestion.createdAt)}</span>
-          {suggestion.actionItemId ? (
+          {suggestion.actionItemId && !inRun ? (
             <>
               <span aria-hidden>·</span>
               <Link
-                href={`/p/${project}/work?item=${suggestion.actionItemId}`}
+                href={`/p/${project}/work/${suggestion.actionItemId}`}
                 className="text-accent hover:underline"
               >
                 View the run
@@ -154,10 +158,13 @@ export function SuggestionRow({
             </Button>
           </div>
         ) : (
-          <Button size="sm" variant="ghost" loading={pending} onClick={() => void run("open")}>
-            <Undo2 aria-hidden />
-            Reopen
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="ghost" loading={pending} onClick={() => void run("open")}>
+              <Undo2 aria-hidden />
+              Reopen
+            </Button>
+            <RemoveButton targets={[{ kind: "suggestion", id: suggestion.id }]} what="this suggestion" />
+          </div>
         )
       }
     />

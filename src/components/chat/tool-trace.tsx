@@ -1,13 +1,13 @@
 "use client";
 
-import { Bug, CircleCheck, Lightbulb, Loader2, Search, UserRoundCheck } from "lucide-react";
+import { AlertCircle, CircleCheck, Loader2, Search, Sparkles, UserRoundCheck } from "lucide-react";
 import { toolLabel, type ToolActivity } from "@/hooks/use-chat-stream";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   search_company_context: Search,
-  log_issue: Bug,
-  log_suggestion: Lightbulb,
+  log_issue: AlertCircle,
+  log_suggestion: Sparkles,
   escalate_to_human: UserRoundCheck,
 };
 

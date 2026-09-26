@@ -5,18 +5,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  ChartNoAxesColumn,
+  Activity,
+  Blocks,
+  BotMessageSquare,
+  Building,
   Check,
   ChevronsUpDown,
-  Briefcase,
-  Building2,
-  Inbox,
-  Plug,
+  History,
   LogOut,
   Menu,
   Plus,
-  ScrollText,
-  Users,
+  UsersRound,
+  Workflow,
   X,
 } from "lucide-react";
 import { BRAND } from "@/lib/brand";
@@ -61,18 +61,18 @@ const NAV_GROUPS: { title: string; items: readonly NavItem[] }[] = [
   {
     title: "Workspace",
     items: [
-      { segment: "roster", label: "Roster", icon: Users },
-      { segment: "work", label: "Work", icon: Briefcase },
-      { segment: "inbox", label: "Inbox", icon: Inbox },
-      { segment: "insights", label: "Insights", icon: ChartNoAxesColumn },
+      { segment: "roster", label: "Roster", icon: UsersRound },
+      { segment: "work", label: "Work", icon: Workflow },
+      { segment: "inbox", label: "Inbox", icon: BotMessageSquare },
+      { segment: "insights", label: "Insights", icon: Activity },
     ],
   },
   {
     title: "Configuration",
     items: [
-      { segment: "integrations", label: "Integrations", icon: Plug },
-      { segment: "organization", label: "Organisation", icon: Building2 },
-      { segment: "audit", label: "Audit log", icon: ScrollText },
+      { segment: "integrations", label: "Integrations", icon: Blocks },
+      { segment: "organization", label: "Organisation", icon: Building },
+      { segment: "audit", label: "Audit log", icon: History },
     ],
   },
 ] as const;
@@ -343,7 +343,7 @@ function ProjectSwitcher({
             )}
           >
             <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-accent-line/60 bg-accent-soft text-accent-soft-fg shadow-2xs">
-              <Building2 className="size-4" aria-hidden />
+              <Building className="size-4" aria-hidden />
             </span>
             <span className="min-w-0 flex-1">
               <span className="meta block truncate text-[10px] leading-tight text-ink-muted">{organization?.name ?? "Project"}</span>
@@ -385,7 +385,7 @@ function ProjectSwitcher({
               {others.map(({ org, first }) => (
                 <DropdownMenuItem key={org.id} asChild>
                   <Link href={`/p/${first!.slug}/${tab}`}>
-                    <Building2 className="size-3.5 text-ink-subtle" aria-hidden />
+                    <Building className="size-3.5 text-ink-subtle" aria-hidden />
                     <span className="truncate">{org.name}</span>
                     <span className="ml-auto text-xs text-ink-muted">{org.role}</span>
                   </Link>

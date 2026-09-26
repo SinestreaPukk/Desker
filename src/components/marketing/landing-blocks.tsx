@@ -8,9 +8,9 @@ import {
   CircleCheckBig,
   FilePen,
   FileUp,
+  History,
   LifeBuoy,
   LockKeyhole,
-  ScrollText,
   UserCheck,
   X,
 } from "lucide-react";
@@ -34,7 +34,7 @@ const ICONS: Record<(typeof LANDING_ICONS)[number], React.ComponentType<{ classN
   draft: FilePen,
   person: UserCheck,
   source: BookOpenCheck,
-  log: ScrollText,
+  log: History,
   lock: LockKeyhole,
   handoff: LifeBuoy,
 };
@@ -54,18 +54,41 @@ export function LandingIcon({ icon, className }: { icon: (typeof LANDING_ICONS)[
 export function TrustStrip({
   label,
   items,
+  tone = "default",
+  className,
 }: {
   label: string;
   items: readonly { name: string; logo?: BrandLogoId }[];
+  tone?: "default" | "sky";
+  className?: string;
 }) {
+  const isSky = tone === "sky";
   return (
-    <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-center sm:gap-8">
-      <p className="eyebrow sd-rise">{label}</p>
-      <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+    <div
+      className={cn(
+        "flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center sm:gap-6",
+        className,
+      )}
+    >
+      <p
+        className={cn(
+          "text-xs font-semibold uppercase tracking-wider",
+          isSky ? "text-[var(--sky-ink)]/75" : "eyebrow sd-rise",
+        )}
+      >
+        {label}
+      </p>
+      <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
         {items.map((item) => (
-          <li key={item.name} className="flex items-center gap-2 text-ink-muted">
-            {item.logo ? <BrandLogo id={item.logo} className="size-6" /> : null}
-            <span className="text-lg font-semibold tracking-tight">{item.name}</span>
+          <li
+            key={item.name}
+            className={cn(
+              "flex items-center gap-2",
+              isSky ? "text-[var(--sky-ink)]" : "text-ink-muted",
+            )}
+          >
+            {item.logo ? <BrandLogo id={item.logo} className="size-5 shrink-0" /> : null}
+            <span className="text-base font-semibold tracking-tight">{item.name}</span>
           </li>
         ))}
       </ul>
