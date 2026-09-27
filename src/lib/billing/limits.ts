@@ -11,7 +11,7 @@ import { prisma } from "@/lib/db";
 import { planFor } from "./plans";
 import { usageSnapshot } from "./usage";
 
-export interface LimitCheck {
+interface LimitCheck {
   allowed: boolean;
   /** Present when refused. Plain language, names the plan. */
   reason?: string;

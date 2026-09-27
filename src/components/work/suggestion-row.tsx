@@ -2,17 +2,18 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, Clock, Sparkles, Undo2, X } from "lucide-react";
+import { Check, Clock, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
+import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ListRow, RowIcon } from "@/components/ui/list-row";
+import { ListRow } from "@/components/ui/list-row";
 import { RemoveButton } from "@/components/work/row-actions";
 import { useDecideSuggestion } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { SuggestionDto } from "@/lib/work/serialize";
 import type { SuggestionStatus } from "@/lib/work/types";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 
 /**
  * One thing an agent thinks should happen next, in the Issues & suggestions
@@ -80,93 +81,121 @@ export function SuggestionRow({
 
   const decided = !suggestion.pending;
 
+  // Only a decided suggestion carries a badge; the heading above already says what it is.
+  const state =
+    suggestion.status === "accepted" ? (
+      <Badge tone="positive">Accepted</Badge>
+    ) : suggestion.status === "dismissed" ? (
+      <Badge tone="neutral">Dismissed</Badge>
+    ) : suggestion.status === "snoozed" && !suggestion.pending ? (
+      <Badge tone="neutral">
+        <Clock aria-hidden />
+        Snoozed
+      </Badge>
+    ) : null;
+
+  const body = (
+    <div className="space-y-1.5">
+      <p className="text-ink-muted">{suggestion.rationale}</p>
+      <p className="text-ink">
+        <span className="font-medium">Proposed next step:</span> {suggestion.proposal}
+      </p>
+    </div>
+  );
+
+  const meta = (
+    <>
+      <span>{suggestion.agent.name}</span>
+      <span aria-hidden>·</span>
+      <span>raised by the agent</span>
+      <span aria-hidden>·</span>
+      <span title={formatDateTime(suggestion.createdAt)}>
+        {formatTime(suggestion.createdAt)} · {formatRelativeTime(suggestion.createdAt)}
+      </span>
+      {suggestion.actionItemId && !inRun ? (
+        <>
+          <span aria-hidden>·</span>
+          <Link href={`/p/${project}/work/${suggestion.actionItemId}`} className="text-accent hover:underline">
+            View the run
+          </Link>
+        </>
+      ) : null}
+    </>
+  );
+
+  const actions = suggestion.pending ? (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <Button size="sm" loading={pending} onClick={() => void run("accepted")}>
+        <Check aria-hidden />
+        Accept
+      </Button>
+      <Button size="sm" variant="secondary" disabled={pending} onClick={() => void run("snoozed", 7)}>
+        <Clock aria-hidden />
+        Snooze
+      </Button>
+      <Button size="sm" variant="ghost" disabled={pending} onClick={() => void run("dismissed")}>
+        <X aria-hidden />
+        Dismiss
+      </Button>
+    </div>
+  ) : (
+    <div className="flex items-center gap-1">
+      <Button size="sm" variant="ghost" loading={pending} onClick={() => void run("open")}>
+        <Undo2 aria-hidden />
+        Reopen
+      </Button>
+      <RemoveButton targets={[{ kind: "suggestion", id: suggestion.id }]} what="this suggestion" />
+    </div>
+  );
+
+  // Inside a run: a plain row in the run's one group - no card inside the card.
+  if (inRun) {
+    return (
+      <div className={decided ? "py-4 opacity-70" : "py-4"}>
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <h3 className="text-sm font-semibold text-ink">{suggestion.summary}</h3>
+          {state}
+        </div>
+        <div className="mt-1 text-sm leading-relaxed">{body}</div>
+        <p className="meta mt-2 flex flex-wrap items-center gap-x-2">{meta}</p>
+        <div className="mt-3">{actions}</div>
+      </div>
+    );
+  }
+
+  // In the Inbox, Mail's shape: the agent who suggested it on top, with their
+  // face, then what they suggest.
   return (
     <ListRow
       muted={decided}
       leading={
-        <RowIcon>
-          <Sparkles />
-        </RowIcon>
+        <AgentAvatar name={suggestion.agent.name} src={suggestion.agent.avatarUrl} seed={suggestion.agent.id} size="md" />
       }
-      title={suggestion.summary}
-      badges={
-        <>
-          <Badge tone="accent">
-            <Sparkles aria-hidden />
-            Suggestion
-          </Badge>
-          {suggestion.status === "accepted" ? (
-            <Badge tone="positive">Accepted</Badge>
-          ) : suggestion.status === "dismissed" ? (
-            <Badge tone="neutral">Dismissed</Badge>
-          ) : suggestion.status === "snoozed" && !suggestion.pending ? (
-            <Badge tone="neutral">
-              <Clock aria-hidden />
-              Snoozed
-            </Badge>
-          ) : null}
-        </>
-      }
+      title={suggestion.agent.name}
+      aside={<span title={formatDateTime(suggestion.createdAt)}>{formatRelativeTime(suggestion.createdAt)}</span>}
       body={
         <div className="space-y-1.5">
-          <p className="text-ink-muted">{suggestion.rationale}</p>
-          <p className="rounded-sm border border-line bg-surface-2/60 px-2.5 py-1.5 text-ink">
-            <span className="text-ink-muted">Proposed next step: </span>
-            {suggestion.proposal}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="font-medium text-ink">{suggestion.summary}</p>
+            {state}
+          </div>
+          {body}
         </div>
       }
       meta={
         <>
-          <span>{suggestion.agent.name}</span>
-          <span aria-hidden>·</span>
-          <span>raised by the agent</span>
-          <span aria-hidden>·</span>
-          <span>{formatRelativeTime(suggestion.createdAt)}</span>
-          {suggestion.actionItemId && !inRun ? (
+          <span>Suggested by the agent</span>
+          {suggestion.actionItemId ? (
             <>
               <span aria-hidden>·</span>
-              <Link
-                href={`/p/${project}/work/${suggestion.actionItemId}`}
-                className="text-accent hover:underline"
-              >
+              <Link href={`/p/${project}/work/${suggestion.actionItemId}`} className="text-accent hover:underline">
                 View the run
               </Link>
             </>
           ) : null}
         </>
       }
-      trailing={
-        suggestion.pending ? (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Button size="sm" loading={pending} onClick={() => void run("accepted")}>
-              <Check aria-hidden />
-              Accept
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={pending}
-              onClick={() => void run("snoozed", 7)}
-            >
-              <Clock aria-hidden />
-              Snooze
-            </Button>
-            <Button size="sm" variant="ghost" disabled={pending} onClick={() => void run("dismissed")}>
-              <X aria-hidden />
-              Dismiss
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1">
-            <Button size="sm" variant="ghost" loading={pending} onClick={() => void run("open")}>
-              <Undo2 aria-hidden />
-              Reopen
-            </Button>
-            <RemoveButton targets={[{ kind: "suggestion", id: suggestion.id }]} what="this suggestion" />
-          </div>
-        )
-      }
+      trailing={actions}
     />
   );
 }

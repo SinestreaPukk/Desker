@@ -10,7 +10,7 @@
  * Pure and shared so the timeline and its tests read the same strings.
  */
 
-export interface AuditLike {
+interface AuditLike {
   action: string;
   actorType: string;
   actorName?: string | null;
@@ -35,13 +35,17 @@ export type AuditIcon =
   | "billing"
   | "note";
 
-export interface AuditDescription {
+interface AuditDescription {
   /** The event, as a short phrase: "Researched competitor pricing". */
   title: string;
   /** One line under it, or null when the title says everything. */
   detail: string | null;
   tone: AuditTone;
   icon: AuditIcon;
+}
+
+function article(word: string): string {
+  return /^[aeiou]/i.test(word) ? "an" : "a";
 }
 
 function text(value: unknown): string | null {
@@ -93,7 +97,10 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
         icon: "research",
       };
     }
-    case "search_context": {
+    case "search_documents":
+    // Earlier names of the same tool, still in the log.
+    case "search_context":
+    case "search_company_context": {
       const query = text(input.query);
       if (!ok) return failed("Tried to look something up in your documents");
       return {
@@ -108,8 +115,8 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
       const kind = text(input.kind)?.replace(/_/g, " ") ?? "something";
       if (!ok) return failed("Tried to write a draft");
       return {
-        title: title ? `Drafted ${clip(title, 70)}` : `Drafted a ${kind}`,
-        detail: `Saved as a ${kind}. Nothing was sent.`,
+        title: title ? `Drafted “${clip(title, 70)}”` : `Drafted ${article(kind)} ${kind}`,
+        detail: `Saved as ${article(kind)} ${kind}. Nothing was sent.`,
         tone: "neutral",
         icon: "draft",
       };
@@ -134,6 +141,44 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
             icon: "approval",
           }
         : { title: "Sent an email", detail: null, tone: "positive", icon: "send" };
+    case "calendar_create_event": {
+      if (!ok) return failed("Tried to add a calendar event");
+      const summary = text(input.summary);
+      return gated
+        ? {
+            title: "Queued a calendar event for your approval",
+            detail: `${summary ? `${clip(summary, 80)}. ` : ""}It waits in the Inbox. Nothing is on the calendar yet.`,
+            tone: "warning",
+            icon: "approval",
+          }
+        : { title: "Added a calendar event", detail: summary ? clip(summary, 120) : null, tone: "positive", icon: "schedule" };
+    }
+    case "slack_post_message":
+      if (!ok) return failed("Tried to post to Slack");
+      return gated
+        ? {
+            title: "Queued a Slack message for your approval",
+            detail: "It waits in the Inbox. Nothing has been posted.",
+            tone: "warning",
+            icon: "approval",
+          }
+        : { title: "Posted to Slack", detail: text(input.channel) ? `In ${text(input.channel)}.` : null, tone: "positive", icon: "send" };
+    case "suggest_opportunity": {
+      if (!ok) return failed("Tried to raise a suggestion");
+      const title = text(input.title);
+      return {
+        title: "Raised a suggestion in your Inbox",
+        detail: title ? clip(title, 120) : null,
+        tone: "accent",
+        icon: "note",
+      };
+    }
+    case "calendar_list_events":
+      return ok
+        ? { title: "Checked the calendar", detail: null, tone: "neutral", icon: "schedule" }
+        : failed("Tried to check the calendar");
+    case "github_read":
+      return ok ? { title: "Read from GitHub", detail: null, tone: "neutral", icon: "research" } : failed("Tried to read from GitHub");
     case "schedule_followup": {
       const objective = text(input.objective);
       return {
@@ -141,6 +186,17 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
         detail: objective ? clip(objective, 120) : null,
         tone: "neutral",
         icon: "schedule",
+      };
+    }
+    case "delegate_to_colleague": {
+      if (!ok) return failed("Tried to hand work to a colleague");
+      const colleague = result?.match(/^Delegated task to (.+?) \(/)?.[1] ?? "a colleague";
+      const task = text(input.task);
+      return {
+        title: `Handed work to ${colleague}`,
+        detail: task ? clip(task, 140) : null,
+        tone: "accent",
+        icon: "person",
       };
     }
     case "escalate_to_human": {
@@ -161,6 +217,13 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
       };
   }
 }
+
+const FAILED_DELIVERY: Record<string, string> = {
+  publish_post: "A post could not be published",
+  send_email: "An email could not be sent",
+  calendar_create_event: "A calendar event could not be added",
+  slack_post_message: "A Slack message could not be posted",
+};
 
 /** One audit row, said in the owner's language. */
 export function describeAuditEntry(entry: AuditLike): AuditDescription {
@@ -243,10 +306,16 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: "Published a post", detail: text(meta.detail), tone: "positive", icon: "publish" };
     case "send_email.delivered":
       return { title: "Sent an approved email", detail: text(meta.detail), tone: "positive", icon: "send" };
+    case "calendar_create_event.delivered":
+      return { title: "Added an approved calendar event", detail: text(meta.detail), tone: "positive", icon: "schedule" };
+    case "slack_post_message.delivered":
+      return { title: "Posted an approved message to Slack", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "publish_post.failed":
     case "send_email.failed":
+    case "calendar_create_event.failed":
+    case "slack_post_message.failed":
       return {
-        title: entry.action.startsWith("publish") ? "A post could not be published" : "An email could not be sent",
+        title: FAILED_DELIVERY[entry.action.slice(0, -".failed".length)] ?? "Something could not be sent",
         detail: text(meta.detail) ?? "The connection returned an error. Check it under Integrations.",
         tone: "danger",
         icon: "settings",
@@ -362,13 +431,12 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
   }
 }
 
-/** "9:03am", the way the timeline shows a time of day. */
+/** "09:03", the way the timeline shows a time of day in 24-hour local time. */
 export function timeOfDay(iso: string, locale?: string): string {
   const date = new Date(iso);
   return date
-    .toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" })
-    .replace(/\s/g, "")
-    .toLowerCase();
+    .toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hour12: false })
+    .replace(/\s/g, "");
 }
 
 /** "Today" / "Yesterday" / "23 September" - the heading a day's rows sit under. */

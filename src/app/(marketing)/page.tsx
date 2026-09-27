@@ -9,14 +9,15 @@ import { defaultProject } from "@/lib/projects";
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import {
-  AuditTrail,
   ComparisonTable,
   Faq,
   MetricTiles,
+  ProductShotImage,
   RoleGrid,
   Steps,
   Testimonials,
   TrustGrid,
+  TrustShots,
   TrustStrip,
   metricsReady,
 } from "@/components/marketing/landing-blocks";
@@ -163,18 +164,18 @@ export default async function LandingPage({
 
       {/* Trust & control ---------------------------------------------------- */}
       <Section id="trust" labelledBy="trust-heading" className="bg-accent text-accent-fg">
-        <div className="grid items-end gap-10 lg:grid-cols-[1.2fr_1fr]">
-            <SectionHeader
-              id="trust-heading"
-              align="left"
-              tone="inverse"
-              eyebrow={trust.eyebrow}
-              heading={trust.heading}
-              intro={trust.intro}
-            />
-          <AuditTrail />
-        </div>
+        <SectionHeader
+          id="trust-heading"
+          align="left"
+          tone="inverse"
+          eyebrow={trust.eyebrow}
+          heading={trust.heading}
+          intro={trust.intro}
+        />
         <div className="mt-12">
+          <TrustShots shots={trust.shots} />
+        </div>
+        <div className="mt-16">
           <TrustGrid items={trust.items} />
         </div>
       </Section>
@@ -260,10 +261,18 @@ export default async function LandingPage({
                   ) : null}
                   <h3 className="text-lg font-semibold tracking-tight text-ink">{plan.name}</h3>
                   <p className="mt-1 min-h-10 text-sm text-ink-muted">{plan.blurb}</p>
-                  <p className="mt-5 text-display font-medium tracking-tight text-ink">
-                    ${plan.priceUsd}
+                  <div className="mt-5 flex items-baseline gap-2">
+                    <span className="text-display font-medium tracking-tight text-ink">
+                      ${plan.priceUsd}
+                    </span>
+                    {plan.originalPriceUsd ? (
+                      <span className="text-xl font-normal text-ink-muted line-through decoration-line-strong">
+                        <span className="sr-only">Original price: </span>
+                        ${plan.originalPriceUsd}
+                      </span>
+                    ) : null}
                     <span className="text-sm font-normal tracking-normal text-ink-muted"> / month</span>
-                  </p>
+                  </div>
                   <ul className="mt-6 space-y-2.5 text-sm text-ink-muted">
                     {[
                       `${plan.limits.publishedAgents} published agent${plan.limits.publishedAgents === 1 ? "" : "s"}`,
@@ -285,6 +294,12 @@ export default async function LandingPage({
             );
           })}
         </div>
+        {pricing.proof ? (
+          <figure className="mx-auto mt-12 max-w-4xl">
+            <ProductShotImage image={pricing.proof.image} alt="The Roster's summary of the last seven days" sizes="(min-width: 896px) 896px, 100vw" />
+            <figcaption className="mt-3 text-center text-sm text-ink-muted">{pricing.proof.caption}</figcaption>
+          </figure>
+        ) : null}
         <p className="mt-8 text-center text-sm text-ink-muted">{pricing.footnote}</p>
         <p className="mt-2 text-center text-sm text-ink-muted">{pricing.reassurance}</p>
       </Section>

@@ -10,7 +10,7 @@ import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { env } from "@/lib/env";
 
-export interface StoredFile {
+interface StoredFile {
   /** Opaque handle. Only this module knows how to read it. */
   storageKey: string;
   sizeBytes: number;

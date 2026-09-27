@@ -10,9 +10,9 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
-export type AuditActorType = "user" | "agent" | "system" | "schedule";
+type AuditActorType = "user" | "agent" | "system" | "schedule";
 
-export interface AuditEntry {
+interface AuditEntry {
   organizationId?: string | null;
   actorType: AuditActorType;
   actorId?: string | null;

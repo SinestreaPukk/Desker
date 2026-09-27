@@ -134,7 +134,7 @@ async function main() {
         "Record feature requests clients raise",
       ],
       allowedTools: [
-        "search_company_context",
+        "search_documents",
         "log_issue",
         "log_suggestion",
         "escalate_to_human",

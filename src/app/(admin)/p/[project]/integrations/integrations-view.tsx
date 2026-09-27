@@ -31,7 +31,7 @@ import { TEMPLATES } from "@/lib/content";
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { integrationInputSchema } from "@/lib/work/validation";
 import { validate } from "@/lib/form-errors";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
 import type { IntegrationDto } from "@/lib/work/serialize";
 
 /**
@@ -102,7 +102,9 @@ export function IntegrationsView({ project }: { project: string }) {
             ) : list.data && list.data.length > 0 ? (
               <ul className="grid gap-2 lg:grid-cols-2">
                 {list.data.map((row) => (
-                  <li key={row.id}>
+                  // min-w-0: a grid item otherwise refuses to shrink below its
+                  // one-line summary, and the page scrolls sideways on a phone.
+                  <li key={row.id} className="min-w-0">
                     <ConnectionRow
                       row={row}
                       onRemove={() => setRemoving({ id: row.id, name: row.name })}
@@ -151,7 +153,7 @@ export function IntegrationsView({ project }: { project: string }) {
               <details
                 key={`${category.id}-${role}`}
                 open={role !== "all"}
-                className="group mt-4 rounded-xl border border-line bg-surface"
+                className="group mt-4 rounded-lg border border-line bg-surface"
               >
                 <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
                   <ChevronRight className="size-4 shrink-0 text-ink-subtle transition-transform group-open:rotate-90" aria-hidden />
@@ -197,7 +199,7 @@ export function IntegrationsView({ project }: { project: string }) {
           })}
 
           {planned.length > 0 ? (
-            <details className="group mt-8 rounded-xl border border-dashed border-line">
+            <details className="group mt-8 rounded-lg border border-dashed border-line">
               <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
                 <ChevronRight className="size-4 shrink-0 text-ink-subtle transition-transform group-open:rotate-90" aria-hidden />
                 <h2 className="text-sm font-semibold text-ink-muted">Coming soon</h2>
@@ -275,7 +277,7 @@ function ConnectionRow({
   const KindIcon = row.type === "webhook" ? Webhook : row.type === "email" ? Mail : Plug;
 
   return (
-    <div className="rounded-xl border border-line p-3 transition-colors hover:bg-surface-2/50">
+    <div className="rounded-lg border border-line p-3 transition-colors hover:bg-surface-2/50">
       <div className="flex items-start gap-3">
         <span
           aria-hidden
@@ -295,8 +297,14 @@ function ConnectionRow({
             {row.consequence}
           </p>
           <p className="mt-1 truncate text-xs text-ink-subtle">
-            {row.summary} · added {formatRelativeTime(row.createdAt)}
-            {row.lastDeliveryAt ? ` · last used ${formatRelativeTime(row.lastDeliveryAt)}` : ""}
+            {row.summary} · added{" "}
+            <span title={formatDateTime(row.createdAt)}>{formatRelativeTime(row.createdAt)}</span>
+            {row.lastDeliveryAt ? (
+              <>
+                {" "}· last used{" "}
+                <span title={formatDateTime(row.lastDeliveryAt)}>{formatRelativeTime(row.lastDeliveryAt)}</span>
+              </>
+            ) : ""}
           </p>
         </div>
         <Button

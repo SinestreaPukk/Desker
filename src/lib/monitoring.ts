@@ -13,7 +13,7 @@ export function monitoringEnabled(): boolean {
   return Boolean(process.env.SENTRY_DSN?.trim() || process.env.NEXT_PUBLIC_SENTRY_DSN?.trim());
 }
 
-export interface ErrorContext {
+interface ErrorContext {
   organizationId?: string | null;
   agentId?: string | null;
   actionItemId?: string | null;

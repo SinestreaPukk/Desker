@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { canSeeConversation } from "@/lib/projects";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { publishAdminEvent } from "@/lib/events";
 
@@ -21,6 +22,9 @@ export async function PATCH(request: Request, { params }: Params) {
     const session = await requireAdmin();
     const { conversationId } = await params;
     const input = await parseJson(request, modeSchema);
+    if (!(await canSeeConversation(conversationId, session.userId))) {
+      throw new HttpError(404, "That conversation no longer exists.");
+    }
 
     const conversation = await prisma.conversation
       .update({

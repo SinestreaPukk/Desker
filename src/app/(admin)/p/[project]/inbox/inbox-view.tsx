@@ -16,6 +16,7 @@ import {
   UserRound,
   UserRoundCheck,
 } from "lucide-react";
+import { Panel } from "@/components/ui/panel";
 import { ApprovalCard } from "@/components/work/approval-card";
 import { DigestCard } from "@/components/work/digest-card";
 import { SuggestionRow } from "@/components/work/suggestion-row";
@@ -47,12 +48,12 @@ import {
 import { errorMessage } from "@/lib/api-client";
 import type { ConversationSummaryDto, IssueDto } from "@/lib/serialize";
 import { ISSUE_KINDS, issueKind } from "@/lib/issue-kinds";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 
 function TabCount({ value, tone, label }: { value: number; tone: "accent" | "danger" | "warning"; label: string }) {
   if (value === 0) return null;
   return (
-    <Badge tone={tone} className="ml-1.5 px-2 py-0 text-[11px] font-bold shadow-2xs" aria-label={`${value} ${label}`}>
+    <Badge tone={tone} className="ml-1.5 px-2 py-0 text-meta font-bold" aria-label={`${value} ${label}`}>
       {value}
     </Badge>
   );
@@ -90,13 +91,18 @@ function ClearAll({ targets, noun }: { targets: RemoveTarget[]; noun: string }) 
   );
 }
 
-export function InboxView({ project }: { project: string }) {
+const INBOX_TABS = ["conversations", "approvals", "issues", "suggestions", "updates"] as const;
+type InboxTab = (typeof INBOX_TABS)[number];
+
+export function InboxView({ project, initialTab }: { project: string; initialTab?: string }) {
   // Tabs are ordered by usage frequency: Conversations is first, followed by Approvals, Issues, Suggestions, and Updates.
-  const [tab, setTab] = React.useState<"conversations" | "approvals" | "issues" | "suggestions" | "updates">(
-    "conversations",
+  // ?tab= opens another one, so a link can land on what it points at.
+  const [tab, setTab] = React.useState<InboxTab>(() =>
+    (INBOX_TABS as readonly string[]).includes(initialTab ?? "") ? (initialTab as InboxTab) : "conversations",
   );
 
-  const awaiting = useActionItems({ project, status: "needs_approval" }, { refetchInterval: 10_000 });
+  // Only counted here; the Approvals tab fetches the full items it renders.
+  const awaiting = useActionItems({ project, status: "needs_approval", view: "list" }, { refetchInterval: 10_000 });
   const openConversations = useConversations({ project, status: "open" });
   const openIssues = useIssues({ project, status: "open" });
   const openSuggestions = useSuggestions({ project, status: "open" });
@@ -162,27 +168,22 @@ export function InboxView({ project }: { project: string }) {
         >
           <TabsList className="w-max">
             <TabsTrigger value="conversations">
-              <BotMessageSquare aria-hidden />
               Conversations
               <TabCount value={counts.conversations} tone="accent" label="open" />
             </TabsTrigger>
             <TabsTrigger value="approvals">
-              <ShieldCheck aria-hidden />
               Approvals
               <TabCount value={counts.approvals} tone="warning" label="waiting" />
             </TabsTrigger>
             <TabsTrigger value="issues" className="whitespace-nowrap">
-              <AlertCircle aria-hidden />
               Issues
               <TabCount value={counts.issues} tone="danger" label="open" />
             </TabsTrigger>
             <TabsTrigger value="suggestions" className="whitespace-nowrap">
-              <Sparkles aria-hidden />
               Suggestions
               <TabCount value={counts.suggestions} tone="accent" label="open" />
             </TabsTrigger>
             <TabsTrigger value="updates">
-              <Radio aria-hidden />
               Updates
               <TabCount value={counts.updates} tone="accent" label="unread" />
             </TabsTrigger>
@@ -323,13 +324,15 @@ function ConversationList({
           noun="conversation"
         />
       ) : null}
-      <ul className="space-y-2.5">
-        {data!.map((conversation) => (
-          <li key={conversation.id}>
-            <ConversationRow conversation={conversation} project={project} />
-          </li>
-        ))}
-      </ul>
+      <Panel className="overflow-hidden">
+        <ul>
+          {data!.map((conversation) => (
+            <li key={conversation.id} className="group/row">
+              <ConversationRow conversation={conversation} project={project} />
+            </li>
+          ))}
+        </ul>
+      </Panel>
     </div>
   );
 }
@@ -400,7 +403,11 @@ function ConversationRow({
           {conversation.messageCount} messages
         </span>
       }
-      aside={formatRelativeTime(conversation.lastMessageAt)}
+      aside={
+        <span title={formatDateTime(conversation.lastMessageAt)}>
+          {formatTime(conversation.lastMessageAt)} · {formatRelativeTime(conversation.lastMessageAt)}
+        </span>
+      }
       trailing={<RemoveButton targets={[{ kind: "conversation", id: conversation.id }]} what="this conversation" />}
     />
   );
@@ -466,23 +473,25 @@ function IssueList({
       {filters.status === "resolved" ? (
         <ClearAll targets={filteredIssues.map((issue) => ({ kind: "issue" as const, id: issue.id }))} noun="issue" />
       ) : null}
-      <ul className="space-y-2.5">
-        {filteredIssues.map((issue) => (
-          <li key={`issue-${issue.id}`}>
-            <IssueRow
-              issue={issue}
-              project={project}
-              pending={setStatus.isPending && setStatus.variables?.issueId === issue.id}
-              onToggle={() =>
-                setStatus.mutate({
-                  issueId: issue.id,
-                  status: issue.status === "open" ? "resolved" : "open",
-                })
-              }
-            />
-          </li>
-        ))}
-      </ul>
+      <Panel className="overflow-hidden">
+        <ul>
+          {filteredIssues.map((issue) => (
+            <li key={`issue-${issue.id}`} className="group/row">
+              <IssueRow
+                issue={issue}
+                project={project}
+                pending={setStatus.isPending && setStatus.variables?.issueId === issue.id}
+                onToggle={() =>
+                  setStatus.mutate({
+                    issueId: issue.id,
+                    status: issue.status === "open" ? "resolved" : "open",
+                  })
+                }
+              />
+            </li>
+          ))}
+        </ul>
+      </Panel>
     </div>
   );
 }
@@ -503,34 +512,38 @@ function IssueRow({
   const Icon = { bug: AlertCircle, lightbulb: Sparkles, handoff: UserRoundCheck, alert: TriangleAlert }[kind.icon];
 
   return (
+    // Mail's shape: who it is from on top (the agent, with their face), then
+    // what it is about, then the detail.
     <ListRow
       muted={resolved}
       leading={
-        <RowIcon>
-          <Icon />
-        </RowIcon>
+        issue.agent ? (
+          <AgentAvatar name={issue.agent.name} src={issue.agent.avatarUrl} seed={issue.agent.id} size="md" />
+        ) : (
+          <RowIcon>
+            <Icon />
+          </RowIcon>
+        )
       }
-      title={issue.summary}
-      badges={
-        <>
-          <Badge tone={kind.tone}>
-            <Icon aria-hidden />
-            {kind.label}
-          </Badge>
-          {issue.type === "escalation" ? null : <SeverityBadge severity={issue.severity} />}
-          {resolved ? <StatusBadge status="resolved" /> : null}
-        </>
-      }
+      title={issue.agent?.name ?? "Unassigned"}
+      aside={<span title={formatDateTime(issue.createdAt)}>{formatRelativeTime(issue.createdAt)}</span>}
       body={
-        issue.details ? <p className="line-clamp-3 whitespace-pre-wrap text-ink-muted">{issue.details}</p> : null
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="font-medium text-ink">{issue.summary}</p>
+            <Badge tone={kind.tone}>
+              <Icon aria-hidden />
+              {kind.label}
+            </Badge>
+            {issue.type === "escalation" ? null : <SeverityBadge severity={issue.severity} />}
+            {resolved ? <StatusBadge status="resolved" /> : null}
+          </div>
+          {issue.details ? <p className="line-clamp-3 whitespace-pre-wrap text-ink-muted">{issue.details}</p> : null}
+        </div>
       }
       meta={
         <>
-          {issue.agent ? <span>{issue.agent.name}</span> : null}
-          <span aria-hidden>·</span>
-          <span>{issue.source === "agent" ? "raised by the agent" : "raised by a client"}</span>
-          <span aria-hidden>·</span>
-          <span>{formatRelativeTime(issue.createdAt)}</span>
+          <span>{issue.source === "agent" ? "Raised by the agent" : "Raised by a client"}</span>
           <span aria-hidden>·</span>
           {issue.conversationId ? (
             <Link href={`/p/${project}/inbox/${issue.conversationId}`} className="text-accent hover:underline">
@@ -686,11 +699,15 @@ function SuggestionList({
           noun="suggestion"
         />
       ) : null}
-      <ul className="space-y-2.5">
-        {rows.map((row) => (
-          <li key={row.key}>{row.node}</li>
-        ))}
-      </ul>
+      <Panel className="overflow-hidden">
+        <ul>
+          {rows.map((row) => (
+            <li key={row.key} className="group/row">
+              {row.node}
+            </li>
+          ))}
+        </ul>
+      </Panel>
     </div>
   );
 }
@@ -766,7 +783,7 @@ function ApprovalList({ project, agentId }: { project: string; agentId: string }
       <EmptyState
         icon={ShieldCheck}
         title="Nothing waiting for approval"
-        description="When an agent in draft-only mode is ready to publish a post or send an email, it lands here with the full text for you to approve, edit, or reject."
+        description="When an agent is ready to send an email, publish a post, add a calendar event or post to Slack, it lands here first, exactly as it would go out, for you to approve, edit or reject."
       />
     );
   }

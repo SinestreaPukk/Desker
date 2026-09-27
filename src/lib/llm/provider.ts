@@ -19,7 +19,7 @@ export interface ToolCall {
   input: Record<string, unknown>;
 }
 
-export interface ToolResultPayload {
+interface ToolResultPayload {
   id: string;
   name: string;
   content: string;
@@ -44,7 +44,7 @@ export type ChatMessage =
 
 // --- tools ------------------------------------------------------------------
 
-export interface JsonObjectSchema {
+interface JsonObjectSchema {
   type: "object";
   properties: Record<string, unknown>;
   required?: string[];
@@ -59,7 +59,7 @@ export interface ToolDefinition {
 
 // --- streaming events -------------------------------------------------------
 
-export interface TokenUsage {
+interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
 }
@@ -145,7 +145,6 @@ export const DEFAULT_MAX_TOKENS = 8192;
 // --- registry ---------------------------------------------------------------
 
 export const PROVIDER_IDS = ["anthropic", "openai"] as const;
-export type ProviderId = (typeof PROVIDER_IDS)[number];
 
 /**
  * Lazily imported so that a deployment with only an Anthropic key never loads

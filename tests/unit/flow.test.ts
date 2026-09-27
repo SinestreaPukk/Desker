@@ -35,10 +35,10 @@ describe("the shape of the flow", () => {
   });
 
   it("keeps the tool registry's order however the tools were ticked", () => {
-    const nodes = buildScopeFlow(input({ tools: ["send_email", "search_context", "web_research"] }));
+    const nodes = buildScopeFlow(input({ tools: ["send_email", "search_documents", "web_research"] }));
     const tools = nodes.filter((node) => node.kind === "tool").map((node) => node.tool);
     expect(tools).toEqual(
-      WORK_TOOL_IDS.filter((id) => ["send_email", "search_context", "web_research"].includes(id)),
+      WORK_TOOL_IDS.filter((id) => ["send_email", "search_documents", "web_research"].includes(id)),
     );
   });
 

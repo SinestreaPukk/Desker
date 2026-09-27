@@ -104,7 +104,7 @@ describe("executeToolCall", () => {
     const result = await executeToolCall(
       { id: "t1", name: "log_issue", input: { summary: "x", severity: "low", details: "y" } },
       context,
-      ["search_company_context"],
+      ["search_documents"],
     );
     expect(result.isError).toBe(true);
     expect(result.content).toContain("not permitted");
@@ -239,7 +239,7 @@ describe("executeToolCall", () => {
 
   it("returns retrieved passages with their source filenames", async () => {
     const result = await executeToolCall(
-      { id: "t1", name: "search_company_context", input: { query: "returns" } },
+      { id: "t1", name: "search_documents", input: { query: "returns" } },
       context,
       ALL,
     );
@@ -250,7 +250,7 @@ describe("executeToolCall", () => {
 
   it("tells the agent to admit ignorance when retrieval finds nothing", async () => {
     const result = await executeToolCall(
-      { id: "t1", name: "search_company_context", input: { query: "nothing here" } },
+      { id: "t1", name: "search_documents", input: { query: "nothing here" } },
       context,
       ALL,
     );
@@ -260,12 +260,12 @@ describe("executeToolCall", () => {
 
   it("records every search, so the misses can be reviewed later", async () => {
     await executeToolCall(
-      { id: "t1", name: "search_company_context", input: { query: "returns" } },
+      { id: "t1", name: "search_documents", input: { query: "returns" } },
       context,
       ALL,
     );
     await executeToolCall(
-      { id: "t2", name: "search_company_context", input: { query: "nothing here" } },
+      { id: "t2", name: "search_documents", input: { query: "nothing here" } },
       context,
       ALL,
     );

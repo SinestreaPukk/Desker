@@ -259,7 +259,7 @@ function ContextHeading({ description }: { description: string }) {
     <>
       <span
         aria-hidden
-        className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-accent-line/60 bg-accent-soft/60 text-accent-soft-fg shadow-2xs [&_svg]:size-5"
+        className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-accent-line/60 bg-accent-soft/60 text-accent-soft-fg [&_svg]:size-5"
       >
         <Building />
       </span>

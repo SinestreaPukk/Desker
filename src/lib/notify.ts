@@ -15,14 +15,14 @@ import "server-only";
 import { afterResponse } from "@/lib/after-response";
 import { env } from "@/lib/env";
 
-export type NotificationKind =
+type NotificationKind =
   | "escalation"
   | "critical_issue"
   | "handoff_reply"
   | "run_failed"
   | "feedback";
 
-export interface Notification {
+interface Notification {
   kind: NotificationKind;
   title: string;
   /** Plain-text body. Kept short - this lands in a chat channel. */

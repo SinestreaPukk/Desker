@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { agentsVisibleTo } from "@/lib/projects";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { publishAdminEvent } from "@/lib/events";
 import { refreshSummaryInBackground } from "@/lib/summarize";
@@ -33,8 +34,8 @@ export async function POST(request: Request, { params }: Params) {
     const { conversationId } = await params;
     const input = await parseJson(request, replySchema);
 
-    const conversation = await prisma.conversation.findUnique({
-      where: { id: conversationId },
+    const conversation = await prisma.conversation.findFirst({
+      where: { id: conversationId, agent: agentsVisibleTo(session.userId) },
       select: { id: true, agentId: true, replyMode: true },
     });
     if (!conversation) throw new HttpError(404, "That conversation no longer exists.");

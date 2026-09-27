@@ -27,7 +27,7 @@ import {
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { describeCadence } from "@/lib/work/cadence";
 import type { ScopeDto } from "@/lib/work/scope";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 import { ContextDraftButton, InheritedProjectContext } from "./context-questions";
 import { ScopeFlow } from "./scope-flow";
 import { HelpLink } from "@/components/help/help-panel";
@@ -321,7 +321,7 @@ function ScopeEditor({
               />
               {scope.lastDigestAt ? (
                 <p className="mt-2 text-xs text-ink-muted">
-                  Last update {formatRelativeTime(scope.lastDigestAt)}.
+                  Last update {formatDateTime(scope.lastDigestAt)}.
                 </p>
               ) : null}
             </div>
@@ -331,8 +331,8 @@ function ScopeEditor({
         {scope.triggerType === "cron" && scope.nextFireAt ? (
           <p className="text-xs text-ink-muted">
             {describeCadence(scope.cron, scope.timezone)}. Next run{" "}
-            {formatRelativeTime(scope.nextFireAt)}
-            {scope.lastFiredAt ? `; last fired ${formatRelativeTime(scope.lastFiredAt)}` : ""}.
+            {formatDateTime(scope.nextFireAt)} ({formatRelativeTime(scope.nextFireAt)})
+            {scope.lastFiredAt ? `; last fired ${formatDateTime(scope.lastFiredAt)}` : ""}.
           </p>
         ) : null}
         <div className="border-t border-line pt-4">
@@ -356,8 +356,8 @@ function ScopeEditor({
                     <span className="text-ink">
                       {TRIGGER_LABELS[item.trigger] ?? "Manual"} run
                     </span>
-                    <span className="ml-2 text-xs text-ink-muted">
-                      {formatRelativeTime(item.createdAt)}
+                    <span className="ml-2 text-xs text-ink-muted" title={formatDateTime(item.createdAt)}>
+                      {formatTime(item.createdAt)} · {formatRelativeTime(item.createdAt)}
                     </span>
                     {(item.headline ?? item.summary) ? (
                       <p className="mt-0.5 truncate text-xs text-ink-muted">

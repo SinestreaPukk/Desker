@@ -6,30 +6,35 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// On touch screens the small sizes get an invisible hit area reaching 44px,
+// so a row of 28-32px buttons (Remove, Snooze) is not a row of mis-taps.
+const touchArea = "pointer-coarse:after:absolute pointer-coarse:after:content-['']";
+
 const button = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium " +
-    "transition-all duration-150 " +
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium " +
+    // The press is the feedback: it lands on pointer-down, 150ms, strong ease-out.
+    "transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 ease-out " +
     "disabled:pointer-events-none disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         primary:
-          "bg-accent text-accent-fg hover:bg-accent-hover shadow-xs hover:shadow-sm active:scale-[0.98] ring-1 ring-inset ring-white/20 dark:ring-white/10",
+          "bg-accent text-accent-fg hover:bg-accent-hover shadow-xs hover:shadow-sm active:scale-[0.97] ring-1 ring-inset ring-white/20 dark:ring-white/10",
         secondary:
-          "bg-surface text-ink border border-line hover:border-line-strong hover:bg-surface-2 shadow-xs active:scale-[0.98]",
-        ghost: "text-ink-muted hover:bg-surface-2 hover:text-ink active:scale-[0.98]",
-        subtle: "bg-surface-2 text-ink hover:bg-surface-3 active:scale-[0.98]",
+          "bg-surface text-ink border border-line hover:border-line-strong hover:bg-surface-2 shadow-xs active:scale-[0.97]",
+        ghost: "text-ink-muted hover:bg-surface-2 hover:text-ink active:scale-[0.97]",
+        subtle: "bg-surface-2 text-ink hover:bg-surface-3 active:scale-[0.97]",
         danger:
-          "bg-danger text-danger-fg hover:brightness-110 shadow-xs hover:shadow-sm active:scale-[0.98] ring-1 ring-inset ring-white/20",
+          "bg-danger text-danger-fg hover:brightness-110 shadow-xs hover:shadow-sm active:scale-[0.97] ring-1 ring-inset ring-white/20",
         link: "text-accent underline underline-offset-4 hover:text-accent-hover",
       },
       size: {
-        sm: "h-8 px-3 text-sm [&_svg]:size-3.5",
+        sm: `h-8 px-3 text-sm [&_svg]:size-3.5 ${touchArea} pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-1.5`,
         md: "h-10 px-4 text-sm [&_svg]:size-4",
         lg: "h-12 px-6 text-base [&_svg]:size-[1.125rem]",
-        icon: "size-9 [&_svg]:size-4",
-        "icon-sm": "size-7 [&_svg]:size-3.5",
+        icon: `size-9 [&_svg]:size-4 ${touchArea} pointer-coarse:after:-inset-1`,
+        "icon-sm": `size-7 [&_svg]:size-3.5 ${touchArea} pointer-coarse:after:-inset-2`,
       },
     },
     defaultVariants: { variant: "primary", size: "md" },

@@ -8,7 +8,7 @@
 import { BRAND } from "@/lib/brand";
 import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
 
-export interface AgentPromptInput {
+interface AgentPromptInput {
   name: string;
   jobTitle: string;
   department?: string | null;
@@ -45,9 +45,9 @@ function bulletList(items: string[]): string {
  * model what a tool does; this tells it how this role is expected to use it.
  */
 const TOOL_GUIDANCE: Record<ToolId, string> = {
-  search_company_context:
-    "You have company and client documents available through `search_company_context`. " +
-    "The company context above is always in front of you, so never search for it; search " +
+  search_documents:
+    "You have uploaded documents available through `search_documents`. " +
+    "The company context above is always in front of you and is in no document, so never search for it; search " +
     "the documents before answering anything specific they may cover - products, pricing, " +
     "policies, procedures, accounts. Do not answer such questions from memory, and do not " +
     "guess at a number, a date, or a policy you have not read. When an answer comes from a " +
@@ -185,12 +185,12 @@ export function buildSystemPrompt(input: AgentPromptInput): string {
     );
   }
 
-  if (allowed.includes("search_company_context") && input.documentNames?.length) {
+  if (allowed.includes("search_documents") && input.documentNames?.length) {
     parts.push(
       section(
         "Documents you can search",
         bulletList(input.documentNames) +
-          "\n\nThese are searchable through `search_company_context`. Their contents are not " +
+          "\n\nThese are searchable through `search_documents`. Their contents are not " +
           "in front of you until you search.",
       ),
     );
@@ -235,7 +235,7 @@ export function buildSystemPrompt(input: AgentPromptInput): string {
   return parts.join("\n\n");
 }
 
-export interface CompanyContextPromptInput {
+interface CompanyContextPromptInput {
   name: string;
   jobTitle: string;
   department?: string | null;
@@ -282,7 +282,7 @@ export function buildCompanyContextPrompt(input: CompanyContextPromptInput): str
       section(
         "Documents you can search",
         bulletList(input.documentNames) +
-          "\n\nThese documents are searchable through `search_company_context`. " +
+          "\n\nThese documents are searchable through `search_documents`. " +
           "When asked anything that might be in these documents, search them before answering. " +
           "When citing information, mention the document filename in plain words so the team member knows where it came from.",
       ),

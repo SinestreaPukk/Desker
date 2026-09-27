@@ -98,6 +98,23 @@
     "eyebrow": "Trust & control",
     "heading": "It asks before it acts",
     "intro": "Handing work to an AI is a bigger ask than trying another app. So an agent drafts, and a person decides.",
+    "shots": [
+      {
+        "image": "approval",
+        "title": "Nothing goes out until you approve it",
+        "body": "Every email, post, calendar event and Slack message waits with its full text. Approve, edit or reject."
+      },
+      {
+        "image": "boundaries",
+        "title": "It can, it can't - on every agent",
+        "body": "Each agent's page says exactly what it does on its own and what it never does without you."
+      },
+      {
+        "image": "handoff-thread",
+        "title": "Hand-offs you can follow",
+        "body": "When one agent asks another for help, the whole exchange is one thread in the Audit log."
+      }
+    ],
     "items": [
       {
         "icon": "draft",
@@ -205,7 +222,11 @@
     "popularPlan": "starter",
     "popularLabel": "Most popular",
     "footnote": "Every plan includes all 8 roles, unlimited teammates, the full audit log and email support.",
-    "reassurance": "No credit card to start · Change or cancel anytime, in one click"
+    "reassurance": "No credit card to start · Change or cancel anytime, in one click",
+    "proof": {
+      "image": "activity",
+      "caption": "On every plan, the Roster opens on your week: what got done, what went out and on whose say-so, and what is waiting for you."
+    }
   },
   "faq": {
     "eyebrow": "FAQ",

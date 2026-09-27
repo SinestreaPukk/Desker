@@ -13,7 +13,7 @@ import { audit } from "@/lib/audit";
 import { env } from "@/lib/env";
 import type { OrganizationRole } from "@/lib/organizations";
 
-export const INVITE_TTL_DAYS = 7;
+const INVITE_TTL_DAYS = 7;
 
 export function inviteUrl(token: string, origin?: string): string {
   return `${env.appUrl || origin || ""}/invite/${token}`;

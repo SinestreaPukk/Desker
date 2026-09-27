@@ -4,7 +4,7 @@ import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { storage } from "@/lib/storage";
 import { syncVectorColumn } from "@/lib/rag/retriever";
 import { toAgentDetail } from "@/lib/serialize";
-import { findProjectById } from "@/lib/projects";
+import { findProjectById, agentsVisibleTo } from "@/lib/projects";
 
 export const runtime = "nodejs";
 
@@ -32,8 +32,8 @@ export async function POST(request: Request, { params }: Params) {
     const { agentId } = await params;
     const input = await parseJson(request, duplicateSchema);
 
-    const source = await prisma.agent.findUnique({
-      where: { id: agentId },
+    const source = await prisma.agent.findFirst({
+      where: { id: agentId, ...agentsVisibleTo(userId) },
       include: {
         documents: {
           where: { status: "ready" },

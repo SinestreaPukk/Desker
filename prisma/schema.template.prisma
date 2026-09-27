@@ -331,7 +331,7 @@ model ConversationNote {
   @@index([conversationId, createdAt])
 }
 
-/// One `search_company_context` call. Kept so an admin can see which questions
+/// One `search_documents` call. Kept so an admin can see which questions
 /// the uploaded documents fail to answer - the list of things worth writing
 /// down next.
 model RetrievalLog {

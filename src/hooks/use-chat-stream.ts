@@ -69,7 +69,7 @@ function describeEffect(event: Extract<RuntimeEvent, { type: "tool_end" }>): str
 }
 
 const TOOL_LABELS: Record<string, string> = {
-  search_company_context: "Searching company documents",
+  search_documents: "Searching uploaded documents",
   log_issue: "Logging an issue",
   log_suggestion: "Logging a suggestion",
   escalate_to_human: "Escalating to a human",
@@ -79,7 +79,7 @@ export function toolLabel(name: string): string {
   return TOOL_LABELS[name] ?? name;
 }
 
-export interface UseChatStreamOptions {
+interface UseChatStreamOptions {
   endpoint: string;
   /** Merged into the POST body alongside `message`. */
   payload: Record<string, unknown>;

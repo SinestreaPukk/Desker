@@ -76,15 +76,9 @@ export function oauthConfigured(provider: OAuthProvider): boolean {
   return Boolean(process.env[spec.clientIdEnv]?.trim() && process.env[spec.clientSecretEnv]?.trim());
 }
 
-/** What an owner (or whoever deploys) needs to set for a provider to work. */
-export function oauthEnvNames(provider: OAuthProvider): string[] {
-  const spec = PROVIDERS[provider];
-  return [spec.clientIdEnv, spec.clientSecretEnv, ...(provider === "github" ? ["GITHUB_APP_SLUG"] : [])];
-}
-
 // --- state ------------------------------------------------------------------
 
-export interface OAuthState {
+interface OAuthState {
   organizationId: string;
   userId: string;
   connectorId: string;
@@ -142,7 +136,7 @@ export function authorizeUrl(provider: OAuthProvider, redirectUri: string, state
   return url.toString();
 }
 
-export interface ConnectorTokens {
+interface ConnectorTokens {
   accessToken: string;
   refreshToken?: string;
   /** Epoch ms; absent when the token does not expire. */

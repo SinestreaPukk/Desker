@@ -12,7 +12,7 @@
  */
 import { GUIDE_SOURCES } from "../../content/guides";
 
-export interface GuideSection {
+interface GuideSection {
   /** Slugified heading; the anchor a contextual link points at. */
   id: string;
   heading: string;
@@ -42,7 +42,7 @@ export function headingId(heading: string): string {
     .replace(/\s+/g, "-");
 }
 
-export function countWords(text: string): number {
+function countWords(text: string): number {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
 
@@ -105,7 +105,7 @@ export function sectionById(guide: Guide, id: string | null | undefined): GuideS
 
 // --- search -----------------------------------------------------------------
 
-export interface GuideMatch {
+interface GuideMatch {
   guide: Guide;
   /** The best-matching section, when the hit was inside one. */
   section: GuideSection | null;

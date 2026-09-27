@@ -6,9 +6,10 @@
  * accountable: look things up, record a problem, record an idea, hand off.
  */
 import type { ToolDefinition } from "@/lib/llm/provider";
+import { SEARCH_DOCUMENTS_TOOL } from "@/lib/rag/search-documents-tool";
 
 export const TOOL_IDS = [
-  "search_company_context",
+  "search_documents",
   "log_issue",
   "log_suggestion",
   "escalate_to_human",
@@ -32,10 +33,10 @@ export const TOOL_METADATA: Record<
     icon: "search" | "bug" | "lightbulb" | "handoff" | "transfer";
   }
 > = {
-  search_company_context: {
-    label: "Search company context",
+  search_documents: {
+    label: "Search uploaded documents",
     blurb:
-      "Look up answers in the documents you have uploaded for this agent. Turn this off and the agent can only rely on its persona.",
+      "Look up passages in the documents you have uploaded for this agent. Company Context is always in its instructions, so it never needs this for that.",
     icon: "search",
   },
   log_issue: {
@@ -64,27 +65,7 @@ export const TOOL_METADATA: Record<
 };
 
 export const TOOL_DEFINITIONS: Record<ToolId, ToolDefinition> = {
-  search_company_context: {
-    name: "search_company_context",
-    description:
-      "Search the company and client documents that have been provided to you for this role. " +
-      "Use this before answering any question about products, policies, pricing, procedures, or " +
-      "anything else specific to the company - do not answer from memory. Returns the most " +
-      "relevant excerpts with their source filenames. Call it more than once with different " +
-      "phrasings if the first search does not return what you need.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        query: {
-          type: "string",
-          description:
-            "The search query. Use the client's own wording plus any obvious synonyms.",
-        },
-      },
-      required: ["query"],
-      additionalProperties: false,
-    },
-  },
+  search_documents: SEARCH_DOCUMENTS_TOOL,
 
   log_issue: {
     name: "log_issue",

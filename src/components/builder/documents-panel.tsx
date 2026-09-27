@@ -140,7 +140,7 @@ export function DocumentsPanel({ agentId }: { agentId: string }) {
             {documents!.map((document) => (
               <li
                 key={document.id}
-                className="flex items-start gap-3 p-3 first:rounded-t-xl last:rounded-b-xl"
+                className="flex items-start gap-3 p-3 first:rounded-t-lg last:rounded-b-lg"
               >
                 <FileText
                   className="mt-0.5 size-4 shrink-0 text-ink-subtle"
@@ -216,7 +216,7 @@ interface SearchResponse {
 }
 
 /**
- * Shows exactly what `search_company_context` would return for a query. Being
+ * Shows exactly what `search_documents` would return for a query. Being
  * able to check retrieval before publishing is the difference between "the
  * agent is wrong" and "the document never indexed".
  */

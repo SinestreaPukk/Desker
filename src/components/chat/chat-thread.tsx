@@ -15,7 +15,7 @@ interface UserBubbleProps {
 const UserBubble = React.memo(function UserBubble({ content }: UserBubbleProps) {
   return (
     <li className="flex justify-end">
-      <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-accent px-4 py-2.5 text-sm leading-relaxed text-accent-fg shadow-2xs">
+      <div className="max-w-[85%] rounded-panel rounded-br-sm bg-accent px-4 py-2.5 text-sm leading-relaxed text-accent-fg">
         <span className="sr-only">You said: </span>
         <div className="space-y-2">
           <MessageText content={content} />
@@ -64,7 +64,7 @@ const AssistantBubble = React.memo(function AssistantBubble({
         {message.content.trim() ? (
           <div
             className={cn(
-              "space-y-2 rounded-2xl rounded-tl-sm border border-line bg-surface px-4 py-3 shadow-2xs",
+              "space-y-2 rounded-panel rounded-tl-sm border border-line bg-surface px-4 py-3 ",
               "text-sm leading-relaxed text-ink",
               message.streaming && "stream-caret",
             )}
@@ -230,8 +230,8 @@ export function TypingIndicator({ agentName }: { agentName: string }) {
         <span
           key={index}
           aria-hidden
-          className="size-1.5 animate-bounce rounded-full bg-ink-subtle"
-          style={{ animationDelay: `${index * 140}ms`, animationDuration: "900ms" }}
+          className="size-1.5 animate-pulse rounded-full bg-ink-subtle"
+          style={{ animationDelay: `${index * 200}ms`, animationDuration: "1.2s" }}
         />
       ))}
     </div>

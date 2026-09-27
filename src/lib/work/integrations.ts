@@ -17,13 +17,13 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { open, seal } from "@/lib/vault";
 
-export interface WebhookConfig {
+interface WebhookConfig {
   url: string;
   /** Optional shared secret; when set, every delivery carries an HMAC header. */
   secret?: string;
 }
 
-export interface EmailConfig {
+interface EmailConfig {
   provider: "resend";
   apiKey: string;
   from: string;

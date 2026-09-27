@@ -23,7 +23,7 @@ export const actionItemInclude = {
 
 type Row = Prisma.ActionItemGetPayload<{ include: typeof actionItemInclude }>;
 
-export function toDraftDto(draft: Row["drafts"][number]): DraftDto {
+function toDraftDto(draft: Row["drafts"][number]): DraftDto {
   return {
     id: draft.id,
     kind: draft.kind,

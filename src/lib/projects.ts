@@ -93,6 +93,15 @@ export function agentsVisibleTo(userId: string): Prisma.AgentWhereInput {
   return { project: projectsVisibleTo(userId) };
 }
 
+/** Whether the user may see a conversation: it belongs to one of their agents. */
+export async function canSeeConversation(conversationId: string, userId: string): Promise<boolean> {
+  const row = await prisma.conversation.findFirst({
+    where: { id: conversationId, agent: agentsVisibleTo(userId) },
+    select: { id: true },
+  });
+  return row !== null;
+}
+
 /**
  * An agent the user may act on, with the organisation it bills to. Null when
  * it does not exist or belongs to a tenant the user is not part of.

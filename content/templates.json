@@ -20,8 +20,8 @@
         "Collect enough detail on a bug for engineering to reproduce it",
         "Record feature requests clients raise"
       ],
-      "allowedTools": ["search_company_context", "log_issue", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "suggest_opportunity", "delegate_to_colleague", "slack_post_message", "escalate_to_human"],
+      "allowedTools": ["search_documents", "log_issue", "log_suggestion", "escalate_to_human"],
+      "workTools": ["search_documents", "suggest_opportunity", "delegate_to_colleague", "slack_post_message", "escalate_to_human"],
       "suggestedIntegrations": ["slack", "intercom", "hubspot"],
       "defaultObjectives": [
         "Answer customer questions accurately using official company policies and uploaded documentation",
@@ -50,8 +50,8 @@
         "Answer questions about plans, limits and configuration",
         "Flag anything that blocks a client from getting started"
       ],
-      "allowedTools": ["search_company_context", "log_issue", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "suggest_opportunity", "delegate_to_colleague", "schedule_followup", "send_email", "calendar_list_events", "calendar_create_event", "escalate_to_human"],
+      "allowedTools": ["search_documents", "log_issue", "log_suggestion", "escalate_to_human"],
+      "workTools": ["search_documents", "suggest_opportunity", "delegate_to_colleague", "schedule_followup", "send_email", "calendar_list_events", "calendar_create_event", "escalate_to_human"],
       "suggestedIntegrations": ["google_calendar", "email"],
       "defaultObjectives": [
         "Guide new clients step-by-step through their setup journey",
@@ -80,8 +80,8 @@
         "Track named competitors or markets over time",
         "Flag claims that cannot be verified"
       ],
-      "allowedTools": ["search_company_context", "escalate_to_human"],
-      "workTools": ["web_research", "search_context", "suggest_opportunity", "delegate_to_colleague", "schedule_followup", "escalate_to_human"],
+      "allowedTools": ["search_documents", "escalate_to_human"],
+      "workTools": ["web_research", "search_documents", "suggest_opportunity", "delegate_to_colleague", "schedule_followup", "escalate_to_human"],
       "suggestedIntegrations": ["slack"],
       "defaultObjectives": [
         "Research competitor product releases, pricing changes, and industry news from the past week, using suggest_opportunity to immediately alert the team when breaking news or shifts occur",
@@ -111,8 +111,8 @@
         "Keep a consistent brand voice across channels",
         "Queue everything for approval before it is published"
       ],
-      "allowedTools": ["search_company_context", "escalate_to_human"],
-      "workTools": ["web_research", "search_context", "draft_content", "publish_post", "suggest_opportunity", "delegate_to_colleague", "schedule_followup", "escalate_to_human"],
+      "allowedTools": ["search_documents", "escalate_to_human"],
+      "workTools": ["web_research", "search_documents", "draft_content", "publish_post", "suggest_opportunity", "delegate_to_colleague", "schedule_followup", "escalate_to_human"],
       "suggestedIntegrations": ["webhook", "email"],
       "defaultObjectives": [
         "Research what competitors announced and key industry trends over the past week, using suggest_opportunity to flag market opportunities to the team",
@@ -142,13 +142,14 @@
         "Schedule follow-ups so nothing is dropped",
         "Keep a clear record of what was agreed"
       ],
-      "allowedTools": ["search_company_context", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "draft_content", "suggest_opportunity", "delegate_to_colleague", "send_email", "schedule_followup", "calendar_list_events", "calendar_create_event", "slack_post_message", "escalate_to_human"],
+      "allowedTools": ["search_documents", "log_suggestion", "escalate_to_human"],
+      "workTools": ["search_documents", "draft_content", "suggest_opportunity", "delegate_to_colleague", "send_email", "schedule_followup", "calendar_list_events", "calendar_create_event", "slack_post_message", "escalate_to_human"],
       "suggestedIntegrations": ["google_calendar", "slack", "email"],
       "defaultObjectives": [
         "Review action items, meeting notes, and incoming requests",
         "Draft follow-up emails with specific dates, metrics, and next steps for human approval",
-        "Schedule follow-up tasks if a response is expected"
+        "Schedule follow-up tasks if a response is expected",
+        "When a follow-up calls for an announcement, newsletter or social post, hand it to the Marketer on your team with the facts it needs"
       ],
       "defaultTriggerType": "manual",
       "defaultContext": "Executive assistant keeping correspondence and commitments on schedule. Queue all emails for approval."
@@ -172,8 +173,8 @@
         "Collect a reproducible report for every bug",
         "Research unfamiliar errors before answering"
       ],
-      "allowedTools": ["search_company_context", "log_issue", "log_suggestion", "escalate_to_human"],
-      "workTools": ["web_research", "search_context", "draft_content", "suggest_opportunity", "delegate_to_colleague", "github_read", "slack_post_message", "escalate_to_human"],
+      "allowedTools": ["search_documents", "log_issue", "log_suggestion", "escalate_to_human"],
+      "workTools": ["web_research", "search_documents", "draft_content", "suggest_opportunity", "delegate_to_colleague", "github_read", "slack_post_message", "escalate_to_human"],
       "suggestedIntegrations": ["github", "slack", "linear"],
       "defaultObjectives": [
         "Analyze API questions and error logs submitted by developers",
@@ -202,8 +203,8 @@
         "Answer first-round product questions",
         "Book meetings for the sales team"
       ],
-      "allowedTools": ["search_company_context", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "draft_content", "suggest_opportunity", "delegate_to_colleague", "send_email", "schedule_followup", "calendar_list_events", "calendar_create_event", "escalate_to_human"],
+      "allowedTools": ["search_documents", "log_suggestion", "escalate_to_human"],
+      "workTools": ["search_documents", "draft_content", "suggest_opportunity", "delegate_to_colleague", "send_email", "schedule_followup", "calendar_list_events", "calendar_create_event", "escalate_to_human"],
       "suggestedIntegrations": ["hubspot", "email", "google_calendar"],
       "defaultObjectives": [
         "Qualify inbound customer inquiries and identify team requirements",
@@ -232,8 +233,8 @@
         "Draft routine people communications for approval",
         "Route sensitive matters to a person straight away"
       ],
-      "allowedTools": ["search_company_context", "log_suggestion", "escalate_to_human"],
-      "workTools": ["search_context", "draft_content", "suggest_opportunity", "delegate_to_colleague", "send_email", "slack_post_message", "escalate_to_human"],
+      "allowedTools": ["search_documents", "log_suggestion", "escalate_to_human"],
+      "workTools": ["search_documents", "draft_content", "suggest_opportunity", "delegate_to_colleague", "send_email", "slack_post_message", "escalate_to_human"],
       "suggestedIntegrations": ["slack", "bamboohr", "email"],
       "defaultObjectives": [
         "Answer employee policy, leave, and benefit inquiries strictly from the company handbook",

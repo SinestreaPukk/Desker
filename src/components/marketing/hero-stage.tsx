@@ -63,7 +63,7 @@ interface Scene {
   render: (beat: number) => React.ReactNode;
 }
 
-export const SCENES: readonly Scene[] = [
+const SCENES: readonly Scene[] = [
   {
     id: "support",
     role: "Support",
@@ -297,7 +297,7 @@ function Appear({ when, children, className }: { when: boolean; children: React.
   return (
     <div
       className={cn(
-        "transition-all duration-500 ease-out",
+        "transition duration-500 ease-out",
         when ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0",
         className,
       )}
@@ -419,7 +419,7 @@ function ApprovalActions({ what }: { what: string }) {
 const SUPPORT_REPLY =
   "Power tools carry a 24-month warranty, so this is a warranty claim rather than a return. Reply to your order email with the order number and we'll arrange a replacement.";
 
-export function SupportScene({ beat }: { beat: number }) {
+function SupportScene({ beat }: { beat: number }) {
   const shown = beat < 2 ? 0 : beat === 2 ? Math.round(SUPPORT_REPLY.length * 0.5) : SUPPORT_REPLY.length;
   return (
     <div className="space-y-3">
@@ -445,7 +445,7 @@ export function SupportScene({ beat }: { beat: number }) {
   );
 }
 
-export function MarketerScene({ beat }: { beat: number }) {
+function MarketerScene({ beat }: { beat: number }) {
   return (
     <div className="space-y-4">
       <RunHeader
@@ -496,7 +496,7 @@ function Cite({ n }: { n: number }) {
   );
 }
 
-export function ResearcherScene({ beat }: { beat: number }) {
+function ResearcherScene({ beat }: { beat: number }) {
   return (
     <div className="space-y-4">
       <RunHeader
@@ -541,7 +541,7 @@ export function ResearcherScene({ beat }: { beat: number }) {
   );
 }
 
-export function DevScene({ beat }: { beat: number }) {
+function DevScene({ beat }: { beat: number }) {
   return (
     <div className="space-y-3">
       <ClientBubble>
@@ -575,7 +575,7 @@ export function DevScene({ beat }: { beat: number }) {
   );
 }
 
-export function AssistantScene({ beat }: { beat: number }) {
+function AssistantScene({ beat }: { beat: number }) {
   return (
     <div className="space-y-4">
       <RunHeader

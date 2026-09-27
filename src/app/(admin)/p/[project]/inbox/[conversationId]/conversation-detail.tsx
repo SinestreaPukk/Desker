@@ -50,7 +50,7 @@ import {
 import { errorMessage } from "@/lib/api-client";
 import { toolLabel } from "@/hooks/use-chat-stream";
 import { ISSUE_KINDS, issueKind } from "@/lib/issue-kinds";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn, formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 
 export function ConversationDetail({
   conversationId,
@@ -122,7 +122,9 @@ export function ConversationDetail({
                 {conversation.agent.jobTitle}
               </p>
               <p className="mt-1 flex flex-wrap items-center gap-2 meta">
-                <span>Started {formatRelativeTime(conversation.createdAt)}</span>
+                <span title={formatDateTime(conversation.createdAt)}>
+                  Started {formatDateTime(conversation.createdAt)} ({formatRelativeTime(conversation.createdAt)})
+                </span>
                 {conversation.isPreview ? (
                   <Badge tone="neutral">Builder preview</Badge>
                 ) : null}
@@ -228,8 +230,8 @@ export function ConversationDetail({
                               ? `${message.authorName ?? "A colleague"} · you`
                               : "Tool result"}
                       </span>
-                      <span className="meta">
-                        {formatRelativeTime(message.createdAt)}
+                      <span className="meta" title={formatDateTime(message.createdAt)}>
+                        {formatTime(message.createdAt)} · {formatRelativeTime(message.createdAt)}
                       </span>
                       {message.rating === 1 ? (
                         <span className="inline-flex items-center gap-1 text-xs text-positive">
@@ -522,7 +524,10 @@ function NotesPanel({ conversationId }: { conversationId: string }) {
                   {note.body}
                 </p>
                 <p className="mt-1.5 meta">
-                  {note.authorName} · {formatRelativeTime(note.createdAt)}
+                  {note.authorName} ·{" "}
+                  <span title={formatDateTime(note.createdAt)}>
+                    {formatTime(note.createdAt)} · {formatRelativeTime(note.createdAt)}
+                  </span>
                 </p>
               </li>
             ))}

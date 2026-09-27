@@ -17,7 +17,7 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 
-export interface RateLimitResult {
+interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   retryAfterSeconds: number;
@@ -68,7 +68,7 @@ export async function checkRateLimit(
  * model on demand (chat, previews, drafts from documents, digests on demand);
  * `runs` covers autonomous runs being started, however they are started.
  */
-export const ORGANIZATION_LIMITS = {
+const ORGANIZATION_LIMITS = {
   model: { limit: env.orgModelCallsPerMinute, windowMs: 60_000 },
   runs: { limit: env.orgRunsPerMinute, windowMs: 60_000 },
 } as const;

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const badge = cva(
   "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium " +
-    "leading-5 whitespace-nowrap shadow-2xs transition-colors [&_svg]:size-3",
+    "leading-5 whitespace-nowrap  transition-colors [&_svg]:size-3",
   {
     variants: {
       tone: {
@@ -39,9 +39,7 @@ export function SeverityBadge({ severity }: { severity: string | null }) {
   const tone =
     SEVERITY_TONE[severity as keyof typeof SEVERITY_TONE] ?? "neutral";
   return (
-    <Badge tone={tone} className="uppercase tracking-wide text-[11px] font-semibold">
-      {severity}
-    </Badge>
+    <Badge tone={tone}>{severity.charAt(0).toUpperCase() + severity.slice(1)}</Badge>
   );
 }
 
@@ -87,6 +85,11 @@ const STATUS: Record<string, { tone: "neutral" | "accent" | "positive" | "warnin
   member: { tone: "neutral", label: "Member" },
 };
 
+/** The words a status is shown with, for filters and anywhere else that is not a badge. */
+export function statusLabel(status: string): string {
+  return STATUS[status]?.label ?? status.replace(/_/g, " ");
+}
+
 export function StatusBadge({
   status,
   withDot = true,
@@ -96,9 +99,9 @@ export function StatusBadge({
   withDot?: boolean;
   className?: string;
 }) {
-  const entry = STATUS[status] ?? { tone: "neutral" as const, label: status.replace(/_/g, " ") };
+  const entry = STATUS[status] ?? { tone: "neutral" as const, label: statusLabel(status) };
   return (
-    <Badge tone={entry.tone} className={cn("gap-1.5 text-[11px] font-semibold", className)}>
+    <Badge tone={entry.tone} className={cn("gap-1.5 text-meta font-semibold", className)}>
       {withDot ? (
         <span className="relative flex size-1.5 shrink-0" aria-hidden>
           {entry.pulse ? (

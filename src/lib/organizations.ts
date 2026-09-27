@@ -15,7 +15,7 @@ import { slugify } from "@/lib/slug";
 export type OrganizationRole = "owner" | "admin" | "member";
 
 /** Appends a counter until the slug is free. */
-export async function uniqueOrganizationSlug(
+async function uniqueOrganizationSlug(
   name: string,
   db: Prisma.TransactionClient = prisma,
 ): Promise<string> {

@@ -33,6 +33,12 @@ export async function GET(request: Request) {
       take: limit,
       include: actionItemInclude,
     });
-    return items.map(toActionItemDto);
+    // view=list: what a row shows. The steps, research, drafts and reports are
+    // most of the weight, and the run's own page fetches them when opened.
+    const lean = url.searchParams.get("view") === "list";
+    return items.map((item) => {
+      const dto = toActionItemDto(item);
+      return lean ? { ...dto, steps: [], findings: [], drafts: [], report: null, summary: null } : dto;
+    });
   });
 }

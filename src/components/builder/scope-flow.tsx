@@ -40,7 +40,7 @@ const NODE_ICON: Record<string, typeof Bot> = {
   agent: Bot,
   approval: ShieldCheck,
   output: FileDown,
-  "tool:search_context": Search,
+  "tool:search_documents": Search,
   "tool:web_research": Search,
   "tool:draft_content": Sparkles,
   "tool:publish_post": Megaphone,
@@ -66,7 +66,7 @@ function Connector({ label }: { label?: string }) {
   return (
     <div aria-hidden className="flex items-center gap-2 pl-[1.375rem]">
       <span className="h-6 w-px bg-line" />
-      {label ? <span className="text-[0.6875rem] text-ink-subtle">{label}</span> : null}
+      {label ? <span className="text-meta text-ink-subtle">{label}</span> : null}
     </div>
   );
 }
@@ -176,7 +176,7 @@ function FlowNode({
         </span>
         <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted">{node.detail}</span>
       </span>
-      <span className="mt-1 text-[0.6875rem] text-accent">Edit</span>
+      <span className="mt-1 text-meta text-accent">Edit</span>
     </button>
   );
 }

@@ -22,7 +22,7 @@ import { prisma } from "@/lib/db";
 import { getProvider } from "@/lib/llm/provider";
 import { recordResearchUsage, type BillingContext } from "@/lib/usage";
 
-export interface SearchHit {
+interface SearchHit {
   title: string;
   url: string;
   snippet: string;
@@ -161,19 +161,6 @@ async function searchDuckDuckGo(query: string): Promise<SearchHit[]> {
     console.warn("[research] DuckDuckGo search fallback failed, trying Wikipedia:", error);
   }
   return searchWikipedia(query);
-}
-
-export class NoSearchProvider extends Error {
-  constructor() {
-    super(
-      "No web search provider is configured. Set TAVILY_API_KEY or BRAVE_SEARCH_API_KEY to enable web research.",
-    );
-    this.name = "NoSearchProvider";
-  }
-}
-
-export function hasSearchProvider(): boolean {
-  return true;
 }
 
 /** How long a set of results stays good enough to reuse. */

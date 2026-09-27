@@ -20,9 +20,9 @@ import { GATED_TOOLS, WORK_TOOL_IDS, WORK_TOOL_METADATA, type WorkToolId } from 
 import { effectiveAutonomy, type AutonomyMode, type ToolAutonomy, type TriggerType } from "./types";
 
 /** Which focused control a node opens when it is clicked. */
-export type ScopeFlowSection = "trigger" | "context" | "objectives" | "tools" | "trust" | "digest";
+type ScopeFlowSection = "trigger" | "context" | "objectives" | "tools" | "trust" | "digest";
 
-export type ScopeFlowKind = "trigger" | "agent" | "tool" | "approval" | "output";
+type ScopeFlowKind = "trigger" | "agent" | "tool" | "approval" | "output";
 
 export interface ScopeFlowNode {
   id: string;

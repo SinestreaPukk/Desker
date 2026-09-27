@@ -9,11 +9,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Calls off a queued or running task. A running one may still finish the step
- * it is on, but the runner only closes out work that is still "in progress",
- * so nothing it does afterwards reopens it.
+ * Calls off a queued or running task. A running one finishes the model call or
+ * tool it is in the middle of, then stops: the runner checks before each turn
+ * and before any tool acts, and only closes out work still "in progress".
  */
-// ponytail: the agent loop is not interrupted mid-step, it just stops counting; add a status check between steps if cancelled runs burn noticeable tokens.
 export async function POST(_request: Request, { params }: { params: Promise<{ actionItemId: string }> }) {
   return handle(async () => {
     const { userId } = await requireAdmin();

@@ -5,9 +5,12 @@ export const metadata: Metadata = { title: "Inbox" };
 
 export default async function InboxPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ project: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { project } = await params;
-  return <InboxView project={project} />;
+  const { tab } = await searchParams;
+  return <InboxView project={project} initialTab={tab} />;
 }

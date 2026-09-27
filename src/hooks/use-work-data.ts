@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage, queryString } from "@/lib/api-client";
 import type { OAuthProvider } from "@/lib/integrations/catalog";
 import type { ScopeDto } from "@/lib/work/scope";
 import type { ScopeInputPayload, IntegrationInputPayload } from "@/lib/work/validation";
@@ -17,7 +17,7 @@ import type { ContextAnswers } from "@/lib/work/context";
 import type { ProjectContextDto } from "@/lib/work/project-context";
 import type { ContextDraftResult } from "@/components/builder/context-questions";
 
-export const workKeys = {
+const workKeys = {
   scope: (agentId: string) => ["scope", agentId] as const,
   actionItems: (filters: Record<string, string>) => ["action-items", filters] as const,
   actionItem: (id: string) => ["action-items", id] as const,
@@ -26,14 +26,6 @@ export const workKeys = {
   digests: (filters: Record<string, string>) => ["digests", filters] as const,
   suggestions: (filters: Record<string, string>) => ["suggestions", filters] as const,
 };
-
-function query(filters: Record<string, string>): string {
-  const params = new URLSearchParams(
-    Object.entries(filters).filter(([, value]) => value && value !== "all"),
-  );
-  const search = params.toString();
-  return search ? `?${search}` : "";
-}
 
 // --- scope of work ----------------------------------------------------------
 
@@ -68,17 +60,20 @@ export function useRunScope(agentId: string) {
 // --- action items -----------------------------------------------------------
 
 export function useActionItems(
-  filters: { project: string; status?: string; agentId?: string },
-  options: { refetchInterval?: number } = {},
+  filters: { project: string; status?: string; agentId?: string; view?: "list" },
+  options: { refetchInterval?: number | ((items: ActionItemDto[] | undefined) => number) } = {},
 ) {
   const clean = Object.fromEntries(
     Object.entries(filters).filter(([, v]) => v !== undefined),
   ) as Record<string, string>;
   return useQuery({
     queryKey: workKeys.actionItems(clean),
-    queryFn: () => api<ActionItemDto[]>(`/api/action-items${query(clean)}`),
+    queryFn: () => api<ActionItemDto[]>(`/api/action-items${queryString(clean)}`),
     enabled: Boolean(filters.project),
-    refetchInterval: options.refetchInterval,
+    refetchInterval:
+      typeof options.refetchInterval === "function"
+        ? (query) => (options.refetchInterval as (items: ActionItemDto[] | undefined) => number)(query.state.data)
+        : options.refetchInterval,
   });
 }
 
@@ -110,7 +105,7 @@ const REMOVABLE = {
   suggestion: { path: "suggestions", key: "suggestions" },
   update: { path: "digests", key: "digests" },
 } as const;
-export type Removable = keyof typeof REMOVABLE;
+type Removable = keyof typeof REMOVABLE;
 
 export type RemoveTarget = { kind: Removable; id: string };
 
@@ -244,7 +239,7 @@ export function useDraftAgentContext(agentId: string) {
 export function useDigests(filters: Record<string, string>) {
   return useQuery({
     queryKey: workKeys.digests(filters),
-    queryFn: () => api<DigestDto[]>(`/api/digests${query(filters)}`),
+    queryFn: () => api<DigestDto[]>(`/api/digests${queryString(filters)}`),
     enabled: Boolean(filters.project),
     refetchInterval: 60_000,
   });
@@ -278,13 +273,13 @@ export function useGenerateDigest(agentId: string) {
 export function useSuggestions(filters: Record<string, string>) {
   return useQuery({
     queryKey: workKeys.suggestions(filters),
-    queryFn: () => api<SuggestionDto[]>(`/api/suggestions${query(filters)}`),
+    queryFn: () => api<SuggestionDto[]>(`/api/suggestions${queryString(filters)}`),
     enabled: Boolean(filters.project),
     refetchInterval: 30_000,
   });
 }
 
-export interface SuggestionDecision extends SuggestionDto {
+interface SuggestionDecision extends SuggestionDto {
   /** What accepting added to the agent's objectives, when it added anything. */
   addedObjective: string | null;
 }
@@ -391,7 +386,7 @@ export function useUpdateDraft() {
 import type { MemberDto } from "@/app/api/organizations/[orgId]/members/route";
 import type { InviteDto } from "@/app/api/organizations/[orgId]/invites/route";
 
-export const orgKeys = {
+const orgKeys = {
   org: (orgId: string) => ["organization", orgId] as const,
   members: (orgId: string) => ["organization", orgId, "members"] as const,
   invites: (orgId: string) => ["organization", orgId, "invites"] as const,

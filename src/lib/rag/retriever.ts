@@ -18,7 +18,7 @@ import { usesPgVector } from "@/lib/env";
 import { bm25Rank, reciprocalRankFusion } from "./bm25";
 import { cosineSimilarity, embedOne } from "./embeddings";
 
-export interface RetrievedChunk {
+interface RetrievedChunk {
   id: string;
   documentId: string;
   filename: string;
@@ -27,7 +27,7 @@ export interface RetrievedChunk {
   score: number;
 }
 
-export const DEFAULT_TOP_K = 5;
+const DEFAULT_TOP_K = 5;
 /** How many candidates each half contributes before fusion. */
 const CANDIDATE_POOL = 24;
 
@@ -46,7 +46,7 @@ const CANDIDATE_POOL = 24;
  * decided by the keyword half and the vector half only breaks ties. It is also
  * the concrete reason to set EMBEDDING_PROVIDER=openai for paraphrase recall.
  */
-export const MIN_VECTOR_SIMILARITY = 0.3;
+const MIN_VECTOR_SIMILARITY = 0.3;
 
 function toVectorLiteral(vector: number[]): string {
   return `[${vector.join(",")}]`;

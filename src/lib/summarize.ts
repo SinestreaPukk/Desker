@@ -52,7 +52,7 @@ function transcriptOf(
  * Regenerates the summary if it is stale. Safe to call after every turn -
  * it returns immediately when nothing has changed enough to matter.
  */
-export async function refreshSummary(
+async function refreshSummary(
   conversationId: string,
   options: { force?: boolean } = {},
 ): Promise<string | null> {

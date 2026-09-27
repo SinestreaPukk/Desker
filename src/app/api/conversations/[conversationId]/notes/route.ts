@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { canSeeConversation } from "@/lib/projects";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 
 export const runtime = "nodejs";
@@ -20,8 +21,11 @@ export interface NoteDto {
 
 export async function GET(_request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { conversationId } = await params;
+    if (!(await canSeeConversation(conversationId, userId))) {
+      throw new HttpError(404, "That conversation no longer exists.");
+    }
 
     const notes = await prisma.conversationNote.findMany({
       where: { conversationId },
@@ -45,11 +49,9 @@ export async function POST(request: Request, { params }: Params) {
     const { conversationId } = await params;
     const input = await parseJson(request, noteSchema);
 
-    const exists = await prisma.conversation.findUnique({
-      where: { id: conversationId },
-      select: { id: true },
-    });
-    if (!exists) throw new HttpError(404, "That conversation no longer exists.");
+    if (!(await canSeeConversation(conversationId, session.userId))) {
+      throw new HttpError(404, "That conversation no longer exists.");
+    }
 
     const note = await prisma.conversationNote.create({
       data: {

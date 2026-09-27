@@ -127,7 +127,7 @@ export const executeApprovedFn = inngest.createFunction(
   },
 );
 
-export const WATCHDOG_CRON = "*/5 * * * *";
+const WATCHDOG_CRON = "*/5 * * * *";
 
 /** Looks over every organisation's autonomous work for anything failing quietly. */
 export const workWatchdogFn = inngest.createFunction(

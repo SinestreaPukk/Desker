@@ -11,7 +11,7 @@ import { inngest } from "./client";
 import { runDueDigests, generateDigest } from "@/lib/work/digest";
 import { captureError } from "@/lib/monitoring";
 
-export const DIGEST_CRON = "*/15 * * * *";
+const DIGEST_CRON = "*/15 * * * *";
 
 export const digestScheduler = inngest.createFunction(
   {

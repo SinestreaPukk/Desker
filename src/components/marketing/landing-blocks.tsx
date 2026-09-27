@@ -1,4 +1,9 @@
 import Link from "next/link";
+import Image, { type StaticImageData } from "next/image";
+import approvalShot from "../../../public/product/approval.png";
+import boundariesShot from "../../../public/product/boundaries.png";
+import threadShot from "../../../public/product/handoff-thread.png";
+import activityShot from "../../../public/product/activity.png";
 import {
   ArrowRight,
   BookOpenCheck,
@@ -14,7 +19,9 @@ import {
   UserCheck,
   X,
 } from "lucide-react";
-import { LANDING_ICONS, TEMPLATES } from "@/lib/content";
+import { LANDING_ICONS, TEMPLATES, type PRODUCT_SHOTS } from "@/lib/content";
+
+type ProductShot = (typeof PRODUCT_SHOTS)[number];
 import { TemplateIcon } from "@/components/marketing/template-icon";
 import { BrandLogo, type BrandLogoId } from "@/components/marketing/brand-logos";
 import { cn } from "@/lib/utils";
@@ -39,7 +46,7 @@ const ICONS: Record<(typeof LANDING_ICONS)[number], React.ComponentType<{ classN
   handoff: LifeBuoy,
 };
 
-export function LandingIcon({ icon, className }: { icon: (typeof LANDING_ICONS)[number]; className?: string }) {
+function LandingIcon({ icon, className }: { icon: (typeof LANDING_ICONS)[number]; className?: string }) {
   const Icon = ICONS[icon];
   return <Icon className={className} aria-hidden />;
 }
@@ -145,28 +152,51 @@ export function TrustGrid({
   );
 }
 
-/** A slice of the audit log: the promise above, as the record shows it. A picture. */
-export function AuditTrail() {
-  const rows = [
-    { time: "09:00", who: "Nova", what: "drafted a post · waiting for approval" },
-    { time: "09:12", who: "You", what: "edited the draft" },
-    { time: "09:13", who: "You", what: "approved · published" },
-    { time: "10:41", who: "Mia", what: "escalated a refund question to you" },
-  ];
+const SHOT_FILES: Record<ProductShot, StaticImageData> = {
+  approval: approvalShot,
+  boundaries: boundariesShot,
+  "handoff-thread": threadShot,
+  activity: activityShot,
+};
+
+/** A screenshot of the running product, framed like a window and never cropped. */
+export function ProductShotImage({ image, alt, className, sizes }: { image: ProductShot; alt: string; className?: string; sizes: string }) {
   return (
-    <div className="sd-rise rounded-panel border border-accent-fg/15 bg-accent-fg/[0.06] p-4" aria-hidden>
-      <p className="meta text-accent-fg/80">Audit log · today</p>
-      <ol className="sd-stagger mt-3 space-y-2.5">
-        {rows.map((row) => (
-          <li key={row.time} className="flex items-baseline gap-3 text-sm">
-            <span className="font-mono text-xs text-accent-fg/70">{row.time}</span>
-            <span className="text-accent-fg">
-              <span className="font-semibold">{row.who}</span> <span className="text-accent-fg/85">{row.what}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
-    </div>
+    <Image
+      src={SHOT_FILES[image]}
+      alt={alt}
+      sizes={sizes}
+      placeholder="blur"
+      className={cn("h-auto w-full rounded-panel border border-line bg-surface shadow-md", className)}
+    />
+  );
+}
+
+/**
+ * The trust promises, shown rather than claimed: real screenshots of the
+ * approval card, an agent's limits and a hand-off in the Audit log. Retaken
+ * with scripts/product-shots.mjs whenever those screens change.
+ */
+export function TrustShots({ shots }: { shots: { image: ProductShot; title: string; body: string }[] }) {
+  return (
+    <ul className="space-y-14 lg:space-y-20">
+      {shots.map((shot, index) => (
+        <li key={shot.image}>
+          <figure className="grid items-center gap-6 lg:grid-cols-12 lg:gap-12">
+            <ProductShotImage
+              image={shot.image}
+              alt={shot.title}
+              sizes="(min-width: 1024px) 640px, 100vw"
+              className={cn("sd-rise lg:col-span-7", index % 2 === 1 && "lg:order-last")}
+            />
+            <figcaption className="lg:col-span-5">
+              <span className="block text-xl font-semibold tracking-tight text-accent-fg">{shot.title}</span>
+              <span className="mt-2 block text-base leading-relaxed text-accent-fg/85">{shot.body}</span>
+            </figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -182,7 +212,7 @@ export function RoleGrid({ cta }: { cta: string }) {
             href={`/showcase#${role.id}`}
             className="group lift flex h-full flex-col rounded-panel border border-line bg-surface p-5 shadow-xs hover:border-accent-line hover:shadow-md"
           >
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg transition-all duration-200 group-hover:scale-110 group-hover:bg-accent group-hover:text-accent-fg group-hover:shadow-sm">
+            <span className="flex size-11 items-center justify-center rounded-panel bg-accent-soft text-accent-soft-fg transition duration-200 group-hover:scale-110 group-hover:bg-accent group-hover:text-accent-fg group-hover:shadow-sm">
               <TemplateIcon icon={role.icon} className="size-6" />
             </span>
             <span className="mt-4 text-lg font-semibold tracking-tight text-ink">{role.name}</span>
@@ -200,7 +230,7 @@ export function RoleGrid({ cta }: { cta: string }) {
 
 /* --- Comparison: Desker vs Generic AI -------------------------------------- */
 
-export interface ComparisonItem {
+interface ComparisonItem {
   dimension: string;
   generic: string;
   desker: string;
@@ -227,7 +257,7 @@ export function ComparisonTable({
               <th scope="col" className="w-[37%] border-l border-line bg-accent-soft/40 px-6 py-4 text-accent">
                 <span className="flex items-center gap-2">
                   <span className="font-bold">{deskerLabel}</span>
-                  <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-fg">
+                  <span className="rounded-full bg-accent px-2 py-0.5 text-meta font-semibold uppercase tracking-wide text-accent-fg">
                     24/7
                   </span>
                 </span>
@@ -265,7 +295,7 @@ export function ComparisonTable({
             <h3 className="text-base font-semibold text-ink">{item.dimension}</h3>
             <div className="mt-3.5 space-y-2.5 text-sm">
               <div className="rounded-lg bg-surface-2/70 p-3">
-                <p className="text-[11px] font-medium uppercase tracking-wider text-ink-subtle">{competitorLabel}</p>
+                <p className="text-meta font-medium uppercase tracking-wider text-ink-subtle">{competitorLabel}</p>
                 <div className="mt-1.5 flex items-start gap-2 text-ink-muted leading-relaxed">
                   <X className="mt-0.5 size-3.5 shrink-0 text-ink-subtle" aria-hidden />
                   <span>{item.generic}</span>
@@ -273,8 +303,8 @@ export function ComparisonTable({
               </div>
               <div className="rounded-lg border border-accent-line bg-accent-soft/30 p-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-accent">{deskerLabel}</p>
-                  <span className="rounded-full bg-accent px-1.5 py-0.2 text-[9px] font-semibold text-accent-fg">24/7</span>
+                  <p className="text-meta font-semibold uppercase tracking-wider text-accent">{deskerLabel}</p>
+                  <span className="rounded-full bg-accent px-1.5 py-0.2 text-meta font-semibold text-accent-fg">24/7</span>
                 </div>
                 <div className="mt-1.5 flex items-start gap-2 font-medium text-ink leading-relaxed">
                   <Check className="mt-0.5 size-3.5 shrink-0 text-positive" aria-hidden />

@@ -30,9 +30,10 @@ import { EmptyState, ErrorState, LoadingCards } from "@/components/ui/states";
 import { useAgents } from "@/hooks/use-admin-data";
 import { ProjectContextPanel } from "@/components/builder/project-context-panel";
 import { SetupChecklist } from "@/components/help/setup-checklist";
+import { ActivityStrip } from "@/components/work/activity-strip";
 import { errorMessage } from "@/lib/api-client";
 import type { AgentSummaryDto } from "@/lib/serialize";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 export function RosterView({ project }: { project: string }) {
   const { data: agents, isPending, error, refetch, isRefetching } = useAgents(project);
@@ -94,14 +95,14 @@ export function RosterView({ project }: { project: string }) {
             className="pl-9 pr-10"
           />
           <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-            <kbd className="rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-ink-subtle shadow-2xs">
+            <kbd className="rounded-sm border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-meta text-ink-subtle">
               /
             </kbd>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="w-36">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
+          <div className="sm:w-36">
             <label htmlFor="roster-status" className="sr-only">
               Filter by status
             </label>
@@ -118,7 +119,7 @@ export function RosterView({ project }: { project: string }) {
           </div>
 
           {departments.length > 0 ? (
-            <div className="w-40">
+            <div className="sm:w-40">
               <label htmlFor="roster-department" className="sr-only">
                 Filter by team
               </label>
@@ -141,8 +142,9 @@ export function RosterView({ project }: { project: string }) {
       </PageToolbar>
 
       <PageBody>
-        {/* First the four things that make a workspace work, then the
-            company context every agent below inherits. */}
+        {/* The week at a glance, then the four things that make a workspace
+            work, then the company context every agent below inherits. */}
+        <ActivityStrip project={project} />
         <SetupChecklist project={project} />
         <ProjectContextPanel project={project} />
 
@@ -215,7 +217,7 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
   // positioned ancestor that hit area escapes the card and covers unrelated
   // controls elsewhere on the page.
   return (
-    <Panel className="group relative flex h-full flex-col transition-all duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md focus-within:border-line-strong focus-within:shadow-md">
+    <Panel className="group relative flex h-full flex-col transition duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md focus-within:border-line-strong focus-within:shadow-md">
       {/* Name and role carry the hierarchy; status sits apart, top right. */}
       <div className="flex items-start gap-3.5 p-5 pb-3.5">
         <div className="relative shrink-0">
@@ -276,11 +278,11 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
       <div className="mt-auto flex items-center justify-between rounded-b-panel border-t border-line/40 bg-surface-2/30 px-5 py-3">
         <p className="meta min-w-0 truncate">
           {agent.department ? `${agent.department} · ` : ""}
-          Updated {formatRelativeTime(agent.updatedAt)}
+          <span title={formatDateTime(agent.updatedAt)}>Updated {formatRelativeTime(agent.updatedAt)}</span>
         </p>
         <Link
           href={`/p/${project}/agents/${agent.id}`}
-          className="relative z-10 text-xs font-semibold text-accent opacity-0 transition-all duration-150 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-accent-hover"
+          className="relative z-10 text-xs font-semibold text-accent opacity-0 transition duration-150 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-accent-hover"
         >
           {live ? "Open editor →" : "Finish setting up →"}
         </Link>

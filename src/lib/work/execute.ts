@@ -11,7 +11,8 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
-import { retrieveContext } from "@/lib/rag/retriever";
+import { searchDocuments } from "@/lib/rag/search-documents";
+import { searchDocumentsInput } from "@/lib/rag/search-documents-tool";
 import type { ToolCall } from "@/lib/llm/provider";
 import { inngest } from "@/lib/jobs/client";
 import { afterResponse } from "@/lib/after-response";
@@ -57,7 +58,7 @@ export interface RunContext {
   trigger: string;
 }
 
-export interface WorkToolOutcome {
+interface WorkToolOutcome {
   content: string;
   isError?: boolean;
   /** Set when an external tool was stopped for approval. */
@@ -66,7 +67,6 @@ export interface WorkToolOutcome {
 
 const MAX_FOLLOWUP_DELAY_MINUTES = 30 * 24 * 60;
 
-const searchSchema = z.object({ query: z.string().trim().min(1).max(500) });
 const researchSchema = z.object({
   query: z.string().trim().min(1).max(300),
   focus: z.string().trim().max(500).optional(),
@@ -192,20 +192,16 @@ async function appendStep(actionItemId: string, step: WorkStep) {
 
 // --- tools ------------------------------------------------------------------
 
-async function searchContext(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
-  const parsed = searchSchema.safeParse(input);
-  if (!parsed.success) return invalid("search_context", parsed.error);
-  const hits = (await retrieveContext(ctx.agent.id, parsed.data.query, 6)).filter(
-    (hit) => ctx.documentIds.length === 0 || ctx.documentIds.includes(hit.documentId),
-  );
-  if (hits.length === 0) {
-    return { content: "No relevant passages in the context documents for that query." };
-  }
-  return {
-    content: hits
-      .map((hit, i) => `[${i + 1}] ${hit.filename} (chunk ${hit.chunkIndex + 1})\n${hit.content}`)
-      .join("\n\n---\n\n"),
-  };
+async function searchDocumentsTool(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = searchDocumentsInput.safeParse(input);
+  if (!parsed.success) return invalid("search_documents", parsed.error);
+  const { content } = await searchDocuments({
+    agentId: ctx.agent.id,
+    query: parsed.data.query,
+    documentIds: ctx.documentIds,
+    topK: 6,
+  });
+  return { content };
 }
 
 async function webResearch(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
@@ -684,8 +680,8 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
   } else {
     try {
       switch (call.name) {
-        case "search_context":
-          outcome = await searchContext(call.input, ctx);
+        case "search_documents":
+          outcome = await searchDocumentsTool(call.input, ctx);
           break;
         case "web_research":
           outcome = await webResearch(call.input, ctx);

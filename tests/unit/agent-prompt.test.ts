@@ -8,7 +8,7 @@ const base = {
   personality: "Warm but efficient. Never uses corporate filler.",
   responsibilities: ["Answer order questions", "Log bugs clients report"],
   escalationRule: "Escalate if the client asks for a refund over $200.",
-  allowedTools: ["search_company_context", "escalate_to_human"],
+  allowedTools: ["search_documents", "escalate_to_human"],
 };
 
 describe("buildSystemPrompt", () => {
@@ -44,7 +44,7 @@ describe("buildSystemPrompt", () => {
   it("omits the escalation rule when the tool is not permitted", () => {
     const prompt = buildSystemPrompt({
       ...base,
-      allowedTools: ["search_company_context"],
+      allowedTools: ["search_documents"],
     });
     expect(prompt).not.toContain("refund over $200");
   });
@@ -52,7 +52,7 @@ describe("buildSystemPrompt", () => {
   it("only describes tools the agent is actually given", () => {
     const prompt = buildSystemPrompt({ ...base, allowedTools: ["log_issue"] });
     expect(prompt).toContain("log_issue");
-    expect(prompt).not.toContain("search_company_context");
+    expect(prompt).not.toContain("search_documents");
     expect(prompt).not.toContain("log_suggestion");
   });
 
@@ -191,7 +191,7 @@ describe("buildCompanyContextPrompt", () => {
     expect(prompt).toContain("Company context");
   });
 
-  it("lists searchable documents and search_company_context guidance", () => {
+  it("lists searchable documents and search_documents guidance", () => {
     const prompt = buildCompanyContextPrompt({
       name: "Mia",
       jobTitle: "Support Lead",
@@ -199,7 +199,7 @@ describe("buildCompanyContextPrompt", () => {
     });
     expect(prompt).toContain("handbook.pdf");
     expect(prompt).toContain("pricing.md");
-    expect(prompt).toContain("search_company_context");
+    expect(prompt).toContain("search_documents");
     expect(prompt).toMatch(/mention the document filename in plain words/i);
   });
 

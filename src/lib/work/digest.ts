@@ -71,7 +71,7 @@ export function digestWindow(
 
 // --- what a period contained ------------------------------------------------
 
-export interface DigestFacts {
+interface DigestFacts {
   agentName: string;
   jobTitle: string;
   cadence: Exclude<DigestCadence, "off">;
@@ -352,7 +352,7 @@ async function digestRecipients(organizationId: string, configured: string | nul
 
 // --- generation -------------------------------------------------------------
 
-export interface GenerateDigestOptions {
+interface GenerateDigestOptions {
   /** The moment the digest is for. Defaults to now. */
   periodEnd?: Date;
   /** Generate even when the period is empty - what "Send me one now" means. */

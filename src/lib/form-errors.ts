@@ -9,9 +9,9 @@
  */
 import type { ZodType } from "zod";
 
-export type FieldErrors = Record<string, string[]>;
+type FieldErrors = Record<string, string[]>;
 
-export type Validated<T> = { ok: true; data: T } | { ok: false; fieldErrors: FieldErrors };
+type Validated<T> = { ok: true; data: T } | { ok: false; fieldErrors: FieldErrors };
 
 export function validate<T>(schema: ZodType<T>, value: unknown): Validated<T> {
   const result = schema.safeParse(value);
@@ -31,7 +31,7 @@ export function validate<T>(schema: ZodType<T>, value: unknown): Validated<T> {
 }
 
 /** One email address, as a person would type it - with or without a display name. */
-export function isEmailAddress(value: string): boolean {
+function isEmailAddress(value: string): boolean {
   const bare = /<([^>]+)>\s*$/.exec(value.trim())?.[1] ?? value.trim();
   return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(bare);
 }

@@ -50,7 +50,7 @@ vi.mock("@/lib/llm/provider", async (importOriginal) => {
       }
       const call =
         turns % 2 === 0
-          ? { id: `c${turns}`, name: "search_context", input: { query: "competitor pricing" } }
+          ? { id: `c${turns}`, name: "search_documents", input: { query: "competitor pricing" } }
           : { id: `c${turns}`, name: "draft_content", input: { kind: "social_caption", title: `Draft ${turns}`, body: "A short caption." } };
       return { message: { role: "assistant" as const, content: "", toolCalls: [call] }, stopReason: "tool_use", usage };
     },
@@ -118,7 +118,7 @@ beforeAll(async () => {
                 documentIds: [],
                 triggerType: "cron",
                 cron: "* * * * *",
-                tools: ["search_context", "draft_content", "suggest_opportunity"],
+                tools: ["search_documents", "draft_content", "suggest_opportunity"],
                 contextAnswers: { project: "Weekly competitor scan." },
                 createdAt: created,
               },

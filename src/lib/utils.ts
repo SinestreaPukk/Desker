@@ -15,6 +15,37 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Local time formatted in 24-hour style: "14:30" (or "14:30:15" with seconds).
+ */
+export function formatTime(
+  date: Date | string | number,
+  options?: { withSeconds?: boolean },
+): string {
+  const then = typeof date === "object" ? date : new Date(date);
+  return then.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: options?.withSeconds ? "2-digit" : undefined,
+    hour12: false,
+  });
+}
+
+/**
+ * Local date and 24-hour time formatted: "26 Sep 2026, 14:30" (or with seconds).
+ */
+export function formatDateTime(
+  date: Date | string | number,
+  options?: { withSeconds?: boolean },
+): string {
+  const then = typeof date === "object" ? date : new Date(date);
+  return then.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: options?.withSeconds ? "medium" : "short",
+    hour12: false,
+  });
+}
+
 export function formatRelativeTime(date: Date | string): string {
   const then = typeof date === "string" ? new Date(date) : date;
   const seconds = Math.round((Date.now() - then.getTime()) / 1000);
@@ -24,7 +55,7 @@ export function formatRelativeTime(date: Date | string): string {
     if (ahead < 3600) return `in ${Math.round(ahead / 60)}m`;
     if (ahead < 86_400) return `in ${Math.round(ahead / 3600)}h`;
     if (ahead < 7 * 86_400) return `in ${Math.round(ahead / 86_400)}d`;
-    return then.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return `${then.toLocaleDateString(undefined, { month: "short", day: "numeric" })} ${formatTime(then)}`;
   }
   if (seconds < 60) return "just now";
   const minutes = Math.round(seconds / 60);
@@ -33,7 +64,7 @@ export function formatRelativeTime(date: Date | string): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.round(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return then.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return `${then.toLocaleDateString(undefined, { month: "short", day: "numeric" })} ${formatTime(then)}`;
 }
 
 export function formatBytes(bytes: number): string {

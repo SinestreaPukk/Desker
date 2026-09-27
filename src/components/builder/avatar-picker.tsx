@@ -128,7 +128,7 @@ export function AvatarPicker({
                   if (chosen?.variant) onChange(builtInKey(chosen.variant, option));
                 }}
                 className={cn(
-                  "size-7 rounded-full border-2 transition-all duration-150 hover:scale-110",
+                  "size-7 rounded-full border-2 transition duration-150 hover:scale-110",
                   tone === option ? "border-accent ring-2 ring-accent/30 scale-105" : "border-transparent opacity-80 hover:opacity-100",
                 )}
                 style={{ background: `var(--av-${option}-fg)` }}
@@ -154,7 +154,7 @@ export function AvatarPicker({
                   aria-pressed={selected}
                   onClick={() => onChange(selected ? null : entry.key)}
                   className={cn(
-                    "size-11 overflow-hidden rounded-full border-2 transition-all duration-150 hover:scale-105",
+                    "size-11 overflow-hidden rounded-full border-2 transition duration-150 hover:scale-105",
                     selected
                       ? "border-accent ring-2 ring-accent/30 shadow-xs scale-105"
                       : "border-transparent hover:border-line-strong",

@@ -19,7 +19,7 @@ export interface BillingContext {
   agentId?: string | null;
 }
 
-export interface UsageSample extends BillingContext {
+interface UsageSample extends BillingContext {
   provider: string;
   model: string;
   inputTokens: number;

@@ -34,7 +34,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingKpis, LoadingRows } from "@/components/ui/states";
 import { useAnalytics } from "@/hooks/use-admin-data";
 import { errorMessage } from "@/lib/api-client";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn, formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 import {
   conversationsCaption,
   escalationCaption,
@@ -130,15 +130,15 @@ export function DetailedInsightsView({ project }: { project: string }) {
           <>
             {/* Top diagnostic KPIs for client engagement & knowledge coverage */}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Panel className="flex flex-col p-4 transition-all hover:border-line-strong hover:shadow-xs">
+              <Panel className="flex flex-col p-4 transition hover:border-line-strong hover:shadow-xs">
                 <div className="flex items-center justify-between gap-2">
                   <p className="meta font-semibold">Answered from documents</p>
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-accent-line/70 bg-accent-soft text-accent-soft-fg shadow-2xs">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-accent-line/70 bg-accent-soft text-accent-soft-fg">
                     <InsightKnowledgeRetrievalIcon className="size-4" />
                   </span>
                 </div>
                 <div className="mt-3">
-                  <p className="text-2xl font-bold tabular-nums text-ink">
+                  <p className="text-xl font-bold tabular-nums text-ink">
                     {(data!.totals.searches - data!.totals.searchMisses).toLocaleString()}
                   </p>
                   <p className="mt-1 text-xs text-ink-muted">
@@ -147,15 +147,15 @@ export function DetailedInsightsView({ project }: { project: string }) {
                 </div>
               </Panel>
 
-              <Panel className="flex flex-col p-4 transition-all hover:border-line-strong hover:shadow-xs">
+              <Panel className="flex flex-col p-4 transition hover:border-line-strong hover:shadow-xs">
                 <div className="flex items-center justify-between gap-2">
                   <p className="meta font-semibold">Client conversations</p>
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-line bg-surface-2 text-ink-muted shadow-2xs">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-line bg-surface-2 text-ink-muted">
                     <InsightConversationsIcon className="size-4" />
                   </span>
                 </div>
                 <div className="mt-3">
-                  <p className="text-2xl font-bold tabular-nums text-ink">
+                  <p className="text-xl font-bold tabular-nums text-ink">
                     {data!.totals.conversations.toLocaleString()}
                   </p>
                   <p className="mt-1 text-xs text-ink-muted">
@@ -169,15 +169,15 @@ export function DetailedInsightsView({ project }: { project: string }) {
                 </div>
               </Panel>
 
-              <Panel className="flex flex-col p-4 transition-all hover:border-line-strong hover:shadow-xs">
+              <Panel className="flex flex-col p-4 transition hover:border-line-strong hover:shadow-xs">
                 <div className="flex items-center justify-between gap-2">
                   <p className="meta font-semibold">Handed to a person</p>
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-danger-line/70 bg-danger-soft text-danger shadow-2xs">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-danger-line/70 bg-danger-soft text-danger">
                     <InsightEscalationIcon className="size-4" />
                   </span>
                 </div>
                 <div className="mt-3">
-                  <p className="text-2xl font-bold tabular-nums text-ink">
+                  <p className="text-xl font-bold tabular-nums text-ink">
                     {data!.totals.escalated.toLocaleString()}
                   </p>
                   <p className="mt-1 text-xs text-ink-muted">
@@ -186,15 +186,15 @@ export function DetailedInsightsView({ project }: { project: string }) {
                 </div>
               </Panel>
 
-              <Panel className="flex flex-col p-4 transition-all hover:border-line-strong hover:shadow-xs">
+              <Panel className="flex flex-col p-4 transition hover:border-line-strong hover:shadow-xs">
                 <div className="flex items-center justify-between gap-2">
                   <p className="meta font-semibold">Client satisfaction</p>
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-positive-line/70 bg-positive-soft text-positive shadow-2xs">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-positive-line/70 bg-positive-soft text-positive">
                     <InsightHelpfulIcon className="size-4" />
                   </span>
                 </div>
                 <div className="mt-3">
-                  <p className="text-2xl font-bold tabular-nums text-ink">
+                  <p className="text-xl font-bold tabular-nums text-ink">
                     {percent(
                       data!.totals.ratedUp + data!.totals.ratedDown > 0
                         ? data!.totals.ratedUp / (data!.totals.ratedUp + data!.totals.ratedDown)
@@ -243,7 +243,10 @@ export function DetailedInsightsView({ project }: { project: string }) {
                             &ldquo;{gap.query}&rdquo;
                           </p>
                           <p className="mt-1 meta text-xs text-ink-muted">
-                            {gap.agentName} · last asked {formatRelativeTime(gap.lastAskedAt)}
+                            {gap.agentName} · last asked{" "}
+                            <span title={formatDateTime(gap.lastAskedAt)}>
+                              {formatTime(gap.lastAskedAt)} · {formatRelativeTime(gap.lastAskedAt)}
+                            </span>
                           </p>
                         </div>
                         <Badge tone={gap.misses > 2 ? "danger" : "warning"}>
@@ -285,7 +288,11 @@ export function DetailedInsightsView({ project }: { project: string }) {
                             {item.reply}
                           </p>
                           <p className="meta text-xs">
-                            {item.agentName} · {formatRelativeTime(item.ratedAt)} ·{" "}
+                            {item.agentName} ·{" "}
+                            <span title={formatDateTime(item.ratedAt)}>
+                              {formatTime(item.ratedAt)} · {formatRelativeTime(item.ratedAt)}
+                            </span>{" "}
+                            ·{" "}
                             <Link
                               href={`/p/${project}/inbox/${item.conversationId}`}
                               className="text-accent hover:underline"

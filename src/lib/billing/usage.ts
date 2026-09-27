@@ -8,7 +8,7 @@ import { costOf } from "@/lib/pricing";
 import { usagePeriod } from "@/lib/usage";
 import { planFor, type Plan } from "./plans";
 
-export interface UsageSnapshot {
+interface UsageSnapshot {
   period: string;
   periodStart: string;
   plan: Plan;

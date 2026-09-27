@@ -16,10 +16,10 @@ export const CONNECTOR_CATEGORIES = [
   { id: "crm", label: "Customers & sales" },
   { id: "hr", label: "People & HR" },
 ] as const;
-export type ConnectorCategory = (typeof CONNECTOR_CATEGORIES)[number]["id"];
+type ConnectorCategory = (typeof CONNECTOR_CATEGORIES)[number]["id"];
 
 /** How an owner connects it. OAuth wherever the provider offers it. */
-export type ConnectorAuth = "oauth" | "api_key" | "webhook";
+type ConnectorAuth = "oauth" | "api_key" | "webhook";
 
 /** The OAuth providers this server can talk to; each needs its client id and secret set. */
 export const OAUTH_PROVIDERS = ["google", "slack", "github"] as const;

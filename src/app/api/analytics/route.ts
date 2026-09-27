@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 const PREVIEW_PREFIX = "preview:";
 
-export interface AgentStats {
+interface AgentStats {
   id: string;
   name: string;
   jobTitle: string;
@@ -70,7 +70,7 @@ export interface WorkTotals {
   unpricedModels: string[];
 }
 
-export interface DislikedReply {
+interface DislikedReply {
   messageId: string;
   conversationId: string;
   agentName: string;
@@ -80,14 +80,14 @@ export interface DislikedReply {
   ratedAt: string;
 }
 
-export interface ContentGap {
+interface ContentGap {
   query: string;
   misses: number;
   agentName: string;
   lastAskedAt: string;
 }
 
-export interface CollabHandoff {
+interface CollabHandoff {
   id: string;
   fromAgent: { id: string; name: string; avatarUrl: string | null };
   toAgent: { id: string; name: string; avatarUrl: string | null };

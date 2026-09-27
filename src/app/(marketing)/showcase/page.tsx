@@ -59,7 +59,7 @@ export default function ShowcasePage() {
               <Reveal>
                 <div className="grid gap-6 rounded-panel border border-line bg-surface p-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:p-8">
                   <div className="flex flex-col">
-                    <span className="flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg shadow-xs">
+                    <span className="flex size-12 items-center justify-center rounded-panel bg-accent-soft text-accent-soft-fg shadow-xs">
                       <TemplateIcon icon={role.icon} className="size-6" />
                     </span>
                     <h2 className="mt-4 text-xl font-medium tracking-tight text-ink">{role.name}</h2>

@@ -11,9 +11,11 @@ type Params = { params: Promise<{ issueId: string }> };
 
 export async function PATCH(request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { issueId } = await params;
     const input = await parseJson(request, issuePatchSchema);
+    const visible = await prisma.issue.findFirst({ where: { id: issueId, agent: agentsVisibleTo(userId) }, select: { id: true } });
+    if (!visible) throw new HttpError(404, "That item no longer exists.");
 
     const issue = await prisma.issue
       .update({

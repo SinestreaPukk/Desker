@@ -5,7 +5,6 @@ import Link from "next/link";
 import { CheckCircle2, Clock, Mail, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { AgentAvatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RemoveButton } from "@/components/work/row-actions";
 import { Panel } from "@/components/ui/panel";
@@ -13,7 +12,7 @@ import { useSetDigestRead } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { DigestDto } from "@/lib/work/serialize";
 import type { DigestBulletKind } from "@/lib/work/types";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 
 const BULLET: Record<
   DigestBulletKind,
@@ -24,14 +23,14 @@ const BULLET: Record<
   done: { icon: CheckCircle2, className: "text-positive", label: "Done" },
 };
 
-/** "15 Sep – 22 Sep", or one date when the window is inside a day. */
+/** "15 Sep – 22 Sep", or one date and 24hr time when the window is inside a day. */
 function period(start: string, end: string): string {
   const from = new Date(start);
   const to = new Date(end);
   const day = { day: "numeric", month: "short" } as const;
   const sameDay = from.toDateString() === to.toDateString();
   return sameDay
-    ? to.toLocaleDateString(undefined, day)
+    ? `${to.toLocaleDateString(undefined, day)} ${formatTime(to)}`
     : `${from.toLocaleDateString(undefined, day)} – ${to.toLocaleDateString(undefined, day)}`;
 }
 
@@ -63,8 +62,14 @@ export function DigestCard({ digest, project }: { digest: DigestDto; project: st
   }
 
   return (
-    <Panel className={unread ? "border-l-2 border-l-accent" : undefined}>
+    <Panel>
       <div className="flex items-start gap-3 px-4 py-3">
+        {/* Unread, the Mail way: one dot, not a stripe and a badge. */}
+        <span
+          className={unread ? "mt-4 size-2 shrink-0 rounded-full bg-accent" : "mt-4 size-2 shrink-0"}
+          aria-label={unread ? "Unread" : undefined}
+          role={unread ? "img" : undefined}
+        />
         <AgentAvatar
           name={digest.agent.name}
           src={digest.agent.avatarUrl}
@@ -78,7 +83,6 @@ export function DigestCard({ digest, project }: { digest: DigestDto; project: st
               {digest.cadence === "daily" ? "Daily update" : "Weekly update"} ·{" "}
               {period(digest.periodStart, digest.periodEnd)}
             </span>
-            {unread ? <Badge tone="accent">New</Badge> : null}
           </div>
           <p className="mt-0.5 text-sm text-ink">{digest.headline}</p>
         </div>
@@ -107,7 +111,9 @@ export function DigestCard({ digest, project }: { digest: DigestDto; project: st
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line px-4 py-2 text-xs text-ink-muted">
         <span>{statLine(digest)}</span>
         <span aria-hidden>·</span>
-        <span>{formatRelativeTime(digest.createdAt)}</span>
+        <span title={formatDateTime(digest.createdAt)}>
+          {formatTime(digest.createdAt)} · {formatRelativeTime(digest.createdAt)}
+        </span>
         {digest.emailedAt ? (
           <>
             <span aria-hidden>·</span>

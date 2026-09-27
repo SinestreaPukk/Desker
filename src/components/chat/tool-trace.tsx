@@ -5,7 +5,7 @@ import { toolLabel, type ToolActivity } from "@/hooks/use-chat-stream";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  search_company_context: Search,
+  search_documents: Search,
   log_issue: AlertCircle,
   log_suggestion: Sparkles,
   escalate_to_human: UserRoundCheck,

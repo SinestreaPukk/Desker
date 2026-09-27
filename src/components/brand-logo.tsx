@@ -12,7 +12,6 @@ import { BRAND } from "@/lib/brand";
  */
 const MASK = {
   mark: "/brand/desker-mark.png",
-  wordmark: "/brand/desker-wordmark.png",
   lockup: "/brand/desker-lockup.png",
 } as const;
 
@@ -42,25 +41,11 @@ export function BrandMark({ className }: { className?: string }) {
   );
 }
 
-/** The wordmark without the tagline. The default for anything compact. */
-export function BrandWordmark({ className }: { className?: string }) {
-  return (
-    <span
-      role="img"
-      aria-label={BRAND.name}
-      style={maskStyle(MASK.wordmark)}
-      // Aspect ratio pinned to the source artwork so the mask cannot stretch.
-      className={cn("inline-block aspect-[1616/720] h-8 bg-accent", className)}
-    />
-  );
-}
-
 /**
  * The full lockup: wordmark plus "Agentic AI Platform".
  *
  * The tagline is only ~18% of the artwork's height, so it needs around 64px to
- * stay legible - hence the h-16 default. Below that use `BrandWordmark`, which
- * drops the tagline rather than rendering it as mush.
+ * stay legible - hence the h-16 default. Below that, use the mark alone.
  */
 export function BrandLockup({ className }: { className?: string }) {
   return (

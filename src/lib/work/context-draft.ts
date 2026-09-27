@@ -37,7 +37,7 @@ export class NoModel extends Error {
   }
 }
 
-export interface ContextDraft {
+interface ContextDraft {
   answers: ContextAnswers;
   /** The filenames it read, so the owner can judge the draft. */
   sources: string[];

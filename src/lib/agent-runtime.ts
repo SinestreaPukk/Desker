@@ -35,7 +35,7 @@ export type RuntimeEvent =
   | { type: "done" }
   | { type: "error"; message: string; retryable: boolean };
 
-export interface AgentForRun {
+interface AgentForRun {
   id: string;
   /** Scopes the colleague list: a router must never reach another project. */
   projectId: string;
@@ -51,7 +51,7 @@ export interface AgentForRun {
 }
 
 /** Rebuilds the neutral conversation history from persisted rows. */
-export function messagesFromRows(
+function messagesFromRows(
   rows: { role: string; content: string; blocks: unknown }[],
 ): ChatMessage[] {
   const messages: ChatMessage[] = [];
@@ -99,7 +99,7 @@ function renderToolTurn(results: { name: string; content: string }[]): string {
   return results.map((result) => `${result.name}: ${result.content}`).join("\n\n");
 }
 
-export interface RunTurnOptions {
+interface RunTurnOptions {
   /** The agent actually answering. See resolveActiveAgent(). */
   agent: AgentForRun;
   conversationId: string;
@@ -126,9 +126,9 @@ export async function* runAgentTurn(
 
   const rawTools = toStringArray(agent.allowedTools);
   const allowedTools = isCompanyContext
-    ? ["search_company_context"]
+    ? ["search_documents"]
     : isColleague
-      ? Array.from(new Set([...rawTools, "search_company_context"]))
+      ? Array.from(new Set([...rawTools, "search_documents"]))
       : rawTools;
   const responsibilities = toStringArray(agent.responsibilities);
 
@@ -144,7 +144,7 @@ export async function* runAgentTurn(
       orderBy: { createdAt: "asc" },
       select: { role: true, content: true, blocks: true },
     }),
-    isCompanyContext || allowedTools.includes("search_company_context")
+    isCompanyContext || allowedTools.includes("search_documents")
       ? prisma.document.findMany({
           where: { agentId: agent.id, status: "ready" },
           select: { filename: true },
@@ -177,7 +177,7 @@ export async function* runAgentTurn(
   const offeredTools =
     documents.length > 0
       ? allowedTools
-      : allowedTools.filter((tool) => tool !== "search_company_context");
+      : allowedTools.filter((tool) => tool !== "search_documents");
 
   const companyContext = effectiveContext({
     projectContext: project.context,

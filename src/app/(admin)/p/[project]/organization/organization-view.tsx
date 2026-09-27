@@ -40,7 +40,7 @@ import {
   type BillingSummary,
 } from "@/hooks/use-work-data";
 import { ApiError, errorMessage } from "@/lib/api-client";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 
 const ROLE_BLURB: Record<string, string> = {
   owner: "People, billing, everything.",
@@ -70,7 +70,7 @@ export function OrganizationView({
         title={org.data?.name ?? "Organisation"}
         description="Who is in this organisation, what they may do, and what it pays for. Shared by every project here."
       />
-      <PageBody className="grid gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <PageBody className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="space-y-5">
           {/* The same shared context as the roster's, edited from either place. */}
           <ProjectContextPanel project={project} />
@@ -132,7 +132,7 @@ function MembersPanel({
             {members.data.map((member) => {
               const isSelf = member.userId === currentUserId;
               return (
-                <li key={member.userId} className="group flex flex-wrap items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-surface-2/60 text-sm">
+                <li key={member.userId} className="group flex flex-wrap items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-surface-2/60 text-sm">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-soft-fg ring-1 ring-accent-line">
                     {(member.name ?? member.email).slice(0, 2).toUpperCase()}
                   </div>
@@ -142,7 +142,10 @@ function MembersPanel({
                       {isSelf ? <span className="ml-1.5 text-xs text-ink-muted font-normal">(you)</span> : null}
                     </p>
                     <p className="truncate text-xs text-ink-muted">
-                      {member.email} · joined {formatRelativeTime(member.joinedAt)}
+                      {member.email} · joined{" "}
+                      <span title={formatDateTime(member.joinedAt)}>
+                        {formatRelativeTime(member.joinedAt)}
+                      </span>
                     </p>
                   </div>
                   {isOwner ? (
@@ -321,7 +324,7 @@ function InvitesPanel({ organizationId, isOwner }: { organizationId: string; isO
                   <div className="min-w-0 flex-1">
                     <p className="text-ink">{invite.email}</p>
                     <p className="text-xs text-ink-muted">
-                      {invite.role} · expires {new Date(invite.expiresAt).toLocaleDateString()}
+                      {invite.role} · expires {formatDateTime(invite.expiresAt)}
                     </p>
                   </div>
                   <Button type="button" size="sm" variant="ghost" onClick={() => void copy(invite.url)}>
@@ -398,7 +401,7 @@ function Meter({ label, used, limit, money }: { label: string; used: number; lim
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-surface-3">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${ratio >= 1 ? "bg-danger" : ratio >= 0.8 ? "bg-warning" : "bg-accent"}`}
+          className={`h-full rounded-full transition duration-500 ${ratio >= 1 ? "bg-danger" : ratio >= 0.8 ? "bg-warning" : "bg-accent"}`}
           style={{ width: `${ratio * 100}%` }}
         />
       </div>
@@ -468,7 +471,7 @@ function BillingPanel({
               {data.subscriptionStatus && data.subscriptionStatus !== "active"
                 ? ` · ${data.subscriptionStatus.replace("_", " ")}`
                 : ""}
-              {data.currentPeriodEnd ? ` · renews ${formatRelativeTime(data.currentPeriodEnd)}` : ""}
+              {data.currentPeriodEnd ? ` · renews ${formatDateTime(data.currentPeriodEnd)}` : ""}
             </PanelDescription>
           </div>
           <Badge tone={plan.id === "free" ? "neutral" : "accent"}>{plan.name}</Badge>
@@ -516,7 +519,17 @@ function BillingPanel({
                   .map((p) => (
                     <div key={p.id} className={`rounded-lg border p-3 ${p.id === plan.id ? "border-accent bg-accent-soft/30" : "border-line"}`}>
                       <p className="text-sm font-medium text-ink">
-                        {p.name} <span className="text-ink-muted">· ${p.priceUsd}/mo</span>
+                        {p.name}{" "}
+                        <span className="text-ink-muted">
+                          ·{" "}
+                          {p.originalPriceUsd ? (
+                            <span className="line-through decoration-line-strong mr-1 text-ink-muted/80">
+                              <span className="sr-only">Original price: </span>
+                              ${p.originalPriceUsd}
+                            </span>
+                          ) : null}
+                          ${p.priceUsd}/mo
+                        </span>
                       </p>
                       <p className="mt-0.5 text-xs text-ink-muted">{p.blurb}</p>
                       <p className="mt-1 text-xs text-ink-muted">

@@ -18,8 +18,8 @@ import { toStringArray } from "@/lib/agent-fields";
 import type { SuggestionStatus } from "./types";
 
 /** How long "remind me later" lasts when no explicit period is given. */
-export const DEFAULT_SNOOZE_DAYS = 7;
-export const MAX_SNOOZE_DAYS = 90;
+const DEFAULT_SNOOZE_DAYS = 7;
+const MAX_SNOOZE_DAYS = 90;
 
 /**
  * The filter for "what is in front of the owner": open, plus anything whose
@@ -41,7 +41,7 @@ export function isPending(
   return suggestion.status === "snoozed" && Boolean(suggestion.snoozedUntil && suggestion.snoozedUntil <= now);
 }
 
-export interface DecideInput {
+interface DecideInput {
   suggestionId: string;
   status: SuggestionStatus;
   /** Snooze only. Defaults to a week, capped at ninety days. */
@@ -49,7 +49,7 @@ export interface DecideInput {
   userId: string;
 }
 
-export interface DecideResult {
+interface DecideResult {
   id: string;
   status: SuggestionStatus;
   snoozedUntil: string | null;

@@ -12,6 +12,8 @@ vi.mock("@/lib/jobs/client", () => ({ inngest: { send: vi.fn(async () => undefin
 
 import { executeWorkTool, type RunContext } from "@/lib/work/execute";
 import { actionItemInclude, toActionItemDto } from "@/app/api/action-items/serialize";
+import { threadOf, threadRoots } from "@/lib/work/thread";
+import { describeAuditEntry } from "@/lib/audit-copy";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);
@@ -156,5 +158,61 @@ describe("agents working together", () => {
     );
     expect(outcome.isError).toBe(true);
     expect(outcome.content).toMatch(/handed on 2 times/);
+  });
+
+  it("reads an Assistant -> Marketer hand-off as one thread, with the reply on the asking run", async () => {
+    const project = await prisma.agent.findUniqueOrThrow({ where: { id: agents.bright }, select: { projectId: true } });
+    const [assistant, marketer] = await Promise.all(
+      [
+        ["Ava", "Executive Assistant"],
+        ["Max", "Content Marketer"],
+      ].map(([name, jobTitle]) =>
+        prisma.agent.create({
+          data: { ...project, name: name!, jobTitle: jobTitle!, personality: "Plain.", responsibilities: [], allowedTools: [], status: "published" },
+        }),
+      ),
+    );
+    const run = await prisma.actionItem.create({
+      data: { organizationId, agentId: assistant!.id, type: "scope_run", trigger: "manual", payload: {} },
+    });
+    const ctx: RunContext = { ...ctxFor("bright", run.id), agent: { id: assistant!.id, name: "Ava", modelProvider: "anthropic", model: null } };
+    const outcome = await executeWorkTool(
+      { id: "call-pair", name: "delegate_to_colleague", input: { colleague_id: marketer!.id, task: "Announce the new opening hours" } },
+      ctx,
+    );
+    expect(outcome.isError).toBeFalsy();
+
+    // The Marketer finishes its run.
+    const handoff = await prisma.actionItem.findFirstOrThrow({ where: { parentId: run.id, agentId: marketer!.id } });
+    await prisma.actionItem.update({
+      where: { id: handoff.id },
+      data: { status: "done", headline: "Drafted the opening-hours post for your approval" },
+    });
+
+    // One thread, whichever run it is opened from.
+    expect(await threadOf(handoff.id)).toEqual([run.id, handoff.id]);
+    expect(await threadOf(run.id)).toEqual([run.id, handoff.id]);
+    const roots = await threadRoots([run.id, handoff.id]);
+    expect(roots.get(run.id)).toBe(run.id);
+    expect(roots.get(handoff.id)).toBe(run.id);
+
+    // The audit row says it in words, naming the colleague.
+    const row = await prisma.auditLog.findFirstOrThrow({ where: { targetId: run.id, action: "tool.called" } });
+    const described = describeAuditEntry({ ...row, metadata: row.metadata as Record<string, unknown> });
+    expect(described.title).toBe("Handed work to Max");
+    expect(described.detail).toBe("Announce the new opening hours");
+
+    // The Marketer's answer is on the Assistant's run.
+    const parent = toActionItemDto(
+      await prisma.actionItem.findUniqueOrThrow({ where: { id: run.id }, include: actionItemInclude }),
+    );
+    expect(parent.collab.handoffs[0]).toMatchObject({
+      status: "done",
+      reply: "Drafted the opening-hours post for your approval",
+    });
+
+    // A run with no hand-off is in no thread.
+    const solo = await runFor("moon");
+    expect((await threadRoots([solo.actionItemId])).size).toBe(0);
   });
 });

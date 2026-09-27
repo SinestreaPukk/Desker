@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Check, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -19,23 +20,30 @@ import {
 import { errorMessage } from "@/lib/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
 import { TRIGGER_LABELS, type GatedToolId } from "@/lib/work/types";
-import { formatRelativeTime, safeHttpUrl } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, safeHttpUrl } from "@/lib/utils";
 
-/** What each outbound action is called on the card and in its toasts. */
-const PENDING_COPY: Record<GatedToolId, { verb: string; noun: string }> = {
-  publish_post: { verb: "publish a post", noun: "post" },
-  send_email: { verb: "send an email", noun: "email" },
-  calendar_create_event: { verb: "add a calendar event", noun: "event" },
-  slack_post_message: { verb: "post to Slack", noun: "message" },
+/**
+ * What each outbound action is called on the card, its button and its toasts -
+ * one table, so an approval reads the same whatever is being approved.
+ */
+const PENDING_COPY: Record<GatedToolId, { verb: string; noun: string; approve: string; going: string }> = {
+  publish_post: { verb: "publish a post", noun: "post", approve: "Approve and publish", going: "publishing" },
+  send_email: { verb: "send an email", noun: "email", approve: "Approve and send", going: "sending" },
+  calendar_create_event: {
+    verb: "add a calendar event",
+    noun: "event",
+    approve: "Approve and add to calendar",
+    going: "adding",
+  },
+  slack_post_message: { verb: "post to Slack", noun: "message", approve: "Approve and post", going: "posting" },
 };
 
 /** The event or message exactly as it would go out: there is no draft to show for these. */
 function ActionPreview({ tool, input }: { tool: GatedToolId; input: Record<string, unknown> }) {
   const text = (key: string) => (typeof input[key] === "string" ? (input[key] as string) : "");
-  const when = (key: string) =>
-    text(key) ? new Date(text(key)).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "";
+  const when = (key: string) => (text(key) ? formatDateTime(text(key)) : "");
   return (
-    <div className="rounded-xl border border-line bg-surface-2/60 p-3.5 text-sm">
+    <div className="rounded-lg border border-line bg-surface-2/60 p-3.5 text-sm">
       {tool === "calendar_create_event" ? (
         <>
           <p className="font-semibold text-ink">{text("summary")}</p>
@@ -67,6 +75,8 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
   const reject = useRejectActionItem();
   const reopen = useReopenActionItem();
   const update = useUpdateDraft();
+  const runHref = `/p/${project}/work/${item.id}`;
+  const onRunPage = usePathname() === runHref;
   const [note, setNote] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState(false);
   const [rejecting, setRejecting] = React.useState(false);
@@ -99,20 +109,21 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
     }
   }
 
-  const what = pending ? PENDING_COPY[pending.tool].noun : "draft";
+  const copy = pending ? PENDING_COPY[pending.tool] : null;
+  const what = copy?.noun ?? "draft";
 
   async function decide(verb: "approve" | "reject") {
     setNote(null);
     try {
       if (verb === "approve") {
         await approve.mutateAsync({ id: item.id });
-        toast.success(`Approved - sending the ${what} now`, {
-          description: `${item.agent.name}'s ${what} is on its way. Delivery shows under Work.`,
+        toast.success(`Approved - ${copy?.going ?? "sending"} the ${what} now`, {
+          description: `You approved ${item.agent.name}'s ${what}. Whether it arrived shows on the run and in the Audit log.`,
         });
       } else {
         await reject.mutateAsync({ id: item.id, reason: reason.trim() });
         toast("Rejected - nothing was sent", {
-          description: reason.trim() ? `Reason: ${reason.trim()}` : `${item.agent.name}'s ${what} stays a draft.`,
+          description: reason.trim() ? `Reason: ${reason.trim()}` : `${item.agent.name}'s ${what} was not sent.`,
           action: {
             label: "Undo",
             onClick: () => {
@@ -148,9 +159,12 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
             <span className="text-ink-muted">
               {" "}
               · from a {(TRIGGER_LABELS[item.trigger] ?? item.trigger).toLowerCase()} run ·{" "}
-              {formatRelativeTime(item.awaitingSince ?? item.createdAt)}
+              <span title={formatDateTime(item.awaitingSince ?? item.createdAt)}>
+                {formatRelativeTime(item.awaitingSince ?? item.createdAt)}
+              </span>
             </span>
           </p>
+          <p className="mt-0.5 text-xs text-ink-muted">Nothing goes out until you approve it.</p>
           {pending.note ? <p className="mt-0.5 text-xs text-ink-muted">{pending.note}</p> : null}
           {item.escalatedAt ? (
             <p className="mt-1 text-xs text-danger">
@@ -206,7 +220,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
                 </p>
               ) : null}
               <p className="mt-0.5 text-sm font-semibold text-ink">{draft.title}</p>
-              <pre className="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap rounded-xl border border-line/80 bg-surface-2/70 p-4 font-sans text-sm leading-relaxed text-ink shadow-2xs">
+              <pre className="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap rounded-lg border border-line/80 bg-surface-2/70 p-4 font-sans text-sm leading-relaxed text-ink">
                 {draft.body}
               </pre>
             </div>
@@ -214,7 +228,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
         ) : pending.tool === "calendar_create_event" || pending.tool === "slack_post_message" ? (
           <ActionPreview tool={pending.tool} input={pending.input} />
         ) : (
-          <pre className="whitespace-pre-wrap rounded-xl border border-line bg-surface-2/60 p-3.5 font-mono text-xs text-ink">
+          <pre className="whitespace-pre-wrap rounded-lg border border-line bg-surface-2/60 p-3.5 font-mono text-xs text-ink">
             {JSON.stringify(pending.input, null, 2)}
           </pre>
         )}
@@ -238,7 +252,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
         ) : null}
 
         {item.findings && item.findings.length > 0 ? (
-          <details className="rounded-xl border border-line bg-surface-2/40 p-3">
+          <details className="rounded-lg border border-line bg-surface-2/40 p-3">
             <summary className="eyebrow cursor-pointer text-ink">
               Research sources &amp; citations ({item.findings.length})
             </summary>
@@ -282,7 +296,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
           open={rejecting}
           onOpenChange={setRejecting}
           title={`Reject this ${what}?`}
-          description={`Nothing is sent. ${item.agent.name} keeps the draft, and you can undo for a moment afterwards.`}
+          description={`Nothing is sent.${draft ? ` ${item.agent.name} keeps the draft.` : ""} You can undo for a moment afterwards.`}
           confirmLabel="Reject"
           onConfirm={() => decide("reject")}
         >
@@ -305,7 +319,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
               className="min-h-[44px] px-4 font-semibold shadow-xs hover:shadow-sm sm:min-h-0 sm:h-9"
             >
               <Check className="size-4" aria-hidden />
-              Approve and send
+              {copy!.approve}
             </Button>
             {draft ? (
               <Button
@@ -329,12 +343,14 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
               <X className="size-3.5" aria-hidden />
               Reject
             </Button>
-            <Link
-              href={`/p/${project}/work?agentId=${item.agent.id}`}
-              className="ml-auto flex min-h-[44px] items-center text-xs font-medium text-accent hover:underline sm:min-h-0"
-            >
-              Full run details
-            </Link>
+            {onRunPage ? null : (
+              <Link
+                href={runHref}
+                className="ml-auto flex min-h-[44px] items-center text-xs font-medium text-accent hover:underline sm:min-h-0"
+              >
+                Full run details
+              </Link>
+            )}
           </div>
         )}
         {note ? <p className="text-xs text-danger">{note}</p> : null}

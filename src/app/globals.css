@@ -25,7 +25,7 @@
 :root {
   /* surfaces - a hint of the brand hue keeps the neutrals from going muddy
      next to the indigo */
-  --paper: oklch(0.983 0.003 286.4); /* slate-2 */
+  --paper: oklch(0.962 0.004 286.3); /* grouped background: white inset lists sit on it */
   --surface: oklch(1 0 0);
   --surface-2: oklch(0.956 0.004 286.3); /* slate-3 */
   --surface-3: oklch(0.932 0.005 286.3); /* slate-4 */
@@ -35,7 +35,7 @@
      does that: --surface-2 is darker than the page in light and lighter than
      it in dark, so a rail painted with it receded in one theme and advanced
      in the other. This one is defined as "below paper" in each. */
-  --rail: oklch(0.956 0.004 286.3); /* slate-3 */
+  --rail: oklch(0.945 0.005 286.3); /* one step below the ground, so the chrome recedes */
 
   /* text */
   --ink: oklch(0.241 0.010 248.2); /* slate-12 */
@@ -233,16 +233,22 @@
   --color-av-6-bg: var(--av-6-bg);
   --color-av-6-fg: var(--av-6-fg);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  /* The platform face first - SF Pro on Apple devices, Segoe UI on Windows -
+     with its own optical sizing and tracking; Geist where neither exists. */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", var(--font-geist-sans), ui-sans-serif, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
   /* The landing hero's serif. Everything else, public site included, is the sans. */
   --font-display: var(--font-garamond), "Iowan Old Style", Georgia, serif;
 
-  /* Type scale: five sizes for the product, plus one display size the
+  /* Type scale: six sizes for the product, plus one display size the
      marketing hero alone may use. Tailwind's default steps are reset so an
      unlisted size (text-2xl, text-[0.8125rem]) is a build-time absence, not a
      quiet exception. Documented with live examples at /design-system. */
   --text-*: initial;
+  /* The meta step: ids, timestamps, counts, small pills. The smallest text
+     anywhere; nothing is set below it. */
+  --text-meta: 0.6875rem;
+  --text-meta--line-height: 1rem;
   --text-xs: 0.75rem;
   --text-xs--line-height: 1rem;
   --text-sm: 0.8125rem;
@@ -253,6 +259,10 @@
   --text-lg--line-height: 1.5rem;
   --text-xl: 1.5rem;
   --text-xl--line-height: 1.875rem;
+  /* The large title every app page opens with; it condenses into the toolbar
+     on scroll. */
+  --text-large-title: 2.125rem;
+  --text-large-title--line-height: 2.5rem;
   --text-display: 2.75rem;
   --text-display--line-height: 1.1;
   /* The landing hero only: 44px on a phone, 84px on a wide desktop. */
@@ -274,6 +284,16 @@
   --radius-lg: 0.75rem;
   --radius-panel: 0.875rem;
   --radius-full: 9999px;
+
+  /* Motion. Tailwind's own ease-out and ease-in-out utilities are redefined
+     as strong curves, so every `ease-out` in the app gets the right one:
+     ease-out for things entering and leaving, ease-in-out for things moving
+     on screen, plain ease for hover and colour. Nothing uses ease-in. Keep UI
+     motion at 150-250ms; the press is 150ms. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: ease;
 
   /* Shadow scale: xs for resting cards, sm for hover and popovers, md for
      dialogs. Tinted with the brand hue via --shadow-color. */
@@ -366,10 +386,25 @@
      list markers and other things that are not read. */
   .meta {
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: var(--text-meta);
     letter-spacing: 0.02em;
     text-transform: uppercase;
     color: var(--ink-muted);
+  }
+  /* Inside the app (Native Desk) metadata speaks in the platform face, in
+     sentence case: the mono uppercase label voice belongs to the public site. */
+  /* Section labels speak the same way inside the app: sentence case, no
+     tracking, the weight carrying the hierarchy instead of capitals. */
+  [data-app] .eyebrow {
+    font-size: var(--text-sm);
+    letter-spacing: normal;
+    text-transform: none;
+  }
+  [data-app] .meta {
+    font-family: inherit;
+    font-size: var(--text-xs);
+    letter-spacing: normal;
+    text-transform: none;
   }
 
   /* Long-form text: the terms and the privacy policy.
@@ -417,14 +452,46 @@
     font-weight: 600;
     color: var(--ink);
   }
+}
 
-  /* Subtle paper texture behind full-page surfaces. */
-  .paper-grid {
-    background-image:
-      linear-gradient(to right, color-mix(in oklch, var(--line) 55%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklch, var(--line) 55%, transparent) 1px, transparent 1px);
-    background-size: 32px 32px;
-    background-position: -1px -1px;
+/* Disclosures (every <details> in the app) open and close instead of
+   snapping, where the browser can animate to auto height. Elsewhere they
+   simply snap, as before. Reduced motion zeroes it with everything else. */
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    height: 0;
+    opacity: 0;
+    overflow: clip;
+    transition:
+      height 200ms var(--ease-out),
+      opacity 200ms var(--ease-out),
+      content-visibility 200ms allow-discrete;
+  }
+  details[open]::details-content {
+    height: auto;
+    opacity: 1;
+  }
+}
+
+/* Materials: a translucent bar that content scrolls under, with a bright top
+   edge where light catches it. Solid for anyone who asks for less
+   transparency, and every blur in the app drops away for them too. */
+.material-bar {
+  background: color-mix(in oklch, var(--rail) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .material-bar {
+    background: var(--rail);
+  }
+  [class*="backdrop-blur"],
+  .material-bar {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
 
@@ -509,7 +576,6 @@
     inset 0 1px 0 oklch(1 0 0 / 0.45),
     inset 0 -1px 0 oklch(0 0 0 / 0.12);
   transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms, filter 220ms;
-  will-change: transform;
 }
 .glass:hover {
   transform: translateY(-1px);
@@ -532,7 +598,6 @@
     0 0 0 1px oklch(1 0 0 / 0.4),
     0 12px 28px -10px oklch(0.200 0.120 270 / 0.55);
   transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms, background-color 220ms;
-  will-change: transform;
 }
 .cta-sky:hover {
   transform: translateY(-1px);
@@ -744,7 +809,6 @@
 /* Hover lift shared by the landing's cards. */
 .lift {
   transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms, border-color 220ms;
-  will-change: transform;
 }
 .lift:hover { transform: translateY(-2px); }
 

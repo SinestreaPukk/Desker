@@ -15,8 +15,7 @@ import { connectorById, connectorForTool } from "@/lib/integrations/catalog";
 import { GATED_TOOL_IDS } from "./types";
 
 
-export const INTEGRATION_STATES = ["connected", "attention", "disconnected"] as const;
-export type IntegrationState = (typeof INTEGRATION_STATES)[number];
+type IntegrationState = "connected" | "attention" | "disconnected";
 
 export interface IntegrationHealth {
   state: IntegrationState;

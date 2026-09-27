@@ -10,7 +10,7 @@ import { RunFindings } from "@/components/work/run-findings";
 import { SuggestionRow } from "@/components/work/suggestion-row";
 import { TeamChat } from "@/components/work/team-chat";
 import type { ActionItemDto, SuggestionDto } from "@/lib/work/serialize";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 
 /** The line a run is known by, in a list and as its page title. */
 export function runTitle(item: ActionItemDto): string {
@@ -59,7 +59,7 @@ export function RunDetail({
           title="Suggestions"
           hint="What the agent thinks should happen next. Accepting one adds it to the agent's objectives."
         >
-          <ul className="space-y-2">
+          <ul className="divide-y divide-line/70 rounded-lg border border-line/70 px-4">
             {suggestions.map((suggestion) => (
               <li key={suggestion.id}>
                 <SuggestionRow suggestion={suggestion} project={project} inRun />
@@ -79,7 +79,7 @@ export function RunDetail({
         <RunSection title="Drafts" hint="Written by the agent, nothing sent.">
           <div className="space-y-2">
             {item.drafts.map((draft) => (
-              <details key={draft.id} className="group rounded-xl border border-line bg-surface">
+              <details key={draft.id} className="group rounded-lg border border-line bg-surface">
                 <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
                   <ChevronRight
                     className="size-4 shrink-0 text-ink-subtle transition-transform group-open:rotate-90"
@@ -98,7 +98,7 @@ export function RunDetail({
         </RunSection>
       ) : null}
 
-      <TeamChat item={item} />
+      <TeamChat item={item} project={project} />
 
       {item.external ? (
         <p className={item.external.ok ? "text-positive" : "text-danger"}>Delivery: {item.external.detail}</p>
@@ -125,7 +125,9 @@ export function RunDetail({
                     <span className={step.ok ? "text-ink" : "text-danger"}>
                       <code className="font-mono">{step.tool}</code>
                     </span>
-                    <span className="ml-2 text-ink-muted">{formatRelativeTime(step.at)}</span>
+                    <span className="ml-2 text-ink-muted" title={formatDateTime(step.at, { withSeconds: true })}>
+                      {formatTime(step.at, { withSeconds: true })} ({formatRelativeTime(step.at)})
+                    </span>
                     <pre className="mt-1 whitespace-pre-wrap font-mono text-xs text-ink-muted">
                       {JSON.stringify(step.input)}
                     </pre>

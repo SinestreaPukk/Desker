@@ -15,7 +15,7 @@ import { captureError } from "@/lib/monitoring";
 
 export { HttpError };
 
-export interface AdminSession {
+interface AdminSession {
   userId: string;
   email: string;
 }

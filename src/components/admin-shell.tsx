@@ -36,16 +36,17 @@ import { FeedbackButton } from "@/components/feedback-dialog";
 import { HelpButton, HelpProvider } from "@/components/help/help-panel";
 import { UsageTracker } from "@/components/usage-tracker";
 import { useAdminLiveFeed, useIssues } from "@/hooks/use-admin-data";
+import { useActionItems } from "@/hooks/use-work-data";
 import { cn, initialsOf } from "@/lib/utils";
 
-export interface ProjectRef {
+interface ProjectRef {
   id: string;
   name: string;
   slug: string;
   organizationId: string;
 }
 
-export interface OrganizationRef {
+interface OrganizationRef {
   id: string;
   name: string;
   role: string;
@@ -100,17 +101,17 @@ export function AdminShell({
 
   const { data: openIssues } = useIssues({ status: "open", project: project.slug });
   const openCount = openIssues?.length ?? 0;
+  // What needs the owner, counted where they look first: beside Work.
+  const waiting = useActionItems({ project: project.slug, status: "needs_approval", view: "list" }, { refetchInterval: 15_000 });
+  const waitingCount = waiting.data?.length ?? 0;
 
   const base = `/p/${project.slug}`;
 
   const navLinks = (
-    <nav aria-label="Main" className="flex flex-col gap-3">
-      {NAV_GROUPS.map((group, groupIdx) => (
-        <div key={group.title} className="space-y-1">
-          {groupIdx > 0 ? <div className="mb-2 border-t border-line/60" role="separator" /> : null}
-          <div className="px-2 pb-1 pt-0.5 text-[11px] font-semibold tracking-wider text-ink-muted uppercase">
-            {group.title}
-          </div>
+    <nav aria-label="Main" className="flex flex-col gap-5">
+      {NAV_GROUPS.map((group) => (
+        <div key={group.title} className="space-y-0.5">
+          <div className="px-3 pb-1 text-xs font-semibold text-ink-muted">{group.title}</div>
           {group.items.map((item) => {
             const Icon = item.icon;
             const href = `${base}/${item.segment}`;
@@ -126,26 +127,28 @@ export function AdminShell({
                 href={href}
                 aria-current={active ? "page" : undefined}
                 onClick={() => setMobileNavOpen(false)}
+                // A filled pill, once: the selection is its own mark, no bar beside it.
                 className={cn(
-                  "relative flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150",
-                  active
-                    ? "bg-accent-soft font-semibold text-accent-soft-fg shadow-2xs before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-accent"
-                    : "text-ink-muted hover:bg-surface hover:text-ink",
+                  "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-150",
+                  active ? "bg-accent-soft text-accent-soft-fg" : "text-ink hover:bg-ink/[0.05]",
                 )}
               >
                 <Icon
-                  className={cn(
-                    "size-4 shrink-0 transition-colors duration-150",
-                    active ? "text-accent-soft-fg" : "text-ink-subtle",
-                  )}
+                  className={cn("size-4 shrink-0", active ? "text-accent-soft-fg" : "text-accent")}
                   aria-hidden
                 />
                 <span>{item.label}</span>
-                {item.segment === "inbox" && openCount > 0 ? (
+                {/* Mail-style counts: indigo for what waits on the owner, quiet grey for the rest. */}
+                {item.segment === "work" && waitingCount > 0 ? (
                   <span
-                    className="ml-auto rounded-full bg-danger px-1.5 py-0.5 text-xs font-bold text-danger-fg tabular-nums shadow-2xs"
-                    aria-label={`${openCount} open items`}
+                    className="ml-auto min-w-5 rounded-full bg-accent-soft px-1.5 text-center text-xs font-semibold leading-5 text-accent-soft-fg tabular-nums ring-1 ring-inset ring-accent-line"
+                    aria-label={`${waitingCount} waiting for you`}
                   >
+                    {waitingCount > 99 ? "99+" : waitingCount}
+                  </span>
+                ) : null}
+                {item.segment === "inbox" && openCount > 0 ? (
+                  <span className="ml-auto text-xs font-medium text-ink-muted tabular-nums" aria-label={`${openCount} open items`}>
                     {openCount > 99 ? "99+" : openCount}
                   </span>
                 ) : null}
@@ -168,7 +171,7 @@ export function AdminShell({
 
   return (
     <HelpProvider project={project.slug}>
-      <div className="flex min-h-dvh flex-col lg:flex-row">
+      <div data-app className="flex min-h-dvh flex-col lg:flex-row">
       {/* Skip link: first tab stop on every admin page. */}
       <a
         href="#admin-main"
@@ -183,14 +186,13 @@ export function AdminShell({
       {/* Mobile top bar */}
       {/* The same ground as the rail it stands in for. The nav links inside
           hover to bg-surface, which needs something quieter behind it. */}
-      <header className="flex items-center justify-between border-b border-line bg-rail px-4 py-3 lg:hidden">
+      <header className="material-bar sticky top-0 z-30 flex items-center justify-between border-b border-line px-4 py-3 lg:hidden">
         <Link href={`${base}/roster`} className="flex items-center gap-2 font-semibold text-ink">
           <BrandMark />
           {BRAND.name}
         </Link>
         <div className="flex items-center gap-2">
           <HelpButton />
-          <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
@@ -208,24 +210,19 @@ export function AdminShell({
         <div id="mobile-nav" className="space-y-3 border-b border-line bg-rail p-3 lg:hidden">
           {projectSwitcher}
           {navLinks}
+          <ThemeToggle className="w-full [&>button]:flex-1" />
         </div>
       ) : null}
 
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-rail p-4 lg:flex">
+      {/* The sidebar stays put while the page scrolls, like a native source list. */}
+      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col overflow-y-auto border-r border-line/70 bg-rail px-3 py-4 lg:flex">
         <Link
           href={`${base}/roster`}
-          className="group mb-4 flex items-center justify-between px-1 text-base font-semibold tracking-tight text-ink"
+          className="mb-4 flex items-center gap-2.5 px-3 text-base font-semibold tracking-tight text-ink"
         >
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-7 items-center justify-center rounded-lg border border-line bg-surface shadow-2xs transition-colors group-hover:border-accent-line">
-              <BrandMark className="size-4" />
-            </span>
-            <span className="font-semibold tracking-tight">{BRAND.name}</span>
-          </div>
-          <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
-            Workspace
-          </span>
+          <BrandMark className="size-5" />
+          {BRAND.name}
         </Link>
 
         <div className="mb-4">{projectSwitcher}</div>
@@ -233,7 +230,7 @@ export function AdminShell({
         {navLinks}
 
         {/* The foot of the sidebar */}
-        <div className="mt-auto space-y-2 border-t border-line pt-3">
+        <div className="mt-auto space-y-1 pt-3">
           {/* Always the same spot, on every screen in the app. */}
           <HelpButton className="w-full justify-start hover:bg-surface" />
           <FeedbackButton project={project.slug} className="w-full justify-start hover:bg-surface" />
@@ -241,15 +238,12 @@ export function AdminShell({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className={cn(
-                  "group flex w-full items-center gap-2.5 rounded-lg border border-line/70 bg-surface/60 p-2 text-left transition-all",
-                  "hover:border-line-strong hover:bg-surface hover:shadow-xs",
-                )}
+                className="group flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-ink/[0.05]"
               >
                 <span className="relative shrink-0">
                   <span
                     aria-hidden
-                    className="flex size-8 items-center justify-center rounded-full border border-line bg-surface-3 text-xs font-semibold text-ink shadow-2xs"
+                    className="flex size-8 items-center justify-center rounded-full border border-line bg-surface-3 text-xs font-semibold text-ink"
                   >
                     {initialsOf(name || email) || "?"}
                   </span>
@@ -262,7 +256,7 @@ export function AdminShell({
                   <span className="block truncate text-xs font-semibold text-ink leading-tight">
                     {name || email.split("@")[0]}
                   </span>
-                  <span className="block truncate text-[11px] text-ink-muted leading-tight mt-0.5">
+                  <span className="block truncate text-meta text-ink-muted leading-tight mt-0.5">
                     {email}
                   </span>
                 </span>
@@ -337,19 +331,14 @@ function ProjectSwitcher({
         <DropdownMenuTrigger asChild>
           <button
             aria-label={`Switch project or organisation (${organization?.name ?? ""}: ${project.name})`}
-            className={cn(
-              "group flex w-full items-center gap-2.5 rounded-lg border border-line bg-surface p-2 shadow-2xs",
-              "text-left transition-all hover:border-line-strong hover:shadow-xs",
-            )}
+            className="group flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-ink/[0.05]"
           >
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-accent-line/60 bg-accent-soft text-accent-soft-fg shadow-2xs">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-fg">
               <Building className="size-4" aria-hidden />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="meta block truncate text-[10px] leading-tight text-ink-muted">{organization?.name ?? "Project"}</span>
-              <span className="block truncate text-sm font-semibold text-ink leading-tight mt-0.5 transition-colors group-hover:text-accent">
-                {project.name}
-              </span>
+              <span className="block truncate text-sm font-semibold text-ink leading-tight">{project.name}</span>
+              <span className="mt-0.5 block truncate text-xs leading-tight text-ink-muted">{organization?.name ?? ""}</span>
             </span>
             <ChevronsUpDown className="size-3.5 shrink-0 text-ink-subtle transition-colors group-hover:text-ink" aria-hidden />
           </button>

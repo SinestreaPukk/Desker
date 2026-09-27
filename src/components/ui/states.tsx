@@ -45,7 +45,7 @@ export function EmptyState({
     >
       <div className="relative mb-4 flex items-center justify-center">
         <div className="absolute size-16 rounded-full bg-accent-soft/40 blur-xs" aria-hidden />
-        <div className="relative flex size-12 items-center justify-center rounded-xl border border-accent-line/80 bg-accent-soft shadow-xs">
+        <div className="relative flex size-12 items-center justify-center rounded-lg border border-accent-line/80 bg-accent-soft shadow-xs">
           <Icon className="size-5 text-accent-soft-fg" />
         </div>
       </div>

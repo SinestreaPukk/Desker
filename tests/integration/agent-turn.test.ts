@@ -106,7 +106,7 @@ beforeAll(async () => {
         "Record feature requests",
       ],
       allowedTools: [
-        "search_company_context",
+        "search_documents",
         "log_issue",
         "log_suggestion",
         "escalate_to_human",
@@ -176,7 +176,7 @@ describeLive("a live agent turn", () => {
     );
 
     expect(events.some((event) => event.type === "error")).toBe(false);
-    expect(toolsUsed(events)).toContain("search_company_context");
+    expect(toolsUsed(events)).toContain("search_documents");
     // The answer must come from the document, not the model's own knowledge.
     expect(text).toMatch(/30/);
 

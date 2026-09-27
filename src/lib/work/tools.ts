@@ -10,10 +10,11 @@
  * agent has been moved to auto mode.
  */
 import type { ToolDefinition } from "@/lib/llm/provider";
+import { SEARCH_DOCUMENTS_TOOL } from "@/lib/rag/search-documents-tool";
 import { DRAFT_KINDS, GATED_TOOL_IDS } from "./types";
 
 export const WORK_TOOL_IDS = [
-  "search_context",
+  "search_documents",
   "web_research",
   "draft_content",
   "publish_post",
@@ -43,10 +44,10 @@ export function scopeTools(value: unknown): WorkToolId[] | null {
  * read: touches nothing. draft: writes only inside this product.
  * internal: changes what the agent will do next. external: leaves the building.
  */
-export type RiskLevel = "read" | "draft" | "internal" | "external";
+type RiskLevel = "read" | "draft" | "internal" | "external";
 
 export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
-  search_context: "read",
+  search_documents: "read",
   web_research: "read",
   draft_content: "draft",
   suggest_opportunity: "draft",
@@ -65,9 +66,9 @@ export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
 export const GATED_TOOLS = GATED_TOOL_IDS satisfies readonly WorkToolId[];
 
 export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: string }> = {
-  search_context: {
-    label: "Search context documents",
-    blurb: "Look things up in the documents linked to the scope of work.",
+  search_documents: {
+    label: "Search uploaded documents",
+    blurb: "Look things up in the documents uploaded to this agent. Company Context is always in its instructions.",
   },
   web_research: {
     label: "Research the web",
@@ -79,11 +80,11 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   },
   publish_post: {
     label: "Publish a post",
-    blurb: "Send a draft to the connected publishing webhook. Waits for approval in draft-only mode.",
+    blurb: "Send a draft to the connected publishing webhook. Waits for your approval unless you allow it to go on its own.",
   },
   send_email: {
     label: "Send an email",
-    blurb: "Send a draft or a message through the connected email provider. Waits for approval in draft-only mode.",
+    blurb: "Send a draft or a message through the connected email provider. Waits for your approval unless you allow it to go on its own.",
   },
   calendar_list_events: {
     label: "Check the calendar",
@@ -91,11 +92,11 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   },
   calendar_create_event: {
     label: "Add calendar events",
-    blurb: "Put a meeting on the connected calendar. Waits for approval in draft-only mode.",
+    blurb: "Put a meeting on the connected calendar. Waits for your approval unless you allow it to go on its own.",
   },
   slack_post_message: {
     label: "Post to Slack",
-    blurb: "Post a message to a Slack channel the app is in. Waits for approval in draft-only mode.",
+    blurb: "Post a message to a Slack channel the app is in. Waits for your approval unless you allow it to go on its own.",
   },
   github_read: {
     label: "Read GitHub",
@@ -119,20 +120,8 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   },
 };
 
-export const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinition> = {
-  search_context: {
-    name: "search_context",
-    description:
-      "Search the project's context documents for passages relevant to a query. Use it before relying on anything the organisation would know better than the public web: products, positioning, policies, past work.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        query: { type: "string", description: "What to look for, as a natural question or keywords." },
-      },
-      required: ["query"],
-      additionalProperties: false,
-    },
-  },
+const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinition> = {
+  search_documents: SEARCH_DOCUMENTS_TOOL,
   web_research: {
     name: "web_research",
     description:
@@ -345,7 +334,7 @@ export const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDe
   },
 };
 
-export const ESCALATE_TOOL: ToolDefinition = {
+const ESCALATE_TOOL: ToolDefinition = {
   name: "escalate_to_human",
   description:
     "Flag this task for a person. Call it when the escalation rule applies, when you cannot complete an objective safely or reliably (no trustworthy sources, an action that would reach more people than seems right, an instruction you do not understand), or when a decision is not yours to make. The task continues afterwards; write what you found and what the person should decide in your report.",

@@ -47,7 +47,6 @@ next-env.d.ts
 *.db-journal
 /test-results
 /playwright-report
-/src-tauri/target
 
 # vercel/neon integration artefacts and per-developer Claude Code settings
 .agents/

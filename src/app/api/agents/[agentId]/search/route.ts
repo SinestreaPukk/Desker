@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { findAgentFor } from "@/lib/projects";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { activeEmbeddingBackend } from "@/lib/rag/embeddings";
 import { retrieveContext } from "@/lib/rag/retriever";
@@ -11,21 +11,17 @@ type Params = { params: Promise<{ agentId: string }> };
 /**
  * Retrieval inspector. Backs the "Test retrieval" panel in the builder so an
  * admin can confirm a document is actually searchable before publishing -
- * exactly what the agent's search_company_context tool will see.
+ * exactly what the agent's search_documents tool will see.
  */
 export async function GET(request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { agentId } = await params;
 
     const query = new URL(request.url).searchParams.get("q")?.trim() ?? "";
     if (!query) throw new HttpError(400, "Provide a search query.");
 
-    const agent = await prisma.agent.findUnique({
-      where: { id: agentId },
-      select: { id: true },
-    });
-    if (!agent) throw new HttpError(404, "That agent no longer exists.");
+    if (!(await findAgentFor(agentId, userId))) throw new HttpError(404, "That agent no longer exists.");
 
     const results = await retrieveContext(agentId, query, 8);
 

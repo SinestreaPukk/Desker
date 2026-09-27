@@ -8,9 +8,9 @@ export default async function AuditPage({
   searchParams,
 }: {
   params: Promise<{ project: string }>;
-  searchParams: Promise<{ agentId?: string }>;
+  searchParams: Promise<{ agentId?: string; thread?: string }>;
 }) {
   const { project } = await params;
-  const { agentId } = await searchParams;
-  return <AuditView project={project} initialAgentId={agentId ?? "all"} />;
+  const { agentId, thread } = await searchParams;
+  return <AuditView project={project} initialAgentId={agentId ?? "all"} initialThread={thread ?? ""} />;
 }

@@ -10,7 +10,7 @@ import { ACCEPTED_EXTENSIONS } from "./extract-shared";
 
 export { ACCEPTED_EXTENSIONS };
 
-export const ACCEPTED_TYPES = {
+const ACCEPTED_TYPES = {
   "application/pdf": [".pdf"],
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
   "text/plain": [".txt"],
@@ -18,8 +18,8 @@ export const ACCEPTED_TYPES = {
 } as const;
 
 
-export class UnsupportedDocumentError extends Error {}
-export class EmptyDocumentError extends Error {}
+class UnsupportedDocumentError extends Error {}
+class EmptyDocumentError extends Error {}
 
 function extensionOf(filename: string): string {
   const index = filename.lastIndexOf(".");

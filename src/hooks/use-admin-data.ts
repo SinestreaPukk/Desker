@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api-client";
+import { api, queryString } from "@/lib/api-client";
 import type {
   AgentDetailDto,
   AgentSummaryDto,
@@ -23,15 +23,6 @@ export const keys = {
   issues: (filters: Record<string, string>) => ["issues", filters] as const,
   analytics: (project: string, days: number) => ["analytics", project, days] as const,
 };
-
-function query(filters: Record<string, string>): string {
-  const entries = Object.entries(filters)
-    .filter(([, value]) => value && value !== "all")
-    .sort(([a], [b]) => a.localeCompare(b));
-  const params = new URLSearchParams(entries);
-  const search = params.toString();
-  return search ? `?${search}` : "";
-}
 
 // --- agents -----------------------------------------------------------------
 
@@ -134,7 +125,7 @@ export function useConversations(filters: Record<string, string>) {
   return useQuery({
     queryKey: keys.conversations(filters),
     queryFn: () =>
-      api<ConversationSummaryDto[]>(`/api/conversations${query(filters)}`),
+      api<ConversationSummaryDto[]>(`/api/conversations${queryString(filters)}`),
     // Backstop for the live SSE feed, which is single-instance only.
     refetchInterval: 20_000,
   });
@@ -201,7 +192,7 @@ export function useSetConversationMode(conversationId: string) {
 export function useIssues(filters: Record<string, string>) {
   return useQuery({
     queryKey: keys.issues(filters),
-    queryFn: () => api<IssueDto[]>(`/api/issues${query(filters)}`),
+    queryFn: () => api<IssueDto[]>(`/api/issues${queryString(filters)}`),
     refetchInterval: 20_000,
   });
 }
@@ -242,7 +233,7 @@ export function useSetConversationStatus() {
   });
 }
 
-export interface AnalyticsResponse {
+interface AnalyticsResponse {
   days: number;
   /** The same counts over the window before this one, for the captions. */
   previous: { conversations: number; runs: number };
@@ -336,7 +327,7 @@ export function useAddNote(conversationId: string) {
 
 // --- agent utilities --------------------------------------------------------
 
-export interface PromptPreview {
+interface PromptPreview {
   prompt: string;
   tools: { name: string; description: string }[];
   approxTokens: number;

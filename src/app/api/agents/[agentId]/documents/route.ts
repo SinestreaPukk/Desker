@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { findAgentFor } from "@/lib/projects";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { env } from "@/lib/env";
 import { safeFilename, storage } from "@/lib/storage";
@@ -14,8 +15,9 @@ type Params = { params: Promise<{ agentId: string }> };
 
 export async function GET(_request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { agentId } = await params;
+    if (!(await findAgentFor(agentId, userId))) throw new HttpError(404, "That agent no longer exists.");
 
     const documents = await prisma.document.findMany({
       where: { agentId },
@@ -39,14 +41,9 @@ export async function GET(_request: Request, { params }: Params) {
 
 export async function POST(request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { agentId } = await params;
-
-    const agent = await prisma.agent.findUnique({
-      where: { id: agentId },
-      select: { id: true },
-    });
-    if (!agent) throw new HttpError(404, "That agent no longer exists.");
+    if (!(await findAgentFor(agentId, userId))) throw new HttpError(404, "That agent no longer exists.");
 
     const form = await request.formData().catch(() => {
       throw new HttpError(400, "Expected a multipart form upload.");

@@ -400,7 +400,7 @@ function CadencePicker({
  * form state, writing the same record. Two views of one configuration, with
  * one implementation between them, so neither can drift from the other.
  */
-export interface ScopeSectionProps {
+interface ScopeSectionProps {
   value: ScopeFormState;
   onChange: (next: ScopeFormState) => void;
   fieldErrors?: Record<string, string[]>;
@@ -541,7 +541,7 @@ export function DocumentsSection({
   );
 }
 
-const RESEARCH_TOOLS = ["search_context", "web_research", "draft_content"] as const;
+const RESEARCH_TOOLS = ["search_documents", "web_research", "draft_content"] as const;
 const ACTION_TOOLS = ["publish_post", "send_email", "schedule_followup", "escalate_to_human"] as const;
 
 export function ToolsSection({

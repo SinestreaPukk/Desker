@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { agentsVisibleTo } from "@/lib/projects";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { toStringArray } from "@/lib/agent-fields";
 import { buildSystemPrompt } from "@/lib/agent-prompt";
@@ -7,7 +8,6 @@ import { buildRunPrompt } from "@/lib/work/prompt";
 import { effectiveContext } from "@/lib/work/context";
 import { WORK_TOOL_IDS, WORK_TOOL_METADATA, scopeTools } from "@/lib/work/tools";
 import { findIntegration, resolveEmail } from "@/lib/work/integrations";
-import { hasSearchProvider } from "@/lib/work/research";
 import type { AutonomyMode } from "@/lib/work/types";
 
 export const runtime = "nodejs";
@@ -22,11 +22,11 @@ type Params = { params: Promise<{ agentId: string }> };
  */
 export async function GET(_request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { agentId } = await params;
 
-    const agent = await prisma.agent.findUnique({
-      where: { id: agentId },
+    const agent = await prisma.agent.findFirst({
+      where: { id: agentId, ...agentsVisibleTo(userId) },
       include: { project: { select: { organizationId: true, context: true } } },
     });
     if (!agent) throw new HttpError(404, "That agent no longer exists.");
@@ -84,7 +84,6 @@ export async function GET(_request: Request, { params }: Params) {
       documentNames: documents.map((document) => document.filename),
       hasPublishing: Boolean(publishing),
       hasEmail: Boolean(email),
-      hasSearch: hasSearchProvider(),
     });
 
     const activeWorkTools = scopeTools(scope?.tools) ?? [...WORK_TOOL_IDS];

@@ -22,7 +22,6 @@ import {
 } from "@/lib/llm/provider";
 import { toStringArray } from "@/lib/agent-fields";
 import { findIntegration, resolveEmail } from "./integrations";
-import { hasSearchProvider } from "./research";
 import { captureMessage } from "@/lib/monitoring";
 import { notifyInBackground } from "@/lib/notify";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
@@ -51,7 +50,7 @@ export type StepRunner = <T>(id: string, fn: () => Promise<T>) => Promise<T>;
 export const inlineSteps: StepRunner = (_id, fn) => fn();
 
 /** Guard against a model that never stops calling tools. */
-export const MAX_WORK_ITERATIONS = 12;
+const MAX_WORK_ITERATIONS = 12;
 
 export class InvalidTransition extends Error {
   constructor(from: string, to: ActionStatus) {
@@ -164,9 +163,9 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       },
       autonomy,
       toolAutonomy: (scope?.toolAutonomy as ToolAutonomy | null) ?? null,
-      // No documents means search_context can only come back empty.
+      // No documents means search_documents can only come back empty.
       tools: (tools ?? [...WORK_TOOL_IDS]).filter(
-        (tool) => documents.length > 0 || tool !== "search_context",
+        (tool) => documents.length > 0 || tool !== "search_documents",
       ),
       documentIds,
       trigger: item.trigger,
@@ -185,7 +184,6 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       hasPublishing: Boolean(publishing),
       hasEmail: Boolean(email),
       missingConnections,
-      hasSearch: hasSearchProvider(),
       colleagues,
     }),
     missing: missingGrounding({
@@ -274,6 +272,12 @@ async function finishRun(
  * Runs one action item to completion, needs_approval, or failure.
  * Returns the final status, or null if the item was not runnable.
  */
+/** False once the run has been cancelled (or removed) while it was working. */
+async function stillRunning(actionItemId: string): Promise<boolean> {
+  const row = await prisma.actionItem.findUnique({ where: { id: actionItemId }, select: { status: true } });
+  return row?.status === "in_progress";
+}
+
 export async function runActionItem(
   actionItemId: string,
   step: StepRunner = inlineSteps,
@@ -309,6 +313,8 @@ export async function runActionItem(
 
   try {
     for (let i = 0; i < MAX_WORK_ITERATIONS; i++) {
+      // An owner can cancel mid-run: stop before spending another model turn.
+      if (i > 0 && !(await step(`still-running-${i}`, () => stillRunning(actionItemId)))) break;
       const turn: CompleteResult = await step(`turn-${i}`, () =>
         provider.complete({
           billing: { organizationId: ctx.organizationId, agentId: ctx.agent.id },
@@ -329,6 +335,8 @@ export async function runActionItem(
         break;
       }
       if (turn.message.content.trim()) summary = turn.message.content.trim();
+      // ...and before any tool acts on the world.
+      if (!(await step(`still-running-tools-${i}`, () => stillRunning(actionItemId)))) break;
 
       const results = [];
       for (const [j, call] of calls.entries()) {

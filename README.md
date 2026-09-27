@@ -281,7 +281,7 @@ a risk level that the runner gates on:
 
 | Tool | Risk | What it does |
 |---|---|---|
-| `search_context` | read | Retrieval over the scope's linked documents |
+| `search_documents` | read | Search over the agent's uploaded documents (limited to the scope's linked ones). Company Context is injected, never searched |
 | `web_research` | read | Search (Brave, or Tavily), read the top pages, summarise with numbered sources; saved to the item. Results are cached by query for 6 hours across organisations; each call is metered per organisation |
 | `draft_content` | draft | Writes a blog post, social caption or email into a `Draft`. Never publishes |
 | `schedule_followup` | internal | Queues the next task as its own action item, now or after a delay, with this run's report as context |
@@ -619,7 +619,6 @@ src/
   lib/conversation.ts      Resolving which agent is answering after a transfer
 
 public/embed.js            The widget loader third-party sites include
-src-tauri/                 Desktop shell (Tauri 2)
 public/brand/              Logo masks, generated from the source artwork
 ```
 
@@ -730,7 +729,7 @@ tool it was never given.
 
 | Tool | Effect |
 |---|---|
-| `search_company_context` | Hybrid search over that agent's documents |
+| `search_documents` | Hybrid search over that agent's uploaded documents; offered only when it has some. Company Context is in every prompt, not searched |
 | `log_issue` | Creates an `Issue` (with severity) on the conversation |
 | `log_suggestion` | Creates a suggestion |
 | `escalate_to_human` | Flags the conversation, files an escalation, and notifies |
@@ -774,8 +773,6 @@ apart. Regenerate from the source artwork after changing it:
 
 ```bash
 node scripts/make-brand-assets.mjs   # logo masks
-node scripts/make-icon.mjs           # app icon, derived from the mark
-npx tauri icon src-tauri/icons/icon.png
 ```
 
 The brand indigo is `#1800AD`, taken from the artwork. It scores 12.8:1 on
@@ -947,27 +944,6 @@ becomes per-instance. Move both to Redis before scaling out.
 **Storage:** the local-disk driver needs a persistent volume. For multiple
 instances, implement the S3 driver in `lib/storage.ts` — the interface is
 already the only thing the rest of the app talks to.
-
----
-
-## Desktop (Tauri)
-
-`src-tauri/` is a native shell for macOS and Windows around a running Desker
-server — not a second frontend. It opens a connection screen, probes
-`/api/health`, and navigates to the app once it answers.
-
-```bash
-rustup toolchain install stable   # one-time: Tauri needs a Rust toolchain
-npm run desktop:dev               # run the shell
-npm run desktop:build             # produce a .app/.dmg or .exe/.msi
-```
-
-Point it somewhere other than `http://localhost:3000` with the `ROSTER_URL`
-environment variable, or from the connection screen itself.
-
-A Tauri bundle can only be produced on its target OS, so both platforms are
-built by the `desktop` matrix job in `.github/workflows/ci.yml`; artifacts are
-attached to the run.
 
 ---
 

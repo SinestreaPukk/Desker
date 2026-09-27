@@ -8,7 +8,7 @@
  * Pure and dependency-free so it can be unit tested directly.
  */
 
-export interface ChunkOptions {
+interface ChunkOptions {
   /** Target chunk size in characters. */
   maxChars?: number;
   /** Characters of the previous chunk repeated at the head of the next. */

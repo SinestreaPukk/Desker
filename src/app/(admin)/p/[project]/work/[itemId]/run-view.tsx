@@ -11,7 +11,7 @@ import { CancelRunButton, RemoveButton } from "@/components/work/row-actions";
 import { useActionItem, useSuggestions } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import { TRIGGER_LABELS } from "@/lib/work/types";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 /** One run on its own page, so the Work list can stay a list. */
 export function RunView({ project, itemId }: { project: string; itemId: string }) {
@@ -38,7 +38,9 @@ export function RunView({ project, itemId }: { project: string; itemId: string }
                 <p className="mt-1 text-sm text-ink-muted">
                   {item.agent.name}
                   {item.agent.jobTitle ? `, ${item.agent.jobTitle}` : ""} · {TRIGGER_LABELS[item.trigger] ?? item.trigger} ·{" "}
-                  {formatRelativeTime(item.createdAt)}
+                  <span title={formatDateTime(item.createdAt)}>
+                    {formatDateTime(item.createdAt)} ({formatRelativeTime(item.createdAt)})
+                  </span>
                 </p>
               </div>
             </div>

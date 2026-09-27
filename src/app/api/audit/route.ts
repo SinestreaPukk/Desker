@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { findProject } from "@/lib/projects";
 import { organizationsFor } from "@/lib/organizations";
+import { threadOf, threadRoots } from "@/lib/work/thread";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ export interface AuditEntryDto {
   targetType: string | null;
   targetId: string | null;
   metadata: Record<string, unknown> | null;
+  /** The run a hand-off thread began with, when this row belongs to one. */
+  threadId: string | null;
 }
 
 function csvCell(value: unknown): string {
@@ -46,6 +49,9 @@ export async function GET(request: Request) {
     const actorType = url.searchParams.get("actorType");
     const from = url.searchParams.get("from");
     const to = url.searchParams.get("to");
+    // One hand-off, start to finish: every row about any run in it, in order.
+    const thread = url.searchParams.get("thread");
+    const threadIds = thread ? await threadOf(thread) : null;
     const format = url.searchParams.get("format") === "csv" ? "csv" : "json";
     const limit = Math.min(
       Math.max(Number.parseInt(url.searchParams.get("limit") ?? (format === "csv" ? "5000" : "200"), 10) || 200, 1),
@@ -73,6 +79,7 @@ export async function GET(request: Request) {
     const where: Prisma.AuditLogWhereInput = {
       organizationId: { in: organizationIds },
       ...agentScope,
+      ...(threadIds ? { targetType: "action_item", targetId: { in: threadIds } } : {}),
       ...(action ? { action: { startsWith: action } } : {}),
       ...(actorType && actorType !== "all" ? { actorType } : {}),
       ...(from || to
@@ -87,7 +94,7 @@ export async function GET(request: Request) {
 
     const rows = await prisma.auditLog.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: threadIds ? "asc" : "desc" },
       take: limit,
     });
 
@@ -97,6 +104,9 @@ export async function GET(request: Request) {
     const [agents, users] = await Promise.all([
       prisma.agent.findMany({ where: { id: { in: agentIds } }, select: { id: true, name: true } }),
       prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, email: true, name: true } }),
+    ]);
+    const roots = await threadRoots([
+      ...new Set(rows.filter((r) => r.targetType === "action_item" && r.targetId).map((r) => r.targetId!)),
     ]);
     const names = new Map<string, string>([
       ...agents.map((a) => [a.id, a.name] as const),
@@ -113,10 +123,11 @@ export async function GET(request: Request) {
       targetType: row.targetType,
       targetId: row.targetId,
       metadata: (row.metadata as Record<string, unknown> | null) ?? null,
+      threadId: row.targetType === "action_item" && row.targetId ? (roots.get(row.targetId) ?? null) : null,
     }));
 
     if (format === "csv") {
-      const header = ["at", "actor_type", "actor", "action", "target_type", "target_id", "tool", "trigger", "ok", "input", "result", "metadata"];
+      const header = ["at", "actor_type", "actor", "action", "target_type", "target_id", "tool", "trigger", "ok", "input", "result", "thread_id", "metadata"];
       const lines = [header.join(",")];
       for (const entry of entries) {
         const m = entry.metadata ?? {};
@@ -133,6 +144,7 @@ export async function GET(request: Request) {
             m.ok === undefined ? "" : String(m.ok),
             m.input ?? "",
             m.result ?? "",
+            entry.threadId ?? "",
             entry.metadata,
           ]
             .map(csvCell)

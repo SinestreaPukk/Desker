@@ -21,6 +21,7 @@ import {
   timeSaved,
 } from "@/lib/insight-copy";
 import { actorWords, dayHeading, describeAuditEntry, timeOfDay } from "@/lib/audit-copy";
+import { WORK_TOOL_IDS } from "@/lib/work/tools";
 
 /** The words that mean the translation did not happen. */
 const JARGON = [
@@ -34,6 +35,7 @@ const JARGON = [
   "send_email",
   "web_research",
   "search_context",
+  "search_documents",
   "draft_content",
   "action_item",
   "tool.called",
@@ -263,7 +265,7 @@ describe("the audit log, in sentences", () => {
 describe("timestamps a person reads", () => {
   it("shows a time of day, not an ISO string", () => {
     expect(timeOfDay("2026-09-23T09:03:00Z", "en-GB")).toMatch(/^\d{1,2}:\d{2}$/);
-    expect(timeOfDay("2026-09-23T09:03:00Z", "en-US")).toMatch(/^\d{1,2}:\d{2}(am|pm)$/);
+    expect(timeOfDay("2026-09-23T09:03:00Z", "en-US")).toMatch(/^\d{1,2}:\d{2}$/);
   });
 
   it("groups by today, yesterday, then the date", () => {
@@ -272,5 +274,20 @@ describe("timestamps a person reads", () => {
     expect(dayHeading("2026-09-22T09:00:00Z", now, "en-GB")).toBe("Yesterday");
     expect(dayHeading("2026-09-18T09:00:00Z", now, "en-GB")).toBe("18 September");
     expect(dayHeading("2025-09-18T09:00:00Z", now, "en-GB")).toBe("18 September 2025");
+  });
+});
+
+describe("every work tool, in the audit log", () => {
+  it("has its own sentence, never the generic fallback", () => {
+    for (const tool of WORK_TOOL_IDS) {
+      for (const gated of [false, true]) {
+        const { title } = describeAuditEntry({
+          action: "tool.called",
+          actorType: "agent",
+          metadata: { tool, ok: true, gated, input: {}, result: "Delegated task to Max (Marketer) as task x." },
+        });
+        expect(title, tool).not.toMatch(/^(Used|Tried to use) /);
+      }
+    }
   });
 });

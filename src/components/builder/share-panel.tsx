@@ -23,7 +23,7 @@ import { useOrigin } from "@/hooks/use-mounted";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
-export interface WidgetSettings {
+interface WidgetSettings {
   label: string;
   color: string;
   side: "right" | "left";

@@ -55,7 +55,7 @@ const STEPS = ["Pick a role", "Who they are", "How they behave", "What they can 
  * is adjusted in the editor. The rest of this step is the scope of work: what
  * the agent does when nobody is talking to it.
  */
-const CONTEXT_TOOL: ToolId = "search_company_context";
+const CONTEXT_TOOL: ToolId = "search_documents";
 
 export function NewAgentWizard({ project }: { project: string }) {
   const router = useRouter();
@@ -174,7 +174,7 @@ export function NewAgentWizard({ project }: { project: string }) {
   }
 
   return (
-    <div className="paper-grid min-h-full">
+    <div className="min-h-full">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
         <Breadcrumbs
           items={[
@@ -184,7 +184,7 @@ export function NewAgentWizard({ project }: { project: string }) {
           className="mb-4"
         />
 
-        <h1 className="text-2xl font-bold tracking-tight text-ink">Hire an AI employee</h1>
+        <h1 className="text-xl font-bold tracking-tight text-ink">Hire an AI employee</h1>
         <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
           Pick a role, give them a name, check how they behave. About five minutes,
           then you&apos;ll add a document and publish.
@@ -546,7 +546,7 @@ function TemplateCard({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        "flex items-start gap-3 rounded-lg border p-3 text-left transition-all",
+        "flex items-start gap-3 rounded-lg border p-3 text-left transition",
         selected
           ? "border-accent bg-accent-soft ring-1 ring-accent"
           : "border-line bg-surface hover:border-line-strong hover:bg-surface-2",
@@ -554,7 +554,7 @@ function TemplateCard({
     >
       <span
         className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-xl transition-all",
+          "flex size-9 shrink-0 items-center justify-center rounded-lg transition",
           selected ? "bg-accent text-accent-fg" : "bg-surface-2 text-accent",
         )}
       >
@@ -602,6 +602,7 @@ function SuggestedConnections({ project, suggested }: { project: string; suggest
               project={project}
               returnTo={`/p/${project}/integrations`}
               newTab
+              permissionsOpen
             />
           </li>
         ))}

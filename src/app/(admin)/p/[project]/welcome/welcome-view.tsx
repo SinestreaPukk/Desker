@@ -111,10 +111,9 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-8 sm:py-12">
       <div>
-        <p className="eyebrow">Step 1 of 2</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Tell us about your business</h1>
+        <h1 className="text-xl font-bold tracking-tight text-ink">Tell us about your business</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-          Four short answers. Every agent you hire reads them before it does anything, so it
+          <span className="font-medium text-ink">Step 1 of 2.</span> Four short answers. Every agent you hire reads them before it does anything, so it
           sounds like you and knows who it is working for. Next, you pick your first agent from a
           template that already knows what to do with them.
         </p>

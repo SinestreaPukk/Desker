@@ -45,6 +45,9 @@ const siteSchema = z.object({
 });
 
 /** Glyphs the landing page may put beside a point. A closed set, so a new one is a decision. */
+/** The screenshots in public/product, written by scripts/product-shots.mjs. */
+export const PRODUCT_SHOTS = ["approval", "boundaries", "handoff-thread", "activity"] as const;
+
 export const LANDING_ICONS = [
   "upload",
   "calendar",
@@ -106,6 +109,17 @@ const landingSchema = z.object({
   }),
   trust: z.object({
     ...sectionHead,
+    /** Real screenshots of the product (scripts/product-shots.mjs), not mock-ups. */
+    shots: z
+      .array(
+        z.object({
+          image: z.enum(PRODUCT_SHOTS),
+          title: z.string().min(1).max(48),
+          body: z.string().min(1).max(160),
+        }),
+      )
+      .min(1)
+      .max(4),
     items: z
       .array(z.object({ icon: z.enum(LANDING_ICONS), title: z.string().min(1).max(48), body: z.string().min(1).max(160) }))
       .min(3)
@@ -153,6 +167,8 @@ const landingSchema = z.object({
     footnote: z.string(),
     /** Under the cards, where the reader is deciding: the money reassurance. */
     reassurance: z.string().max(140).optional(),
+    /** One real screenshot beside the plans: what every plan is watched by. */
+    proof: z.object({ image: z.enum(PRODUCT_SHOTS), caption: z.string().min(1).max(160) }).optional(),
   }),
   faq: z.object({
     ...sectionHead,

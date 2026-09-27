@@ -69,3 +69,12 @@ export function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return "Something went wrong. Try again, and tell us if it keeps happening.";
 }
+
+/** Filters as a stable query string: blanks and "all" dropped, keys sorted so cache keys match. */
+export function queryString(filters: Record<string, string>): string {
+  const entries = Object.entries(filters)
+    .filter(([, value]) => value && value !== "all")
+    .sort(([a], [b]) => a.localeCompare(b));
+  const search = new URLSearchParams(entries).toString();
+  return search ? `?${search}` : "";
+}

@@ -44,7 +44,7 @@ function contentTerms(text: string): string[] {
   return tokenize(text).filter((term) => !STOPWORDS.has(term));
 }
 
-export interface Bm25Doc {
+interface Bm25Doc {
   id: string;
   content: string;
 }

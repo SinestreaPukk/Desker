@@ -24,7 +24,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { transition } from "./runner";
 
 /** How long work may wait in the queue before it counts as a backlog. */
-export const QUEUE_WAIT_BUDGET_MS = 10 * 60_000;
+const QUEUE_WAIT_BUDGET_MS = 10 * 60_000;
 /** A run this many budgets past its start is treated as dead, not slow. */
 const STUCK_MULTIPLIER = 4;
 
@@ -36,7 +36,7 @@ export function isSpike(current: number, baselinePerWindow: number, floor: numbe
   return current >= floor && current > baselinePerWindow * factor;
 }
 
-export interface OpsAlert {
+interface OpsAlert {
   /** Stable id for deduplication, e.g. "escalation-spike". */
   key: string;
   title: string;
@@ -44,7 +44,7 @@ export interface OpsAlert {
 }
 
 /** Sends a platform alert unless the same kind already went out this hour. */
-export async function opsAlert(alert: OpsAlert): Promise<boolean> {
+async function opsAlert(alert: OpsAlert): Promise<boolean> {
   const fresh = await checkRateLimit(`ops-alert:${alert.key}`, 1, 60 * 60_000);
   if (!fresh.allowed) return false;
   captureMessage(`[ops] ${alert.title}: ${alert.detail}`, { route: "watchdog", alert: alert.key });
@@ -60,7 +60,7 @@ export async function opsAlert(alert: OpsAlert): Promise<boolean> {
   return true;
 }
 
-export interface WatchdogReport {
+interface WatchdogReport {
   overBudget: number;
   stuckFailed: number;
   queued: number;

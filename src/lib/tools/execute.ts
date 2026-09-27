@@ -13,10 +13,11 @@ import { audit } from "@/lib/audit";
 import { publishAdminEvent } from "@/lib/events";
 import { notifyInBackground } from "@/lib/notify";
 import type { ToolCall } from "@/lib/llm/provider";
-import { retrieveContext } from "@/lib/rag/retriever";
+import { searchDocuments } from "@/lib/rag/search-documents";
+import { SEARCH_DOCUMENTS, searchDocumentsInput } from "@/lib/rag/search-documents-tool";
 import { SEVERITIES, isToolId, type ToolId } from "./registry";
 
-export interface ToolContext {
+interface ToolContext {
   /** The agent currently answering - the one whose tools these are. */
   agentId: string;
   /** Scopes a transfer: the target must be in the same project. */
@@ -36,8 +37,6 @@ export interface ToolOutcome {
     | { kind: "search"; query: string; hits: number }
     | { kind: "transfer"; toAgentId: string; toAgentName: string; reason: string };
 }
-
-const searchSchema = z.object({ query: z.string().min(1).max(500) });
 
 const issueSchema = z.object({
   summary: z.string().min(1).max(300),
@@ -67,50 +66,15 @@ function invalidInput(toolName: string, error: z.ZodError): ToolOutcome {
   };
 }
 
-async function searchCompanyContext(
-  input: unknown,
-  context: ToolContext,
-): Promise<ToolOutcome> {
-  const parsed = searchSchema.safeParse(input);
-  if (!parsed.success) return invalidInput("search_company_context", parsed.error);
-
-  const hits = await retrieveContext(context.agentId, parsed.data.query);
-
-  // Recorded whether or not it found anything: the misses are the useful half,
-  // because they are the questions the uploaded documents cannot answer.
-  await prisma.retrievalLog
-    .create({
-      data: {
-        agentId: context.agentId,
-        conversationId: context.conversationId,
-        query: parsed.data.query,
-        hitCount: hits.length,
-      },
-    })
-    .catch((error: unknown) => {
-      console.error("[tools] retrieval log failed", error);
-    });
-
-  if (hits.length === 0) {
-    return {
-      content:
-        "No relevant passages found in the uploaded documents for that query. Try a different " +
-        "phrasing, or tell the client you do not have that information rather than guessing.",
-      effect: { kind: "search", query: parsed.data.query, hits: 0 },
-    };
-  }
-
-  const body = hits
-    .map(
-      (hit, index) =>
-        `[${index + 1}] source: ${hit.filename} (chunk ${hit.chunkIndex + 1})\n${hit.content}`,
-    )
-    .join("\n\n---\n\n");
-
-  return {
-    content: `${hits.length} relevant passage(s):\n\n${body}`,
-    effect: { kind: "search", query: parsed.data.query, hits: hits.length },
-  };
+async function searchDocumentsTool(input: unknown, context: ToolContext): Promise<ToolOutcome> {
+  const parsed = searchDocumentsInput.safeParse(input);
+  if (!parsed.success) return invalidInput(SEARCH_DOCUMENTS, parsed.error);
+  const result = await searchDocuments({
+    agentId: context.agentId,
+    conversationId: context.conversationId,
+    query: parsed.data.query,
+  });
+  return { content: result.content, effect: { kind: "search", query: parsed.data.query, hits: result.hits } };
 }
 
 async function logIssue(input: unknown, context: ToolContext): Promise<ToolOutcome> {
@@ -358,7 +322,7 @@ const HANDLERS: Record<
   ToolId,
   (input: unknown, context: ToolContext) => Promise<ToolOutcome>
 > = {
-  search_company_context: searchCompanyContext,
+  search_documents: searchDocumentsTool,
   log_issue: logIssue,
   log_suggestion: logSuggestion,
   escalate_to_human: escalateToHuman,

@@ -97,8 +97,9 @@ export async function PATCH(request: Request, { params }: Params) {
 
 export async function DELETE(_request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { agentId } = await params;
+    if (!(await findAgentFor(agentId, userId))) throw new HttpError(404, "That agent no longer exists.");
 
     // Cascades to documents, chunks, conversations, messages and issues.
     await prisma.agent.delete({ where: { id: agentId } }).catch(() => {

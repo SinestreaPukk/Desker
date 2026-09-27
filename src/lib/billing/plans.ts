@@ -30,6 +30,8 @@ export interface Plan {
   name: string;
   /** USD per month; 0 for the free tier. */
   priceUsd: number;
+  /** Original USD per month before promotion discount. */
+  originalPriceUsd?: number;
   blurb: string;
   limits: PlanLimits;
 }
@@ -52,7 +54,8 @@ export const PLANS: Record<PlanId, Plan> = {
   starter: {
     id: "starter",
     name: "Starter",
-    priceUsd: 49,
+    priceUsd: 29,
+    originalPriceUsd: 49,
     blurb: "A small team's AI staff.",
     limits: {
       publishedAgents: 3,
@@ -66,7 +69,8 @@ export const PLANS: Record<PlanId, Plan> = {
   growth: {
     id: "growth",
     name: "Growth",
-    priceUsd: 199,
+    priceUsd: 129,
+    originalPriceUsd: 199,
     blurb: "A department of agents, working around the clock.",
     limits: {
       publishedAgents: 10,

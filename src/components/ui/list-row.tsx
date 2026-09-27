@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Panel } from "@/components/ui/panel";
 import { cn } from "@/lib/utils";
 
 /**
@@ -37,28 +36,30 @@ export function ListRow({
   muted?: boolean;
   className?: string;
 }) {
+  // A row in an inset group (the list around it is the Panel): the separator
+  // starts past the leading figure, as in a native list, and the last row has none.
   return (
-    <Panel
+    <div
       className={cn(
-        "group relative transition-all duration-150 focus-within:shadow-sm hover:shadow-xs hover:border-line-strong",
+        "group relative flex items-start gap-3.5 pl-4 transition-colors duration-150 has-[a:hover]:bg-surface-2/70 has-[a:active]:bg-surface-2",
         muted && "opacity-70",
         className,
       )}
     >
-      <div className="flex items-start gap-3.5 p-4">
-        <div className="mt-0.5 shrink-0">{leading}</div>
+      <div className="mt-3.5 shrink-0">{leading}</div>
+      <div className="flex min-w-0 flex-1 items-start gap-3.5 border-b border-line/70 py-3.5 pr-4 group-last/row:border-b-0">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <h2 className="text-sm font-semibold text-ink group-hover:text-accent transition-colors">{title}</h2>
+            <h2 className="text-base font-semibold text-ink">{title}</h2>
             {badges}
           </div>
           {body ? <div className="mt-1 text-sm leading-relaxed text-ink-muted">{body}</div> : null}
-          {meta ? <p className="mt-2.5 flex flex-wrap items-center gap-x-2 meta">{meta}</p> : null}
+          {meta ? <p className="mt-2 flex flex-wrap items-center gap-x-2 meta">{meta}</p> : null}
         </div>
         {aside ? <p className="meta shrink-0 whitespace-nowrap pt-0.5">{aside}</p> : null}
         {trailing ? <div className="relative z-10 shrink-0">{trailing}</div> : null}
       </div>
-    </Panel>
+    </div>
   );
 }
 
@@ -68,7 +69,7 @@ export function RowIcon({ children, className }: { children: React.ReactNode; cl
     <span
       aria-hidden
       className={cn(
-        "flex size-9 items-center justify-center rounded-lg border border-line bg-surface-2/80 shadow-2xs text-ink-muted [&_svg]:size-4",
+        "flex size-9 items-center justify-center rounded-lg border border-line bg-surface-2/80  text-ink-muted [&_svg]:size-4",
         className,
       )}
     >

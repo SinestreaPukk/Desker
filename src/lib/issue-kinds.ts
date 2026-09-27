@@ -4,7 +4,7 @@
  * Kept in one place so the inbox list and the conversation detail cannot drift
  * apart on what an escalation looks like.
  */
-export type IssueKind = "issue" | "suggestion" | "escalation" | "failure";
+type IssueKind = "issue" | "suggestion" | "escalation" | "failure";
 
 export const ISSUE_KINDS: Record<
   IssueKind,

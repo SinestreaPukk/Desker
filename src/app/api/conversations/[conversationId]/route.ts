@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { publishAdminEvent } from "@/lib/events";
 import { audit } from "@/lib/audit";
-import { agentsVisibleTo } from "@/lib/projects";
+import { agentsVisibleTo, canSeeConversation } from "@/lib/projects";
 import { conversationPatchSchema } from "@/lib/validation";
 import type { IssueDto, MessageDto } from "@/lib/serialize";
 
@@ -13,11 +13,11 @@ type Params = { params: Promise<{ conversationId: string }> };
 
 export async function GET(_request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { conversationId } = await params;
 
-    const conversation = await prisma.conversation.findUnique({
-      where: { id: conversationId },
+    const conversation = await prisma.conversation.findFirst({
+      where: { id: conversationId, agent: agentsVisibleTo(userId) },
       select: {
         id: true,
         status: true,
@@ -89,9 +89,12 @@ export async function GET(_request: Request, { params }: Params) {
 
 export async function PATCH(request: Request, { params }: Params) {
   return handle(async () => {
-    await requireAdmin();
+    const { userId } = await requireAdmin();
     const { conversationId } = await params;
     const input = await parseJson(request, conversationPatchSchema);
+    if (!(await canSeeConversation(conversationId, userId))) {
+      throw new HttpError(404, "That conversation no longer exists.");
+    }
 
     const conversation = await prisma.conversation
       .update({

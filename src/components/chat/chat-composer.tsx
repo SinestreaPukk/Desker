@@ -52,8 +52,8 @@ export function ChatComposer({
     >
       <div
         className={cn(
-          "flex items-end gap-2 rounded-xl border border-line bg-surface px-3.5 py-2 shadow-xs",
-          "transition-all focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15",
+          "flex items-end gap-2 rounded-lg border border-line bg-surface px-3.5 py-2 shadow-xs",
+          "transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15",
           disabled && "opacity-60",
         )}
       >
@@ -99,7 +99,7 @@ export function ChatComposer({
             size="icon-sm"
             disabled={!value.trim() || sending || disabled}
             aria-label="Send message"
-            className="mb-0.5 rounded-lg shadow-2xs"
+            className="mb-0.5 rounded-lg"
           >
             <ArrowUp aria-hidden />
           </Button>

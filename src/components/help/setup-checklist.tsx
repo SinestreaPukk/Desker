@@ -152,7 +152,7 @@ export function SetupChecklist({ project }: { project: string }) {
         <button
           type="button"
           onClick={() => help.open({ slug: "hire-an-agent" })}
-          className="text-accent hover:underline"
+          className="-my-2 py-3 text-accent hover:underline"
         >
           Read the two-minute guide
         </button>

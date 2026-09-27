@@ -16,7 +16,9 @@ import {
   ShieldCheck,
   StickyNote,
   UserRound,
+  UsersRound,
   Workflow,
+  X,
 } from "lucide-react";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -33,7 +35,7 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { useAgents } from "@/hooks/use-admin-data";
 import { api, errorMessage } from "@/lib/api-client";
 import type { AuditEntryDto } from "@/app/api/audit/route";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 import {
   actorWords,
   dayHeading,
@@ -56,8 +58,18 @@ function buildQuery(params: Record<string, string>): string {
  * row one disclosure away. Filters narrow it; Export gives the same rows as
  * CSV, unchanged, for anyone who needs the machine-readable version.
  */
-export function AuditView({ project, initialAgentId }: { project: string; initialAgentId: string }) {
+export function AuditView({
+  project,
+  initialAgentId,
+  initialThread,
+}: {
+  project: string;
+  initialAgentId: string;
+  initialThread: string;
+}) {
   const [agentId, setAgentId] = React.useState(initialAgentId);
+  // One hand-off between agents, oldest first so it reads as the story it is.
+  const [thread, setThread] = React.useState(initialThread);
   const [actorType, setActorType] = React.useState("all");
   const [action, setAction] = React.useState("");
   const [from, setFrom] = React.useState("");
@@ -65,8 +77,8 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
   const agents = useAgents(project);
 
   const params = React.useMemo(
-    () => ({ project, agentId, actorType, action: action.trim(), from, to: to ? `${to}T23:59:59` : "" }),
-    [project, agentId, actorType, action, from, to],
+    () => ({ project, agentId, actorType, action: action.trim(), from, to: to ? `${to}T23:59:59` : "", thread }),
+    [project, agentId, actorType, action, from, to, thread],
   );
   const query = useQuery({
     queryKey: ["audit", params],
@@ -79,7 +91,7 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
     <Page>
       <PageHeader
         title="Audit log"
-        description="Everything your agents did and everything a person decided, newest first. Nothing here can be edited or deleted."
+        description={`Everything your agents did and everything a person decided, ${thread ? "in the order it happened" : "newest first"}. Nothing here can be edited or deleted.`}
         actions={
           <Button asChild variant="secondary" size="sm">
             <a href={exportHref} download>
@@ -149,6 +161,18 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
       </PageToolbar>
 
       <PageBody>
+        {thread ? (
+          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-accent-line/70 bg-accent-soft/50 px-4 py-3">
+            <UsersRound className="size-4 shrink-0 text-accent-soft-fg" aria-hidden />
+            <p className="min-w-0 flex-1 text-sm text-ink">
+              One hand-off between your agents, from the first ask to the last reply.
+            </p>
+            <Button variant="ghost" size="sm" onClick={() => setThread("")}>
+              <X aria-hidden />
+              Show everything
+            </Button>
+          </div>
+        ) : null}
         {query.isPending ? (
           <LoadingRows count={6} />
         ) : query.error ? (
@@ -160,7 +184,7 @@ export function AuditView({ project, initialAgentId }: { project: string; initia
             description="Every task an agent runs, everything it looks up or writes, and every decision a person makes is recorded here as it happens."
           />
         ) : (
-          <Timeline entries={query.data} />
+          <Timeline entries={query.data} onThread={thread ? undefined : setThread} />
         )}
       </PageBody>
     </Page>
@@ -195,7 +219,7 @@ const ICONS: Record<AuditIcon, typeof Search> = {
  * The row behind it - the verb, the target, the payload - is one disclosure
  * away for whoever needs it, and nobody else has to read it.
  */
-function Timeline({ entries }: { entries: AuditEntryDto[] }) {
+function Timeline({ entries, onThread }: { entries: AuditEntryDto[]; onThread?: (id: string) => void }) {
   const now = new Date();
   const days: { heading: string; rows: AuditEntryDto[] }[] = [];
   for (const entry of entries) {
@@ -212,7 +236,7 @@ function Timeline({ entries }: { entries: AuditEntryDto[] }) {
           <h2 className="meta mb-2 px-1">{day.heading}</h2>
           <Panel className="divide-y divide-line">
             {day.rows.map((entry) => (
-              <AuditRow key={entry.id} entry={entry} />
+              <AuditRow key={entry.id} entry={entry} onThread={onThread} />
             ))}
           </Panel>
         </section>
@@ -221,7 +245,7 @@ function Timeline({ entries }: { entries: AuditEntryDto[] }) {
   );
 }
 
-function AuditRow({ entry }: { entry: AuditEntryDto }) {
+function AuditRow({ entry, onThread }: { entry: AuditEntryDto; onThread?: (id: string) => void }) {
   const described = describeAuditEntry(entry);
   const Icon = ICONS[described.icon];
   const hasPayload = entry.metadata && Object.keys(entry.metadata).length > 0;
@@ -243,7 +267,21 @@ function AuditRow({ entry }: { entry: AuditEntryDto }) {
         {described.detail ? (
           <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">{described.detail}</p>
         ) : null}
-        <p className="mt-1 text-xs text-ink-subtle">{actorWords(entry)}</p>
+        <p className="mt-1 text-xs text-ink-subtle">
+          {actorWords(entry)}
+          {entry.threadId && onThread ? (
+            <>
+              {" · "}
+              <button
+                type="button"
+                onClick={() => onThread(entry.threadId!)}
+                className="font-medium text-accent hover:underline"
+              >
+                Part of a hand-off - follow it
+              </button>
+            </>
+          ) : null}
+        </p>
 
         {hasPayload ? (
           <details className="mt-1.5">
@@ -265,9 +303,9 @@ function AuditRow({ entry }: { entry: AuditEntryDto }) {
               ) : null}
               <div className="flex gap-2">
                 <dt className="text-ink-subtle">Recorded</dt>
-                <dd className="text-ink">{new Date(entry.at).toISOString()}</dd>
+                <dd className="text-ink">{formatDateTime(entry.at, { withSeconds: true })}</dd>
               </div>
-              <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-[0.7rem] text-ink-muted">
+              <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-meta text-ink-muted">
                 {JSON.stringify(entry.metadata, null, 2)}
               </pre>
             </dl>
@@ -278,7 +316,7 @@ function AuditRow({ entry }: { entry: AuditEntryDto }) {
       <time
         className="shrink-0 whitespace-nowrap text-xs tabular-nums text-ink-muted"
         dateTime={entry.at}
-        title={new Date(entry.at).toLocaleString()}
+        title={formatDateTime(entry.at, { withSeconds: true })}
       >
         {timeOfDay(entry.at)}
       </time>

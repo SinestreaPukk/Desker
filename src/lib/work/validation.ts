@@ -15,7 +15,7 @@ import { MAX_CONTEXT_ANSWER } from "./context";
  * server-side when the answers are composed, so the schema only has to keep
  * the shape and the size sane.
  */
-export const contextAnswersSchema = z
+const contextAnswersSchema = z
   .record(z.string().min(1).max(64), z.string().trim().max(MAX_CONTEXT_ANSWER))
   .default({});
 

@@ -9,7 +9,7 @@ import { prisma } from "@/lib/db";
 import { withCronMonitor } from "@/lib/monitoring";
 import { inngest } from "./client";
 
-export const HEARTBEAT_SOURCE = "heartbeat";
+const HEARTBEAT_SOURCE = "heartbeat";
 
 /**
  * Every minute in development, where the point is to watch it work; every
@@ -17,8 +17,8 @@ export const HEARTBEAT_SOURCE = "heartbeat";
  * run history. `heartbeatIntervalMs` is what the health check measures against.
  */
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
-export const HEARTBEAT_CRON = IS_PRODUCTION ? "*/5 * * * *" : "* * * * *";
-export const heartbeatIntervalMs = (IS_PRODUCTION ? 5 : 1) * 60_000;
+const HEARTBEAT_CRON = IS_PRODUCTION ? "*/5 * * * *" : "* * * * *";
+const heartbeatIntervalMs = (IS_PRODUCTION ? 5 : 1) * 60_000;
 
 /** Keep a day of ticks: enough to eyeball gaps, not enough to grow forever. */
 const RETENTION_MS = 24 * 60 * 60_000;

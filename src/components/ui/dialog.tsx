@@ -18,17 +18,18 @@ export function DialogContent({
       <DialogPrimitive.Overlay
         className={cn(
           "fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px]",
-          "data-[state=open]:animate-in data-[state=open]:fade-in-0",
-          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+          "ease-out data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-250",
+          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-200",
         )}
       />
       <DialogPrimitive.Content
         className={cn(
           "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2",
-          "rounded-panel border border-line bg-surface p-6 shadow-md dark:border-line dark:ring-1 dark:ring-white/[0.08] dark:shadow-2xl",
+          "rounded-panel border border-line bg-surface p-6 shadow-md dark:border-line dark:ring-1 dark:ring-white/[0.08] ",
           "max-h-[calc(100dvh-2rem)] overflow-y-auto",
-          "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
-          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+          // Centred, so it scales from its middle; it arrives and leaves the same way.
+          "ease-out data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-96 data-[state=open]:duration-250",
+          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-96 data-[state=closed]:duration-200",
           className,
         )}
         {...props}

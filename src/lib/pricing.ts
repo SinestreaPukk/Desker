@@ -10,7 +10,7 @@
  * rate shows up as "unknown" rather than as free.
  */
 
-export interface ModelPrice {
+interface ModelPrice {
   /** USD per 1M input tokens. */
   input: number;
   /** USD per 1M output tokens. */

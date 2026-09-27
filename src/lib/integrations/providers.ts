@@ -67,7 +67,7 @@ export async function listCalendarEvents(
     .join("\n");
 }
 
-export interface CalendarEventInput {
+interface CalendarEventInput {
   summary: string;
   start: string;
   end: string;
@@ -126,7 +126,7 @@ export async function postSlackMessage(
 
 // --- GitHub (read-only) ------------------------------------------------------
 
-export type GithubAction = "list_repos" | "list_issues" | "get_issue" | "read_file" | "search_code";
+type GithubAction = "list_repos" | "list_issues" | "get_issue" | "read_file" | "search_code";
 
 const MAX_TEXT = 12_000;
 

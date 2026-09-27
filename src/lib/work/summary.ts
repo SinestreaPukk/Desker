@@ -25,13 +25,13 @@ import { getProvider, type ChatMessage } from "@/lib/llm/provider";
 import { clamp, firstSentences, parseModelJson, stringField } from "./model-json";
 import type { WorkStep } from "./types";
 
-export interface RunSuggestion {
+interface RunSuggestion {
   summary: string;
   rationale: string;
   proposal: string;
 }
 
-export interface RunSummary {
+interface RunSummary {
   headline: string;
   summary: string;
   suggestion: RunSuggestion | null;
@@ -64,7 +64,7 @@ Rules for the suggestion:
 - Never propose something already done in this task, and never propose "keep monitoring".`;
 
 /** Everything the summariser is allowed to see about a run. */
-export interface RunFacts {
+interface RunFacts {
   agentName: string;
   jobTitle: string;
   trigger: string;
@@ -127,7 +127,7 @@ function factsToPrompt(facts: RunFacts): string {
  * model's version and never wrong, which is the right trade for a fallback.
  */
 export function fallbackSummary(facts: RunFacts): RunSummary {
-  const research = facts.steps.filter((s) => s.tool === "web_research" || s.tool === "search_context").length;
+  const research = facts.steps.filter((s) => s.tool === "web_research" || s.tool === "search_documents").length;
   const did: string[] = [];
   if (research > 0) did.push(`ran ${research} ${research === 1 ? "piece" : "pieces"} of research`);
   if (facts.drafts.length > 0) {
@@ -278,7 +278,7 @@ export async function summarizeRun(actionItemId: string): Promise<RunSummary | n
 }
 
 /** Stores an agent-initiated recommendation and tells the open dashboards about it. */
-export async function recordSuggestion(input: {
+async function recordSuggestion(input: {
   organizationId: string;
   agentId: string;
   actionItemId?: string | null;

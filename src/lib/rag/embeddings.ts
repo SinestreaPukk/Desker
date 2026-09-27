@@ -55,7 +55,7 @@ export function localEmbed(text: string): number[] {
   return l2Normalize(vector);
 }
 
-export function l2Normalize(vector: number[]): number[] {
+function l2Normalize(vector: number[]): number[] {
   let sum = 0;
   for (const value of vector) sum += value * value;
   const magnitude = Math.sqrt(sum);

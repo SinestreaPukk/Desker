@@ -26,14 +26,14 @@ function plural(count: number, one: string, many = `${one}s`): string {
 }
 
 /** "Last 30 days" as it appears mid-sentence. */
-export function rangeWords(days: number): string {
+function rangeWords(days: number): string {
   if (days === 1) return "in the last day";
   if (days === 7) return "this week";
   if (days === 30) return "this month";
   return `in the last ${days} days`;
 }
 
-export interface ConversationCopy {
+interface ConversationCopy {
   conversations: number;
   previousConversations: number;
   escalated: number;
@@ -99,7 +99,7 @@ export function issuesCaption(issues: number, suggestions: number): string {
 
 // --- autonomous work --------------------------------------------------------
 
-export interface WorkCopy {
+interface WorkCopy {
   runs: number;
   previousRuns: number;
   done: number;
@@ -156,7 +156,7 @@ export function humanCost(usd: number | null): string {
   return `$${usd.toFixed(2)}`;
 }
 
-export interface CostCopy {
+interface CostCopy {
   costUsd: number | null;
   runs: number;
   conversations: number;
@@ -187,8 +187,8 @@ export function costCaption(input: CostCopy): string {
  * labelled an estimate: fifteen minutes for a conversation somebody would
  * otherwise have answered, half an hour for a task.
  */
-export const MINUTES_SAVED_PER_CONVERSATION = 15;
-export const MINUTES_SAVED_PER_TASK = 30;
+const MINUTES_SAVED_PER_CONVERSATION = 15;
+const MINUTES_SAVED_PER_TASK = 30;
 
 export function timeSaved(conversations: number, doneRuns: number): { hours: number; caption: string } {
   const minutes =

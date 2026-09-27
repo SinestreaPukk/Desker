@@ -74,19 +74,6 @@ export const TRIGGER_LABELS: Record<string, string> = {
   delegation: "Delegated",
 };
 
-/** Human copy for statuses, used by the rough Work table now and the Inbox later. */
-export const STATUS_LABELS: Record<ActionStatus, string> = {
-  queued: "Queued",
-  in_progress: "Running",
-  needs_approval: "Needs approval",
-  approved: "Approved",
-  executing_external: "Sending",
-  done: "Done",
-  failed: "Failed",
-  rejected: "Rejected",
-  cancelled: "Cancelled",
-};
-
 /** A tool call as recorded on ActionItem.steps. */
 export interface WorkStep {
   at: string;
@@ -128,7 +115,7 @@ export const DIGEST_CADENCE_LABELS: Record<DigestCadence, string> = {
  * order they are worth reading in: what needs a decision, then what is still
  * running, then what is finished.
  */
-export const DIGEST_BULLET_KINDS = ["heads_up", "pending", "done"] as const;
+const DIGEST_BULLET_KINDS = ["heads_up", "pending", "done"] as const;
 export type DigestBulletKind = (typeof DIGEST_BULLET_KINDS)[number];
 
 export interface DigestBullet {

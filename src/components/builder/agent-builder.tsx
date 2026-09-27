@@ -70,6 +70,7 @@ import { ChatSurface } from "@/components/chat/chat-surface";
 import type { ChatBubble } from "@/hooks/use-chat-stream";
 import { AvatarPicker } from "./avatar-picker";
 import { ScopeOfWorkPanel } from "./scope-of-work-panel";
+import { BoundariesCard } from "./boundaries-card";
 import { PromptPreviewDialog } from "./prompt-preview-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EscalationRuleHelper } from "./live-example";
@@ -86,7 +87,7 @@ import { parseLines, randomAgentName } from "@/lib/agent-fields";
 import { TOOL_IDS, TOOL_METADATA, type ToolId } from "@/lib/tools/registry";
 import type { AgentDetailDto } from "@/lib/serialize";
 import type { AgentInput } from "@/lib/validation";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 const TOOL_ICONS = {
   search: Search,
@@ -153,7 +154,7 @@ function toPayload(form: FormState) {
   };
 }
 
-export type EditorSection = "work" | "knowledge" | "profile" | "settings";
+type EditorSection = "work" | "knowledge" | "profile" | "settings";
 
 const SECTIONS: {
   id: EditorSection;
@@ -186,7 +187,7 @@ const FIELD_SECTION: Record<string, EditorSection> = {
 function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next: EditorSection) => void }) {
   return (
     <nav aria-label="Editor sections" className="-mx-1 overflow-x-auto pb-1">
-      <ul className="inline-flex min-w-max items-center gap-1 rounded-lg border border-line bg-surface-2/80 p-1 shadow-2xs">
+      <ul className="inline-flex min-w-max items-center gap-1 rounded-lg border border-line bg-surface-2/80 p-1">
         {SECTIONS.map((item) => {
           const active = item.id === value;
           const Icon = item.icon;
@@ -198,7 +199,7 @@ function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next
                 onClick={() => onChange(item.id)}
                 title={item.hint}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm font-medium transition-all duration-150",
+                  "inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm font-medium transition duration-150",
                   active
                     ? "bg-surface font-semibold text-ink shadow-xs"
                     : "text-ink-muted hover:bg-surface/40 hover:text-ink",
@@ -520,6 +521,11 @@ export function AgentBuilder({
             <FormError message={saveError} />
 
             <ScheduleSummary agentId={agent.id} onEdit={() => setSection("work")} />
+            <BoundariesCard
+              agentId={agent.id}
+              escalationRule={saved.escalationRule}
+              onEdit={() => setSection("work")}
+            />
 
             <SectionNav value={section} onChange={setSection} />
 
@@ -937,7 +943,7 @@ function ScheduleSummary({ agentId, onEdit }: { agentId: string; onEdit: () => v
         ? {
             Icon: CalendarClock,
             title: describeCadence(s.cron, s.timezone),
-            detail: s.nextFireAt ? `Next run ${formatRelativeTime(s.nextFireAt)}.` : "Runs on its own.",
+            detail: s.nextFireAt ? `Next run ${formatRelativeTime(s.nextFireAt)} (${formatDateTime(s.nextFireAt)}).` : "Runs on its own.",
           }
         : s.triggerType === "webhook"
           ? { Icon: Zap, title: "Runs when triggered", detail: "Starts whenever its webhook receives an event." }
@@ -954,7 +960,7 @@ function ScheduleSummary({ agentId, onEdit }: { agentId: string; onEdit: () => v
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 shadow-2xs">
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3">
       <span
         aria-hidden
         className={cn(

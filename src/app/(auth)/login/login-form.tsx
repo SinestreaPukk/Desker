@@ -51,13 +51,13 @@ export function LoginForm() {
     <div className="space-y-6">
       <div>
         <BrandLockup />
-        <h1 className="mt-5 text-xl font-semibold tracking-tight text-ink sm:text-2xl">Sign in</h1>
+        <h1 className="mt-5 text-xl font-semibold tracking-tight text-ink">Sign in</h1>
         <p className="mt-1.5 text-sm text-ink-muted">
           Manage your roster of AI employees.
         </p>
       </div>
 
-      <Panel className="window shadow-xl shadow-ink/4">
+      <Panel className="window shadow-md">
         <PanelBody className="p-6 sm:p-7">
           <form onSubmit={onSubmit} className="space-y-5" noValidate>
             <FormError message={error} />

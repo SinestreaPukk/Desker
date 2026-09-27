@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-/** The one surface primitive: a bordered card on paper. */
+/** The one surface primitive: an inset group, white on the grouped ground. */
 export function Panel({
   className,
   ...props
@@ -9,8 +9,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-panel border border-line bg-surface",
-        "shadow-xs",
+        "rounded-panel border border-line/50 bg-surface",
         "dark:shadow-none dark:border-line dark:ring-1 dark:ring-white/[0.04]",
         "transition-[border-color,box-shadow,transform]",
         className,

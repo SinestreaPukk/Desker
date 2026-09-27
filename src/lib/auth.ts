@@ -21,12 +21,12 @@ declare module "next-auth" {
   }
 }
 
-export const credentialsSchema = z.object({
+const credentialsSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address."),
   password: z.string().min(8, "Password must be at least 8 characters."),
 });
 
-export const BCRYPT_ROUNDS = 12;
+const BCRYPT_ROUNDS = 12;
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_ROUNDS);

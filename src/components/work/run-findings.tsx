@@ -39,7 +39,7 @@ function FindingCard({ finding }: { finding: Finding }) {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="flex h-full w-full flex-col gap-2 rounded-xl border border-line bg-surface p-4 text-left transition-colors hover:border-accent-line hover:bg-accent-soft/20"
+          className="flex h-full w-full flex-col gap-2 rounded-lg border border-line bg-surface p-4 text-left transition-colors hover:border-accent-line hover:bg-accent-soft/20"
         >
           <span className="flex items-start gap-3">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-accent-line/70 bg-accent-soft text-accent-soft-fg">

@@ -1,6 +1,5 @@
 "use client";
 
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import {
   AgentFigure,
   defaultAvatar,
@@ -59,18 +58,18 @@ export function AgentAvatar({
     );
   }
 
-  // An uploaded image, with the agent's own face behind it so a slow or broken
-  // image never collapses to an empty grey circle.
+  // An uploaded image over the agent's own face, so a slow or broken image
+  // never collapses to an empty grey circle: a failed image just removes itself.
   return (
-    <AvatarPrimitive.Root className={cn(shell, "border border-line")}>
-      <AvatarPrimitive.Image
+    <span className={cn(shell, "border border-line")}>
+      <AgentFigure seed={resolved.seed} tone={resolved.tone} />
+      {/* eslint-disable-next-line @next/next/no-img-element -- data: URIs and arbitrary hosts */}
+      <img
         src={src!}
         alt=""
-        className="aspect-square size-full object-cover"
+        className="absolute inset-0 aspect-square size-full object-cover"
+        onError={(event) => event.currentTarget.remove()}
       />
-      <AvatarPrimitive.Fallback delayMs={300} className="size-full">
-        <AgentFigure seed={resolved.seed} tone={resolved.tone} />
-      </AvatarPrimitive.Fallback>
-    </AvatarPrimitive.Root>
+    </span>
   );
 }

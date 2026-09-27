@@ -173,7 +173,7 @@ export function toScopeDto(
   };
 }
 
-export interface ScopeInput {
+interface ScopeInput {
   /**
    * The composed string. Ignored when `contextAnswers` is given: the answers
    * are the source of truth and the string is derived from them, so the two
@@ -201,7 +201,7 @@ export interface ScopeInput {
   digestRecipients?: string;
 }
 
-export function newWebhookToken(): string {
+function newWebhookToken(): string {
   return randomBytes(24).toString("base64url");
 }
 
@@ -249,7 +249,7 @@ export async function saveScope(agentId: string, input: ScopeInput) {
   });
 }
 
-export interface StartRunInput {
+interface StartRunInput {
   agentId: string;
   trigger: "manual" | "schedule" | "webhook";
   payload?: Record<string, unknown>;

@@ -31,7 +31,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     const { actionItemId } = await params;
     const item = await prisma.actionItem.findFirst({
       where: { id: actionItemId, agent: agentsVisibleTo(userId) },
-      select: { id: true, status: true, organizationId: true, headline: true },
+      select: { id: true, status: true, organizationId: true, headline: true, payload: true },
     });
     if (!item) throw new HttpError(404, "That task no longer exists.");
     if (IN_FLIGHT.has(item.status)) {
@@ -45,7 +45,11 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
       action: "action_item.deleted",
       targetType: "action_item",
       targetId: actionItemId,
-      metadata: { status: item.status, headline: item.headline },
+      // A queued run has no headline yet; its task says what it was.
+      metadata: {
+        status: item.status,
+        headline: item.headline ?? (item.payload as { objective?: string } | null)?.objective ?? null,
+      },
     });
     return { ok: true };
   });

@@ -24,7 +24,7 @@ export const BRAND = {
  * scripts/check-contrast.mjs fails if one drifts from globals.css.
  */
 export const TOKEN_HEX = {
-  paper: "#F9FAFC",
+  paper: "#F2F2F5",
   "paper@dark": "#18191B",
   ink: "#1C2024",
   "ink-muted": "#60646C",

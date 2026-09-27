@@ -14,8 +14,8 @@
 import * as React from "react";
 
 /** Twelve looks per tone is enough choice without a wall of near-duplicates. */
-export const VARIANTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
-export type Variant = (typeof VARIANTS)[number];
+const VARIANTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+type Variant = (typeof VARIANTS)[number];
 
 export const TONES = [1, 2, 3, 4, 5, 6] as const;
 export type Tone = (typeof TONES)[number];
@@ -166,13 +166,13 @@ export function AgentFigure({
 // --- stored value ----------------------------------------------------------
 
 /** A built-in avatar is stored as this short key, not as image data. */
-export type BuiltInAvatar = `beam:${Variant}:${Tone}`;
+type BuiltInAvatar = `beam:${Variant}:${Tone}`;
 
 export function builtInKey(variant: Variant, tone: Tone): BuiltInAvatar {
   return `beam:${variant}:${tone}`;
 }
 
-export interface ResolvedAvatar {
+interface ResolvedAvatar {
   seed: string;
   tone: Tone;
   /** Present when the avatar came from the picker rather than the agent id. */

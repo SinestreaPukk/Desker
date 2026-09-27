@@ -25,6 +25,7 @@ export function ConnectorCard({
   newTab = false,
   onSetUp,
   setUpOpen = false,
+  permissionsOpen = false,
 }: {
   connector: Connector;
   /** The organisation's connection of this kind, when there is one. */
@@ -39,6 +40,8 @@ export function ConnectorCard({
   /** For key- and webhook-based connectors: reveals their form in place. */
   onSetUp?: () => void;
   setUpOpen?: boolean;
+  /** Show what it can and can't do without a click - the hire wizard, where that is the decision. */
+  permissionsOpen?: boolean;
 }) {
   const roles = showRoles
     ? connector.roles
@@ -46,10 +49,36 @@ export function ConnectorCard({
         .filter((title): title is string => Boolean(title))
     : [];
 
+  const permissions = (
+    <>
+      <dl className="grid gap-3 text-xs sm:grid-cols-2">
+        <div>
+          <dt className="eyebrow mb-1">It can</dt>
+          {connector.can.map((line) => (
+            <dd key={line} className="flex items-start gap-1.5 text-ink">
+              <Check className="mt-0.5 size-3 shrink-0 text-positive" aria-hidden />
+              {line}
+            </dd>
+          ))}
+        </div>
+        <div>
+          <dt className="eyebrow mb-1">It can&apos;t</dt>
+          {connector.cannot.map((line) => (
+            <dd key={line} className="flex items-start gap-1.5 text-ink-muted">
+              <Minus className="mt-0.5 size-3 shrink-0" aria-hidden />
+              {line}
+            </dd>
+          ))}
+        </div>
+      </dl>
+      {roles.length > 0 ? <p className="mt-3 text-xs text-ink-subtle">Useful for: {roles.join(", ")}</p> : null}
+    </>
+  );
+
   return (
     <div
       className={cn(
-        "flex h-full flex-col rounded-xl border p-4 transition-colors",
+        "flex h-full flex-col rounded-lg border p-4 transition-colors",
         connection?.state === "connected"
           ? "border-positive-line/60 bg-positive-soft/20"
           : connector.status === "planned"
@@ -81,35 +110,17 @@ export function ConnectorCard({
         </p>
       ) : null}
 
-      <details className="group mt-3">
-        <summary className="flex w-fit cursor-pointer list-none items-center gap-1 text-xs font-medium text-ink-muted hover:text-ink [&::-webkit-details-marker]:hidden">
-          <ChevronRight className="size-3 transition-transform group-open:rotate-90" aria-hidden />
-          What it can and can&apos;t do
-        </summary>
-        <dl className="mt-2 grid gap-3 text-xs sm:grid-cols-2">
-          <div>
-            <dt className="eyebrow mb-1">It can</dt>
-            {connector.can.map((line) => (
-              <dd key={line} className="flex items-start gap-1.5 text-ink">
-                <Check className="mt-0.5 size-3 shrink-0 text-positive" aria-hidden />
-                {line}
-              </dd>
-            ))}
-          </div>
-          <div>
-            <dt className="eyebrow mb-1">It can&apos;t</dt>
-            {connector.cannot.map((line) => (
-              <dd key={line} className="flex items-start gap-1.5 text-ink-muted">
-                <Minus className="mt-0.5 size-3 shrink-0" aria-hidden />
-                {line}
-              </dd>
-            ))}
-          </div>
-        </dl>
-        {roles.length > 0 ? (
-          <p className="mt-3 text-xs text-ink-subtle">Useful for: {roles.join(", ")}</p>
-        ) : null}
-      </details>
+      {permissionsOpen ? (
+        <div className="mt-3">{permissions}</div>
+      ) : (
+        <details className="group mt-3">
+          <summary className="flex w-fit cursor-pointer list-none items-center gap-1 text-xs font-medium text-ink-muted hover:text-ink [&::-webkit-details-marker]:hidden">
+            <ChevronRight className="size-3 transition-transform group-open:rotate-90" aria-hidden />
+            What it can and can&apos;t do
+          </summary>
+          <div className="mt-2">{permissions}</div>
+        </details>
+      )}
     </div>
   );
 }

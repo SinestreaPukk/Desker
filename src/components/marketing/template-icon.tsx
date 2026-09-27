@@ -67,7 +67,7 @@ const ICONS: Record<
 };
 
 /** Direct mapping by role template ID for convenience */
-export const ROLE_ICONS_BY_ID: Record<string, React.ComponentType<{ className?: string }>> = {
+const ROLE_ICONS_BY_ID: Record<string, React.ComponentType<{ className?: string }>> = {
   "customer-support": CustomerSupportIcon,
   "client-onboarding": ClientOnboardingIcon,
   researcher: ResearcherIcon,

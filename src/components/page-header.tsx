@@ -1,4 +1,5 @@
 import * as React from "react";
+import { LargeTitle } from "@/components/large-title";
 import { cn } from "@/lib/utils";
 
 /**
@@ -41,27 +42,23 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    // The rule runs the full width of the page; what it divides does not.
-    <div className={cn("border-b border-line bg-surface/40 backdrop-blur-xs", className)}>
+    // No band and no rule: a large title on the grouped ground, as a native app
+    // opens a screen. It condenses into a toolbar once it scrolls away.
+    <div className={className}>
       <div
         className={cn(
-          "flex flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6",
+          "flex flex-col gap-4 px-4 pb-2 pt-6 sm:px-6 sm:pt-9",
           "md:flex-row md:items-start md:justify-between",
-          // A fixed minimum keeps the header the same height whether or not a
-          // page supplies a description or actions.
-          "md:min-h-[6.25rem]",
           COLUMN,
         )}
       >
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-ink">{title}</h1>
+          <LargeTitle title={title} />
           {description ? (
-            <p className="mt-1 max-w-2xl text-xs sm:text-sm leading-relaxed text-ink-muted">
-              {description}
-            </p>
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-ink-muted">{description}</p>
           ) : null}
         </div>
-        {actions ? <div className="flex shrink-0 items-center gap-2.5">{actions}</div> : null}
+        {actions ? <div className="flex shrink-0 items-center gap-2.5 md:pt-1">{actions}</div> : null}
       </div>
     </div>
   );
@@ -88,7 +85,8 @@ export function PageToolbar({
   stack?: boolean;
 }) {
   return (
-    <div className={cn("border-b border-line bg-surface/20 backdrop-blur-xs", className)}>
+    // Controls sit on the ground with the title, not in a band of their own.
+    <div className={className}>
       <div
         className={cn(
           "flex flex-col gap-3 px-4 py-3 sm:px-6",

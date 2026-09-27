@@ -10,7 +10,7 @@ import { useChatStream, type ChatBubble } from "@/hooks/use-chat-stream";
 import { useClientLiveFeed } from "@/hooks/use-client-live-feed";
 import { cn } from "@/lib/utils";
 
-export interface ChatSurfaceAgent {
+interface ChatSurfaceAgent {
   id: string;
   name: string;
   jobTitle: string;

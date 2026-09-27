@@ -6,7 +6,6 @@
 *.db
 *.db-journal
 storage/
-src-tauri/target/
 .next/
 node_modules/
 playwright-report/
