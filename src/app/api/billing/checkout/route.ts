@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { env } from "@/lib/env";
 import { priceIdFor, stripe, stripeConfigured } from "@/lib/billing/stripe";
+import { PLANS, renewalTerms } from "@/lib/billing/plans";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,6 +60,8 @@ export async function POST(request: Request) {
       allow_promotion_codes: true,
       client_reference_id: org.id,
       subscription_data: { metadata: { organizationId: org.id, plan: input.plan } },
+      // Shown right above Stripe's pay button: the renewal terms, before the charge.
+      custom_text: { submit: { message: renewalTerms(PLANS[input.plan]) } },
     });
 
     await audit({

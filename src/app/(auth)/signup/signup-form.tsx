@@ -130,7 +130,7 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
                   className="mt-0.5"
                 />
                 <span>
-                  I agree to the{" "}
+                  I&apos;m 18 or older, and I agree to the{" "}
                   <Link href="/terms" target="_blank" className="font-medium text-accent hover:underline">
                     Terms of Service
                   </Link>{" "}

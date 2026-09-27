@@ -368,6 +368,13 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
         tone: "positive",
         icon: "settings",
       };
+    case "email.unsubscribed":
+      return {
+        title: "Someone unsubscribed from your emails",
+        detail: text(meta.email) ? `${text(meta.email)} won't receive agent emails or digests from now on.` : null,
+        tone: "neutral",
+        icon: "send",
+      };
     case "integration.removed":
       return {
         title: `${who} removed ${text(meta.name) ?? "an integration"}`,
@@ -378,6 +385,8 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
 
     case "organization.created":
       return { title: "Workspace created", detail: null, tone: "neutral", icon: "settings" };
+    case "organization.mailing_address_updated":
+      return { title: `${who} updated the mailing address on agent emails`, detail: null, tone: "neutral", icon: "settings" };
     case "organization.renamed":
       return { title: `${who} renamed the organisation`, detail: null, tone: "neutral", icon: "settings" };
     case "project.created":

@@ -7,14 +7,14 @@
     "headline": "Autonomous AI agents that work for you 24/7",
     "subhead": "A marketer, a researcher, developer support, personal assistant, you name it. Every agent has a job, your context, and tools that reach the outside world",
     "primaryCta": {
-      "label": "Start free",
-      "href": "/signup"
+      "label": "Join the beta",
+      "href": "/login"
     },
     "secondaryCta": {
       "label": "See it work",
       "href": "/showcase"
     },
-    "microcopy": "Free forever plan · No credit card · Nothing sends without your OK"
+    "microcopy": "Being built now · Beta invites go out first · Nothing sends without your OK"
   },
   "trustStrip": {
     "label": "Built on models from",
@@ -188,27 +188,6 @@
       }
     ]
   },
-  "metrics": {
-    "eyebrow": "Outcomes",
-    "heading": "What teams get back",
-    "items": [
-      {
-        "label": "Hours saved per week",
-        "value": null,
-        "todo": "Measure with design partners"
-      },
-      {
-        "label": "Median time to first reply",
-        "value": null,
-        "todo": "From conversation timestamps"
-      },
-      {
-        "label": "Drafts approved without edits",
-        "value": null,
-        "todo": "From action-item approvals"
-      }
-    ]
-  },
   "testimonials": {
     "enabled": false,
     "eyebrow": "Customers",
@@ -216,6 +195,7 @@
     "items": []
   },
   "pricing": {
+    "enabled": false,
     "eyebrow": "Pricing",
     "heading": "Start free. Pay when it earns it.",
     "intro": "Priced on how many agents are live and how much they do. The free plan doesn't expire.",
@@ -232,6 +212,10 @@
     "eyebrow": "FAQ",
     "heading": "Before you start",
     "items": [
+      {
+        "q": "When can I use Desker?",
+        "a": "We're building it now and opening a beta soon. Until then, sign-in is limited to the people testing it."
+      },
       {
         "q": "What can an agent actually do?",
         "a": "It answers your clients on a chat link or a widget on your site, searches the documents you upload, researches the web with citations, drafts posts and emails, logs bugs and requests, and schedules its own follow-ups. It can work on a schedule or the moment someone writes in."
@@ -250,7 +234,7 @@
       },
       {
         "q": "Is my data secure?",
-        "a": "Nothing you upload is used to train an AI model, and your documents are readable only inside your organisation. Integration credentials such as API keys are encrypted at rest with AES-256-GCM. TODO: confirm the hosting, backup and deletion details you want stated here before launch."
+        "a": "Nothing you upload is used to train an AI model, and your documents are readable only inside your organisation. Integration credentials such as API keys are encrypted at rest with AES-256-GCM. It is stored with our hosting and database providers, Vercel and Neon, and deleted when you close your organisation."
       },
       {
         "q": "Can I connect my own tools?",
@@ -261,30 +245,22 @@
         "a": "About five minutes: pick a role, upload a document, test it live in the playground, publish. The app has a step-by-step guide for each part, from hiring an agent to reading the audit log."
       },
       {
-        "q": "Can I cancel anytime?",
-        "a": "Yes, in one click, with no notice period and no cancellation fee. You drop back to the free plan and keep your agents and your documents rather than losing the work."
-      },
-      {
-        "q": "Do you have a plan for a bigger team?",
-        "a": "Every plan already includes unlimited teammates, with roles and invitations. If you need more agents, more volume, or a security review before you can buy, get in touch and we'll size it with you."
-      },
-      {
         "q": "What languages does it work in?",
-        "a": "An agent reads your documents and replies in the language you write its job in, and the models behind it handle the major languages well. The Desker interface itself is English only today. TODO: confirm the language list you want to state before launch."
+        "a": "An agent reads your documents and replies in the language you write its job in, and the models behind it handle the major languages well. The Desker interface itself is English only today."
       }
     ]
   },
   "cta": {
-    "heading": "Start deploying your own agent now",
-    "body": "Upload a document, pick a role, and see what it hands you tomorrow morning.",
+    "heading": "Beta testing is coming soon",
+    "body": "Desker is still being built. Beta testing opens soon.",
     "button": {
-      "label": "Start free",
-      "href": "/signup"
+      "label": "Join the beta",
+      "href": "/login"
     },
     "secondary": {
       "label": "See it work first",
       "href": "/showcase"
     },
-    "microcopy": "Free forever plan · No credit card · Nothing sends without your OK"
+    "microcopy": "No payment during the beta · Nothing sends without your OK"
   }
 }

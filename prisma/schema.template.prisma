@@ -95,6 +95,10 @@ model Organization {
   /// Stripe's subscription status (active, past_due, canceled...), or null.
   subscriptionStatus   String?
   currentPeriodEnd     DateTime?
+  /// The postal address printed at the foot of every email an agent sends.
+  /// Anti-spam law (CAN-SPAM and similar) requires one on commercial email,
+  /// so agent email is refused until it is set.
+  mailingAddress       String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -108,6 +112,20 @@ model Organization {
   integrations  Integration[]
   digests       Digest[]
   suggestions   Suggestion[]
+  emailSuppressions EmailSuppression[]
+}
+
+/// Someone who asked not to receive email from this organisation, through the
+/// unsubscribe link at the foot of every agent and digest email. Checked
+/// before each send; never removed by the product.
+model EmailSuppression {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, email])
 }
 
 /// An email invited into an organisation with a role. The token in the link

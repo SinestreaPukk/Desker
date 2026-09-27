@@ -78,7 +78,7 @@ export function buildRunPrompt(input: RunPromptInput): string {
       ? "A publishing integration is connected, so publish_post is available for finished drafts."
       : "No publishing integration is connected: do not call publish_post; leave posts as drafts and say so in the report.",
     input.hasEmail
-      ? "An email provider is connected, so send_email is available."
+      ? "An email provider is connected, so send_email is available. Your business name, postal address and an unsubscribe link are added to the foot of every email automatically - do not write your own. Anyone who unsubscribed is skipped."
       : "No email provider is connected: do not call send_email; leave emails as drafts and say so in the report.",
     ...(input.missingConnections?.length
       ? [

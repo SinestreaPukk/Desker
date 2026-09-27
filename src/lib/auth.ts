@@ -10,10 +10,12 @@
  * the matcher forgot.
  */
 import NextAuth, { type DefaultSession } from "next-auth";
+import { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { mayUsePlatform, PRIVATE_BETA_CODE } from "@/lib/private-beta";
 
 declare module "next-auth" {
   interface Session {
@@ -27,6 +29,11 @@ const credentialsSchema = z.object({
 });
 
 const BCRYPT_ROUNDS = 12;
+
+/** Tells the sign-in form this address is not in the private beta (see private-beta.ts). */
+class PrivateBetaSignin extends CredentialsSignin {
+  code = PRIVATE_BETA_CODE;
+}
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_ROUNDS);
@@ -46,6 +53,9 @@ export async function currentUser() {
     where: { id },
     select: { id: true, email: true, name: true },
   });
+  // Private beta: a session from before the allowlist - or for an address
+  // taken off it - is signed out, not let in.
+  if (!user || !mayUsePlatform(user.email)) return null;
   return user;
 }
 
@@ -62,6 +72,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(raw) {
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
+        // Before the account lookup, so the answer is the same whether or
+        // not an account exists for the address.
+        if (!mayUsePlatform(parsed.data.email)) throw new PrivateBetaSignin();
 
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email },

@@ -397,7 +397,7 @@ export function useOrganization(orgId: string) {
   return useQuery({
     queryKey: orgKeys.org(orgId),
     queryFn: () =>
-      api<{ id: string; name: string; slug: string; plan: string; role: string; members: number; projects: number }>(
+      api<{ id: string; name: string; slug: string; plan: string; mailingAddress: string | null; role: string; members: number; projects: number }>(
         `/api/organizations/${orgId}`,
       ),
     enabled: Boolean(orgId),
@@ -459,11 +459,14 @@ export function useRemoveMember(orgId: string) {
   });
 }
 
-export function useRenameOrganization(orgId: string) {
+export function useUpdateOrganization(orgId: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) =>
-      api<{ id: string; name: string }>(`/api/organizations/${orgId}`, { method: "PATCH", body: JSON.stringify({ name }) }),
+    mutationFn: (changes: { name?: string; mailingAddress?: string }) =>
+      api<{ id: string; name: string; mailingAddress: string | null }>(`/api/organizations/${orgId}`, {
+        method: "PATCH",
+        body: JSON.stringify(changes),
+      }),
     onSuccess: () => void client.invalidateQueries({ queryKey: ["organization", orgId] }),
   });
 }

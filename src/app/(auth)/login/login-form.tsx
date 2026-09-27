@@ -9,6 +9,7 @@ import { Field, Input } from "@/components/ui/field";
 import { Panel, PanelBody } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { BrandLockup } from "@/components/brand-logo";
+import { PRIVATE_BETA_CODE, PRIVATE_BETA_MESSAGE } from "@/lib/private-beta";
 
 export function LoginForm() {
   const router = useRouter();
@@ -32,7 +33,11 @@ export function LoginForm() {
 
     if (result?.error) {
       // Deliberately not distinguishing "no such account" from "wrong password".
-      setError("That email and password combination doesn't match an account.");
+      setError(
+        result.code === PRIVATE_BETA_CODE
+          ? PRIVATE_BETA_MESSAGE
+          : "That email and password combination doesn't match an account.",
+      );
       setPending(false);
       return;
     }
@@ -53,7 +58,7 @@ export function LoginForm() {
         <BrandLockup />
         <h1 className="mt-5 text-xl font-semibold tracking-tight text-ink">Sign in</h1>
         <p className="mt-1.5 text-sm text-ink-muted">
-          Manage your roster of AI employees.
+          Desker is in private beta. Sign-in is open to our testers for now, and beta testing opens soon.
         </p>
       </div>
 

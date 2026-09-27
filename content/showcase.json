@@ -6,5 +6,5 @@
   "heading": "Roles you can hire today",
   "intro": "Each role is a starting point in the hire wizard: a job title, a tone of voice, a default escalation rule and the tools it may use. Adjust anything; the agent is yours.",
   "exampleLabel": "For example",
-  "cta": { "label": "Hire this role", "href": "/signup" }
+  "cta": { "label": "Join the beta", "href": "/login" }
 }

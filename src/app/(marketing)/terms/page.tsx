@@ -5,7 +5,7 @@ import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = pageMetadata({
   title: "Terms of Service",
-  description: `The terms that govern your use of ${LEGAL.companyName}: the service, your account, AI output, plans, your data and liability.`,
+  description: `The terms that govern your use of ${LEGAL.companyName}: the service, your account, AI output, plans and renewal, email, copyright, your data and liability.`,
   path: "/terms",
 });
 
@@ -30,6 +30,7 @@ export default function TermsPage() {
 
       <h2>2. Your account and your organisation</h2>
       <ul>
+        <li>You must be at least 18 years old and use the Service for your business or profession. It is not intended for children.</li>
         <li>You must give accurate information and keep your credentials confidential.</li>
         <li>An organisation owner is responsible for the people they invite and the roles they assign.</li>
         <li>You must not use the Service to break the law, to send unsolicited messages, or to interfere with the Service or other customers.</li>
@@ -43,14 +44,41 @@ export default function TermsPage() {
         warrant the accuracy of any output.
       </p>
 
-      <h2>4. Plans and payment</h2>
+      <h2>4. Plans, automatic renewal and cancellation</h2>
       <p>
-        Paid plans are billed monthly in advance through our payment provider and renew until
-        cancelled. Plan limits are described on the billing page and enforced by the Service.
-        Fees are non-refundable except where the law requires otherwise.
+        Paid plans are billed monthly in advance through our payment provider.{" "}
+        <strong>
+          A paid plan renews automatically every month, at the price shown when you subscribed,
+          until you cancel.
+        </strong>{" "}
+        You can cancel at any time online, in Organization &rarr; Billing &rarr; Manage or cancel billing,
+        with no need to contact us. Cancelling stops future charges; the plan stays active until
+        the end of the month you have already paid for. We will tell you by email at least 7 days
+        before any price change applies to you. Plan limits are described on the billing page and
+        enforced by the Service. Fees are non-refundable except where the law requires otherwise.
       </p>
 
-      <h2>5. Your data</h2>
+      <h2>5. Email your agents send</h2>
+      <p>
+        Email an agent sends goes out from your organisation, and you are its sender. You must
+        only email people you have a lawful reason to contact and must follow the anti-spam law
+        that applies to you. The Service adds your business name, the postal address you set, and
+        an unsubscribe link to every agent email, and it stops emailing anyone who unsubscribes; do
+        not remove or work around them.
+      </p>
+
+      <h2>6. Copyright complaints</h2>
+      <p>
+        If you believe content in the Service infringes your copyright, send a notice to our
+        designated agent at {LEGAL.copyrightEmail} with: your signature; the work you say is
+        infringed; where the infringing material is; your contact details; a statement that you
+        believe in good faith the use is not authorised; and a statement, under penalty of perjury,
+        that your notice is accurate and that you are the owner or authorised to act for them. We
+        remove or disable material named in a valid notice and tell the person who provided it,
+        who may send a counter-notice. We close the accounts of repeat infringers.
+      </p>
+
+      <h2>7. Your data</h2>
       <p>
         You retain all rights to the content you upload and the output your agents produce. You
         grant {LEGAL.companyName} the licence needed to operate the Service on your behalf,
@@ -58,21 +86,21 @@ export default function TermsPage() {
         handling of personal data is described in the Privacy Policy.
       </p>
 
-      <h2>6. Termination</h2>
+      <h2>8. Termination</h2>
       <p>
         You may close your organisation at any time. We may suspend or terminate accounts that
         breach these terms or put the Service or other customers at risk, with notice where
         practicable.
       </p>
 
-      <h2>7. Liability</h2>
+      <h2>9. Liability</h2>
       <p>
         To the extent permitted by law, the Service is provided as is, and {LEGAL.companyName}
         &rsquo;s total liability for any claim is limited to the fees you paid in the twelve
         months before the claim arose.
       </p>
 
-      <h2>8. Changes and contact</h2>
+      <h2>10. Changes and contact</h2>
       <p>
         We may update these terms; material changes will be announced in the Service and take
         effect no sooner than 14 days after notice. These terms are governed by the laws of{" "}

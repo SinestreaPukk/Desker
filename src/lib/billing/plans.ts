@@ -117,3 +117,15 @@ export function planFor(id: string | null | undefined): Plan {
   if (!limitsEnforced()) return SELF_HOSTED;
   return isPlanId(id ?? "") ? PLANS[id as PlanId] : PLANS.free;
 }
+
+/**
+ * The automatic-renewal terms, said the same way next to the plan buttons and
+ * on Stripe's checkout page, right before anyone pays. Auto-renewal law
+ * (California's among others) wants them clear and in front of the buyer.
+ */
+export function renewalTerms(plan: Pick<Plan, "name" | "priceUsd">): string {
+  return (
+    `${plan.name} is $${plan.priceUsd} a month, charged today and then automatically every month until you cancel. ` +
+    "Cancel anytime in Organization → Billing → Manage or cancel billing; you keep the plan until the end of the month you paid for."
+  );
+}

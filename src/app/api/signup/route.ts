@@ -9,6 +9,7 @@ import { findOpenInvitation } from "@/lib/invites";
 import { TERMS_VERSION } from "@/lib/legal";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
+import { mayUsePlatform, PRIVATE_BETA_MESSAGE } from "@/lib/private-beta";
 
 export const runtime = "nodejs";
 
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
       throw new HttpError(429, `Too many sign-ups from this address. Try again in ${limit.retryAfterSeconds}s.`);
     }
     const input = await parseJson(request, signupSchema);
+    if (!mayUsePlatform(input.email)) throw new HttpError(403, PRIVATE_BETA_MESSAGE);
 
     const existing = await prisma.user.findUnique({ where: { email: input.email } });
     if (existing) {

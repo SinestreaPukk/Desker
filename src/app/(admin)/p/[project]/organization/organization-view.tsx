@@ -8,7 +8,7 @@ import { Page, PageBody, PageHeader } from "@/components/page-header";
 import { ProjectContextPanel } from "@/components/builder/project-context-panel";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/field";
+import { Field, Input, Textarea } from "@/components/ui/field";
 import {
   Panel,
   PanelBody,
@@ -34,12 +34,13 @@ import {
   useMembers,
   useOrganization,
   useRemoveMember,
-  useRenameOrganization,
+  useUpdateOrganization,
   useRevokeInvite,
   useSetMemberRole,
   type BillingSummary,
 } from "@/hooks/use-work-data";
 import { ApiError, errorMessage } from "@/lib/api-client";
+import { renewalTerms } from "@/lib/billing/plans";
 import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 
 const ROLE_BLURB: Record<string, string> = {
@@ -80,6 +81,9 @@ export function OrganizationView({
         <div className="space-y-5">
           <BillingPanel project={project} isOwner={isOwner} checkoutResult={checkoutResult} />
           {isOwner && org.data ? <RenamePanel organizationId={organizationId} name={org.data.name} /> : null}
+          {isOwner && org.data ? (
+            <MailingAddressPanel organizationId={organizationId} address={org.data.mailingAddress ?? ""} />
+          ) : null}
         </div>
       </PageBody>
     </Page>
@@ -537,6 +541,8 @@ function BillingPanel({
                         {p.limits.conversationsPerMonth.toLocaleString()} conversations · ${p.limits.modelCostUsdPerMonth} model budget
                       </p>
                       {p.id !== plan.id && p.purchasable ? (
+                        <>
+                        <p className="mt-2 text-xs text-ink">{renewalTerms(p)}</p>
                         <Button
                           size="sm"
                           className="mt-2"
@@ -545,6 +551,7 @@ function BillingPanel({
                         >
                           {plan.id === "free" ? "Choose" : "Switch to"} {p.name}
                         </Button>
+                        </>
                       ) : null}
                     </div>
                   ))}
@@ -559,7 +566,7 @@ function BillingPanel({
                 disabled={portal.isPending}
               >
                 <CreditCard aria-hidden />
-                Manage billing
+                Manage or cancel billing
               </Button>
             ) : null}
           </div>
@@ -572,7 +579,7 @@ function BillingPanel({
 }
 
 function RenamePanel({ organizationId, name }: { organizationId: string; name: string }) {
-  const rename = useRenameOrganization(organizationId);
+  const rename = useUpdateOrganization(organizationId);
   const [value, setValue] = React.useState(name);
   const [note, setNote] = React.useState<string | null>(null);
   return (
@@ -582,7 +589,7 @@ function RenamePanel({ organizationId, name }: { organizationId: string; name: s
           e.preventDefault();
           setNote(null);
           try {
-            await rename.mutateAsync(value.trim());
+            await rename.mutateAsync({ name: value.trim() });
             setNote("Saved.");
           } catch (caught) {
             setNote(errorMessage(caught));
@@ -609,6 +616,62 @@ function RenamePanel({ organizationId, name }: { organizationId: string; name: s
             variant={value.trim() && value.trim() !== name ? "primary" : "secondary"}
             disabled={rename.isPending || !value.trim() || value.trim() === name}
           >
+            Save
+          </Button>
+        </PanelFooter>
+      </form>
+    </Panel>
+  );
+}
+
+/**
+ * The postal address at the foot of every email an agent sends. Anti-spam
+ * law requires one on email to customers, so agent email waits for it.
+ */
+function MailingAddressPanel({ organizationId, address }: { organizationId: string; address: string }) {
+  const update = useUpdateOrganization(organizationId);
+  const [value, setValue] = React.useState(address);
+  const [note, setNote] = React.useState<string | null>(null);
+  const changed = value.trim() !== address.trim();
+  return (
+    <Panel>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setNote(null);
+          try {
+            await update.mutateAsync({ mailingAddress: value.trim() });
+            setNote("Saved.");
+          } catch (caught) {
+            setNote(errorMessage(caught));
+          }
+        }}
+      >
+        <PanelHeader>
+          <div>
+            <PanelTitle>
+              <Mail className="mr-1.5 inline size-4 text-accent" aria-hidden />
+              Email sender details
+            </PanelTitle>
+            <PanelDescription>
+              Every email an agent sends ends with your business name, this address, and an unsubscribe link. The
+              law requires them on email to customers, so agents can&apos;t send email until an address is set.
+            </PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody>
+          <Field label="Business postal address" htmlFor="org-address" hint={note ?? undefined}>
+            <Textarea
+              id="org-address"
+              rows={3}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder={"12 Sukhumvit Soi 11\nKhlong Toei Nuea, Bangkok 10110\nThailand"}
+            />
+          </Field>
+        </PanelBody>
+        <PanelFooter className="flex justify-end">
+          <Button type="submit" size="sm" variant={changed ? "primary" : "secondary"} disabled={update.isPending || !changed}>
             Save
           </Button>
         </PanelFooter>

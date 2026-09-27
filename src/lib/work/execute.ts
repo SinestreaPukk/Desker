@@ -19,6 +19,7 @@ import { afterResponse } from "@/lib/after-response";
 import { notifyInBackground } from "@/lib/notify";
 import { canStartRun } from "@/lib/billing/limits";
 import { connectorAccess } from "@/lib/integrations/oauth";
+import { optOutFor, splitOptedOut } from "@/lib/email-optout";
 import {
   createCalendarEvent,
   listCalendarEvents,
@@ -818,7 +819,28 @@ export async function executePendingAction(
     if (to.length === 0 || !subject || !body) {
       return { ok: false, status: 0, detail: "The email is missing a recipient, subject or body." };
     }
-    delivery = await deliverEmail(email, { to, subject, text: body });
+    // Anti-spam law: a postal address on every email, and nobody who opted out.
+    const organization = await prisma.organization.findUniqueOrThrow({
+      where: { id: organizationId },
+      select: { id: true, name: true, mailingAddress: true },
+    });
+    if (!organization.mailingAddress?.trim()) {
+      return {
+        ok: false,
+        status: 0,
+        detail:
+          "Add your business's postal address under Organization → Email sender details first. The law requires one on emails to customers, so nothing was sent.",
+      };
+    }
+    const { allowed, optedOut } = await splitOptedOut(organizationId, to);
+    if (allowed.length === 0) {
+      return { ok: false, status: 0, detail: `Nothing was sent: ${optedOut.join(", ")} asked not to receive emails from you.` };
+    }
+    const optOut = optOutFor(organization, allowed);
+    delivery = await deliverEmail(email, { to: allowed, subject, text: body + optOut.footer, headers: optOut.headers });
+    if (delivery.ok && optedOut.length > 0) {
+      delivery = { ...delivery, detail: `${delivery.detail}. Skipped ${optedOut.join(", ")}, who asked not to receive emails from you.` };
+    }
   }
 
   if (delivery.ok && draft) {

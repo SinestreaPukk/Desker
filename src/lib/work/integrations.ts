@@ -176,7 +176,7 @@ export function parseRecipients(to: string): string[] {
 
 export async function deliverEmail(
   config: EmailConfig,
-  message: { to: string[]; subject: string; text: string },
+  message: { to: string[]; subject: string; text: string; headers?: Record<string, string> },
 ): Promise<DeliveryResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15_000);
@@ -192,6 +192,7 @@ export async function deliverEmail(
         to: message.to,
         subject: message.subject,
         text: message.text,
+        ...(message.headers && Object.keys(message.headers).length > 0 ? { headers: message.headers } : {}),
       }),
       signal: controller.signal,
     });

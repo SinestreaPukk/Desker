@@ -143,16 +143,6 @@ const landingSchema = z.object({
         .max(8),
     })
     .optional(),
-  /**
-   * Outcome numbers. A value stays null until it is measured - the section is
-   * not shown in production while any value is missing. Never an estimate.
-   */
-  metrics: z.object({
-    ...sectionHead,
-    items: z
-      .array(z.object({ label: z.string().min(1).max(48), value: z.string().nullable(), todo: z.string().optional() }))
-      .length(3),
-  }),
   /** Real quotes only. Hidden until enabled with at least one item. */
   testimonials: z.object({
     enabled: z.boolean(),
@@ -160,6 +150,8 @@ const landingSchema = z.object({
     items: z.array(z.object({ quote: z.string().min(1), name: z.string().min(1), title: z.string().min(1) })),
   }),
   pricing: z.object({
+    /** Off while there is nothing to buy yet: the section and its links are hidden. */
+    enabled: z.boolean(),
     ...sectionHead,
     /** Which tier carries the emphasis. A decision, so it is written down. */
     popularPlan: z.enum(PLAN_IDS),

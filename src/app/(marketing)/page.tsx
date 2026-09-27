@@ -11,7 +11,6 @@ import { Panel } from "@/components/ui/panel";
 import {
   ComparisonTable,
   Faq,
-  MetricTiles,
   ProductShotImage,
   RoleGrid,
   Steps,
@@ -19,7 +18,6 @@ import {
   TrustGrid,
   TrustShots,
   TrustStrip,
-  metricsReady,
 } from "@/components/marketing/landing-blocks";
 import { GLASS_BUTTON, SKY_LINK } from "@/components/marketing/glass-button";
 import { HeroStage } from "@/components/marketing/hero-stage";
@@ -45,7 +43,7 @@ export const metadata: Metadata = pageMetadata({
  * The front door, in the order a visitor's questions arrive: what is it
  * (hero), can I believe it (built on), why would I (problem), how (three
  * steps), what exactly (showcase), is it safe (trust), which one (roles),
- * does it work (outcomes, quotes), what does it cost (pricing), but what
+ * does it work (quotes), what does it cost (pricing), but what
  * about (FAQ), and go (CTA).
  *
  * A signed-in person has already been convinced; they go to their workspace.
@@ -71,11 +69,10 @@ export default async function LandingPage({
     redirect(`/p/${project.slug}/roster`);
   }
 
-  const { hero, trustStrip, steps, features, trust, roles, comparison, metrics, testimonials, pricing, faq, cta } =
+  const { hero, trustStrip, steps, features, trust, roles, comparison, testimonials, pricing, faq, cta } =
     LANDING;
   // Placeholders are for review only: outside production an unmeasured number
   // shows as a marked TODO; in production the section waits for real values.
-  const showMetrics = metricsReady(metrics.items) || process.env.NODE_ENV !== "production";
   const showTestimonials = testimonials.enabled && testimonials.items.length > 0;
 
   return (
@@ -207,16 +204,6 @@ export default async function LandingPage({
         </Section>
       ) : null}
 
-      {/* Outcomes ---------------------------------------------------------- */}
-      {showMetrics ? (
-        <Section labelledBy="metrics-heading" className="border-t border-line bg-surface">
-            <SectionHeader id="metrics-heading" eyebrow={metrics.eyebrow} heading={metrics.heading} intro={metrics.intro} />
-          <div className="mt-12">
-            <MetricTiles items={metrics.items} />
-          </div>
-        </Section>
-      ) : null}
-
       {/* Testimonials: real quotes only, off until content enables them --- */}
       {showTestimonials ? (
         <Section labelledBy="testimonials-heading" className="border-t border-line">
@@ -232,7 +219,8 @@ export default async function LandingPage({
         </Section>
       ) : null}
 
-      {/* Pricing ------------------------------------------------------------ */}
+      {/* Pricing: off until there is something to buy (landing.json) ------ */}
+      {pricing.enabled ? (
       <Section id="pricing" labelledBy="pricing-heading" className="border-t border-line">
           <SectionHeader id="pricing-heading" eyebrow={pricing.eyebrow} heading={pricing.heading} intro={pricing.intro} />
         {/* Three columns only from lg. At 768 they were 230px wide and every
@@ -303,6 +291,7 @@ export default async function LandingPage({
         <p className="mt-8 text-center text-sm text-ink-muted">{pricing.footnote}</p>
         <p className="mt-2 text-center text-sm text-ink-muted">{pricing.reassurance}</p>
       </Section>
+      ) : null}
 
       {/* FAQ ---------------------------------------------------------------- */}
       <Section id="faq" labelledBy="faq-heading" className="border-t border-line">

@@ -43,9 +43,32 @@ export default function PrivacyPage() {
         <li>A web search provider (Brave or Tavily) receives search queries an agent makes.</li>
         <li>Our hosting, database and job-runtime providers (Vercel, Neon, Inngest) store and process data to run the Service.</li>
         <li>Our payment provider (Stripe) handles payment details; we never see your card number.</li>
-        <li>Integrations you connect (a publishing webhook, an email provider) receive exactly what your agents send them after your approval.</li>
+        <li>Integrations you connect (a publishing webhook, an email provider, Google Calendar, Slack, GitHub) receive exactly what your agents send them, after your approval unless you allowed that tool to act on its own.</li>
         <li>An error-monitoring service may receive technical error reports without request bodies or message content.</li>
       </ul>
+
+      <h2>Cookies, tracking and recordings</h2>
+      <p>
+        We set one cookie, to keep you signed in. There is no advertising or analytics tracking,
+        no session recording, and the site loads no fonts or scripts from other companies&rsquo;
+        servers: everything is served from our own domain.
+      </p>
+
+      <h2>Emails and unsubscribing</h2>
+      <p>
+        Emails your agents send, and agent reports you choose to have emailed, go out from your
+        organisation through the email provider you connect. Each one names your business, gives
+        its postal address, and has an unsubscribe link. Anyone who unsubscribes is taken off that
+        organisation&rsquo;s list straight away and is not emailed by its agents again.
+      </p>
+
+      <h2>Children</h2>
+      <p>
+        {LEGAL.companyName} is a business tool for adults. Accounts are for people aged 18 or over,
+        and we do not knowingly collect personal data from children under 13 (or the higher age
+        your country sets). If you believe a child has given us personal data, write to{" "}
+        {LEGAL.contactEmail} and we will delete it.
+      </p>
 
       <h2>Security</h2>
       <p>

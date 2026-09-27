@@ -319,37 +319,6 @@ export function ComparisonTable({
   );
 }
 
-/* --- Outcomes ------------------------------------------------------------------ */
-
-type Metric = { label: string; value: string | null; todo?: string };
-
-/** The section shows in production only once every value is measured. */
-export function metricsReady(items: readonly Metric[]): boolean {
-  return items.every((item) => item.value !== null);
-}
-
-export function MetricTiles({ items }: { items: readonly Metric[] }) {
-  return (
-    <dl className="sd-stagger grid gap-4 sm:grid-cols-3">
-      {items.map((item) => (
-        <div
-          key={item.label}
-          className={cn(
-            "rounded-panel border bg-surface p-6 text-center",
-            item.value === null ? "border-dashed border-line-strong" : "border-line shadow-xs",
-          )}
-        >
-          <dd className="sd-pop text-display font-medium tracking-tight text-accent">{item.value ?? "—"}</dd>
-          <dt className="mt-2 text-sm text-ink-muted">{item.label}</dt>
-          {item.value === null ? (
-            <p className="mt-3 font-mono text-xs text-danger">TODO: {item.todo ?? "measure this"}</p>
-          ) : null}
-        </div>
-      ))}
-    </dl>
-  );
-}
-
 /* --- Testimonials -------------------------------------------------------------- */
 
 /** Real quotes only. The page renders this only when content enables it. */

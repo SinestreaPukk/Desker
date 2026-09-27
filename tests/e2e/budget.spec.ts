@@ -73,7 +73,7 @@ test.describe("the public site", () => {
     // Everything is there without the animation library: the server renders
     // the page visible and the hero's own copy is on screen.
     await expect(reduced.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(reduced.getByRole("link", { name: /Start free/ }).first()).toBeVisible();
+    await expect(reduced.getByRole("link", { name: /Join the beta/ }).first()).toBeVisible();
     await expect(reduced.getByRole("contentinfo")).toBeVisible();
 
     const opacities = await reduced.evaluate(() =>

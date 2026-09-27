@@ -21,6 +21,7 @@ import { publishAdminEvent } from "@/lib/events";
 import { getProvider, type ChatMessage } from "@/lib/llm/provider";
 import { clamp, parseModelJson, stringField } from "./model-json";
 import { previousFire } from "./scope";
+import { optOutFor, splitOptedOut } from "@/lib/email-optout";
 import { deliverEmail, parseRecipients, resolveEmail } from "./integrations";
 import {
   isDigestBulletKind,
@@ -487,10 +488,25 @@ async function emailDigest(input: {
     return;
   }
 
+  // The same opt-out as agent email: whoever unsubscribed stops getting these.
+  const { allowed } = await splitOptedOut(input.organizationId, to);
+  if (allowed.length === 0) {
+    await prisma.digest.update({
+      where: { id: input.digestId },
+      data: { emailError: "Every recipient unsubscribed, so the digest stayed in the Inbox." },
+    });
+    return;
+  }
+  const organization = await prisma.organization.findUniqueOrThrow({
+    where: { id: input.organizationId },
+    select: { id: true, name: true, mailingAddress: true },
+  });
+  const optOut = optOutFor(organization, allowed);
   const delivery = await deliverEmail(config, {
-    to,
+    to: allowed,
     subject: `${input.agentName}: ${input.headline}`,
-    text: digestText(input.agentName, input.headline, input.bullets, input.link),
+    text: digestText(input.agentName, input.headline, input.bullets, input.link) + optOut.footer,
+    headers: optOut.headers,
   });
   await prisma.digest.update({
     where: { id: input.digestId },
