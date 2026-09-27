@@ -11,6 +11,17 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/**": ["./node_modules/.prisma/client/**"],
   },
+  async redirects() {
+    // One address: www.desker.dev forwards to desker.dev, path and all.
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.desker.dev" }],
+        destination: "https://desker.dev/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     // Defence in depth for the admin app. The embed routes are exempt from
     // the frame rule below because being framed is their whole purpose.
