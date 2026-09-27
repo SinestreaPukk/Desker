@@ -9,7 +9,7 @@
  */
 import { SITE } from "@/lib/content";
 
-export const TERMS_VERSION = "2026-09-27";
+export const TERMS_VERSION = "2026-09-27.2";
 
 export const LEGAL = {
   companyName: process.env.NEXT_PUBLIC_LEGAL_COMPANY_NAME?.trim() || "Desker",

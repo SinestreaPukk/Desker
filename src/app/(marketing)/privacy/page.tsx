@@ -64,9 +64,8 @@ export default function PrivacyPage() {
 
       <h2>Children</h2>
       <p>
-        {LEGAL.companyName} is a business tool for adults. Accounts are for people aged 18 or over,
-        and we do not knowingly collect personal data from children under 13 (or the higher age
-        your country sets). If you believe a child has given us personal data, write to{" "}
+        We do not knowingly collect personal data from children under 13 (or the higher age your
+        country sets). If you believe a child has given us personal data, write to{" "}
         {LEGAL.contactEmail} and we will delete it.
       </p>
 

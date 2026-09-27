@@ -11,6 +11,14 @@ import { Panel, PanelBody } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { api, ApiError } from "@/lib/api-client";
 import { BrandLockup } from "@/components/brand-logo";
+import type { UseType } from "@/lib/validation";
+
+const USE_TYPE_OPTIONS: { value: UseType; label: string; hint: string }[] = [
+  { value: "freelancer", label: "Freelancer", hint: "Working for myself" },
+  { value: "business", label: "Business", hint: "An established company" },
+  { value: "startup", label: "Startup", hint: "A young, growing team" },
+  { value: "personal", label: "Personal", hint: "For my own projects" },
+];
 
 export function SignupForm({ invite }: { invite?: { token: string; email: string; organization: string } | null }) {
   const router = useRouter();
@@ -38,7 +46,11 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
       await api("/api/signup", {
         method: "POST",
         body: JSON.stringify({
-          name: String(form.get("name") ?? ""),
+          firstName: String(form.get("firstName") ?? ""),
+          lastName: String(form.get("lastName") ?? ""),
+          username: String(form.get("username") ?? ""),
+          ...(invite ? {} : { organization: String(form.get("organization") ?? "") }),
+          useType: String(form.get("useType") ?? ""),
           email,
           password,
           acceptTerms: accepted,
@@ -84,9 +96,60 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
           <form onSubmit={onSubmit} className="space-y-5" noValidate>
             <FormError message={error} />
 
-            <Field label="Your name" htmlFor="name" hint="Optional.">
-              <Input name="name" autoComplete="name" placeholder="Alex Chen" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="First name" htmlFor="firstName" required error={fieldErrors.firstName?.[0]}>
+                <Input name="firstName" autoComplete="given-name" required placeholder="Alex" />
+              </Field>
+              <Field label="Last name" htmlFor="lastName" required error={fieldErrors.lastName?.[0]}>
+                <Input name="lastName" autoComplete="family-name" required placeholder="Chen" />
+              </Field>
+            </div>
+
+            <Field
+              label="Username"
+              htmlFor="username"
+              required
+              hint="Letters, numbers, dots, dashes or underscores."
+              error={fieldErrors.username?.[0]}
+            >
+              <Input
+                name="username"
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                required
+                minLength={3}
+                maxLength={30}
+                placeholder="alexchen"
+              />
             </Field>
+
+            {invite ? null : (
+              <Field label="Organisation" htmlFor="organization" required error={fieldErrors.organization?.[0]}>
+                <Input name="organization" autoComplete="organization" required placeholder="Chen Studio" />
+              </Field>
+            )}
+
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium text-ink">
+                How will you use Desker? <span className="text-danger" aria-hidden>*</span>
+              </legend>
+              <div className="grid grid-cols-2 gap-2">
+                {USE_TYPE_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex cursor-pointer flex-col rounded-lg border border-line bg-surface px-3 py-2.5 transition-colors hover:border-accent-line has-[:checked]:border-accent has-[:checked]:bg-accent-soft/40 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent"
+                  >
+                    <input type="radio" name="useType" value={option.value} required className="sr-only" />
+                    <span className="text-sm font-medium text-ink">{option.label}</span>
+                    <span className="text-xs text-ink-muted">{option.hint}</span>
+                  </label>
+                ))}
+              </div>
+              {fieldErrors.useType?.[0] ? (
+                <p className="mt-1.5 text-xs text-danger">{fieldErrors.useType[0]}</p>
+              ) : null}
+            </fieldset>
 
             <Field
               label="Email"
@@ -130,7 +193,7 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
                   className="mt-0.5"
                 />
                 <span>
-                  I&apos;m 18 or older, and I agree to the{" "}
+                  I agree to the{" "}
                   <Link href="/terms" target="_blank" className="font-medium text-accent hover:underline">
                     Terms of Service
                   </Link>{" "}

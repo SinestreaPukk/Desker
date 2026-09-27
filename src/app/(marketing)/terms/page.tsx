@@ -30,7 +30,6 @@ export default function TermsPage() {
 
       <h2>2. Your account and your organisation</h2>
       <ul>
-        <li>You must be at least 18 years old and use the Service for your business or profession. It is not intended for children.</li>
         <li>You must give accurate information and keep your credentials confidential.</li>
         <li>An organisation owner is responsible for the people they invite and the roles they assign.</li>
         <li>You must not use the Service to break the law, to send unsolicited messages, or to interfere with the Service or other customers.</li>

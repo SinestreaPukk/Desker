@@ -47,7 +47,16 @@ async function signIn() {
 
 const signup = await call("/api/signup", {
   method: "POST",
-  body: JSON.stringify({ name: "Demo Owner", email, password, acceptTerms: true }),
+  body: JSON.stringify({
+    firstName: "Demo",
+    lastName: "Owner",
+    username: "demo-owner",
+    organization: "Northwind Supply Co.",
+    useType: "business",
+    email,
+    password,
+    acceptTerms: true,
+  }),
 });
 console.log(signup.status === 409 ? "demo account exists; signing in" : `signed up (${signup.status})`);
 await signIn();

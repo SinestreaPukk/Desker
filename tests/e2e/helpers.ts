@@ -6,7 +6,11 @@ export const hasModelKey = Boolean(process.env.ANTHROPIC_API_KEY?.trim());
 export const ADMIN = {
   email: "e2e-admin@example.com",
   password: "e2e-password-123",
-  name: "E2E Admin",
+  firstName: "E2E",
+  lastName: "Admin",
+  username: "e2e-admin",
+  organization: "E2E Org",
+  useType: "business",
   acceptTerms: true,
 };
 
@@ -18,7 +22,7 @@ export const ANONYMOUS = { cookies: [], origins: [] };
 /** A distinct admin, for specs that exercise signup itself. */
 export function uniqueAdmin() {
   const stamp = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-  return { email: `e2e-${stamp}@example.com`, password: "e2e-password-123" };
+  return { email: `e2e-${stamp}@example.com`, password: "e2e-password-123", username: `e2e-${stamp}` };
 }
 
 /** The project every spec works inside, resolved once after sign-in. */
@@ -30,13 +34,23 @@ export async function currentProjectSlug(page: Page): Promise<string> {
   return page.url().match(/\/p\/([^/]+)\//)![1]!;
 }
 
+/** The profile fields every sign-up asks for (the organisation is asked separately, not on an invitation). */
+export async function fillProfile(page: Page, username: string) {
+  await page.getByLabel("First name").fill("E2E");
+  await page.getByLabel("Last name").fill("Tester");
+  await page.getByLabel("Username").fill(username);
+  await page.getByText("Business", { exact: true }).click();
+}
+
 export async function signUp(
   page: Page,
-  admin: { email: string; password: string },
+  admin: { email: string; password: string; username: string },
   /** A signup URL with query parameters to carry through, e.g. a role template. */
   path = "/signup",
 ) {
   await page.goto(path);
+  await fillProfile(page, admin.username);
+  await page.getByLabel("Organisation").fill("E2E Org");
   await page.getByLabel("Email").fill(admin.email);
   await page.getByLabel("Password").fill(admin.password);
   await page.getByLabel(/I agree to the/).check();

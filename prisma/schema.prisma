@@ -25,7 +25,14 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  /// "First Last", composed from the two below at sign-up; what the product shows.
   name         String?
+  firstName    String?
+  lastName     String?
+  /// Chosen at sign-up; lowercase letters, numbers, dots, dashes, underscores.
+  username     String?  @unique
+  /// How they said they use Desker: freelancer | business | startup | personal.
+  useType      String?
   /// When and which version of the Terms and Privacy Policy this person
   /// accepted at sign-up. The acceptance record the legal documents need.
   termsAcceptedAt DateTime?

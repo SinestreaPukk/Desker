@@ -56,9 +56,24 @@ export const agentInputSchema = z.object({
 
 export type AgentInput = z.infer<typeof agentInputSchema>;
 
+/** How someone uses Desker, asked at sign-up. */
+export const USE_TYPES = ["freelancer", "business", "startup", "personal"] as const;
+export type UseType = (typeof USE_TYPES)[number];
+
+export const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,29}$/;
+
 export const signupSchema = z
   .object({
-    name: z.string().trim().max(120).optional(),
+    firstName: z.string().trim().min(1, "Enter your first name.").max(60, "That first name is too long."),
+    lastName: z.string().trim().min(1, "Enter your last name.").max(60, "That last name is too long."),
+    username: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(USERNAME_PATTERN, "Use 3-30 letters, numbers, dots, dashes or underscores, starting with a letter or number."),
+    /** The new organisation's name. Not asked when joining through an invitation. */
+    organization: z.string().trim().max(80, "That organisation name is too long.").optional(),
+    useType: z.enum(USE_TYPES, { message: "Choose how you'll use Desker." }),
     email: z.string().trim().toLowerCase().email("Enter a valid email address."),
     password: z
       .string()
@@ -66,12 +81,16 @@ export const signupSchema = z
       .max(200, "That password is too long."),
     /** An invitation token; joins that organisation instead of creating one. */
     invite: z.string().trim().max(200).optional(),
-    /** The consent step, including that the person is 18 or over. Recorded with the terms version on the user. */
+    /** The consent step. Recorded with the terms version on the user. */
     acceptTerms: z.literal(true, {
-      message: "Confirm you're 18 or older and accept the Terms of Service and Privacy Policy to create an account.",
+      message: "Accept the Terms of Service and Privacy Policy to create an account.",
     }),
   })
-  .strict();
+  .strict()
+  .refine((input) => Boolean(input.invite) || Boolean(input.organization), {
+    path: ["organization"],
+    message: "Enter your organisation's name.",
+  });
 
 export const chatRequestSchema = z.object({
   agentId: z.string().min(1),

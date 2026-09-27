@@ -4,6 +4,7 @@ import { handle, parseJson, requireAdmin } from "@/lib/api";
 import { findProject } from "@/lib/projects";
 import { notifyInBackground } from "@/lib/notify";
 import { track } from "@/lib/product-events";
+import { emailOwner } from "@/lib/owner-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ const schema = z.object({
   project: z.string().trim().max(200).optional(),
 });
 
-/** In-app feedback: stored, forwarded to the notification channel, counted. */
+/** In-app feedback: stored, forwarded to the notification channel, emailed to the owner, counted. */
 export async function POST(request: Request) {
   return handle(async () => {
     const { userId, email } = await requireAdmin();
@@ -39,6 +40,11 @@ export async function POST(request: Request) {
       body: input.message.slice(0, 1500),
       agentName: "Desker",
       path: input.path,
+    });
+    emailOwner({
+      subject: `Feedback (${input.kind}) from ${email}`,
+      text: `${input.message}\n\nFrom: ${email}${input.path ? `\nPage: ${input.path}` : ""}`,
+      replyTo: email,
     });
     await track({ name: "feedback.sent", organizationId, userId, path: input.path, metadata: { kind: input.kind } });
     return { id: row.id };

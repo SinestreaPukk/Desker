@@ -2,9 +2,9 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { handle, parseJson, HttpError } from "@/lib/api";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { afterResponse } from "@/lib/after-response";
 import { notifyInBackground } from "@/lib/notify";
 import { SITE } from "@/lib/content";
+import { emailOwner } from "@/lib/owner-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,8 +19,8 @@ const schema = z.object({
 
 /**
  * The contact form. The message is always kept (as feedback of kind
- * "contact") and forwarded to the notification webhook; it is emailed too
- * when the deployment has Resend and a CONTACT_EMAIL. A filled honeypot is
+ * "contact"), forwarded to the notification webhook, and emailed to the
+ * owner (owner-email.ts). A filled honeypot is
  * accepted and dropped, so a bot learns nothing.
  */
 export async function POST(request: Request) {
@@ -60,39 +60,11 @@ export async function POST(request: Request) {
       path: "/contact",
     });
 
-    const apiKey = process.env.RESEND_API_KEY?.trim();
-    const from = process.env.EMAIL_FROM?.trim();
-    const to = process.env.CONTACT_EMAIL?.trim() || SITE.company.email;
-    if (apiKey && from) {
-      // After the response, not before it: the sender sees "thanks" as soon as
-      // the message is stored, and a slow provider cannot hold the form open.
-      afterResponse(async () => {
-        try {
-          const response = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-            body: JSON.stringify({
-              from,
-              to: [to],
-              reply_to: input.email,
-              subject: `[${SITE.company.name}] Contact from ${input.name}${input.company ? ` (${input.company})` : ""}`,
-              text: body,
-            }),
-            signal: AbortSignal.timeout(10_000),
-          });
-          // Only network errors were being caught. A rejected send - an
-          // unverified sending domain is the usual one - answers 4xx, which
-          // the old code read as success and dropped in silence.
-          if (!response.ok) {
-            console.error(
-              `[contact] email rejected: ${response.status} ${(await response.text().catch(() => "")).slice(0, 300)}`,
-            );
-          }
-        } catch (error: unknown) {
-          console.error("[contact] email failed", error);
-        }
-      });
-    }
+    emailOwner({
+      subject: `Contact from ${input.name}${input.company ? ` (${input.company})` : ""}`,
+      text: body,
+      replyTo: input.email,
+    });
     return { ok: true };
   });
 }

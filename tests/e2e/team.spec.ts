@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ANONYMOUS, COMPANY_CONTEXT, currentProjectSlug, signUp, uniqueAdmin } from "./helpers";
+import { ANONYMOUS, COMPANY_CONTEXT, currentProjectSlug, fillProfile, signUp, uniqueAdmin } from "./helpers";
 
 /**
  * The stranger's path: an owner invites, the invitee creates an account from
@@ -24,6 +24,7 @@ test("an owner invites a teammate who joins from the link", async ({ page, brows
   await expect(guest.getByText(/You have been invited as/)).toBeVisible();
   await guest.getByRole("link", { name: "Create an account" }).click();
   await expect(guest.getByLabel("Email")).toHaveValue(invitee.email);
+  await fillProfile(guest, invitee.username);
   await guest.getByLabel("Password").fill(invitee.password);
   await guest.getByLabel(/I agree to the/).check();
   await guest.getByRole("button", { name: "Create account" }).click();

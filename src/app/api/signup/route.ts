@@ -3,7 +3,7 @@ import { handle, parseJson, HttpError } from "@/lib/api";
 import { hashPassword } from "@/lib/auth";
 import { signupSchema } from "@/lib/validation";
 import { uniqueSlug } from "@/lib/projects";
-import { createOrganizationFor, defaultOrganizationName } from "@/lib/organizations";
+import { createOrganizationFor } from "@/lib/organizations";
 import { audit } from "@/lib/audit";
 import { findOpenInvitation } from "@/lib/invites";
 import { TERMS_VERSION } from "@/lib/legal";
@@ -32,6 +32,16 @@ export async function POST(request: Request) {
     if (existing) {
       throw new HttpError(409, "An account with that email already exists.");
     }
+    if (await prisma.user.findUnique({ where: { username: input.username } })) {
+      throw usernameTaken();
+    }
+    const profile = {
+      name: `${input.firstName} ${input.lastName}`,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      username: input.username,
+      useType: input.useType,
+    };
 
     // Signing up from an invitation joins that organisation instead of
     // founding a new one. The address must match: a forwarded link is not
@@ -47,7 +57,7 @@ export async function POST(request: Request) {
         const created = await tx.user.create({
           data: {
             email: input.email,
-            name: input.name?.trim() || null,
+            ...profile,
             passwordHash,
             termsAcceptedAt: new Date(),
             termsVersion: TERMS_VERSION,
@@ -83,18 +93,14 @@ export async function POST(request: Request) {
       const user = await tx.user.create({
         data: {
           email: input.email,
-          name: input.name?.trim() || null,
+          ...profile,
           passwordHash,
           termsAcceptedAt: new Date(),
           termsVersion: TERMS_VERSION,
         },
         select: { id: true, email: true, name: true },
       });
-      const organization = await createOrganizationFor(
-        user.id,
-        defaultOrganizationName(user),
-        tx,
-      );
+      const organization = await createOrganizationFor(user.id, input.organization!, tx);
       await tx.project.create({
         data: {
           name: "Default project",
@@ -117,4 +123,8 @@ export async function POST(request: Request) {
 
     return user;
   });
+}
+
+function usernameTaken(): HttpError {
+  return new HttpError(409, "That username is taken.", { fieldErrors: { username: ["That username is taken - try another."] } });
 }
