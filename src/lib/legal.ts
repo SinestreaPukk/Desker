@@ -19,5 +19,5 @@ export const LEGAL = {
     process.env.NEXT_PUBLIC_LEGAL_COPYRIGHT_EMAIL?.trim() ||
     process.env.NEXT_PUBLIC_LEGAL_CONTACT_EMAIL?.trim() ||
     SITE.company.email,
-  jurisdiction: process.env.NEXT_PUBLIC_LEGAL_JURISDICTION?.trim() || "[jurisdiction]",
+  jurisdiction: process.env.NEXT_PUBLIC_LEGAL_JURISDICTION?.trim() || "Thailand",
 } as const;
