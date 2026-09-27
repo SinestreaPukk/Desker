@@ -4,14 +4,14 @@ import { findProject } from "@/lib/projects";
 import { requireRole } from "@/lib/organizations";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
-import { stripe, stripeConfigured } from "@/lib/billing/stripe";
+import { portalConfiguration, stripe, stripeConfigured } from "@/lib/billing/stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const schema = z.object({ project: z.string().min(1) });
 
-/** Opens Stripe's hosted portal: change plan, update card, see invoices. Owners only. */
+/** Opens Stripe's hosted portal: cancel, update card, see invoices. Owners only. */
 export async function POST(request: Request) {
   return handle(async () => {
     const { userId } = await requireAdmin();
@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     const origin = env.appUrl || new URL(request.url).origin;
     const session = await stripe().billingPortal.sessions.create({
       customer: org.stripeCustomerId,
+      configuration: await portalConfiguration(),
       return_url: `${origin}/p/${project.slug}/organization`,
     });
     return { url: session.url };
