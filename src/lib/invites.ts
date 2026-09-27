@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { env } from "@/lib/env";
 import type { OrganizationRole } from "@/lib/organizations";
+import { deliverAppEmail } from "@/lib/app-email";
 
 const INVITE_TTL_DAYS = 7;
 
@@ -110,25 +111,12 @@ export async function sendInviteEmail(input: {
   inviterName: string;
   url: string;
 }): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.EMAIL_FROM?.trim();
-  if (!apiKey || !from) return false;
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        from,
-        to: [input.to],
-        subject: `${input.inviterName} invited you to ${input.organizationName} on Desker`,
-        text:
-          `${input.inviterName} has invited you to join ${input.organizationName} on Desker.\n\n` +
-          `Accept the invitation here (it expires in ${INVITE_TTL_DAYS} days):\n${input.url}\n\n` +
-          "If you were not expecting this, you can ignore it.",
-      }),
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
+  return deliverAppEmail({
+    to: input.to,
+    subject: `${input.inviterName} invited you to ${input.organizationName} on Desker`,
+    text:
+      `${input.inviterName} has invited you to join ${input.organizationName} on Desker.\n\n` +
+      `Accept the invitation here (it expires in ${INVITE_TTL_DAYS} days):\n${input.url}\n\n` +
+      "If you were not expecting this, you can ignore it.",
+  });
 }

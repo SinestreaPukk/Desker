@@ -16,6 +16,7 @@ export function LoginForm() {
   const search = useSearchParams();
   const inviteToken = search.get("invite");
   const template = search.get("template");
+  const justReset = search.get("reset") === "1";
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -65,6 +66,11 @@ export function LoginForm() {
       <Panel className="window shadow-md">
         <PanelBody className="p-6 sm:p-7">
           <form onSubmit={onSubmit} className="space-y-5" noValidate>
+            {justReset && !error ? (
+              <p role="status" className="rounded-md border border-positive-line bg-positive-soft px-3 py-2 text-sm text-positive">
+                Password changed. Sign in with your new one.
+              </p>
+            ) : null}
             <FormError message={error} />
 
             <Field label="Email" htmlFor="email" required>
@@ -86,6 +92,11 @@ export function LoginForm() {
                 placeholder="••••••••"
               />
             </Field>
+            <p className="-mt-3 text-right text-sm">
+              <Link href="/forgot-password" className="font-medium text-accent hover:underline">
+                Forgot password?
+              </Link>
+            </p>
 
             <Button type="submit" className="w-full" loading={pending}>
               Sign in

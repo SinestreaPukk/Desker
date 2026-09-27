@@ -4,7 +4,7 @@ import { handle, parseJson, requireAdmin } from "@/lib/api";
 import { findProject } from "@/lib/projects";
 import { notifyInBackground } from "@/lib/notify";
 import { track } from "@/lib/product-events";
-import { emailOwner } from "@/lib/owner-email";
+import { emailOwner } from "@/lib/app-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

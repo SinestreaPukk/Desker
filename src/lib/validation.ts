@@ -60,6 +60,18 @@ export type AgentInput = z.infer<typeof agentInputSchema>;
 export const USE_TYPES = ["freelancer", "business", "startup", "personal"] as const;
 export type UseType = (typeof USE_TYPES)[number];
 
+/** One rule for every password Desker sets: sign-up and reset. */
+export const passwordRule = z.string().min(8, "Use at least 8 characters.").max(200, "That password is too long.");
+
+export const passwordResetRequestSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid email address."),
+});
+
+export const passwordResetSchema = z.object({
+  token: z.string().trim().min(20).max(200),
+  password: passwordRule,
+});
+
 export const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,29}$/;
 
 export const signupSchema = z
@@ -75,10 +87,7 @@ export const signupSchema = z
     organization: z.string().trim().max(80, "That organisation name is too long.").optional(),
     useType: z.enum(USE_TYPES, { message: "Choose how you'll use Desker." }),
     email: z.string().trim().toLowerCase().email("Enter a valid email address."),
-    password: z
-      .string()
-      .min(8, "Use at least 8 characters.")
-      .max(200, "That password is too long."),
+    password: passwordRule,
     /** An invitation token; joins that organisation instead of creating one. */
     invite: z.string().trim().max(200).optional(),
     /** The consent step. Recorded with the terms version on the user. */

@@ -387,6 +387,8 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: "Workspace created", detail: null, tone: "neutral", icon: "settings" };
     case "organization.mailing_address_updated":
       return { title: `${who} updated the mailing address on agent emails`, detail: null, tone: "neutral", icon: "settings" };
+    case "user.password_reset":
+      return { title: `${who} reset their password`, detail: "Every other session was signed out.", tone: "neutral", icon: "person" };
     case "organization.renamed":
       return { title: `${who} renamed the organisation`, detail: null, tone: "neutral", icon: "settings" };
     case "project.created":

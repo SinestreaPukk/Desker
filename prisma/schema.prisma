@@ -33,6 +33,8 @@ model User {
   username     String?  @unique
   /// How they said they use Desker: freelancer | business | startup | personal.
   useType      String?
+  /// When the password last changed. Sessions signed in before it are ended.
+  passwordChangedAt DateTime?
   /// When and which version of the Terms and Privacy Policy this person
   /// accepted at sign-up. The acceptance record the legal documents need.
   termsAcceptedAt DateTime?
@@ -41,6 +43,21 @@ model User {
 
   memberships Membership[]
   feedback    Feedback[]
+  passwordResets PasswordReset[]
+}
+
+/// A "forgot password" link. Only a hash of the token is stored, so a copy of
+/// the database cannot be used to reset anyone's password. One use, one hour.
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 /// What a person told us from inside the product. Read by the team, never by

@@ -4,7 +4,7 @@ import { handle, parseJson, HttpError } from "@/lib/api";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { notifyInBackground } from "@/lib/notify";
 import { SITE } from "@/lib/content";
-import { emailOwner } from "@/lib/owner-email";
+import { emailOwner } from "@/lib/app-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ const schema = z.object({
 /**
  * The contact form. The message is always kept (as feedback of kind
  * "contact"), forwarded to the notification webhook, and emailed to the
- * owner (owner-email.ts). A filled honeypot is
+ * owner (app-email.ts). A filled honeypot is
  * accepted and dropped, so a bot learns nothing.
  */
 export async function POST(request: Request) {

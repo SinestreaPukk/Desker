@@ -20,6 +20,8 @@ import { mayUsePlatform, PRIVATE_BETA_CODE } from "@/lib/private-beta";
 declare module "next-auth" {
   interface Session {
     user: { id: string } & DefaultSession["user"];
+    /** When this sign-in happened (seconds). A password change ends older sessions. */
+    issuedAt?: number;
   }
 }
 
@@ -49,14 +51,18 @@ export async function currentUser() {
   const session = await auth();
   const id = session?.user?.id;
   if (!id) return null;
-  const user = await prisma.user.findUnique({
+  const row = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, email: true, name: true },
+    select: { id: true, email: true, name: true, passwordChangedAt: true },
   });
   // Private beta: a session from before the allowlist - or for an address
   // taken off it - is signed out, not let in.
-  if (!user || !mayUsePlatform(user.email)) return null;
-  return user;
+  if (!row || !mayUsePlatform(row.email)) return null;
+  // A password reset ends every session signed in before it.
+  if (row.passwordChangedAt && (session.issuedAt ?? 0) < Math.floor(row.passwordChangedAt.getTime() / 1000)) {
+    return null;
+  }
+  return { id: row.id, email: row.email, name: row.name };
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -99,6 +105,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     session({ session, token }) {
       if (token.sub) session.user.id = token.sub;
+      if (typeof token.iat === "number") session.issuedAt = token.iat;
       return session;
     },
   },
