@@ -7,6 +7,8 @@ export const actionItemInclude = {
   agent: { select: { id: true, name: true, jobTitle: true, avatarUrl: true } },
   drafts: { orderBy: { createdAt: "asc" as const } },
   parent: { select: { agent: { select: { id: true, name: true, avatarUrl: true } } } },
+  // A flag or a failure stays on the owner's plate until they mark it handled.
+  issues: { where: { status: "open", type: { in: ["escalation", "failure"] } }, select: { id: true } },
   followups: {
     where: { type: "colleague_delegation" },
     orderBy: { createdAt: "asc" as const },
@@ -78,14 +80,17 @@ export function toActionItemDto(item: Row): ActionItemDto {
     approvedAt: item.approvedAt?.toISOString() ?? null,
     escalatedAt: item.escalatedAt?.toISOString() ?? null,
     escalationReason: item.escalationReason,
+    openIssueIds: item.issues.map((issue) => issue.id),
     createdAt: item.createdAt.toISOString(),
     startedAt: item.startedAt?.toISOString() ?? null,
     completedAt: item.completedAt?.toISOString() ?? null,
   };
 }
 
+/** A follow-up's or hand-off's objective, or what the owner typed when they pressed Run now. */
 function taskOf(payload: Prisma.JsonValue): string {
-  const value = (payload as Record<string, unknown> | null)?.objective;
+  const record = payload as Record<string, unknown> | null;
+  const value = record?.objective ?? record?.instruction;
   return typeof value === "string" ? value : "";
 }
 

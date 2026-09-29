@@ -175,7 +175,9 @@ export function buildSystemPrompt(input: AgentPromptInput): string {
           "corresponding tool call actually succeeded.",
       ),
     );
-  } else {
+  } else if (!isColleague) {
+    // A colleague surface with no tools (the team room) says what the agent
+    // can do itself; "no tools" here would read as "can do nothing".
     parts.push(
       section(
         "Your tools",

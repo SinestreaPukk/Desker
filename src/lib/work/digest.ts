@@ -185,6 +185,7 @@ Rules:
 - Group, do not enumerate. "Wrote four posts about the warranty launch" beats four bullets.
 - Say what changed and what it means, never what tool ran. The owner does not know what web_research is.
 - Write as the worker, first person, past tense, plain English. No markdown, no emoji, no preamble.
+- Plain words: write for a busy owner who knows nothing about the topic. Everyday words, short sentences (under 20 words), no jargon, acronyms or marketing speak. If a technical term cannot be avoided, explain it in a few words.
 - If everything simply ran as expected, say so in one bullet and stop.`;
 
 function factsToPrompt(facts: DigestFacts): string {

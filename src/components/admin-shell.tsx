@@ -14,6 +14,7 @@ import {
   History,
   LogOut,
   Menu,
+  MessagesSquare,
   Plus,
   UsersRound,
   Workflow,
@@ -63,6 +64,7 @@ const NAV_GROUPS: { title: string; items: readonly NavItem[] }[] = [
     title: "Workspace",
     items: [
       { segment: "roster", label: "Roster", icon: UsersRound },
+      { segment: "team", label: "Team", icon: MessagesSquare },
       { segment: "work", label: "Work", icon: Workflow },
       { segment: "inbox", label: "Inbox", icon: BotMessageSquare },
       { segment: "insights", label: "Insights", icon: Activity },
@@ -138,7 +140,7 @@ export function AdminShell({
                   aria-hidden
                 />
                 <span>{item.label}</span>
-                {/* Mail-style counts: indigo for what waits on the owner, quiet grey for the rest. */}
+                {/* Mail-style counts: the accent for what waits on the owner, quiet grey for the rest. */}
                 {item.segment === "work" && waitingCount > 0 ? (
                   <span
                     className="ml-auto min-w-5 rounded-full bg-accent-soft px-1.5 text-center text-xs font-semibold leading-5 text-accent-soft-fg tabular-nums ring-1 ring-inset ring-accent-line"
@@ -277,7 +279,14 @@ export function AdminShell({
         </div>
       </aside>
 
-      <main id="admin-main" className="min-w-0 flex-1">
+      <main id="admin-main" className="relative isolate min-w-0 flex-1">
+        {/* The desk behind every page: a few notes just out of focus at the
+            top, the same ground as the public site, quiet enough to read on. */}
+        <div aria-hidden className="soft-notes soft-notes-quiet pointer-events-none absolute inset-x-0 top-0 -z-10 h-96 overflow-hidden">
+          <span className="absolute -left-16 -top-10 h-64 w-80 rounded-panel bg-note-lemon" style={{ rotate: "-8deg" }} />
+          <span className="absolute right-[8%] -top-16 h-72 w-96 rounded-panel bg-note-sky" style={{ rotate: "7deg" }} />
+          <span className="absolute left-[42%] top-24 h-48 w-72 rounded-panel bg-note-lilac" style={{ rotate: "-4deg" }} />
+        </div>
         {process.env.NEXT_PUBLIC_ENVIRONMENT === "staging" ? (
           <p className="border-b border-warning-line bg-warning-soft px-4 py-1.5 text-center text-xs text-warning">
             Staging - demo data, reset without notice. Nothing here reaches real clients.

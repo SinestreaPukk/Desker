@@ -209,6 +209,8 @@ export function useSetIssueStatus() {
       void client.invalidateQueries({ queryKey: ["issues"] });
       void client.invalidateQueries({ queryKey: ["conversations"] });
       void client.invalidateQueries({ queryKey: ["agents"] });
+      // A run's flag is an issue too: Work's Needs you reads off it.
+      void client.invalidateQueries({ queryKey: ["action-items"] });
     },
   });
 }

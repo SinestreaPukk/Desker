@@ -171,7 +171,7 @@ describe("the run summary written without a model", () => {
         drafts: [{ kind: "social_caption", title: "Warranty launch" }],
       }),
     );
-    expect(summary.summary).toContain("1 piece of research");
+    expect(summary.summary).toContain("looked up 1 thing");
     expect(summary.summary).toContain("wrote 1 draft");
     expect(summary.summary).toContain("Two competitors changed pricing");
     expect(summary.headline).toBe("Drafted Warranty launch");

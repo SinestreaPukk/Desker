@@ -34,6 +34,7 @@ import {
 import { missingGrounding } from "./preflight";
 import { connectorForTool } from "@/lib/integrations/catalog";
 import { summarizeRun } from "./summary";
+import { postTaskResult } from "@/lib/team";
 import { WORK_TOOL_IDS, scopeTools, workToolDefinitions } from "./tools";
 import { executeWorkTool, executePendingAction, recordEscalation, type RunContext } from "./execute";
 import {
@@ -374,6 +375,10 @@ export async function runActionItem(
     });
     return written?.headline ?? null;
   });
+  // Asked for in the team room: the agent reports back there. Its own step, so a retry never posts twice.
+  await step("report-to-team", () =>
+    postTaskResult(actionItemId).catch((caught: unknown) => console.error("[work] team report not posted", caught)),
+  );
   const final = await prisma.actionItem.findUnique({
     where: { id: actionItemId },
     select: { status: true },

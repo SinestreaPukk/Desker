@@ -92,6 +92,17 @@ describe("the watchdog", () => {
     expect(await prisma.issue.count({ where: { actionItemId: dead.id, type: "failure" } })).toBe(1);
   });
 
+  it("nudges the owner about an approval waiting a day, once a day", async () => {
+    const waiting = await run("needs_approval", { awaitingSince: new Date(Date.now() - 25 * 60 * 60_000) });
+    await checkAutonomousWork();
+    await checkAutonomousWork();
+    expect(notified.filter((n) => n.title.startsWith("Waiting on your OK"))).toHaveLength(1);
+    // A day later it is still waiting: one more nudge.
+    await checkAutonomousWork(new Date(Date.now() + 24 * 60 * 60_000 + 60_000));
+    expect(notified.filter((n) => n.title.startsWith("Waiting on your OK"))).toHaveLength(2);
+    await prisma.actionItem.delete({ where: { id: waiting.id } });
+  });
+
   it("raises a queue backlog once an hour, not every five minutes", async () => {
     await prisma.rateLimitWindow.deleteMany({ where: { key: "ops-alert:queue-backlog" } });
     await run("queued", { createdAt: new Date(Date.now() - 30 * 60_000) });

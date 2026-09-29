@@ -71,9 +71,11 @@ export const TOOL_DEFINITIONS: Record<ToolId, ToolDefinition> = {
     name: "log_issue",
     description:
       "Record a bug, defect, or problem the client has reported so a human on the team can act " +
-      "on it. Call this as soon as the client describes something that is broken or not working " +
-      "as expected - do not wait until the end of the conversation, and do not promise to log " +
-      "something without actually calling this tool.",
+      "on it. Every report has the same shape, so the team can reproduce it without asking again: " +
+      "before calling, ask the client for any of steps, expected, actual and where that they have " +
+      "not given (one short question, not an interrogation). Call it as soon as you have them - do " +
+      "not wait until the end of the conversation, and do not promise to log something without " +
+      "actually calling this tool.",
     inputSchema: {
       type: "object",
       properties: {
@@ -89,14 +91,25 @@ export const TOOL_DEFINITIONS: Record<ToolId, ToolDefinition> = {
             "workaround. high: a core workflow is blocked for this client. critical: data " +
             "loss, a security concern, or an outage affecting many users.",
         },
+        steps: {
+          type: "string",
+          description: "What the client did, step by step, to run into it.",
+        },
+        expected: { type: "string", description: "What they expected to happen." },
+        actual: {
+          type: "string",
+          description: "What happened instead, with any error message word for word.",
+        },
+        where: {
+          type: "string",
+          description: "Where it happened: page or feature, device, browser or app version, account or order id.",
+        },
         details: {
           type: "string",
-          description:
-            "What the client did, what they expected, and what actually happened. Include any " +
-            "error messages, order numbers, or identifiers they gave you.",
+          description: "Anything else useful that does not fit above.",
         },
       },
-      required: ["summary", "severity", "details"],
+      required: ["summary", "severity", "steps", "expected", "actual"],
       additionalProperties: false,
     },
   },

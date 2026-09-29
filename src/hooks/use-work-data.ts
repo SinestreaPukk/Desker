@@ -49,9 +49,11 @@ export function useSaveScope(agentId: string) {
 export function useRunScope(agentId: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: () =>
+    // An instruction, when given, becomes this run's task on top of the agent's goals.
+    mutationFn: (instruction?: string) =>
       api<{ id: string; status: string; error: string | null }>(`/api/agents/${agentId}/scope/run`, {
         method: "POST",
+        body: JSON.stringify({ instruction }),
       }),
     onSuccess: () => void client.invalidateQueries({ queryKey: ["action-items"] }),
   });

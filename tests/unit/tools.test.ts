@@ -332,3 +332,12 @@ describe("transfer_to_agent", () => {
     expect(result.content).toMatch(/do not answer their question yourself/i);
   });
 });
+
+describe("a logged bug report", () => {
+  it("reads the same every time, leaving out what is blank", async () => {
+    const { issueDetails } = await import("@/lib/tools/execute");
+    expect(
+      issueDetails({ steps: "Opened checkout", expected: "Pay", actual: "Error 500", where: "", details: "" }),
+    ).toBe("Steps: Opened checkout\n\nExpected: Pay\n\nWhat happened: Error 500");
+  });
+});

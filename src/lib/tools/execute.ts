@@ -41,8 +41,26 @@ export interface ToolOutcome {
 const issueSchema = z.object({
   summary: z.string().min(1).max(300),
   severity: z.enum(SEVERITIES).catch("medium"),
+  steps: z.string().max(3000).default(""),
+  expected: z.string().max(1500).default(""),
+  actual: z.string().max(3000).default(""),
+  where: z.string().max(1000).default(""),
   details: z.string().max(5000).default(""),
 });
+
+/** One layout for every bug report, so each reads the same in the Inbox. Blank parts are left out. */
+export function issueDetails(input: { steps: string; expected: string; actual: string; where: string; details: string }): string {
+  return [
+    ["Steps", input.steps],
+    ["Expected", input.expected],
+    ["What happened", input.actual],
+    ["Where", input.where],
+    ["Notes", input.details],
+  ]
+    .filter(([, value]) => value.trim())
+    .map(([label, value]) => `${label}: ${value.trim()}`)
+    .join("\n\n");
+}
 
 const suggestionSchema = z.object({
   summary: z.string().min(1).max(300),
@@ -88,7 +106,7 @@ async function logIssue(input: unknown, context: ToolContext): Promise<ToolOutco
       type: "issue",
       summary: parsed.data.summary,
       severity: parsed.data.severity,
-      details: parsed.data.details || null,
+      details: issueDetails(parsed.data) || null,
     },
   });
 

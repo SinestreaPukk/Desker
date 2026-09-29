@@ -205,7 +205,9 @@ model Project {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
-  agents Agent[]
+  agents       Agent[]
+  teamThreads  TeamThread[]
+  teamMessages TeamMessage[]
 
   @@index([organizationId])
 }
@@ -247,6 +249,7 @@ model Agent {
   issues              Issue[]
   digests             Digest[]
   suggestions         Suggestion[]
+  teamMessages        TeamMessage[]
 
   @@index([status])
   @@index([projectId])
@@ -531,6 +534,7 @@ model ActionItem {
   drafts      Draft[]
   issues      Issue[]
   suggestions Suggestion[]
+  teamMessages TeamMessage[]
 
   @@index([organizationId, status])
   @@index([agentId, status])
@@ -750,4 +754,41 @@ model RateLimitWindow {
   resetAt DateTime
 
   @@index([resetAt])
+}
+
+/// One chat in the team room: the owner and all their agents. Kept, so the
+/// owner can come back to it from the chat history.
+model TeamThread {
+  id        String        @id @default(cuid())
+  projectId String
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The opening message, cut short: how the chat is listed in the history.
+  title     String
+  createdAt DateTime      @default(now())
+  /// Moved on every message, so the history lists the latest chat first.
+  updatedAt DateTime      @default(now())
+  messages  TeamMessage[]
+
+  @@index([projectId, updatedAt])
+}
+
+/// A line in a team chat. A person's line has no agentId; an agent's reply has
+/// one, and links the task it started when the owner asked for work.
+model TeamMessage {
+  id           String      @id @default(cuid())
+  projectId    String
+  project      Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  threadId     String
+  thread       TeamThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  agentId      String?
+  agent        Agent?      @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  /// The person who wrote it; null on an agent's reply.
+  userId       String?
+  authorName   String?
+  content      String
+  actionItemId String?
+  actionItem   ActionItem? @relation(fields: [actionItemId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+
+  @@index([threadId, createdAt])
 }

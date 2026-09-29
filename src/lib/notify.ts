@@ -20,6 +20,7 @@ type NotificationKind =
   | "critical_issue"
   | "handoff_reply"
   | "run_failed"
+  | "approval_waiting"
   | "feedback";
 
 interface Notification {

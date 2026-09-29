@@ -3,10 +3,9 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { AgentAvatar } from "@/components/ui/avatar";
-import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ErrorState, LoadingRows } from "@/components/ui/states";
-import { CollabTag, RunDetail, runTitle } from "@/components/work/run-detail";
+import { CollabTag, RunBadge, RunDetail, runTitle } from "@/components/work/run-detail";
 import { CancelRunButton, RemoveButton } from "@/components/work/row-actions";
 import { useActionItem, useSuggestions } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
@@ -46,8 +45,7 @@ export function RunView({ project, itemId }: { project: string; itemId: string }
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <CollabTag item={item} />
-              {item.escalatedAt ? <Badge tone="danger">Escalated</Badge> : null}
-              <StatusBadge status={item.status} />
+              <RunBadge item={item} />
               {item.status === "queued" || item.status === "in_progress" ? <CancelRunButton id={item.id} /> : null}
               {["in_progress", "approved", "executing_external"].includes(item.status) ? null : (
                 <RemoveButton

@@ -7,6 +7,7 @@
  * - runs past their time budget (the owner hears once; the platform hears how many),
  * - runs stuck far past it, which are failed so they stop holding a slot,
  * - work waiting in the queue longer than it should (the runtime is down or saturated),
+ * - approvals left waiting on the owner for a day (a nudge, once a day, so drafts do not go stale),
  * - a platform-wide spike in failures or escalations, which usually means
  *   something upstream broke rather than many agents finding real problems.
  *
@@ -27,6 +28,8 @@ import { transition } from "./runner";
 const QUEUE_WAIT_BUDGET_MS = 10 * 60_000;
 /** A run this many budgets past its start is treated as dead, not slow. */
 const STUCK_MULTIPLIER = 4;
+/** How long an approval may wait before the owner is nudged, and how often after that. */
+export const APPROVAL_NUDGE_MS = 24 * 60 * 60_000;
 
 /**
  * Whether `current` is a spike against a baseline rate: well above normal and
@@ -62,6 +65,7 @@ async function opsAlert(alert: OpsAlert): Promise<boolean> {
 
 interface WatchdogReport {
   overBudget: number;
+  approvalsNudged: number;
   stuckFailed: number;
   queued: number;
   oldestQueuedMs: number | null;
@@ -143,6 +147,41 @@ export async function checkAutonomousWork(now = new Date()): Promise<WatchdogRep
     });
   }
 
+  // --- approvals left waiting on the owner -------------------------------------
+  // A draft waiting on a decision goes stale; the owner hears once a day, so it
+  // is a nudge, not a nag.
+  const stale = await prisma.actionItem.findMany({
+    where: { status: "needs_approval", awaitingSince: { lt: new Date(now.getTime() - APPROVAL_NUDGE_MS) } },
+    select: {
+      id: true,
+      headline: true,
+      awaitingSince: true,
+      result: true,
+      agent: { select: { name: true, project: { select: { slug: true } } } },
+    },
+    take: 200,
+  });
+  let approvalsNudged = 0;
+  for (const item of stale) {
+    const result = (item.result as Record<string, unknown> | null) ?? {};
+    const last = typeof result.approvalNudgedAt === "string" ? Date.parse(result.approvalNudgedAt) : 0;
+    if (now.getTime() - last < APPROVAL_NUDGE_MS) continue;
+    await prisma.actionItem.update({
+      where: { id: item.id },
+      data: { result: { ...result, approvalNudgedAt: now.toISOString() } as Prisma.InputJsonValue },
+    });
+    const days = Math.floor((now.getTime() - item.awaitingSince!.getTime()) / APPROVAL_NUDGE_MS);
+    notifyInBackground({
+      kind: "approval_waiting",
+      title: `Waiting on your OK for ${days === 1 ? "a day" : `${days} days`}`,
+      body: `${item.headline ?? "A draft"}. Approve it or reject it so it does not go out of date.`,
+      agentName: item.agent.name,
+      path: `/p/${item.agent.project.slug}/work/${item.id}`,
+      severity: "low",
+    });
+    approvalsNudged++;
+  }
+
   // --- work waiting too long in the queue --------------------------------------
   const waitingSince = new Date(now.getTime() - QUEUE_WAIT_BUDGET_MS);
   const [queued, oldest] = await Promise.all([
@@ -193,7 +232,7 @@ export async function checkAutonomousWork(now = new Date()): Promise<WatchdogRep
     });
   }
 
-  return { overBudget, stuckFailed, queued, oldestQueuedMs, failedRecent, escalationsRecent, alerts };
+  return { overBudget, approvalsNudged, stuckFailed, queued, oldestQueuedMs, failedRecent, escalationsRecent, alerts };
 }
 
 /** The queue as the health endpoint reports it. */

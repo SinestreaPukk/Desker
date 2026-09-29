@@ -92,7 +92,7 @@ export function buildRunPrompt(input: RunPromptInput): string {
     "Team delegation: When your findings call for action from another department or specialist on your roster, use `delegate_to_colleague` so they can run their own tasks in parallel.",
     "Use schedule_followup when the next step should happen later or as its own task - for example research now, drafting once findings are in.",
     "If something is impossible or the objective is unclear, say so in the report rather than guessing.",
-    "When the work is done, reply with a report in Markdown, under 300 words: what you did, the key findings, what you drafted (with draft ids), and anything that needs a human.",
+    "When the work is done, reply with a report in Markdown, under 300 words: what you did, the key findings, what you drafted (with draft ids), and anything that needs a human. Use plain, everyday words and short sentences; the owner reads it.",
   ];
   parts.push(`Ground rules:\n${rules.map((r) => `- ${r}`).join("\n")}`);
 

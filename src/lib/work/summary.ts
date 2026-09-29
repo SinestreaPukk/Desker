@@ -55,6 +55,8 @@ Reply with one JSON object and nothing else:
 Rules for the summary:
 - Write as the worker, in the first person, past tense. "Checked competitor pricing for the three accounts you flagged."
 - Be concrete: name what you looked at, how many, what changed, what you wrote.
+- Plain words: write for a busy owner who knows nothing about the topic. Everyday words, short sentences (under 20 words), no jargon, acronyms or marketing speak. If a technical term cannot be avoided, explain it in a few words.
+- The headline follows the same rule: a plain statement of the result, not a label. "Found two cheaper suppliers" beats "Supplier analysis complete".
 - Never name a tool, a draft id, a status or an objective number. The owner does not know what web_research is.
 - If the task failed or stopped for approval, say so plainly and say what the owner needs to do.
 - No preamble, no markdown, no bullet points.
@@ -129,12 +131,12 @@ function factsToPrompt(facts: RunFacts): string {
 export function fallbackSummary(facts: RunFacts): RunSummary {
   const research = facts.steps.filter((s) => s.tool === "web_research" || s.tool === "search_documents").length;
   const did: string[] = [];
-  if (research > 0) did.push(`ran ${research} ${research === 1 ? "piece" : "pieces"} of research`);
+  if (research > 0) did.push(`looked up ${research} ${research === 1 ? "thing" : "things"}`);
   if (facts.drafts.length > 0) {
     did.push(`wrote ${facts.drafts.length} draft${facts.drafts.length === 1 ? "" : "s"}`);
   }
   const followups = facts.steps.filter((s) => s.tool === "schedule_followup").length;
-  if (followups > 0) did.push(`queued ${followups} follow-up${followups === 1 ? "" : "s"}`);
+  if (followups > 0) did.push(`planned ${followups} more task${followups === 1 ? "" : "s"} for later`);
 
   const opening = facts.error
     ? `This task failed before it could finish: ${facts.error}`
@@ -160,7 +162,7 @@ export function fallbackSummary(facts: RunFacts): RunSummary {
       : facts.drafts.length > 0
         ? clamp(`Drafted ${facts.drafts[0]!.title}`, 70)
         : research > 0
-          ? "Research finished"
+          ? "Looked into it"
           : "Task finished";
 
   return { headline, summary: clamp(summary, 700), suggestion: null };

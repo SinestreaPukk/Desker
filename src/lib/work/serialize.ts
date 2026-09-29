@@ -59,6 +59,8 @@ export interface ActionItemDto {
   approvedAt: string | null;
   escalatedAt: string | null;
   escalationReason: string | null;
+  /** The run's flag or failure, still open: it sits under Needs you until marked handled. */
+  openIssueIds: string[];
   createdAt: string;
   startedAt: string | null;
   completedAt: string | null;

@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabCount, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import {
   useAgents,
@@ -50,14 +50,6 @@ import type { ConversationSummaryDto, IssueDto } from "@/lib/serialize";
 import { ISSUE_KINDS, issueKind } from "@/lib/issue-kinds";
 import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 
-function TabCount({ value, tone, label }: { value: number; tone: "accent" | "danger" | "warning"; label: string }) {
-  if (value === 0) return null;
-  return (
-    <Badge tone={tone} className="ml-1.5 px-2 py-0 text-meta font-bold" aria-label={`${value} ${label}`}>
-      {value}
-    </Badge>
-  );
-}
 
 /** What Active and Done mean on each tab, in the status words its API speaks. */
 const STATUS_FOR = {
