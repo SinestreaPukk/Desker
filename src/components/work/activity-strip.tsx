@@ -26,7 +26,7 @@ export function ActivityStrip({ project }: { project: string }) {
     { value: a.done, label: a.done === 1 ? "task done" : "tasks done" },
     { value: a.sentApproved, label: "sent after you approved" },
     { value: a.sentOnItsOwn, label: "sent on its own" },
-    { value: a.waiting, label: "waiting for you", href: `/p/${project}/inbox?tab=approvals`, attention: a.waiting > 0 },
+    { value: a.waiting, label: "waiting for you", href: `/p/${project}/needs-you`, attention: a.waiting > 0 },
     ...(a.escalated > 0 ? [{ value: a.escalated, label: "asked for a person", attention: true }] : []),
   ];
 

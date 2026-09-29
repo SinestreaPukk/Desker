@@ -15,6 +15,7 @@ import type {
 import type { SuggestionStatus } from "@/lib/work/types";
 import type { ContextAnswers } from "@/lib/work/context";
 import type { ProjectContextDto } from "@/lib/work/project-context";
+import type { AgentRuleDto } from "@/lib/work/rules";
 import type { ContextDraftResult } from "@/components/builder/context-questions";
 
 const workKeys = {
@@ -188,6 +189,54 @@ function useDecision(verb: "approve" | "reject" | "reopen") {
 export const useApproveActionItem = () => useDecision("approve");
 export const useRejectActionItem = () => useDecision("reject");
 export const useReopenActionItem = () => useDecision("reopen" as "approve");
+
+// --- saved corrections (AgentRule) ----------------------------------------------
+
+const rulesKey = (agentId: string) => ["agent-rules", agentId] as const;
+
+export function useAgentRules(agentId: string) {
+  return useQuery({
+    queryKey: rulesKey(agentId),
+    queryFn: () => api<AgentRuleDto[]>(`/api/agents/${agentId}/rules`),
+    enabled: Boolean(agentId),
+  });
+}
+
+export function useSaveRule(agentId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id?: string; text: string; source?: AgentRuleDto["source"]; actionItemId?: string }) =>
+      input.id
+        ? api<AgentRuleDto>(`/api/agents/${agentId}/rules/${input.id}`, { method: "PATCH", body: JSON.stringify({ text: input.text }) })
+        : api<AgentRuleDto>(`/api/agents/${agentId}/rules`, {
+            method: "POST",
+            body: JSON.stringify({ text: input.text, source: input.source ?? "manual", actionItemId: input.actionItemId }),
+          }),
+    onSettled: () => void client.invalidateQueries({ queryKey: rulesKey(agentId) }),
+  });
+}
+
+export function useRemoveRule(agentId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (ruleId: string) => api(`/api/agents/${agentId}/rules/${ruleId}`, { method: "DELETE" }),
+    onSettled: () => void client.invalidateQueries({ queryKey: rulesKey(agentId) }),
+  });
+}
+
+/** Retry a failed run: a new run, or the same send back in Needs you. */
+export function useRetryRun() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (runId: string) =>
+      api<{ id: string; resend: boolean }>(`/api/action-items/${runId}/retry`, { method: "POST" }),
+    onSettled: () => {
+      void client.invalidateQueries({ queryKey: ["action-items"] });
+      void client.invalidateQueries({ queryKey: ["agents"] });
+      void client.invalidateQueries({ queryKey: ["issues"] });
+    },
+  });
+}
 
 // --- context ----------------------------------------------------------------
 

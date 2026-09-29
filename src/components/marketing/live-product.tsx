@@ -146,7 +146,7 @@ export function LiveApproval({
       </div>
     </div>
   );
-  return framed ? <LiveFrame title="Inbox · Approvals">{card}</LiveFrame> : card;
+  return framed ? <LiveFrame title="Needs you">{card}</LiveFrame> : card;
 }
 
 /* --- Limits ---------------------------------------------------------------------- */
@@ -204,7 +204,7 @@ const THREAD = [
   { who: "Sol", seed: "sol", time: "Fri 16:20", icon: Mail, title: "Wrote the competitor brief and emailed it to you", detail: "Saved as a document · every claim numbered to its source", handoff: false },
   { who: "Sol", seed: "sol", time: "Fri 16:21", icon: UserRound, title: "Handed the brief to Nova", detail: "Asked Nova: lead Monday's post with how easy a claim is", handoff: true },
   { who: "Nova", seed: "nova", time: "Mon 08:40", icon: Pencil, title: "Drafted \"A claim takes one email\"", detail: "Saved as a draft · nothing was published", handoff: true },
-  { who: "Nova", seed: "nova", time: "Mon 08:52", icon: Send, title: "Queued the post for your approval", detail: "Waits in your Inbox until you decide", handoff: true },
+  { who: "Nova", seed: "nova", time: "Mon 08:52", icon: Send, title: "Queued the post for your approval", detail: "Waits in Needs you until you decide", handoff: true },
 ] as const;
 
 export function LiveHandoff() {

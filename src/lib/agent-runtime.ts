@@ -14,6 +14,7 @@ import { toStringArray } from "@/lib/agent-fields";
 import { buildSystemPrompt, buildCompanyContextPrompt } from "@/lib/agent-prompt";
 import { effectiveContext } from "@/lib/work/context";
 import { spaceKind } from "@/lib/space";
+import { rulesFor } from "@/lib/work/rules";
 import {
   getProvider,
 
@@ -133,7 +134,7 @@ export async function* runAgentTurn(
       : rawTools;
   const responsibilities = toStringArray(agent.responsibilities);
 
-  const [project, historyRows, documents, colleagues, recall, scope] = await Promise.all([
+  const [project, historyRows, documents, colleagues, recall, scope, rules] = await Promise.all([
     // The tenant to bill this turn to. An agent whose project is gone cannot
     // answer, so a missing project is an error rather than a free turn.
     prisma.project.findUniqueOrThrow({
@@ -171,6 +172,7 @@ export async function* runAgentTurn(
       where: { agentId: agent.id },
       select: { context: true },
     }),
+    rulesFor(agent.id),
   ]);
 
   // Nothing uploaded means nothing to search: offering the tool anyway only
@@ -197,6 +199,7 @@ export async function* runAgentTurn(
       companyContext,
       documentNames: documents.map((document) => document.filename),
       kind,
+      rules,
     });
   } else {
     systemPrompt = buildSystemPrompt({
@@ -213,6 +216,7 @@ export async function* runAgentTurn(
       companyContext,
       audience: isColleague ? "colleague" : "client",
       kind,
+      rules,
     });
   }
 

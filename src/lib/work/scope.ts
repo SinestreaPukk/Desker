@@ -81,7 +81,7 @@ export function validTimezone(timezone: string): boolean {
   }
 }
 
-function nextFire(cron: string | null, timezone: string, from = new Date()): Date | null {
+export function nextFire(cron: string | null, timezone: string, from = new Date()): Date | null {
   if (!cron) return null;
   try {
     return CronExpressionParser.parse(cron, { tz: timezone, currentDate: from }).next().toDate();
@@ -255,6 +255,8 @@ interface StartRunInput {
   payload?: Record<string, unknown>;
   /** Unique per scheduled tick; a duplicate returns null instead of a second run. */
   dedupeKey?: string;
+  /** The run this one continues (a retry). */
+  parentId?: string;
   actor?: { type: "user" | "schedule" | "system"; id?: string };
 }
 
@@ -309,6 +311,7 @@ export async function startRun(input: StartRunInput) {
         trigger: input.trigger,
         payload: (input.payload ?? {}) as Prisma.InputJsonValue,
         dedupeKey: input.dedupeKey ?? null,
+        parentId: input.parentId ?? null,
       },
     });
   } catch (error) {
@@ -327,24 +330,29 @@ export async function startRun(input: StartRunInput) {
     metadata: { trigger: input.trigger, agentId: agent.id },
   });
 
+  await dispatchRun(item.id, agent.project.organizationId);
+  return item;
+}
+
+/**
+ * Hands a created action item to the job runtime. If the runtime cannot be
+ * reached (local dev, self-hosting without Inngest) it runs inline after the
+ * response, so a run never stalls on plumbing. One implementation for every
+ * way a run is born: a start, a hand-off, a workflow step.
+ */
+export async function dispatchRun(actionItemId: string, organizationId: string): Promise<void> {
   try {
-    await inngest.send({
-      name: "work/action-item.run",
-      data: { actionItemId: item.id, organizationId: agent.project.organizationId },
-    });
+    await inngest.send({ name: "work/action-item.run", data: { actionItemId, organizationId } });
   } catch (error) {
-    // If the Inngest runner is unreachable (e.g. local dev, self-hosting without Inngest dev server),
-    // fall back to executing inline via afterResponse so runs never stall or fail due to runtime plumbing.
-    console.warn("[startRun] inngest.send failed, executing inline via afterResponse:", error);
+    console.warn("[dispatchRun] inngest.send failed, executing inline via afterResponse:", error);
     afterResponse(async () => {
       try {
-        await runActionItem(item.id, inlineSteps);
+        await runActionItem(actionItemId, inlineSteps);
       } catch (err) {
-        console.error(`[startRun:afterResponse] execution failed for item ${item.id}:`, err);
+        console.error(`[dispatchRun:afterResponse] execution failed for item ${actionItemId}:`, err);
       }
     });
   }
-  return item;
 }
 
 /** One schedule tick that is due and has been claimed, ready to become a run. */

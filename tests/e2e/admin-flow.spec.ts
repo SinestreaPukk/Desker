@@ -4,7 +4,8 @@ import { ANONYMOUS, currentProjectSlug, hasModelKey, signUp, uniqueAdmin } from 
 /**
  * The acceptance path from the build brief: an admin signs up, builds an agent,
  * uploads context, publishes, a client chats on the public link, and the
- * conversation plus anything the agent logged shows up in the admin inbox.
+ * conversation shows up under Conversations, and anything the agent logged
+ * waits in Needs you.
  */
 test.describe.configure({ mode: "serial" });
 
@@ -104,7 +105,7 @@ test("publishing makes the public chat link work", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Mia" })).toBeVisible();
 });
 
-test("a client gets a streamed, grounded reply and it lands in the inbox", async ({
+test("a client gets a streamed, grounded reply and it lands in Conversations", async ({
   page,
 }) => {
   test.skip(!hasModelKey, "ANTHROPIC_API_KEY is not set");
@@ -119,7 +120,7 @@ test("a client gets a streamed, grounded reply and it lands in the inbox", async
   });
   await expect(page.getByText(/30/).first()).toBeVisible({ timeout: 60_000 });
 
-  await page.goto(`/p/${project}/inbox`);
+  await page.goto(`/p/${project}/conversations`);
   await expect(page.getByRole("heading", { name: "Mia" }).first()).toBeVisible({
     timeout: 20_000,
   });
@@ -139,20 +140,21 @@ test("a reported bug becomes an issue on the dashboard", async ({ page }) => {
 
   await expect(page.getByText("Issue logged")).toBeVisible({ timeout: 60_000 });
 
-  await page.goto(`/p/${project}/inbox`);
-  await page.getByRole("tab", { name: /Issues/ }).click();
+  await page.goto(`/p/${project}/needs-you`);
+  await page.getByRole("tab", { name: /Reported/ }).click();
   await expect(page.getByText("Issue", { exact: true }).first()).toBeVisible({
     timeout: 20_000,
   });
 
-  // And it can be resolved from here.
+  // It can be resolved from here, and then sits under Handled.
   await page.getByRole("button", { name: "Resolve" }).first().click();
+  await page.getByRole("tab", { name: "Handled" }).click();
   await expect(page.getByRole("button", { name: "Reopen" }).first()).toBeVisible({
     timeout: 20_000,
   });
 });
 
-test("a second project has its own roster, inbox and insights", async ({ page }) => {
+test("a second project has its own roster, work and insights", async ({ page }) => {
   const first = await currentProjectSlug(page);
 
   const created = await page.request.post("/api/projects", {

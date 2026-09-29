@@ -20,6 +20,7 @@ import { Panel } from "@/components/ui/panel";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState, ErrorState, LoadingKpis, LoadingRows } from "@/components/ui/states";
 import { useAnalytics } from "@/hooks/use-admin-data";
+import { OutcomesPanel } from "@/components/work/outcomes-panel";
 import { errorMessage } from "@/lib/api-client";
 import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 import {
@@ -98,7 +99,7 @@ export function InsightsView({ project }: { project: string }) {
     <Page>
       <PageHeader
         title="Insights"
-        description="Executive summary of your autonomous AI workforce: tasks done on their own, tokens used, time saved and multi-agent collaboration."
+        description="What your agents got done, what it cost, and what is working: approval time, rework and failures by agent, role and hand-off."
       />
 
       <PageToolbar>
@@ -186,6 +187,8 @@ export function InsightsView({ project }: { project: string }) {
                 hint="Tasks and conversations handed between team members."
               />
             </div>
+
+            <OutcomesPanel outcomes={data!.outcomes} />
 
             {/* Collaboration between agents: heading above its group, as a native settings list. */}
             <section className="space-y-2">

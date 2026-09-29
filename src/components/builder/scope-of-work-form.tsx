@@ -190,7 +190,7 @@ export function DigestSettings({
           </SelectContent>
         </Select>
         <p className="mt-1.5 text-xs text-ink-muted">
-          A few lines in the Inbox&apos;s Updates tab: what got done, what is waiting on you, and
+          A few lines under Work → Digests: what got done, what is waiting on you, and
           anything this agent thinks you should know. A period with nothing in it sends nothing.
         </p>
       </div>
@@ -752,7 +752,7 @@ export function ScopeOfWorkForm({
         <p className="rounded-lg border border-accent-line bg-accent-soft/40 px-3 py-2 text-xs leading-relaxed text-ink-muted">
           <strong className="font-medium text-ink">Draft-only mode.</strong> Research and drafts
           run on their own. Anything that would publish a post or send an email stops and waits
-          for your approval in the Inbox. Every agent starts this way; you can extend trust in the
+          for your approval in Needs you. Every agent starts this way; you can extend trust in the
           editor once it has earned it.
         </p>
       ) : null}

@@ -16,6 +16,8 @@ export const agentInputSchema = z.object({
     .min(1, "A job title tells the agent what it does.")
     .max(120, "Keep the job title under 120 characters."),
   department: z.string().trim().max(120, "Keep the team name under 120 characters.").optional().or(z.literal("")),
+  /** The role template it was hired from; set once, by the hire wizard. */
+  templateId: z.string().trim().max(64).regex(/^[a-z0-9-]*$/).optional(),
   // Built-in avatars are short keys; uploaded ones are data URIs up to
   // MAX_AVATAR_DATA_URI_LENGTH, which the picker already enforces client-side.
   avatarUrl: z.string().trim().max(MAX_AVATAR_DATA_URI_LENGTH).optional().or(z.literal("")),

@@ -510,7 +510,7 @@ async function escalateToHuman(input: unknown, ctx: RunContext): Promise<WorkToo
   await recordEscalation(ctx, parsed.data.summary, parsed.data.reason);
   return {
     content:
-      "Escalated: a person will see this in their inbox. Finish what you safely can and put what they need to decide in your report.",
+      "Escalated: a person will see this in Needs you. Finish what you safely can and put what they need to decide in your report.",
   };
 }
 
@@ -598,22 +598,8 @@ async function delegateToColleague(input: unknown, ctx: RunContext): Promise<Wor
     delegatedTaskIds: [...((current.delegatedTaskIds as string[] | undefined) ?? []), delegatedItem.id],
   }));
 
-  try {
-    await inngest.send({
-      name: "work/action-item.run",
-      data: { actionItemId: delegatedItem.id, organizationId: ctx.organizationId },
-    });
-  } catch (error) {
-    console.warn("[delegateToColleague] inngest.send failed, running via afterResponse:", error);
-    afterResponse(async () => {
-      try {
-        const { runActionItem, inlineSteps } = await import("./runner");
-        await runActionItem(delegatedItem.id, inlineSteps);
-      } catch (err) {
-        console.error(`[delegateToColleague:afterResponse] execution failed for task ${delegatedItem.id}:`, err);
-      }
-    });
-  }
+  const { dispatchRun } = await import("./scope");
+  await dispatchRun(delegatedItem.id, ctx.organizationId);
 
   return {
     content: `Delegated task to ${colleague.name} (${colleague.jobTitle}) as task ${delegatedItem.id}. They will carry out the objective autonomously.`,

@@ -1,34 +1,30 @@
 export const guide = {
   audience: "all",
   slug: "integrations",
-  title: "Connect a publishing webhook or email",
-  summary: "The two ways work leaves the building, and how to test one safely.",
+  title: "Connect email, publishing and a support inbox",
+  summary: "How work leaves Desker and comes in - what each connection does, and what it doesn't.",
   minutes: 2,
-  body: `Integrations live under **Integrations**, per space. Until one is connected an agent can still research and draft - it simply has nowhere to send anything.
-
-## A publishing webhook
-
-Anything that accepts a JSON POST works: Zapier, Make, n8n, or your own endpoint. Paste the URL, give it a name, and optionally set a signing secret.
-
-When a secret is set, every delivery carries an \`X-Desker-Signature\` header - \`sha256=\` followed by an HMAC of the exact body. Verify it at your end and ignore anything that fails; that is what stops somebody else posting to your endpoint.
+  body: `Integrations live under **Integrations**, per space. Until one is connected an agent can still research and draft - it simply has nowhere to send anything, and says so in its report.
 
 ## Email
 
-Email goes through Resend. Paste an API key and the from-address you have verified with them. If the deployment already has a key configured, agents can send without you connecting anything.
+Email goes through Resend. Paste an API key and the from-address you have verified with them. In a business, every agent email also carries your postal address, which the law requires, so set it under Organisation first.
 
-## What a connection changes
+## Publishing posts
 
-- \`publish_post\` and \`send_email\` become available to agents whose scope of work allows them.
-- Both still wait for your approval while the agent is in draft-only mode.
-- Digests can be emailed as well as landing in the Inbox.
+Desker doesn't post to LinkedIn, X or Instagram by itself. It sends each post you approve - title, text and platform - to a webhook address, and a Zapier or Make zap (or your own code) does the posting. That zap is where images, scheduling and which account it goes to are decided.
+
+When a signing secret is set, every delivery carries an \`X-Desker-Signature\` header - \`sha256=\` and an HMAC of the exact body - so your endpoint can ignore anything that didn't come from Desker. Desker never sees replies, likes or reach afterwards.
+
+## A support inbox
+
+The closed loop for support. Your helpdesk, a website form, or a zap on your support email sends each customer message to the inbox's private address. The Support agent answers it from your uploaded policies - or, when they don't settle it, hands it to you - and the reply waits in **Needs you**. Once you approve it, it is emailed to the customer, and the address you give for reporting back hears \`ticket.answered\` (or \`ticket.needs_human\`).
+
+Its setup card lists what it still needs - a published agent, your policies, email, a postal address - so nothing fails quietly on the first customer.
 
 ## Testing without an audience
 
-Point the webhook at a request-bin style URL first, or at a private channel. Then:
-
-1. Open an agent's scope of work and press **Run now**.
-2. Approve what it queues under **Inbox → Approvals**.
-3. Check the delivery line on the run under **Work** - it records the status your endpoint returned.
+Point a webhook at a request-bin style URL first, or use **Send a test message** on the support inbox. Then approve what arrives in **Needs you** and check the delivery line on the run under **Work**.
 
 ## Keys and secrets
 

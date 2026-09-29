@@ -58,7 +58,7 @@ export function NewSpaceDialog({
           <DialogDescription>
             {personal
               ? "Assistants for your own life: money, plans, your week. Private to you - nobody can be invited in, its assistants have no public link, and nothing in it is shared with your business."
-              : "AI staff for a business, with its own roster, inbox, team and billing. Nothing is shared with your personal space."}
+              : "AI staff for a business, with its own roster, Needs you queue, team and billing. Nothing is shared with your personal space."}
           </DialogDescription>
           <div className="mt-5 space-y-4">
             <FormError message={error} />

@@ -57,6 +57,7 @@ export async function POST(request: Request, { params }: Params) {
         name: sameProject ? `${source.name} (copy)` : source.name,
         jobTitle: source.jobTitle,
         department: source.department,
+        templateId: source.templateId,
         avatarUrl: source.avatarUrl,
         personality: source.personality,
         responsibilities: source.responsibilities ?? [],

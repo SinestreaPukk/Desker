@@ -743,7 +743,7 @@ export function SupportScene({ beat }: { beat: number }) {
       <Appear when={beat >= 3}>
         <p className="text-sm text-ink">
           <span className="font-semibold">11 answered</span> from your documents,{" "}
-          <span className="font-semibold">1 waiting for you</span> in the Inbox.
+          <span className="font-semibold">1 waiting for you</span> in Needs you.
         </p>
       </Appear>
     </div>

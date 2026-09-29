@@ -18,6 +18,8 @@ interface RunPromptInput {
   scope: { context: string; objectives: string[] };
   /** A personal space: the agent works for one person, privately, not for a company. */
   kind?: SpaceKind;
+  /** Corrections the owner saved from earlier work, oldest first. */
+  rules?: string[];
   autonomy: AutonomyMode;
   documentNames: string[];
   hasPublishing: boolean;
@@ -50,6 +52,13 @@ export function buildRunPrompt(input: RunPromptInput): string {
     );
   if (scope.objectives.length > 0) {
     parts.push(`Standing objectives:\n${scope.objectives.map((o) => `- ${o}`).join("\n")}`);
+  }
+
+  const corrections = (input.rules ?? []).map((rule) => rule.trim()).filter(Boolean);
+  if (corrections.length > 0) {
+    parts.push(
+      `Corrections from your owner - they corrected earlier work and asked you to remember it. Follow every one, every time:\n${corrections.map((r) => `- ${r}`).join("\n")}`,
+    );
   }
 
   if (input.documentNames.length > 0) {

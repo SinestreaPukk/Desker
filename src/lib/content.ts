@@ -188,7 +188,7 @@ const landingSchema = z.object({
   }),
   faq: z.object({
     ...sectionHead,
-    items: z.array(z.object({ q: z.string().min(1), a: z.string().min(1) })).min(3).max(10),
+    items: z.array(z.object({ q: z.string().min(1), a: z.string().min(1) })).min(3).max(12),
   }),
   cta: z.object({
     heading: z.string(),

@@ -125,7 +125,8 @@ test("approve what a task wants to send", async ({ page }) => {
     },
   });
 
-  await page.goto(`/p/${project}/inbox`);
+  // Needs you is the one place a decision is made.
+  await page.goto(`/p/${project}/needs-you`);
   await page.getByRole("tab", { name: /Approvals/ }).click();
 
   // The card shows what it wants to send, not a status code.
@@ -151,8 +152,7 @@ test("read the digest the agent writes about itself", async ({ page }) => {
     })
     .toBeGreaterThan(0);
 
-  await page.goto(`/p/${project}/inbox`);
-  await page.getByRole("tab", { name: /Updates/ }).click();
+  await page.goto(`/p/${project}/work?view=digests`);
 
   const digest = await prisma.digest.findFirstOrThrow({
     where: { agentId },

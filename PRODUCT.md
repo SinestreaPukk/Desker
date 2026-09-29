@@ -30,9 +30,9 @@ Desker gives a business a team of AI employees, and a person a set of private AI
 
 ## Operating Context
 
-- The owner's day: open the app, read what was done (Work, Inbox updates), approve or reject what is waiting, review suggestions, adjust an employee's scope.
+- The owner's day: open the app, read what was done (Work, Needs you), approve or reject what is waiting, review suggestions, adjust an employee's scope.
 - A personal space renames things for one person: "Chat" for the team room, "Your space" for settings, "Switch on" for publish, "About you" for company context.
-- Surfaces: Roster (the staff), agent editor (profile, knowledge, work and schedule), Work (runs: active and finished, each with its own report page), Inbox (conversations, approvals, issues, suggestions, updates), Insights, Integrations, Audit log, Organisation.
+- Surfaces: Roster (the staff), agent editor (profile, knowledge, work and schedule), Work (runs: active and finished, each with its own report page), Needs you (the one action queue: approvals, escalations, failures, agent questions, reported problems), Conversations (chat history), Insights, Integrations, Audit log, Organisation.
 - Clients also meet the agents through a public chat link or an embeddable widget.
 - A public marketing site sells the product.
 

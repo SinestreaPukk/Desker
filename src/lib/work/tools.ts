@@ -118,7 +118,7 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   },
   suggest_opportunity: {
     label: "Suggest opportunity or alert",
-    blurb: "Proactively post a news alert, market trend, bug, or idea to the team inbox.",
+    blurb: "Proactively post a news alert, market trend, bug, or idea to Needs you.",
   },
   escalate_to_human: {
     label: "Escalate to a human",

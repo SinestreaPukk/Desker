@@ -94,7 +94,7 @@ export function issuesCaption(issues: number, suggestions: number): string {
   const parts: string[] = [];
   if (issues > 0) parts.push(`${plural(issues, "thing")} reported in chat`);
   if (suggestions > 0) parts.push(`${plural(suggestions, "suggestion")} an agent raised`);
-  return `${parts.join(" and ")}. Both wait in the Inbox until you deal with them.`;
+  return `${parts.join(" and ")}. Both wait in Needs you until you deal with them.`;
 }
 
 // --- autonomous work --------------------------------------------------------

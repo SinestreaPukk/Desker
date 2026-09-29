@@ -2,20 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, ChevronRight, UsersRound } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowRight, ChevronRight, UsersRound } from "lucide-react";
 import { Note } from "@/components/ui/note";
 import { DecisionStamp } from "@/components/ui/decision-stamp";
 import { Markdown } from "@/components/markdown";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ApprovalCard } from "@/components/work/approval-card";
 import { RunFindings } from "@/components/work/run-findings";
-import { SuggestionRow } from "@/components/work/suggestion-row";
 import { TeamChat } from "@/components/work/team-chat";
-import { useSetIssueStatus } from "@/hooks/use-admin-data";
 import { useScope } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
 import { humanDuration } from "@/lib/insight-copy";
 import type { ActionItemDto, SuggestionDto } from "@/lib/work/serialize";
 import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
@@ -48,31 +43,30 @@ export function RunBadge({ item }: { item: ActionItemDto }) {
 }
 
 /**
- * Takes a flagged or failed run off Needs you. It resolves the run's issues,
- * so the Inbox's Issues tab agrees; the flag itself stays on the record.
+ * A run paused on a person says so, and where to decide: Needs you is the one
+ * place decisions are made, so the run page never grows a second set of
+ * approve and resolve buttons that could drift from the first.
  */
-function MarkHandled({ item }: { item: ActionItemDto }) {
-  const setStatus = useSetIssueStatus();
-  const [pending, setPending] = React.useState(false);
-  async function handle() {
-    setPending(true);
-    try {
-      await Promise.all(item.openIssueIds.map((issueId) => setStatus.mutateAsync({ issueId, status: "resolved" })));
-      toast.success("Marked handled", { description: "It has left Needs you." });
-    } catch (caught) {
-      toast.error(errorMessage(caught));
-    } finally {
-      setPending(false);
-    }
-  }
+function DecideInQueue({ item, project }: { item: ActionItemDto; project: string }) {
+  const approval = item.status === "needs_approval";
+  const target = approval ? item.id : item.openIssueIds[0];
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface-2/60 px-3 py-2">
-      <p className="text-ink-muted">Dealt with it? Mark it handled to take it off Needs you.</p>
-      <Button size="sm" variant="secondary" onClick={() => void handle()} loading={pending}>
-        <Check aria-hidden />
-        Mark handled
+    <Note tone="coral" className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-note-ink">
+      <p className="text-sm">
+        <span className="font-semibold">
+          {approval ? `${item.agent.name} is waiting for your yes.` : `${item.agent.name} needs you on this run.`}
+        </span>{" "}
+        {approval
+          ? `${item.pendingAction?.note ? `${item.pendingAction.note} ` : ""}Approve, edit or reject it in Needs you.`
+          : "Deal with it in Needs you, where every flag and failure waits."}
+      </p>
+      <Button size="sm" asChild>
+        <Link href={`/p/${project}/needs-you?item=${target}`}>
+          {approval ? "Review in Needs you" : "Open in Needs you"}
+          <ArrowRight aria-hidden />
+        </Link>
       </Button>
-    </div>
+    </Note>
   );
 }
 
@@ -121,7 +115,7 @@ export function RunDetail({
 
   return (
     <div className="space-y-8 text-sm">
-      {item.status === "needs_approval" && item.pendingAction ? <ApprovalCard item={item} project={project} /> : null}
+      {item.status === "needs_approval" || item.openIssueIds.length > 0 ? <DecideInQueue item={item} project={project} /> : null}
 
       {/* A decided run carries its decision as a stamp: what the owner said
           about the thing that would have left the building. */}
@@ -158,7 +152,6 @@ export function RunDetail({
         </p>
       ) : null}
 
-      {item.openIssueIds.length > 0 && item.status !== "needs_approval" ? <MarkHandled item={item} /> : null}
 
       {item.status === "queued" || item.status === "in_progress" ? <RunPlan item={item} /> : null}
 
@@ -171,12 +164,19 @@ export function RunDetail({
       {suggestions.length > 0 ? (
         <RunSection
           title={`What ${name} suggests next`}
-          hint={`Say yes and ${name} adds it to its regular work.`}
+          hint="Say yes or no in Needs you; a yes adds it to its regular work."
         >
-          <ul className="divide-y divide-line/70 rounded-lg border border-line/70 px-4">
+          <ul className="space-y-2">
             {suggestions.map((suggestion) => (
-              <li key={suggestion.id}>
-                <SuggestionRow suggestion={suggestion} project={project} inRun />
+              <li key={suggestion.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line/70 px-4 py-3">
+                <span className="min-w-0 flex-1 text-ink">{suggestion.summary}</span>
+                {suggestion.pending ? (
+                  <Link href={`/p/${project}/needs-you?item=${suggestion.id}`} className="text-xs font-medium text-accent hover:underline">
+                    Decide in Needs you
+                  </Link>
+                ) : (
+                  <StatusBadge status={suggestion.status} />
+                )}
               </li>
             ))}
           </ul>

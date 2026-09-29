@@ -39,7 +39,7 @@ function linkFor(notification: Notification): string | null {
   const base = env.appUrl;
   if (!base) return null;
   if (notification.path) return `${base}${notification.path}`;
-  if (notification.conversationId) return `${base}/inbox/${notification.conversationId}`;
+  if (notification.conversationId) return `${base}/conversations/${notification.conversationId}`;
   return null;
 }
 

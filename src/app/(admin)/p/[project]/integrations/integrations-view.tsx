@@ -28,6 +28,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ConnectorCard } from "@/components/integrations/connector-card";
 import { CONNECTORS, CONNECTOR_CATEGORIES, connectorById } from "@/lib/integrations/catalog";
 import { TEMPLATES } from "@/lib/content";
+import { useSpaceKind } from "@/components/space-kind";
+import { SupportInboxForm } from "@/components/integrations/support-inbox-form";
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { integrationInputSchema } from "@/lib/work/validation";
 import { validate } from "@/lib/form-errors";
@@ -62,17 +64,37 @@ export function IntegrationsView({ project }: { project: string }) {
     router.replace(returnTo, { scroll: false });
   }, [search, router, returnTo]);
 
-  // The hire wizard links to #<connector>: open its collapsed section and scroll to it.
+  // Which category sections are open. React owns <details open>, so this is
+  // state: opening one by hand (or by a link) must survive the next render.
+  const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set());
+  const toggle = (id: string, open: boolean) =>
+    setExpanded((current) => {
+      if (current.has(id) === open) return current;
+      const next = new Set(current);
+      if (open) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+
+  // Links elsewhere point at #<connector>: open its section and scroll to it.
   React.useEffect(() => {
-    const target = window.location.hash && document.getElementById(window.location.hash.slice(1));
-    if (!target) return;
-    const section = target.closest("details");
-    if (section) section.open = true;
-    target.scrollIntoView({ block: "center" });
+    const id = window.location.hash.slice(1);
+    const connector = id ? connectorById(id) : undefined;
+    if (!connector) return;
+    // After hydration, so the server's closed sections match the first paint.
+    const frame = requestAnimationFrame(() => {
+      toggle(connector.category, true);
+      requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "center" }));
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const byType = new Map((list.data ?? []).map((row) => [row.type, row]));
-  const shown = CONNECTORS.filter((connector) => role === "all" || connector.roles.includes(role));
+  // A personal space has no customers writing in.
+  const personal = useSpaceKind() === "personal";
+  const shown = CONNECTORS.filter(
+    (connector) => (role === "all" || connector.roles.includes(role)) && !(personal && connector.id === "support_inbox"),
+  );
   // The library is for choosing: an OAuth connector already set up lives in
   // "Your connections" above. Key and webhook ones stay, since you can add another.
   const library = shown.filter(
@@ -152,7 +174,8 @@ export function IntegrationsView({ project }: { project: string }) {
               // role filter opens them, since then you are looking for something.
               <details
                 key={`${category.id}-${role}`}
-                open={role !== "all"}
+                open={role !== "all" || expanded.has(category.id) || Boolean(formHere)}
+                onToggle={(event) => toggle(category.id, event.currentTarget.open)}
                 className="group mt-4 rounded-lg border border-line bg-surface"
               >
                 <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
@@ -186,6 +209,11 @@ export function IntegrationsView({ project }: { project: string }) {
                   {formHere?.id === "webhook" ? (
                     <div className="mt-3 max-w-2xl">
                       <WebhookForm project={project} onDone={() => setOpenForm(null)} />
+                    </div>
+                  ) : null}
+                  {formHere?.id === "support_inbox" ? (
+                    <div className="mt-3 max-w-3xl">
+                      <SupportInboxForm project={project} onDone={() => setOpenForm(null)} />
                     </div>
                   ) : null}
                   {formHere?.id === "email" ? (

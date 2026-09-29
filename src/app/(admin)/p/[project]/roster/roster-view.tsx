@@ -1,6 +1,7 @@
 "use client";
 
 import { useSpaceKind } from "@/components/space-kind";
+import { AgentHealth } from "@/components/work/agent-health";
 import * as React from "react";
 import Link from "next/link";
 import {
@@ -289,6 +290,13 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
           </div>
         ) : null}
       </dl>
+
+      {/* Is it doing its job: the verdict and, when something is wrong, the fix. */}
+      {agent.health ? (
+        <div className="mx-5 border-t border-note-ink/10 py-3">
+          <AgentHealth status={agent.health} project={project} compact />
+        </div>
+      ) : null}
 
       <div className="mt-auto flex items-center justify-between border-t border-note-ink/10 px-5 py-3">
         <p className="meta min-w-0 truncate">

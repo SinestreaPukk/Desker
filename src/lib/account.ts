@@ -85,6 +85,7 @@ export async function exportAccount(userId: string) {
               status: true,
               createdAt: true,
               scopeOfWork: { select: { context: true, contextAnswers: true, objectives: true, triggerType: true, cron: true } },
+              rules: { select: { text: true, source: true, createdAt: true } },
               documents: {
                 select: {
                   filename: true,

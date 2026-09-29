@@ -146,8 +146,8 @@ export function fallbackSummary(facts: RunFacts): RunSummary {
 
   const closing = facts.pendingTool
     ? facts.pendingTool === "send_email"
-      ? "An email is waiting for your approval in the Inbox; nothing has been sent."
-      : "A post is waiting for your approval in the Inbox; nothing has gone out."
+      ? "An email is waiting for your approval in Needs you; nothing has been sent."
+      : "A post is waiting for your approval in Needs you; nothing has gone out."
     : facts.escalationReason
       ? `I flagged this for you: ${facts.escalationReason}`
       : "";

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   Activity,
+  BellDot,
   Blocks,
   BotMessageSquare,
   Building,
@@ -16,6 +17,7 @@ import {
   Menu,
   MessagesSquare,
   Plus,
+  Route,
   UserRound,
   UsersRound,
   Workflow,
@@ -41,7 +43,8 @@ import { FeedbackButton } from "@/components/feedback-dialog";
 import { HelpButton, HelpProvider } from "@/components/help/help-panel";
 import { UsageTracker } from "@/components/usage-tracker";
 import { useAdminLiveFeed, useIssues } from "@/hooks/use-admin-data";
-import { useActionItems } from "@/hooks/use-work-data";
+import { useActionItems, useSuggestions } from "@/hooks/use-work-data";
+import { waitingCount as waitingCount_ } from "@/lib/needs-you";
 import { cn, initialsOf } from "@/lib/utils";
 
 interface ProjectRef {
@@ -69,7 +72,7 @@ function navGroups(kind: SpaceKind): { title: string; items: readonly NavItem[] 
   if (kind === "business") return NAV_GROUPS;
   return NAV_GROUPS.map((group) => ({
     ...group,
-    items: group.items.map((item) =>
+    items: group.items.filter((item) => item.segment !== "conversations").map((item) =>
       item.segment === "organization" ? { ...item, label: "Your space", icon: UserRound } : item.segment === "team" ? { ...item, label: "Chat" } : item,
     ),
   }));
@@ -79,10 +82,12 @@ const NAV_GROUPS: { title: string; items: readonly NavItem[] }[] = [
   {
     title: "Workspace",
     items: [
+      { segment: "needs-you", label: "Needs you", icon: BellDot },
       { segment: "roster", label: "Roster", icon: UsersRound },
       { segment: "team", label: "Team", icon: MessagesSquare },
       { segment: "work", label: "Work", icon: Workflow },
-      { segment: "inbox", label: "Inbox", icon: BotMessageSquare },
+      { segment: "workflows", label: "Workflows", icon: Route },
+      { segment: "conversations", label: "Conversations", icon: BotMessageSquare },
       { segment: "insights", label: "Insights", icon: Activity },
     ],
   },
@@ -119,11 +124,16 @@ export function AdminShell({
   // One subscription for the whole admin app.
   useAdminLiveFeed();
 
+  // Everything that waits on a person, counted once, beside Needs you: the
+  // same three sources the queue lists.
   const { data: openIssues } = useIssues({ status: "open", project: project.slug });
-  const openCount = openIssues?.length ?? 0;
-  // What needs the owner, counted where they look first: beside Work.
   const waiting = useActionItems({ project: project.slug, status: "needs_approval", view: "list" }, { refetchInterval: 15_000 });
-  const waitingCount = waiting.data?.length ?? 0;
+  const suggestions = useSuggestions({ project: project.slug });
+  const waitingCount = waitingCount_({
+    approvals: waiting.data?.length ?? 0,
+    openIssues: openIssues?.length ?? 0,
+    pendingSuggestions: (suggestions.data ?? []).filter((suggestion) => suggestion.pending).length,
+  });
 
   const base = `/p/${project.slug}`;
 
@@ -159,17 +169,12 @@ export function AdminShell({
                 />
                 <span>{item.label}</span>
                 {/* Mail-style counts: the accent for what waits on the owner, quiet grey for the rest. */}
-                {item.segment === "work" && waitingCount > 0 ? (
+                {item.segment === "needs-you" && waitingCount > 0 ? (
                   <span
                     className="ml-auto min-w-5 rounded-full bg-accent-soft px-1.5 text-center text-xs font-semibold leading-5 text-accent-soft-fg tabular-nums ring-1 ring-inset ring-accent-line"
                     aria-label={`${waitingCount} waiting for you`}
                   >
                     {waitingCount > 99 ? "99+" : waitingCount}
-                  </span>
-                ) : null}
-                {item.segment === "inbox" && openCount > 0 ? (
-                  <span className="ml-auto text-xs font-medium text-ink-muted tabular-nums" aria-label={`${openCount} open items`}>
-                    {openCount > 99 ? "99+" : openCount}
                   </span>
                 ) : null}
               </Link>
@@ -355,7 +360,7 @@ function ProjectSwitcher({
    * comparing two projects' inboxes is the obvious reason to switch at all.
    */
   const tab = React.useMemo(() => {
-    const match = pathname.match(/^\/p\/[^/]+\/(roster|inbox|insights|agents)/);
+    const match = pathname.match(/^\/p\/[^/]+\/(roster|needs-you|work|conversations|insights|agents)/);
     const segment = match?.[1];
     // Detail routes (a specific conversation or agent) do not exist in the
     // other project, so fall back to that section's index.

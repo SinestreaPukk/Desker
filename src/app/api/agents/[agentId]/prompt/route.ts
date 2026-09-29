@@ -28,7 +28,10 @@ export async function GET(_request: Request, { params }: Params) {
 
     const agent = await prisma.agent.findFirst({
       where: { id: agentId, ...agentsVisibleTo(userId) },
-      include: { project: { select: { organizationId: true, context: true, organization: { select: { kind: true } } } } },
+      include: {
+        project: { select: { organizationId: true, context: true, organization: { select: { kind: true } } } },
+        rules: { select: { text: true }, orderBy: { createdAt: "asc" } },
+      },
     });
     if (!agent) throw new HttpError(404, "That agent no longer exists.");
 
@@ -71,6 +74,7 @@ export async function GET(_request: Request, { params }: Params) {
       recall: null,
       companyContext,
       kind,
+      rules: agent.rules.map((rule) => rule.text),
     });
 
     const workPrompt = buildRunPrompt({
@@ -86,6 +90,7 @@ export async function GET(_request: Request, { params }: Params) {
         objectives: scope ? toStringArray(scope.objectives) : [],
       },
       kind,
+      rules: agent.rules.map((rule) => rule.text),
       autonomy: (scope?.autonomy as AutonomyMode) ?? "draft_only",
       documentNames: documents.map((document) => document.filename),
       hasPublishing: Boolean(publishing),

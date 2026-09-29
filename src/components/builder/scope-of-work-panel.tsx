@@ -181,7 +181,7 @@ function ScopeEditor({
       await digestNow.mutateAsync();
       toast.success("Writing your update now", {
         description:
-          "It covers everything since the last one and lands in the Inbox's Updates tab in a moment.",
+          "It covers everything since the last one and lands under Work → Digests in a moment.",
       });
     } catch (caught) {
       toast.error(errorMessage(caught));

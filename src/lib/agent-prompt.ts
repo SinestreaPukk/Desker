@@ -33,6 +33,18 @@ interface AgentPromptInput {
   audience?: "client" | "colleague";
   /** A personal space: the agent works privately for one person, not a company. */
   kind?: SpaceKind;
+  /** Corrections the owner saved from earlier work (AgentRule), oldest first. */
+  rules?: string[];
+}
+
+/** The owner's saved corrections: standing instructions, above the tools and the rules. */
+export function correctionsSection(rules: string[] | undefined): string | null {
+  const list = (rules ?? []).map((rule) => rule.trim()).filter(Boolean);
+  if (list.length === 0) return null;
+  return section(
+    "Corrections from your owner",
+    `Your owner corrected earlier work and asked you to remember it. These are standing instructions - follow every one, every time, even where the rest of this brief would suggest otherwise:\n${bulletList(list)}`,
+  );
 }
 
 /** The shared-context section: about the company, or about the person. */
@@ -192,6 +204,9 @@ export function buildSystemPrompt(input: AgentPromptInput): string {
     );
   }
 
+  const corrections = correctionsSection(input.rules);
+  if (corrections) parts.push(corrections);
+
   if (allowed.length > 0) {
     const guidance = allowed.map((tool) => `- ${TOOL_GUIDANCE[tool]}`).join("\n");
     parts.push(
@@ -278,6 +293,7 @@ interface CompanyContextPromptInput {
   /** Filenames of the ready context documents */
   documentNames?: string[];
   kind?: SpaceKind;
+  rules?: string[];
 }
 
 export function buildCompanyContextPrompt(input: CompanyContextPromptInput): string {
@@ -293,6 +309,7 @@ export function buildCompanyContextPrompt(input: CompanyContextPromptInput): str
       companyContext: input.companyContext,
       audience: "colleague",
       kind: "personal",
+      rules: input.rules,
     });
   }
   const parts: string[] = [];
@@ -319,6 +336,9 @@ export function buildCompanyContextPrompt(input: CompanyContextPromptInput): str
   if (input.companyContext?.trim()) {
     parts.push(contextSection(input.companyContext.trim(), input.kind));
   }
+
+  const corrections = correctionsSection(input.rules);
+  if (corrections) parts.push(corrections);
 
   if (input.documentNames && input.documentNames.length > 0) {
     parts.push(

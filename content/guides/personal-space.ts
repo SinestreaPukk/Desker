@@ -26,7 +26,7 @@ The chat beside the editor is a private trial. Ask it what you would ask on a Mo
 
 ## Your two minutes a day
 
-- **Work** - what each assistant did, and anything waiting for your yes.
+- **Needs you** - everything waiting on you: what to approve, what an assistant flagged, and what it suggests.
 - **Chat** - ask for anything: "@Penny how much went on food this month?"
-- **Inbox** - suggestions it raised and its weekly digest.`,
+- **Work** - what each assistant did, and its weekly digest.`,
 } as const;

@@ -135,7 +135,7 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
       return gated
         ? {
             title: "Queued a post for your approval",
-            detail: "It waits in the Inbox. Nothing has been published.",
+            detail: "It waits in Needs you. Nothing has been published.",
             tone: "warning",
             icon: "approval",
           }
@@ -145,7 +145,7 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
       return gated
         ? {
             title: "Queued an email for your approval",
-            detail: "It waits in the Inbox. Nothing has been sent.",
+            detail: "It waits in Needs you. Nothing has been sent.",
             tone: "warning",
             icon: "approval",
           }
@@ -156,7 +156,7 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
       return gated
         ? {
             title: "Queued a calendar event for your approval",
-            detail: `${summary ? `${clip(summary, 80)}. ` : ""}It waits in the Inbox. Nothing is on the calendar yet.`,
+            detail: `${summary ? `${clip(summary, 80)}. ` : ""}It waits in Needs you. Nothing is on the calendar yet.`,
             tone: "warning",
             icon: "approval",
           }
@@ -167,7 +167,7 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
       return gated
         ? {
             title: "Queued a Slack message for your approval",
-            detail: "It waits in the Inbox. Nothing has been posted.",
+            detail: "It waits in Needs you. Nothing has been posted.",
             tone: "warning",
             icon: "approval",
           }
@@ -176,7 +176,7 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
       if (!ok) return failed("Tried to raise a suggestion");
       const title = text(input.title);
       return {
-        title: "Raised a suggestion in your Inbox",
+        title: "Raised a suggestion in Needs you",
         detail: title ? clip(title, 120) : null,
         tone: "accent",
         icon: "note",
@@ -286,6 +286,13 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       };
     case "action_item.reopened":
       return { title: `${who} put a rejected item back in the queue`, detail: null, tone: "neutral", icon: "approval" };
+    case "action_item.retried":
+      return {
+        title: meta.resend ? `${who} asked to send a failed item again` : `${who} retried a failed run`,
+        detail: meta.resend ? "It is back in Needs you for a fresh yes." : "A new run started with the same instruction.",
+        tone: "neutral",
+        icon: "task",
+      };
     case "action_item.cancelled":
       return { title: `${who} cancelled a task`, detail: "Nothing further ran.", tone: "neutral", icon: "task" };
     case "action_item.deleted":
@@ -340,7 +347,7 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
     case "suggestion.created":
       return {
         title: "Suggested something",
-        detail: summary ? clip(summary, 140) : "It is in the Inbox under Issues & suggestions.",
+        detail: summary ? clip(summary, 140) : "It is waiting in Needs you.",
         tone: "accent",
         icon: "note",
       };
@@ -360,6 +367,50 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
 
     case "draft.edited":
       return { title: `${who} edited a draft before approving it`, detail: null, tone: "neutral", icon: "draft" };
+    case "support_inbox.created":
+      return { title: `${who} set up the support inbox`, detail: "Customer messages sent to its address are answered by the Support agent, and each reply waits for approval.", tone: "neutral", icon: "settings" };
+    case "support_inbox.updated":
+      return {
+        title: meta.rotated ? `${who} replaced the support inbox address` : `${who} changed the support inbox`,
+        detail: meta.rotated ? "The old address stopped working at once." : null,
+        tone: "neutral",
+        icon: "settings",
+      };
+    case "support_inbox.removed":
+      return { title: `${who} removed the support inbox`, detail: "Its address no longer accepts messages.", tone: "neutral", icon: "settings" };
+    case "workflow.started":
+      return {
+        title: `${who} started the “${text(meta.name) ?? "a"}” workflow`,
+        detail: typeof meta.steps === "number" ? `${meta.steps} step${meta.steps === 1 ? "" : "s"}, each handed to the next when it finishes.` : null,
+        tone: "neutral",
+        icon: "task",
+      };
+    case "agent_rule.created":
+      return {
+        title:
+          meta.source === "rejection"
+            ? `${who} turned a rejection into a rule for an agent`
+            : meta.source === "edit"
+              ? `${who} turned an edit into a rule for an agent`
+              : `${who} gave an agent a new rule`,
+        detail: text(meta.text) ? `“${clip(text(meta.text)!, 160)}” - it follows this from its next run.` : null,
+        tone: "neutral",
+        icon: "settings",
+      };
+    case "agent_rule.updated":
+      return {
+        title: `${who} reworded one of an agent's rules`,
+        detail: text(meta.text) ? `Now: “${clip(text(meta.text)!, 160)}”` : null,
+        tone: "neutral",
+        icon: "settings",
+      };
+    case "agent_rule.removed":
+      return {
+        title: `${who} removed one of an agent's rules`,
+        detail: text(meta.text) ? `It no longer follows “${clip(text(meta.text)!, 140)}”.` : null,
+        tone: "neutral",
+        icon: "settings",
+      };
     case "scope_of_work.updated":
       return { title: `${who} changed what an agent does on its own`, detail: null, tone: "neutral", icon: "settings" };
     case "project.context_updated":

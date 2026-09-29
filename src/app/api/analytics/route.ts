@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { summarizeOutcomes } from "@/lib/work/outcomes";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { findProject, projectsVisibleTo } from "@/lib/projects";
 import { costOf } from "@/lib/pricing";
@@ -143,6 +144,7 @@ export async function GET(request: Request) {
           id: true,
           name: true,
           jobTitle: true,
+          templateId: true,
           avatarUrl: true,
           status: true,
           _count: { select: { documents: true } },
@@ -509,6 +511,48 @@ export async function GET(request: Request) {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 20);
 
+    // What decides the next thing to build: approval time, rework, failures,
+    // and how each agent, role and hand-off turns out (lib/work/outcomes.ts).
+    const [editedRows, rules] = await Promise.all([
+      prisma.auditLog.findMany({
+        // Only the runs in this list are looked up, so the caller's organisations are scope enough.
+        where: {
+          action: "draft.edited",
+          createdAt: { gte: since },
+          organization: { memberships: { some: { userId } } },
+        },
+        select: { metadata: true },
+      }),
+      prisma.agentRule.findMany({
+        where: { createdAt: { gte: since }, agentId: { in: agents.map((agent) => agent.id) } },
+        select: { agentId: true },
+      }),
+    ]);
+    const edited = new Set(
+      editedRows
+        .map((row) => (row.metadata as { actionItemId?: string } | null)?.actionItemId)
+        .filter((id): id is string => typeof id === "string"),
+    );
+    const outcomes = {
+      ...summarizeOutcomes({
+        agents: agents.map((agent) => ({ id: agent.id, name: agent.name, jobTitle: agent.jobTitle, templateId: agent.templateId })),
+        edited,
+        runs: items.map((item) => ({
+          id: item.id,
+          agentId: item.agentId,
+          status: item.status,
+          type: item.type,
+          awaitingSince: item.awaitingSince,
+          approvedAt: item.approvedAt,
+          completedAt: item.completedAt,
+          createdAt: item.createdAt,
+          parentAgentId: item.parent?.agent.id ?? null,
+        })),
+      }),
+      /** Corrections the owner saved as rules in the range: the agents that needed teaching. */
+      corrections: rules.length,
+    };
+
     const collab: CollabStats = {
       total: delegations.length + transfers.length,
       delegations: delegations.length,
@@ -529,6 +573,7 @@ export async function GET(request: Request) {
         .slice(0, 25),
       dislikedReplies,
       work: { totals: workTotals, agents: workAgents },
+      outcomes,
       collab,
     };
   });

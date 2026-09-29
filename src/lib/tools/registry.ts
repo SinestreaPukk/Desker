@@ -42,7 +42,7 @@ export const TOOL_METADATA: Record<
   log_issue: {
     label: "Log an issue",
     blurb:
-      "Record a bug or problem the client reports, with a severity, so it lands in your issue inbox.",
+      "Record a bug or problem the client reports, with a severity, so it lands in Needs you.",
     icon: "bug",
   },
   log_suggestion: {

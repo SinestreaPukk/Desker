@@ -157,9 +157,14 @@ export const CONNECTORS: readonly Connector[] = [
     roles: ["marketer", "social-media-manager"],
     auth: "webhook",
     status: "available",
-    pitch: "Send approved posts to LinkedIn, X, Instagram, YouTube or your CMS, through Zapier, Make or your own endpoint.",
-    can: ["Send the posts you approve to the address you give it"],
-    cannot: ["Read anything back", "Post without your approval in draft-only mode"],
+    pitch: "Desker doesn't post to social networks directly. It sends each post you approve to a webhook, and a Zapier or Make zap (or your own code) posts it to LinkedIn, X, Instagram, Facebook or your CMS.",
+    can: ["Send the posts you approve, with title, text and platform, to the address you give it", "Sign each delivery so your endpoint can check it came from Desker"],
+    cannot: [
+      "Post to a social network by itself - a zap or your code does the posting",
+      "Attach images or schedule for a later time",
+      "See replies, likes or reach afterwards",
+      "Post without your approval in draft-only mode",
+    ],
     tools: ["publish_post"],
   },
   {
@@ -176,6 +181,21 @@ export const CONNECTORS: readonly Connector[] = [
   },
 
   // --- customers & sales ------------------------------------------------------
+  {
+    id: "support_inbox",
+    name: "Support inbox",
+    category: "crm",
+    roles: ["customer-support", "client-onboarding"],
+    auth: "webhook",
+    status: "available",
+    pitch: "Customer messages in from your helpdesk, a website form or a Zapier/Make zap; answered from your policies; reply sent once you approve; your helpdesk told it's done.",
+    can: [
+      "Take customer messages at a private address (JSON or a form)",
+      "Answer from your uploaded policies, or hand it to you when they don't settle it",
+      "Email the reply you approve, and tell your helpdesk the ticket was answered",
+    ],
+    cannot: ["Read your helpdesk or inbox on its own - messages must be sent to it", "Reply without your approval in draft-only mode"],
+  },
   {
     id: "hubspot",
     name: "HubSpot",

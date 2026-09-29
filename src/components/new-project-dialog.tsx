@@ -70,7 +70,7 @@ export function NewProjectDialog({
         <form onSubmit={submit}>
           <DialogTitle>New project</DialogTitle>
           <DialogDescription>
-            A project has its own roster, inbox and insights. Use one per client
+            A project has its own roster, work and insights. Use one per client
             or per product line — nothing is shared between them.
           </DialogDescription>
 

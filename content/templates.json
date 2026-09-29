@@ -50,7 +50,7 @@
           "Handed a refund request to you: money is your call"
         ],
         "output": {
-          "label": "Morning summary · in your Inbox",
+          "label": "Morning summary · in Needs you",
           "title": "11 answered, 1 waiting for you",
           "lines": [
             "Drill stopped working · answered from returns-policy.pdf",
@@ -544,7 +544,7 @@
           "Checked the week against your 20,000 budget"
         ],
         "output": {
-          "label": "Weekly money check-in · in your Inbox",
+          "label": "Weekly money check-in · in your digests",
           "title": "฿17,900 spent, ฿2,100 under budget",
           "lines": [
             "Eating out ฿4,900 · up 30% on last week",
@@ -788,7 +788,7 @@
           "Checked cherry-blossom forecasts for your dates"
         ],
         "output": {
-          "label": "Trip plan · in your Inbox",
+          "label": "Trip plan · in your digests",
           "title": "Japan, 4-14 April: ฿78,000 all in",
           "lines": [
             "Tokyo 4 nights · Kyoto 4 · Osaka 2",
@@ -848,7 +848,7 @@
           "Put three 20-minute sessions in your calendar"
         ],
         "output": {
-          "label": "This week's lesson · in your Inbox",
+          "label": "This week's lesson · in your digests",
           "title": "Week 6: at the restaurant",
           "lines": [
             "12 new phrases, each with a real menu example",

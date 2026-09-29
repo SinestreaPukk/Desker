@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { CheckCircle2, Clock, Mail, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Clock, Mail, Radio, TriangleAlert } from "lucide-react";
+import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { toast } from "sonner";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { RemoveButton } from "@/components/work/row-actions";
 import { Note } from "@/components/ui/note";
-import { useSetDigestRead } from "@/hooks/use-work-data";
+import { useDigests, useSetDigestRead } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { DigestDto } from "@/lib/work/serialize";
 import type { DigestBulletKind } from "@/lib/work/types";
@@ -45,7 +46,7 @@ function statLine(digest: DigestDto): string {
 }
 
 /**
- * One update from one agent, as it lands in the Inbox. Unread is a left edge
+ * One update from one agent, as it lands under Work → Digests. Unread is a left edge
  * and a dot rather than a background wash: a column of these has to stay
  * readable when half of them are new.
  */
@@ -137,5 +138,66 @@ export function DigestCard({ digest, project }: { digest: DigestDto; project: st
         </Link>
       </div>
     </Note>
+  );
+}
+
+/**
+ * Agents' digests: the short reports each writes on its own cadence, read
+ * under Work beside the runs they sum up.
+ */
+export function DigestList({
+  project,
+  agentId,
+  status,
+}: {
+  project: string;
+  agentId: string;
+  status: string;
+}) {
+  const { data, isPending, error, refetch, isRefetching } = useDigests({
+    project,
+    agentId,
+    status: status === "unread" || status === "read" ? status : "all",
+  });
+
+  if (isPending) return <LoadingRows count={3} />;
+  if (error) {
+    return (
+      <ErrorState message={errorMessage(error)} onRetry={() => void refetch()} retrying={isRefetching} />
+    );
+  }
+  if (data!.length === 0) {
+    return status === "unread" ? (
+      <EmptyState
+        icon={CheckCircle2}
+        title="You're up to date"
+        description="Every update your agents have sent has been read. New ones arrive on each agent's digest cadence - weekly by default."
+      />
+    ) : status === "read" ? (
+      <EmptyState icon={CheckCircle2} title="Nothing read yet" description="Digests move here once you have read them." />
+    ) : (
+      <EmptyState
+        icon={Radio}
+        title="No updates yet"
+        description="Each agent writes you a short update on its own cadence - what it got done, what is pending, and anything it thinks you should know. Set the cadence in an agent's scope of work, or press Send one now there to see one immediately."
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {status === "read" ? (
+        <div className="flex justify-end">
+          <RemoveButton
+            targets={data!.map((digest) => ({ kind: "update" as const, id: digest.id }))}
+            what={`${data!.length} digest${data!.length === 1 ? "" : "s"}`}
+            label="Clear all"
+          />
+        </div>
+      ) : null}
+      {data!.map((digest) => (
+        <DigestCard key={digest.id} digest={digest} project={project} />
+      ))}
+    </div>
   );
 }

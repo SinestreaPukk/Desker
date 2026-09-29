@@ -19,6 +19,7 @@ import { buildSystemPrompt } from "@/lib/agent-prompt";
 import { getProvider } from "@/lib/llm/provider";
 import { effectiveContext } from "@/lib/work/context";
 import { spaceKind, type SpaceKind } from "@/lib/space";
+import { rulesFor } from "@/lib/work/rules";
 import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { RunRefused, startRun } from "@/lib/work/scope";
 import { WORK_TOOL_METADATA, type WorkToolId } from "@/lib/work/tools";
@@ -194,13 +195,14 @@ export async function replyAs(input: {
     if (!env.hasAnthropicKey && !env.hasOpenAiKey) {
       reply = "I can't reply here yet: no AI model is set up for this workspace.";
     } else {
-      const [project, scope, documents] = await Promise.all([
+      const [project, scope, documents, rules] = await Promise.all([
         prisma.project.findUnique({
           where: { id: projectId },
           select: { context: true, organization: { select: { kind: true } } },
         }),
         prisma.scopeOfWork.findUnique({ where: { agentId: agent.id }, select: { context: true, tools: true } }),
         prisma.document.findMany({ where: { agentId: agent.id, status: "ready" }, select: { filename: true }, take: 30 }),
+        rulesFor(agent.id),
       ]);
       const kind = spaceKind(project?.organization.kind);
       const systemPrompt = [
@@ -214,6 +216,7 @@ export async function replyAs(input: {
           companyContext: effectiveContext({ projectContext: project?.context, agentContext: scope?.context, kind }),
           audience: "colleague",
           kind,
+          rules,
         }),
         abilitiesSection(
           toStringArray(scope?.tools),

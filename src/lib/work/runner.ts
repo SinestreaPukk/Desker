@@ -98,6 +98,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
           documents: { where: { status: "ready" }, select: { id: true, filename: true } },
           // The project's shared context is inherited by every agent in it.
           project: { select: { context: true, contextAnswers: true, organization: { select: { kind: true } } } },
+          rules: { select: { text: true }, orderBy: { createdAt: "asc" } },
         },
       },
       parent: { select: { result: true } },
@@ -183,6 +184,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
         objectives,
       },
       kind,
+      rules: item.agent.rules.map((rule) => rule.text),
       autonomy,
       documentNames: documents.map((d) => d.filename),
       hasPublishing: Boolean(publishing),
@@ -271,6 +273,25 @@ async function finishRun(
     targetId: actionItemId,
     metadata: outcome.error ? { error: outcome.error } : { summary: outcome.summary.slice(0, 300) },
   });
+  if (to === "done") await continueWorkflow(actionItemId);
+  // A support ticket the agent could not settle: the helpdesk hears it needs a person.
+  if (to !== "failed") {
+    const flagged = await prisma.actionItem.findUnique({ where: { id: actionItemId }, select: { escalatedAt: true } });
+    if (flagged?.escalatedAt) {
+      const { reportToHelpdesk } = await import("./support-inbox");
+      await reportToHelpdesk(actionItemId, "needs_human");
+    }
+  }
+}
+
+/** A finished workflow step starts the next one (workflow-run.ts). Never fails the run it follows. */
+async function continueWorkflow(actionItemId: string) {
+  try {
+    const { advanceWorkflow } = await import("./workflow-run");
+    await advanceWorkflow(actionItemId);
+  } catch (error) {
+    console.error("[work] workflow did not advance", error);
+  }
 }
 
 /**
@@ -425,6 +446,14 @@ export async function executeApprovedAction(
       metadata: { tool: action.tool, status: delivery.status, detail: delivery.detail },
     });
   });
+  if (delivery.ok) await step("continue-workflow", () => continueWorkflow(actionItemId));
+  // The reply to a support ticket went out: the helpdesk hears it was answered.
+  if (delivery.ok && action.tool === "send_email") {
+    await step("report-to-helpdesk", async () => {
+      const { reportToHelpdesk } = await import("./support-inbox");
+      await reportToHelpdesk(actionItemId, "answered");
+    });
+  }
   return delivery.ok ? "done" : "failed";
 }
 

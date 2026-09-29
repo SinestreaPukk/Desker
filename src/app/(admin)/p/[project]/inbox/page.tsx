@@ -1,8 +1,10 @@
-import type { Metadata } from "next";
-import { InboxView } from "./inbox-view";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Inbox" };
-
+/**
+ * The Inbox split in two: what needs a person is Needs you, the one action
+ * queue; chat history is Conversations; agents' digests live under Work.
+ * Old links (emails, bookmarks) still land in the right place.
+ */
 export default async function InboxPage({
   params,
   searchParams,
@@ -12,5 +14,7 @@ export default async function InboxPage({
 }) {
   const { project } = await params;
   const { tab } = await searchParams;
-  return <InboxView project={project} initialTab={tab} />;
+  if (tab === "conversations") redirect(`/p/${project}/conversations`);
+  if (tab === "updates") redirect(`/p/${project}/work?view=digests`);
+  redirect(`/p/${project}/needs-you`);
 }

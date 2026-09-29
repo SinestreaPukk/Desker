@@ -3,7 +3,7 @@
 import { Check, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/components/ui/note";
-import { useScope } from "@/hooks/use-work-data";
+import { useAgentRules, useScope } from "@/hooks/use-work-data";
 import { describeBoundaries } from "@/lib/work/boundaries";
 
 /**
@@ -15,13 +15,18 @@ export function BoundariesCard({
   agentId,
   escalationRule,
   onEdit,
+  onRules,
 }: {
   agentId: string;
   /** Every run is told to follow it, so it belongs with the limits. */
   escalationRule: string | null;
   onEdit: () => void;
+  /** Opens the rules saved from the owner's corrections. */
+  onRules: () => void;
 }) {
   const scope = useScope(agentId);
+  const rules = useAgentRules(agentId);
+  const ruleCount = rules.data?.length ?? 0;
   if (!scope.data) return null;
   const { can, cannot } = describeBoundaries(scope.data);
 
@@ -43,6 +48,17 @@ export function BoundariesCard({
       {escalationRule?.trim() ? (
         <p className="mt-3 border-t border-line pt-2.5 text-xs text-ink-muted">
           <span className="font-medium text-ink">It stops and asks you when:</span> {escalationRule.trim()}
+        </p>
+      ) : null}
+      {ruleCount > 0 ? (
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 border-t border-line pt-2.5 text-xs text-ink-muted">
+          <span>
+            <span className="font-medium text-ink">It follows {ruleCount} rule{ruleCount === 1 ? "" : "s"}</span> you saved from
+            your corrections.
+          </span>
+          <button type="button" onClick={onRules} className="font-medium text-accent hover:underline">
+            See them
+          </button>
         </p>
       ) : null}
     </Note>

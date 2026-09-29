@@ -47,7 +47,7 @@
       {
         "icon": "approve",
         "title": "Read it over coffee",
-        "body": "The work is done and waiting in one inbox. Approve it, edit it, or bin it. A weekly digest sums up the rest."
+        "body": "Anything that needs you waits in one queue, Needs you. Approve it, edit it, or bin it. A weekly digest sums up the rest."
       }
     ]
   },
@@ -57,7 +57,7 @@
     "intro": "What's done, and what's waiting on you: three from a business, two from a personal space.",
     "items": [
       {
-        "label": "Approvals inbox",
+        "label": "Needs you",
         "title": "Nothing goes out until you say so",
         "body": "Every post, email and ticket waits here with its full text. Approve, edit or reject in one click. Every decision is logged.",
         "demo": "approval"
@@ -124,7 +124,7 @@
       {
         "icon": "person",
         "title": "You approve every send",
-        "body": "Posts and emails wait in your inbox with the full text. Approve, edit or reject — from your phone."
+        "body": "Posts and emails wait in Needs you with the full text. Approve, edit or reject — from your phone."
       },
       {
         "icon": "source",
@@ -252,6 +252,10 @@
       {
         "q": "Where do its answers come from?",
         "a": "From what you told it, the documents you upload (PDF, Word, Markdown, text, CSV) and cited web pages. When the answer is in none of them, it says it doesn't know rather than inventing one."
+      },
+      {
+        "q": "What can it connect to?",
+        "a": "Today: email through your own Resend account; a support inbox that takes customer messages from any helpdesk, website form or Zapier/Make zap and reports back when each is answered; Google Calendar, Slack and GitHub; and publishing through a webhook. Desker doesn't post to LinkedIn, X or Instagram directly: it sends each post you approve to a Zapier or Make zap, which posts it. HubSpot, Intercom and Salesforce are on the way."
       },
       {
         "q": "Is my data secure?",

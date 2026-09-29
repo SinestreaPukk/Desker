@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
@@ -16,6 +17,7 @@ import {
   useApproveActionItem,
   useRejectActionItem,
   useReopenActionItem,
+  useSaveRule,
   useUpdateDraft,
 } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
@@ -69,7 +71,7 @@ function ActionPreview({ tool, input }: { tool: GatedToolId; input: Record<strin
 /**
  * One thing waiting on a person: what the agent wants to send, shown in full,
  * editable in place, with the three decisions that exist - approve, edit and
- * approve, or reject. Used by the Inbox's Approvals tab and the Work page.
+ * approve, or reject. Rendered only in Needs you, the one place a decision is made.
  */
 export function ApprovalCard({ item, project }: { item: ActionItemDto; project: string }) {
   const approve = useApproveActionItem();
@@ -82,6 +84,11 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
   const [editing, setEditing] = React.useState(false);
   const [rejecting, setRejecting] = React.useState(false);
   const [reason, setReason] = React.useState("");
+  // The correction loop: a rejection's reason, or what an edit changed, can
+  // become a rule the agent follows from now on - offered, never assumed.
+  const [keepRule, setKeepRule] = React.useState(true);
+  const [teach, setTeach] = React.useState<string | null>(null);
+  const saveRule = useSaveRule(item.agent.id);
   // The decision lands as a stamp on the card for a moment before the card
   // leaves the queue - the same stamp as the public site's demos.
   const [stamp, setStamp] = React.useState<StampKind | null>(null);
@@ -108,9 +115,18 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
         ...(isEmail ? { to: edit.to.trim() } : {}),
       });
       setEditing(false);
+      // They corrected it: ask whether the agent should remember why.
+      if (edit.body.trim() !== (draft.body ?? "").trim() || edit.title.trim() !== (draft.title ?? "").trim()) setTeach("");
     } catch (caught) {
       setNote(errorMessage(caught));
     }
+  }
+
+  async function keep(text: string, source: "rejection" | "edit") {
+    await saveRule.mutateAsync({ text: text.trim(), source, actionItemId: item.id });
+    toast.success(`${item.agent.name} will remember that`, {
+      description: `Saved as a rule. See, reword or remove it on ${item.agent.name}'s page, under Profile.`,
+    });
   }
 
   const copy = pending ? PENDING_COPY[pending.tool] : null;
@@ -130,6 +146,9 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
         });
       } else {
         await reject.mutateAsync({ id: item.id, reason: reason.trim() });
+        if (keepRule && reason.trim().length >= 5) {
+          await keep(reason, "rejection").catch((caught) => toast.error(`The rule wasn't saved: ${errorMessage(caught)}`));
+        }
         toast("Rejected - nothing was sent", {
           description: reason.trim() ? `Reason: ${reason.trim()}` : `${item.agent.name}'s ${what} was not sent.`,
           action: {
@@ -243,6 +262,38 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
           </pre>
         )}
 
+        {teach !== null ? (
+          <div className="space-y-2 rounded-lg border border-accent-line bg-accent-soft/30 p-3">
+            <p className="text-sm font-medium text-ink">
+              You changed {item.agent.name}&apos;s draft. Should it do this differently from now on?
+            </p>
+            <Textarea
+              rows={2}
+              aria-label={`What ${item.agent.name} should do differently`}
+              value={teach}
+              onChange={(e) => setTeach(e.target.value)}
+              placeholder="Keep emails under 120 words and sign off with my first name."
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                loading={saveRule.isPending}
+                disabled={teach.trim().length < 5}
+                onClick={() =>
+                  void keep(teach, "edit")
+                    .then(() => setTeach(null))
+                    .catch((caught) => toast.error(errorMessage(caught)))
+                }
+              >
+                Save as a rule
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setTeach(null)}>
+                Just this once
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
         {/* Why this is in front of you, in the agent's own words, before the
             detail of how it got there. */}
         {item.summary ? (
@@ -315,10 +366,24 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
               id={`reason-${item.id}`}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Tone is off for this audience."
+              placeholder="Too salesy - never mention discounts in posts."
               autoFocus
             />
           </Field>
+          {reason.trim().length >= 5 ? (
+            <label htmlFor={`keep-${item.id}`} className="mt-3 flex cursor-pointer items-start gap-2.5 text-sm text-ink">
+              <Checkbox
+                id={`keep-${item.id}`}
+                checked={keepRule}
+                onCheckedChange={(next) => setKeepRule(next === true)}
+                className="mt-0.5"
+              />
+              <span>
+                Save this as a rule for {item.agent.name}, so it doesn&apos;t happen again.
+                <span className="block text-xs text-ink-muted">It shows on {item.agent.name}&apos;s page, where you can reword or remove it.</span>
+              </span>
+            </label>
+          ) : null}
         </ConfirmDialog>
         {(
           <div className="flex flex-wrap items-center gap-2.5 pt-2 sm:gap-3">

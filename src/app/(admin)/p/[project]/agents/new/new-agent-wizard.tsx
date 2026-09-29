@@ -126,6 +126,7 @@ export function NewAgentWizard({ project }: { project: string }) {
         name: form.name.trim(),
         jobTitle: form.jobTitle.trim(),
         department: form.department.trim(),
+        ...(template && template !== SCRATCH ? { templateId: template } : {}),
         avatarUrl: form.avatarUrl ?? "",
         personality: form.personality.trim(),
         responsibilities: parseLines(form.responsibilitiesText),

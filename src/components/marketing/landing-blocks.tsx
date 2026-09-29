@@ -1,11 +1,9 @@
-import Link from "next/link";
 import Image, { type StaticImageData } from "next/image";
 import approvalShot from "../../../public/product/approval.png";
 import boundariesShot from "../../../public/product/boundaries.png";
 import threadShot from "../../../public/product/handoff-thread.png";
 import activityShot from "../../../public/product/activity.png";
 import {
-  ArrowRight,
   FileLock,
   Hand,
   NotebookPen,
@@ -22,7 +20,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { LANDING_ICONS, TEMPLATES, type PRODUCT_SHOTS } from "@/lib/content";
+import { LANDING_ICONS, type PRODUCT_SHOTS } from "@/lib/content";
 
 type ProductShot = (typeof PRODUCT_SHOTS)[number];
 import { StickyNote } from "@/components/marketing/desk-notes";
@@ -250,78 +248,8 @@ export function TrustShots({ shots }: { shots: { image: ProductShot; title: stri
 
 /* --- Roles ------------------------------------------------------------------- */
 
-/** Every role, from the same records the wizard and showcase use. One card each. */
-/** Who fills each role at ABC Inc., as the demo cast them. */
-const ROLE_STAFF: Record<string, readonly [string, string]> = {
-  "customer-support": ["Mia", "mia"],
-  "client-onboarding": ["Ivy", "ivy"],
-  researcher: ["Sol", "sol"],
-  marketer: ["Nova", "nova"],
-  secretary: ["Kai", "kai"],
-  "dev-support": ["Ada", "ada"],
-  "sales-development": ["Leo", "leo-leads"],
-  "people-ops": ["Rae", "rae"],
-  "money-manager": ["Penny", "penny"],
-  "personal-assistant": ["Juno", "juno"],
-  "social-media-manager": ["Remy", "remy"],
-  "career-coach": ["Theo", "theo"],
-  "travel-planner": ["Isla", "isla"],
-  "learning-coach": ["Ollie", "ollie"],
-};
-/** Who does each role in the demos, for the showcase too. */
-export { ROLE_STAFF };
-const ROLE_TONES = ["lemon", "sky", "mint", "coral", "lilac", "mint", "lemon", "sky"] as const;
-const ROLE_TILTS = [-1.2, 0.9, -0.5, 1.3, -1, 0.6, 1.1, -0.7];
-
-/**
- * The roles as a roster pinned to the desk: a note per role, in the person
- * who does it at ABC Inc. - their face, their name, the job - rather than a
- * grid of icon cards. Each note opens that role's run on the showcase.
- */
-export function RoleGrid({ cta, groups }: { cta: string; groups: { business: string; personal: string } }) {
-  return (
-    <div className="space-y-12">
-      {(["business", "personal"] as const).map((audience) => (
-        <section key={audience} aria-labelledby={`roles-${audience}`}>
-          <h3 id={`roles-${audience}`} className="mb-5 font-hand text-hand-cta font-bold text-ink">
-            {groups[audience]}
-          </h3>
-          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {TEMPLATES.filter((role) => role.audience === audience).map((role, index) => {
-              const [name, seed] = ROLE_STAFF[role.id] ?? [role.name, role.id];
-              return (
-                <li key={role.id} className="sd-rise">
-                  <Link href={`/showcase#${role.id}`} className="group block h-full rounded-sm focus-visible:outline-offset-4">
-                    <StickyNote
-                      tone={ROLE_TONES[(index + (audience === "personal" ? 2 : 0)) % ROLE_TONES.length]!}
-                      tilt={ROLE_TILTS[index % ROLE_TILTS.length]!}
-                      settle={false}
-                      soft
-                      className="relative flex h-full flex-col px-5 pb-5 pt-6"
-                    >
-                      <span className="flex items-center gap-3">
-                        <AgentAvatar name={name} seed={seed} size="lg" />
-                        <span>
-                          <span className="block font-hand text-hand-cta font-bold leading-none">{name}</span>
-                          <span className="mt-1 block text-sm font-semibold">{role.name}</span>
-                        </span>
-                      </span>
-                      <span className="mt-3 text-sm leading-relaxed">{role.pitch}</span>
-                      <span className="mt-auto flex items-center gap-1.5 pt-4 text-sm font-semibold text-accent">
-                        {cta}
-                        <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
-                      </span>
-                    </StickyNote>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
-    </div>
-  );
-}
+import { ROLE_STAFF, RoleGrid } from "@/components/marketing/role-grid";
+export { ROLE_STAFF, RoleGrid };
 
 /* --- Two desks: business and personal ------------------------------------- */
 

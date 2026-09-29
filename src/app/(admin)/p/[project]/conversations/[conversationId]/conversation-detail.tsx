@@ -100,7 +100,7 @@ export function ConversationDetail({
       <header className="border-b border-line px-4 py-4 sm:px-6">
         <Breadcrumbs
           items={[
-            { label: "Inbox", href: `/p/${project}/inbox` },
+            { label: "Conversations", href: `/p/${project}/conversations` },
             { label: `Conversation with ${conversation.agent.name}` },
           ]}
           className="mb-3"

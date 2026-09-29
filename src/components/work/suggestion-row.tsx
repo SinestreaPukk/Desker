@@ -13,11 +13,11 @@ import { useDecideSuggestion } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { SuggestionDto } from "@/lib/work/serialize";
 import type { SuggestionStatus } from "@/lib/work/types";
-import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 /**
- * One thing an agent thinks should happen next, in the Issues & suggestions
- * tab next to the issues.
+ * One thing an agent thinks should happen next - a question for the owner,
+ * decided in Needs you beside the approvals and flags.
  *
  * Three decisions, because a recommendation is decided rather than resolved:
  * accepting writes the proposal onto the agent's scope of work so the next run
@@ -28,12 +28,9 @@ import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 export function SuggestionRow({
   suggestion,
   project,
-  inRun = false,
 }: {
   suggestion: SuggestionDto;
   project: string;
-  /** Shown inside its own run: no link back to it. */
-  inRun?: boolean;
 }) {
   const decide = useDecideSuggestion();
   const pending = decide.isPending && decide.variables?.suggestionId === suggestion.id;
@@ -49,13 +46,13 @@ export function SuggestionRow({
         });
       } else if (status === "snoozed") {
         toast("Snoozed for a week", {
-          description: "It comes back to this tab when the week is up.",
+          description: "It comes back to Needs you when the week is up.",
           action: {
             label: "Undo",
             onClick: () => {
               decide
                 .mutateAsync({ suggestionId: suggestion.id, status: "open" })
-                .then(() => toast.success("Back in your suggestions"))
+                .then(() => toast.success("Back in Needs you"))
                 .catch((caught: unknown) => toast.error(errorMessage(caught)));
             },
           },
@@ -68,7 +65,7 @@ export function SuggestionRow({
             onClick: () => {
               decide
                 .mutateAsync({ suggestionId: suggestion.id, status: "open" })
-                .then(() => toast.success("Back in your suggestions"))
+                .then(() => toast.success("Back in Needs you"))
                 .catch((caught: unknown) => toast.error(errorMessage(caught)));
             },
           },
@@ -103,26 +100,6 @@ export function SuggestionRow({
     </div>
   );
 
-  const meta = (
-    <>
-      <span>{suggestion.agent.name}</span>
-      <span aria-hidden>·</span>
-      <span>raised by the agent</span>
-      <span aria-hidden>·</span>
-      <span title={formatDateTime(suggestion.createdAt)}>
-        {formatTime(suggestion.createdAt)} · {formatRelativeTime(suggestion.createdAt)}
-      </span>
-      {suggestion.actionItemId && !inRun ? (
-        <>
-          <span aria-hidden>·</span>
-          <Link href={`/p/${project}/work/${suggestion.actionItemId}`} className="text-accent hover:underline">
-            View the run
-          </Link>
-        </>
-      ) : null}
-    </>
-  );
-
   const actions = suggestion.pending ? (
     <div className="flex flex-wrap items-center gap-1.5">
       <Button size="sm" loading={pending} onClick={() => void run("accepted")}>
@@ -148,22 +125,7 @@ export function SuggestionRow({
     </div>
   );
 
-  // Inside a run: a plain row in the run's one group - no card inside the card.
-  if (inRun) {
-    return (
-      <div className={decided ? "py-4 opacity-70" : "py-4"}>
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-          <h3 className="text-sm font-semibold text-ink">{suggestion.summary}</h3>
-          {state}
-        </div>
-        <div className="mt-1 text-sm leading-relaxed">{body}</div>
-        <p className="meta mt-2 flex flex-wrap items-center gap-x-2">{meta}</p>
-        <div className="mt-3">{actions}</div>
-      </div>
-    );
-  }
-
-  // In the Inbox, Mail's shape: the agent who suggested it on top, with their
+  // Mail's shape: the agent who suggested it on top, with their
   // face, then what they suggest.
   return (
     <ListRow

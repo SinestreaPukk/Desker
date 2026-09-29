@@ -235,7 +235,7 @@ export function useSetConversationStatus() {
   });
 }
 
-interface AnalyticsResponse {
+export interface AnalyticsResponse {
   days: number;
   /** The same counts over the window before this one, for the captions. */
   previous: { conversations: number; runs: number };
@@ -286,6 +286,7 @@ interface AnalyticsResponse {
     agents: import("@/app/api/analytics/route").AgentWorkStats[];
   };
   collab: import("@/app/api/analytics/route").CollabStats;
+  outcomes: ReturnType<typeof import("@/lib/work/outcomes").summarizeOutcomes> & { corrections: number };
 }
 
 export function useAnalytics(project: string, days = 30) {

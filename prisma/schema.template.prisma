@@ -142,6 +142,7 @@ model Organization {
   digests       Digest[]
   suggestions   Suggestion[]
   emailSuppressions EmailSuppression[]
+  supportInboxes    SupportInbox[]
 }
 
 /// Someone who asked not to receive email from this organisation, through the
@@ -216,6 +217,7 @@ model Project {
   agents       Agent[]
   teamThreads  TeamThread[]
   teamMessages TeamMessage[]
+  supportInbox SupportInbox?
 
   @@index([organizationId])
 }
@@ -227,6 +229,10 @@ model Agent {
   name             String
   jobTitle         String
   department       String?
+  /// The role template it was hired from (content/templates.json), so
+  /// Insights can say which roles are used and how they do. Null for agents
+  /// started from scratch, or hired before this was recorded.
+  templateId       String?
   avatarUrl        String?
   // Free text, injected verbatim into the system prompt.
   personality      String
@@ -258,9 +264,57 @@ model Agent {
   digests             Digest[]
   suggestions         Suggestion[]
   teamMessages        TeamMessage[]
+  rules               AgentRule[]
+  supportInboxes      SupportInbox[]
 
   @@index([status])
   @@index([projectId])
+}
+
+/// The support desk's closed loop: customer messages come in at a private
+/// address (from a helpdesk, a website form, or a Zapier/Make zap), the
+/// Support agent answers from the project's documents, the reply waits in
+/// Needs you, and once it is sent the helpdesk is told the ticket was
+/// answered. One per project.
+model SupportInbox {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String       @unique
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  agentId        String
+  agent          Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  /// The path credential for the intake address. Replacing it retires the old address.
+  token          String       @unique
+  /// Where "answered" and "handed to a person" are reported back. Optional.
+  callbackUrl    String?
+  /// Vault-sealed signing secret for the callback (X-Desker-Signature).
+  callbackSecret String?
+  enabled        Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
+/// A correction the owner chose to keep: saved from a rejected or edited
+/// draft (or typed by hand), and read by the agent before everything it does
+/// from then on. Always visible and editable on the agent's page, and every
+/// change is an audit row - never a silent, growing pile of behaviour.
+model AgentRule {
+  id           String   @id @default(cuid())
+  agentId      String
+  agent        Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  text         String
+  /// rejection | edit | manual
+  source       String   @default("manual")
+  /// The run whose draft was corrected, when it came from one.
+  actionItemId String?
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([agentId, createdAt])
 }
 
 model Document {

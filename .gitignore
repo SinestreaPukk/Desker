@@ -53,6 +53,9 @@ next-env.d.ts
 .claude/skills/
 .claude/settings.local.json
 skills-lock.json
+.impeccable/critique/
+.impeccable/review/
+.impeccable/*.cache.json
 
 # cloud-sync conflict copies ("file 2.ts") must never be committed
 * [0-9].*

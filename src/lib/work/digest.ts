@@ -260,7 +260,7 @@ export function fallbackDigest(facts: DigestFacts): { headline: string; bullets:
   if (stats.awaitingApproval > 0) {
     bullets.push({
       kind: "pending",
-      text: `${stats.awaitingApproval} thing${stats.awaitingApproval === 1 ? " is" : "s are"} waiting for your approval in the Inbox. Nothing goes out until you decide.`,
+      text: `${stats.awaitingApproval} thing${stats.awaitingApproval === 1 ? " is" : "s are"} waiting for your approval in Needs you. Nothing goes out until you decide.`,
     });
   }
   if (stats.completed > 0) {
@@ -334,7 +334,7 @@ function digestText(
     "",
     ...bullets.map((bullet) => `- [${label[bullet.kind]}] ${bullet.text}`),
     "",
-    link ? `Open the Inbox: ${link}` : "",
+    link ? `Open Needs you: ${link}` : "",
   ]
     .join("\n")
     .trim();
@@ -449,7 +449,7 @@ export async function generateDigest(
       headline: written.headline,
       bullets: written.bullets,
       recipients: scope.digestRecipients,
-      link: env.appUrl ? `${env.appUrl}/p/${agent.project.slug}/inbox` : null,
+      link: env.appUrl ? `${env.appUrl}/p/${agent.project.slug}/needs-you` : null,
     });
   }
 
@@ -480,9 +480,9 @@ async function emailDigest(input: {
     resolveEmail(input.organizationId),
   ]);
   const problem = !config
-    ? "No email provider is connected, so the digest stayed in the Inbox."
+    ? "No email provider is connected, so the digest stayed under Work → Digests."
     : to.length === 0
-      ? "No valid recipient address, so the digest stayed in the Inbox."
+      ? "No valid recipient address, so the digest stayed under Work → Digests."
       : null;
   if (problem || !config) {
     await prisma.digest.update({ where: { id: input.digestId }, data: { emailError: problem } });
@@ -494,7 +494,7 @@ async function emailDigest(input: {
   if (allowed.length === 0) {
     await prisma.digest.update({
       where: { id: input.digestId },
-      data: { emailError: "Every recipient unsubscribed, so the digest stayed in the Inbox." },
+      data: { emailError: "Every recipient unsubscribed, so the digest stayed under Work → Digests." },
     });
     return;
   }

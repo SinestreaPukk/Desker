@@ -294,7 +294,7 @@ export function DetailedInsightsView({ project }: { project: string }) {
                             </span>{" "}
                             ·{" "}
                             <Link
-                              href={`/p/${project}/inbox/${item.conversationId}`}
+                              href={`/p/${project}/conversations/${item.conversationId}`}
                               className="text-accent hover:underline"
                             >
                               View conversation

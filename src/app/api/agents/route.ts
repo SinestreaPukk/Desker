@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { agentInputSchema } from "@/lib/validation";
+import { templateById } from "@/lib/content";
 import { findProject, projectsVisibleTo } from "@/lib/projects";
 import { canPublishAgent } from "@/lib/billing/limits";
 import { toAgentDetail, type AgentSummaryDto } from "@/lib/serialize";
 import { runModeOf } from "@/lib/work/cadence";
 import { assertProjectGrounded } from "@/lib/work/project-context";
+import { agentStatusFacts } from "@/lib/work/agent-status-load";
+import { describeAgentStatus } from "@/lib/work/agent-status";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,6 +56,10 @@ export async function GET(request: Request) {
       );
     }
 
+    // Last run, next run, what waits on a person and what is broken - one
+    // verdict per agent, for the roster and the agent page.
+    const facts = project ? await agentStatusFacts(project.id, project.organizationId) : null;
+
     return agents.map(
       (agent): AgentSummaryDto => ({
         id: agent.id,
@@ -66,6 +73,9 @@ export async function GET(request: Request) {
         documentCount: agent._count.documents,
         openIssueCount: openIssuesByAgent.get(agent.id) ?? 0,
         runs: runModeOf(agent.scopeOfWork),
+        ...(facts?.get(agent.id)
+          ? { health: describeAgentStatus(facts.get(agent.id)!, { project: project!.slug, agentId: agent.id }) }
+          : {}),
         updatedAt: agent.updatedAt.toISOString(),
       }),
     );
@@ -96,6 +106,8 @@ export async function POST(request: Request) {
         name: input.name,
         jobTitle: input.jobTitle,
         department: input.department || null,
+        // Only a real template counts: a stray id would put the agent in a role it is not.
+        templateId: input.templateId && templateById(input.templateId) ? input.templateId : null,
         avatarUrl: input.avatarUrl || null,
         personality: input.personality,
         responsibilities: input.responsibilities,

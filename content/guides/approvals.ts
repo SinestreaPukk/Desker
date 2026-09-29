@@ -8,9 +8,9 @@ export const guide = {
 
 ## Where things wait
 
-**Inbox → Approvals** lists every run that is holding something: a post, an email, a calendar event or a message. You see the full text, not a summary of it, along with the agent's own account of why it is asking.
+**Needs you**, at the top of the sidebar, is the one place anything waits for a person. Approvals come first: every run holding a post, an email, a calendar event or a message, with the full text - not a summary - and the agent's own account of why it is asking.
 
-The same card appears under **Work** on the run itself, so you can approve from wherever you noticed it.
+The run itself, under **Work**, says it is waiting and links straight back here. Decisions are only ever made in Needs you, so there is one list to clear, not two.
 
 ## Your three options
 
@@ -32,9 +32,9 @@ An escalation rule is a plain sentence about when to fetch a person:
 
 > Escalate if a request involves money, a legal commitment, or anything you haven't done before.
 
-The agent judges it from what actually happens in its work or a chat, not from keywords. When it fires, the item lands in **Inbox → Issues** marked *Escalated*, with the agent's reason - and the run carries on with whatever is still safe to do.
+The agent judges it from what actually happens in its work or a chat, not from keywords. When it fires, the item lands in **Needs you** marked *Escalated*, with the agent's reason - and the run carries on with whatever is still safe to do.
 
 ## If nothing is waiting
 
-An empty Approvals tab means no agent is holding anything. Anything an agent proposes on its own - a next step it thinks you should take - shows up in **Inbox → Suggestions** instead.`,
+An empty Needs you means nothing is waiting on you: no approval, no flag, no failed run, no question. When an agent proposes a next step, it lands there too, as a question to accept, snooze or dismiss.`,
 } as const;

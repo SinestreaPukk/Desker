@@ -17,7 +17,7 @@ const CAN: Record<Exclude<WorkToolId, GatedToolId>, string> = {
   calendar_list_events: "Check your calendar",
   schedule_followup: "Queue its own follow-up tasks",
   delegate_to_colleague: "Hand work to a colleague on your roster",
-  suggest_opportunity: "Raise ideas and alerts in your Inbox",
+  suggest_opportunity: "Raise ideas and alerts in Needs you",
   escalate_to_human: "Stop and ask you when it should",
 };
 

@@ -1,13 +1,11 @@
-import type { Metadata } from "next";
-import { ConversationDetail } from "./conversation-detail";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Conversation" };
-
-export default async function ConversationPage({
+/** Conversations moved out of the Inbox; links already sent in emails still work. */
+export default async function OldConversationPage({
   params,
 }: {
   params: Promise<{ project: string; conversationId: string }>;
 }) {
   const { project, conversationId } = await params;
-  return <ConversationDetail conversationId={conversationId} project={project} />;
+  redirect(`/p/${project}/conversations/${conversationId}`);
 }

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, ChevronRight, Play, Search, Workflow } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Play, Search, Workflow } from "lucide-react";
 import { toast } from "sonner";
 import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-header";
 import { AgentAvatar } from "@/components/ui/avatar";
@@ -17,7 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Note } from "@/components/ui/note";
 import { SectionTab } from "@/components/ui/section-tab";
 import { Panel } from "@/components/ui/panel";
 import {
@@ -31,6 +30,7 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { TabCount, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CollabTag, isFlagged, RunBadge, RunDetail, runTitle } from "@/components/work/run-detail";
 import { CancelRunButton, RemoveButton } from "@/components/work/row-actions";
+import { DigestList } from "@/components/work/digest-card";
 import { useAgents } from "@/hooks/use-admin-data";
 import { FINISHED, useActionItem, useActionItems, useRunScope, useScope, useSuggestions } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
@@ -52,23 +52,17 @@ function useSplitView(): boolean {
 }
 
 /**
- * The four questions an owner brings to this page, as tabs: what is there,
- * what needs me, what is coming, what got done. Four named views beat nine raw
- * statuses in a dropdown: fewer choices, in the owner's words, with the count
- * that matters on the tab itself.
+ * What an owner brings to this page, as tabs: what is there, what is moving,
+ * what got done, and the digests that sum it up. Decisions are not made here:
+ * anything waiting on a person is in Needs you, the one action queue, and a
+ * run here only points to it.
  */
-const VIEWS = ["all", "needs_you", "active", "finished"] as const;
+const VIEWS = ["all", "active", "finished", "digests"] as const;
 type View = (typeof VIEWS)[number];
 
-/** Waiting for approval, or flagged or failed and not yet marked handled. */
-function needsYou(item: ActionItemDto): boolean {
-  return item.status === "needs_approval" || item.openIssueIds.length > 0;
-}
-
 function inView(view: View, item: ActionItemDto): boolean {
-  if (view === "needs_you") return needsYou(item);
   if (view === "finished") return FINISHED.has(item.status);
-  if (view === "active") return !needsYou(item) && !FINISHED.has(item.status);
+  if (view === "active") return !FINISHED.has(item.status);
   return true;
 }
 
@@ -81,15 +75,12 @@ function matches(item: ActionItemDto, query: string): boolean {
 
 const EMPTY: Record<View, { title: string; description: string }> = {
   all: { title: "Nothing here yet", description: "" },
-  needs_you: {
-    title: "Nothing needs you",
-    description: "When an agent wants your OK, flags something or gets stuck, it shows up here.",
-  },
   active: {
     title: "Nothing running or queued",
     description: "Press New task to give an agent something to do now.",
   },
   finished: { title: "Nothing finished yet", description: "Work your agents complete lands here." },
+  digests: { title: "", description: "" },
 };
 
 /**
@@ -127,14 +118,11 @@ export function WorkView({
   // Filtered here rather than by the API: the tab counts and the groups read off the same list.
   const searched = (items.data ?? []).filter((item) => matches(item, search.trim()));
   const counts = {
-    needs_you: searched.filter((item) => inView("needs_you", item)).length,
     active: searched.filter((item) => inView("active", item)).length,
   };
   const all = searched.filter((item) => inView(view, item));
-  // What needs the owner leads, finished or not; the rest splits by whether it is still moving.
-  const needs = all.filter(needsYou);
-  const active = all.filter((item) => !needsYou(item) && !FINISHED.has(item.status));
-  const finished = all.filter((item) => !needsYou(item) && FINISHED.has(item.status));
+  const active = all.filter((item) => !FINISHED.has(item.status));
+  const finished = all.filter((item) => FINISHED.has(item.status));
 
   // The tab and the open run live in the address, so a refresh or a shared link keeps them.
   const setParam = (key: string, value: string | null) => {
@@ -151,8 +139,8 @@ export function WorkView({
     setSelectedId(id);
     setParam("run", id);
   }, []);
-  // Nothing chosen yet: open what needs the owner, else the newest run that has something to read.
-  const shown = selectedId ?? all.find((item) => item.status === "needs_approval")?.id ?? all.find((item) => item.status !== "queued")?.id ?? all[0]?.id ?? null;
+  // Nothing chosen yet: open the newest run that has something to read.
+  const shown = selectedId ?? all.find((item) => item.status !== "queued")?.id ?? all[0]?.id ?? null;
 
   // One fetch for the project; each row counts the suggestions its run raised.
   const suggestions = useSuggestions({ project });
@@ -172,9 +160,8 @@ export function WorkView({
       item={item}
       project={project}
       openSuggestions={openSuggestionsByRun.get(item.id) ?? 0}
-      prominent={group === "Needs you"}
-      // Running and Queued say the state in their heading; Needs you and Finished mix reasons, so they show it.
-      showStatus={!group || group === "Needs you"}
+      // Running and Queued say the state in their heading, except a run paused on a person.
+      showStatus={!group || item.status === "needs_approval" || item.openIssueIds.length > 0}
       selected={split && item.id === shown}
       onSelect={split ? select : undefined}
     />
@@ -183,12 +170,6 @@ export function WorkView({
   const list = (
     <div className="space-y-6">
       {view === "all" && !search ? <TodayStrip items={items.data ?? []} /> : null}
-
-      {needs.length > 0 ? (
-        <RunGroup label="Needs you" count={needs.length}>
-          {needs.map((item) => row(item, "Needs you"))}
-        </RunGroup>
-      ) : null}
 
       {groupActive(active).map((group) => (
         <RunGroup key={group.label} label={group.label} count={group.items.length}>
@@ -222,7 +203,7 @@ export function WorkView({
     <Page>
       <PageHeader
         title="Work"
-        description="What your agents are doing, what they finished, and what needs your OK."
+        description="What your agents are doing and what they finished. Anything waiting on you is in Needs you."
         actions={<RunAgentDialog agents={agents.data ?? []} defaultAgentId={agentId} />}
       />
 
@@ -234,15 +215,12 @@ export function WorkView({
         >
           <TabsList className="w-max" aria-label="Show">
             <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="needs_you" className="whitespace-nowrap">
-              Needs you
-              <TabCount value={counts.needs_you} tone="warning" label="waiting" />
-            </TabsTrigger>
             <TabsTrigger value="active" className="whitespace-nowrap">
               Running &amp; queued
               <TabCount value={counts.active} tone="accent" label="active" />
             </TabsTrigger>
             <TabsTrigger value="finished">Finished</TabsTrigger>
+            <TabsTrigger value="digests">Digests</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -284,7 +262,9 @@ export function WorkView({
       </PageToolbar>
 
       <PageBody>
-        {items.isLoading ? (
+        {view === "digests" ? (
+          <DigestList project={project} agentId={agentId} status="all" />
+        ) : items.isLoading ? (
           <LoadingRows count={4} />
         ) : items.error ? (
           <ErrorState message={errorMessage(items.error)} onRetry={() => void items.refetch()} />
@@ -301,7 +281,7 @@ export function WorkView({
           />
         ) : all.length === 0 && view !== "all" ? (
           <EmptyState
-            icon={view === "needs_you" ? CheckCircle2 : Workflow}
+            icon={Workflow}
             title={EMPTY[view].title}
             description={EMPTY[view].description}
           />
@@ -487,23 +467,14 @@ function RunGroup({
   children: React.ReactNode;
 }) {
   const id = `work-${label.replace(/\s+/g, "-").toLowerCase()}`;
-  const waiting = label === "Needs you";
   const Heading = level === 2 ? "h2" : "h3";
   return (
     <section aria-labelledby={id} className={dense ? "[--row-y:0.625rem]" : undefined}>
       <Heading id={id} className="mb-2 flex items-center gap-2 px-1 text-sm font-semibold text-ink">
-        {level === 2 ? <SectionTab tone={waiting ? "coral" : "sky"}>{label}</SectionTab> : label}
+        {level === 2 ? <SectionTab tone="sky">{label}</SectionTab> : label}
         <span className="font-normal text-ink-muted">{count}</span>
       </Heading>
-      {/* What waits on you is a note on the desk, as on the site; the rest
-          stays in a plain group. */}
-      {waiting ? (
-        <Note tone="coral" className="overflow-hidden">
-          {children}
-        </Note>
-      ) : (
-        <Panel className="overflow-hidden">{children}</Panel>
-      )}
+      <Panel className="overflow-hidden">{children}</Panel>
     </section>
   );
 }
@@ -520,7 +491,6 @@ function RunRow({
   item,
   project,
   openSuggestions,
-  prominent = false,
   showStatus = true,
   selected = false,
   onSelect,
@@ -528,8 +498,6 @@ function RunRow({
   item: ActionItemDto;
   project: string;
   openSuggestions: number;
-  /** Waiting on the owner: billed a size up, with the page's one solid action. */
-  prominent?: boolean;
   showStatus?: boolean;
   selected?: boolean;
   onSelect?: (id: string) => void;
@@ -561,7 +529,7 @@ function RunRow({
         name={item.agent.name}
         src={item.agent.avatarUrl}
         seed={item.agent.id}
-        size={prominent ? "md" : "sm"}
+        size="sm"
         className="shrink-0"
       />
       <div className="flex min-w-0 flex-1 items-center gap-3 border-b border-line/70 py-[var(--row-y,0.875rem)] pr-4 group-last/row:border-b-0">
@@ -569,7 +537,7 @@ function RunRow({
           <p
             className={cn(
               "text-ink",
-              prominent ? "text-base font-semibold" : "text-sm font-medium",
+              "text-sm font-medium",
               queued ? "line-clamp-2" : "truncate",
             )}
           >
@@ -599,19 +567,19 @@ function RunRow({
         {/* One state per row: an escalation outranks how the run ended. */}
         {showStatus || isFlagged(item) ? <RunBadge item={item} /> : null}
         <div className="relative z-10 flex items-center gap-1">
-          {prominent ? (
-            <Button size="sm" asChild>
-              <Link href={`/p/${project}/work/${item.id}`} onClick={open}>
-                Review
+          {item.status === "needs_approval" || item.openIssueIds.length > 0 ? (
+            <Button size="sm" variant="secondary" asChild>
+              <Link href={`/p/${project}/needs-you?item=${item.status === "needs_approval" ? item.id : item.openIssueIds[0]}`}>
+                In Needs you
               </Link>
             </Button>
           ) : null}
           {item.status === "in_progress" && !onSelect ? <CancelRunButton id={item.id} /> : null}
-          {removable && !prominent && !onSelect ? (
+          {removable && !onSelect ? (
             <RemoveButton targets={[{ kind: "run", id: item.id }]} what={queued ? "this queued run" : "this run"} />
           ) : null}
         </div>
-        {prominent ? null : <ChevronRight className="size-4 shrink-0 text-ink-subtle" aria-hidden />}
+        <ChevronRight className="size-4 shrink-0 text-ink-subtle" aria-hidden />
       </div>
     </div>
   );
@@ -643,9 +611,13 @@ function collect(items: ActionItemDto[], labelOf: (item: ActionItemDto) => strin
   return order.filter((key) => groups.has(key)).map((key) => ({ label: key, items: groups.get(key)! }));
 }
 
-/** Running and Queued; what needs the owner is its own group, above. */
+/** Running, Paused (waiting on a person, in Needs you) and Queued. */
 function groupActive(items: ActionItemDto[]): Group[] {
-  return collect(items, (item) => (item.status === "queued" ? "Queued" : "Running"), ["Running", "Queued"]);
+  return collect(
+    items,
+    (item) => (item.status === "queued" ? "Queued" : item.status === "needs_approval" ? "Paused" : "Running"),
+    ["Running", "Paused", "Queued"],
+  );
 }
 
 /** Newest first within each day (the API already sorts). */

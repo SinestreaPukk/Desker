@@ -20,7 +20,7 @@ const BUDGET_KB = {
   /** The landing page alone may pay for the animation library. */
   landing: 380,
   roster: 300,
-  inbox: 300,
+  needsYou: 300,
   insights: 300,
 };
 
@@ -103,8 +103,8 @@ test.describe("the app screens", () => {
     const roster = await measureJs(page, `/p/${project}/roster`);
     expect(roster, `roster downloaded ${roster} kB`).toBeLessThanOrEqual(BUDGET_KB.roster);
 
-    const inbox = await measureJs(page, `/p/${project}/inbox`);
-    expect(inbox, `inbox downloaded ${inbox} kB`).toBeLessThanOrEqual(BUDGET_KB.inbox);
+    const needsYou = await measureJs(page, `/p/${project}/needs-you`);
+    expect(needsYou, `Needs you downloaded ${needsYou} kB`).toBeLessThanOrEqual(BUDGET_KB.needsYou);
 
     const insights = await measureJs(page, `/p/${project}/insights`);
     expect(insights, `insights downloaded ${insights} kB`).toBeLessThanOrEqual(BUDGET_KB.insights);

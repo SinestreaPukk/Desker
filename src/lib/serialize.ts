@@ -7,6 +7,7 @@
  */
 import { toStringArray } from "@/lib/agent-fields";
 import type { RunMode } from "@/lib/work/cadence";
+import type { AgentStatus } from "@/lib/work/agent-status";
 
 export interface AgentSummaryDto {
   id: string;
@@ -21,10 +22,12 @@ export interface AgentSummaryDto {
   openIssueCount: number;
   /** Whether it works on its own, and when. */
   runs: { mode: RunMode; cadence: string | null };
+  /** Is it doing its job, and what to do if not. Present when listed for one project. */
+  health?: AgentStatus;
   updatedAt: string;
 }
 
-export interface AgentDetailDto extends Omit<AgentSummaryDto, "conversationCount" | "documentCount" | "openIssueCount" | "runs"> {
+export interface AgentDetailDto extends Omit<AgentSummaryDto, "conversationCount" | "documentCount" | "openIssueCount" | "runs" | "health"> {
   personality: string;
   responsibilities: string[];
   allowedTools: string[];

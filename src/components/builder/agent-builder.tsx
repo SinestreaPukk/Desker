@@ -79,9 +79,11 @@ import { DuplicateAgentDialog } from "./duplicate-agent-dialog";
 import { DocumentsPanel } from "./documents-panel";
 import { ProjectContextPanel } from "./project-context-panel";
 import { SharePanel } from "./share-panel";
+import { AgentHealth } from "@/components/work/agent-health";
+import { RulesPanel } from "./rules-panel";
 import { useSpaceKind } from "@/components/space-kind";
 import { spaceCopy } from "@/lib/space-copy";
-import { useDeleteAgent, useUpdateAgent } from "@/hooks/use-admin-data";
+import { useAgents, useDeleteAgent, useUpdateAgent } from "@/hooks/use-admin-data";
 import { useRunScope, useScope } from "@/hooks/use-work-data";
 import { describeCadence } from "@/lib/work/cadence";
 import { errorMessage, ApiError } from "@/lib/api-client";
@@ -240,6 +242,8 @@ export function AgentBuilder({
   const router = useRouter();
   const update = useUpdateAgent(agent.id);
   const remove = useDeleteAgent();
+  // How it is doing - last run, next run, what waits, what broke - from the roster's own list.
+  const health = useAgents(project).data?.find((entry) => entry.id === agent.id)?.health;
 
   const [form, setForm] = React.useState<FormState>(() => toFormState(agent));
   const [saved, setSaved] = React.useState<FormState>(() => toFormState(agent));
@@ -539,11 +543,13 @@ export function AgentBuilder({
           <div className="mx-auto max-w-3xl space-y-5 pb-16">
             <FormError message={saveError} />
 
+            {health ? <AgentHealth status={health} project={project} /> : null}
             <ScheduleSummary agentId={agent.id} onEdit={() => setSection("work")} />
             <BoundariesCard
               agentId={agent.id}
               escalationRule={saved.escalationRule}
               onEdit={() => setSection("work")}
+              onRules={() => setSection("profile")}
             />
 
             <SectionNav value={section} onChange={setSection} />
@@ -567,6 +573,8 @@ export function AgentBuilder({
 
             {/* Profile ---------------------------------------------------- */}
             {section === "profile" ? (
+            <>
+            <RulesPanel agentId={agent.id} agentName={agent.name} project={project} />
             <Panel>
               <PanelHeader>
                 <div>
@@ -761,6 +769,7 @@ export function AgentBuilder({
                 ) : null}
               </PanelBody>
             </Panel>
+            </>
             ) : null}
 
             {/* Sharing & model ------------------------------------------- */}
