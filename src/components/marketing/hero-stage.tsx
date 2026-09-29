@@ -1,11 +1,12 @@
 "use client";
 
 /**
- * The hero's demo: a work desk. Five of the staff sit in a rail on the left,
- * and the one on duty does a real piece of work on the right - a researcher's
- * brief with its comparison and sources, a marketer's post with its graphic,
- * a sales rep's lead list filling in, an assistant's meeting booked and
- * followed up, a support desk's overnight inbox triaged. Real output, not a
+ * The hero's demo: a work desk. Six of the staff sit in a rail on the left -
+ * four at a business, two in one person's private space - and the one on duty
+ * does a real piece of work on the right: a researcher's brief with its
+ * sources, a marketer's post, a money manager's statement added up, a sales
+ * rep's lead list, a support desk's overnight inbox, a week planned around a
+ * birthday. Real output, not a
  * chat. Each step ticks as it happens; anything that would leave the
  * building ends waiting for your yes.
  *
@@ -19,7 +20,7 @@
  * which shows that scene finished and holds it.
  */
 import * as React from "react";
-import { Check, FileSearch, Globe, Mail, Pause, Play } from "lucide-react";
+import { Check, FileSearch, Globe, Lock, Mail, Pause, Play } from "lucide-react";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,8 @@ function useReducedMotionPref() {
 
 interface Scene {
   id: string;
+  /** Whose desk it is: a business, or one person's private space. */
+  place: string;
   agent: string;
   seed: string;
   role: string;
@@ -60,6 +63,7 @@ interface Scene {
 const SCENES: readonly Scene[] = [
   {
     id: "research",
+    place: "ABC Inc. · Work",
     agent: "Sol",
     seed: "sol",
     role: "Researcher",
@@ -75,6 +79,7 @@ const SCENES: readonly Scene[] = [
   },
   {
     id: "marketing",
+    place: "ABC Inc. · Work",
     agent: "Nova",
     seed: "nova",
     role: "Marketer",
@@ -89,7 +94,24 @@ const SCENES: readonly Scene[] = [
     render: (beat) => <MarketingScene beat={beat} />,
   },
   {
+    id: "money",
+    place: "Maya · Personal",
+    agent: "Penny",
+    seed: "penny",
+    role: "Money",
+    result: "Check-in sent",
+    waits: false,
+    captions: [
+      "Monday 08:00 - Penny opens Maya's statement",
+      "Adding up 46 transactions, card numbers masked",
+      "Sorting spending into categories",
+      "Check-in sent: one subscription to cancel",
+    ],
+    render: (beat) => <MoneyScene beat={beat} />,
+  },
+  {
     id: "sales",
+    place: "ABC Inc. · Work",
     agent: "Leo",
     seed: "leo-leads",
     role: "Sales rep",
@@ -104,22 +126,8 @@ const SCENES: readonly Scene[] = [
     render: (beat) => <SalesScene beat={beat} />,
   },
   {
-    id: "assistant",
-    agent: "Kai",
-    seed: "kai",
-    role: "Assistant",
-    result: "Needs your yes",
-    waits: true,
-    captions: [
-      "After Thursday's meeting - Kai reads your notes",
-      "Booking the next call in your calendar",
-      "Pulling out the action items",
-      "Follow-up to Dana drafted for your yes",
-    ],
-    render: (beat) => <AssistantScene beat={beat} />,
-  },
-  {
     id: "support",
+    place: "ABC Inc. · Work",
     agent: "Mia",
     seed: "mia",
     role: "Support",
@@ -132,6 +140,22 @@ const SCENES: readonly Scene[] = [
       "11 answered, 1 waiting for you",
     ],
     render: (beat) => <SupportScene beat={beat} />,
+  },
+  {
+    id: "life",
+    place: "Maya · Personal",
+    agent: "Juno",
+    seed: "juno",
+    role: "Life admin",
+    result: "Needs your yes",
+    waits: true,
+    captions: [
+      "Sunday 18:00 - Juno plans Maya's week",
+      "Reading the calendar: one clash on Wednesday",
+      "Spotted Sam's birthday on Thursday",
+      "Gift time proposed, waiting for your yes",
+    ],
+    render: (beat) => <LifeScene beat={beat} />,
   },
 ];
 
@@ -212,7 +236,7 @@ export function HeroStage({ className, ...props }: React.ComponentProps<"div">) 
           <i className="size-2.5 rounded-full bg-line-strong/40" />
           <i className="size-2.5 rounded-full bg-line-strong/40" />
         </span>
-        <span className="hidden shrink-0 text-xs font-semibold text-ink sm:inline">ABC Inc. · Work</span>
+        <span className="hidden shrink-0 text-xs font-semibold text-ink sm:inline">{current.place}</span>
         <span
           key={`${scene}-${beat}`}
           className="ml-auto truncate text-right text-xs text-ink-muted animate-in fade-in duration-500"
@@ -904,6 +928,163 @@ export function PeopleScene({ beat }: { beat: number }) {
   );
 }
 
+/* --- The personal space ------------------------------------------------------ */
+
+const SPENDING = [
+  { category: "Rent", amount: 18000 },
+  { category: "Eating out", amount: 4900 },
+  { category: "Groceries", amount: 3250 },
+  { category: "Transport", amount: 1420 },
+  { category: "Subscriptions", amount: 1127 },
+];
+
+export function MoneyScene({ beat }: { beat: number }) {
+  const top = SPENDING[0]!.amount;
+  return (
+    <div className="space-y-4">
+      <RunHeader
+        name="Penny"
+        seed="penny"
+        title="Your money this week"
+        meta="Every Monday 08:00 · march-statement.csv"
+        status={beat >= 3 ? "done" : "in_progress"}
+      />
+      <Steps
+        beat={beat}
+        steps={["Added up 46 transactions, to the cent", "Sorted them into categories", "Found 3 subscriptions, one unused"]}
+      />
+      <Appear when={beat >= 2}>
+        <div className="rounded-lg border border-line bg-surface p-3.5">
+          <p className="text-sm font-semibold text-ink">฿28,697 out · ฿2,100 under budget</p>
+          <ul className="mt-3 space-y-2">
+            {SPENDING.map((row) => (
+              <li key={row.category} className="grid grid-cols-[6rem_1fr_4.5rem] items-center gap-2 text-xs">
+                <span className="truncate text-ink-muted">{row.category}</span>
+                <span className="h-2 overflow-hidden rounded-full bg-surface-2">
+                  <span
+                    className="block h-full rounded-full bg-accent transition-[width] duration-700 ease-out"
+                    style={{ width: beat >= 2 ? `${(row.amount / top) * 100}%` : "0%" }}
+                  />
+                </span>
+                <span className="text-right tabular-nums text-ink">฿{row.amount.toLocaleString("en-US")}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Appear>
+      <Appear when={beat >= 3} className="flex flex-wrap items-center gap-2">
+        <ToolChip icon={Mail}>Disney+ ฿289 a month, unused since June</ToolChip>
+        <ToolChip icon={Lock}>Card numbers masked</ToolChip>
+      </Appear>
+    </div>
+  );
+}
+
+const MAYA_WEEK: Record<string, string | null> = { Mon: "Gym", Tue: null, Wed: "Dentist", Thu: "Sam's birthday", Fri: "Drinks" };
+
+export function LifeScene({ beat }: { beat: number }) {
+  return (
+    <div className="space-y-4">
+      <RunHeader
+        name="Juno"
+        seed="juno"
+        title="Plan the week ahead"
+        meta="Sunday 18:00 · your calendar"
+        status={beat >= 3 ? "needs_approval" : "in_progress"}
+      />
+      <div className="grid grid-cols-5 gap-1.5">
+        {WEEK.map((day) => {
+          const event = MAYA_WEEK[day];
+          const birthday = day === "Thu";
+          return (
+            <div key={day} className="rounded-md border border-line bg-surface p-1.5">
+              <p className="text-center text-xs font-semibold text-ink-muted">{day}</p>
+              <div className="mt-1.5 h-12 space-y-1">
+                {event ? (
+                  <span
+                    className={cn(
+                      "block rounded-sm px-1 py-0.5 text-xs leading-tight transition-colors duration-500",
+                      birthday && beat >= 2 ? "bg-accent-soft font-semibold text-accent-soft-fg" : "bg-surface-3 text-ink-muted",
+                    )}
+                  >
+                    {event}
+                  </span>
+                ) : null}
+                {day === "Wed" ? (
+                  <span
+                    className={cn(
+                      "block rounded-sm bg-accent-soft px-1 py-0.5 text-xs font-semibold leading-tight text-accent-soft-fg transition-opacity duration-500",
+                      beat >= 3 ? "opacity-100" : "opacity-0",
+                    )}
+                  >
+                    18:00 Gift
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <Appear when={beat >= 1}>
+        <ul className="space-y-1 text-sm text-ink">
+          <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-positive" aria-hidden />Dentist moved clear of your 3pm call</li>
+          <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-positive" aria-hidden />Reply to your landlord drafted</li>
+        </ul>
+      </Appear>
+      <Appear when={beat >= 3}>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface-2 px-3.5 py-2.5">
+          <span className="text-sm text-ink">
+            <span className="font-medium">Gift shopping for Sam</span>
+            <span className="text-ink-muted"> · Wed 18:00</span>
+          </span>
+          <Decide label="Approve and add" />
+        </div>
+      </Appear>
+    </div>
+  );
+}
+
+/** One run, from a role's own record: for roles without a scene of their own. */
+export interface WorkRecord {
+  trigger: string;
+  task: string;
+  steps: readonly string[];
+  output: { label: string; title: string; lines: readonly string[] };
+  status: string;
+}
+
+export function WorkScene({ beat, work, agent, seed }: { beat: number; work: WorkRecord; agent: string; seed: string }) {
+  const last = work.steps.length;
+  return (
+    <div className="space-y-4">
+      <RunHeader
+        name={agent}
+        seed={seed}
+        title={work.task}
+        meta={work.trigger}
+        status={beat >= 3 ? work.status : "in_progress"}
+      />
+      <Steps beat={Math.min(beat, last)} steps={work.steps} />
+      <Appear when={beat >= 3}>
+        <div className="rounded-lg border border-line bg-surface p-3.5">
+          <p className="meta">{work.output.label}</p>
+          <p className="mt-1 text-sm font-semibold text-ink">{work.output.title}</p>
+          <ul className="mt-2 space-y-1 text-sm text-ink-muted">
+            {work.output.lines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          {work.status === "needs_approval" ? (
+            <div className="mt-3 flex">
+              <Decide label="Approve" />
+            </div>
+          ) : null}
+        </div>
+      </Appear>
+    </div>
+  );
+}
+
 /** Each role's own scene, for the showcase. */
 export const ROLE_SCENES: Record<string, (props: { beat: number }) => React.ReactNode> = {
   "customer-support": SupportScene,
@@ -914,5 +1095,7 @@ export const ROLE_SCENES: Record<string, (props: { beat: number }) => React.Reac
   "dev-support": DevScene,
   "sales-development": SalesScene,
   "people-ops": PeopleScene,
+  "money-manager": MoneyScene,
+  "personal-assistant": LifeScene,
 };
 export const SCENE_BEATS = BEATS;

@@ -13,6 +13,7 @@ import { publishAdminEvent } from "@/lib/events";
 import { toStringArray } from "@/lib/agent-fields";
 import { buildSystemPrompt, buildCompanyContextPrompt } from "@/lib/agent-prompt";
 import { effectiveContext } from "@/lib/work/context";
+import { spaceKind } from "@/lib/space";
 import {
   getProvider,
 
@@ -137,7 +138,7 @@ export async function* runAgentTurn(
     // answer, so a missing project is an error rather than a free turn.
     prisma.project.findUniqueOrThrow({
       where: { id: agent.projectId },
-      select: { organizationId: true, context: true },
+      select: { organizationId: true, context: true, organization: { select: { kind: true } } },
     }),
     prisma.message.findMany({
       where: { conversationId },
@@ -179,9 +180,11 @@ export async function* runAgentTurn(
       ? allowedTools
       : allowedTools.filter((tool) => tool !== "search_documents");
 
+  const kind = spaceKind(project.organization.kind);
   const companyContext = effectiveContext({
     projectContext: project.context,
     agentContext: scope?.context,
+    kind,
   });
 
   let systemPrompt: string;
@@ -193,6 +196,7 @@ export async function* runAgentTurn(
       personality: agent.personality,
       companyContext,
       documentNames: documents.map((document) => document.filename),
+      kind,
     });
   } else {
     systemPrompt = buildSystemPrompt({
@@ -208,6 +212,7 @@ export async function* runAgentTurn(
       recall,
       companyContext,
       audience: isColleague ? "colleague" : "client",
+      kind,
     });
   }
 

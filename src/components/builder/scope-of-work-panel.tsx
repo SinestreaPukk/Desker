@@ -33,7 +33,8 @@ import { ScopeFlow } from "./scope-flow";
 import { HelpLink } from "@/components/help/help-panel";
 import { markFlowViewSeen } from "@/components/help/checklist-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AGENT_CONTEXT_QUESTIONS } from "@/lib/work/context";
+import { contextQuestionsFor } from "@/lib/work/context";
+import { useSpaceKind } from "@/components/space-kind";
 import {
   DigestSettings,
   ScopeOfWorkForm,
@@ -114,6 +115,7 @@ function ScopeEditor({
   project: string;
   scope: ScopeDto;
 }) {
+  const kind = useSpaceKind();
   const documents = useDocuments(agentId);
   const draftContext = useDraftAgentContext(agentId);
   const save = useSaveScope(agentId);
@@ -271,7 +273,7 @@ function ScopeEditor({
               showModeNote={false}
               contextDraft={
                 <ContextDraftButton
-                  questions={AGENT_CONTEXT_QUESTIONS}
+                  questions={contextQuestionsFor(kind).agent}
                   value={form.contextAnswers}
                   onChange={(contextAnswers) => setForm({ ...form, contextAnswers })}
                   draft={() => draftContext.mutateAsync()}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { PUBLICLY_REACHABLE } from "@/lib/conversation";
 import { EmbedChat } from "./embed-chat";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +23,8 @@ export default async function EmbedPage({
 }) {
   const { agentId } = await params;
 
-  const agent = await prisma.agent.findUnique({
-    where: { id: agentId },
+  const agent = await prisma.agent.findFirst({
+    where: { id: agentId, ...PUBLICLY_REACHABLE },
     select: { id: true, status: true },
   });
   if (!agent || agent.status !== "published") notFound();

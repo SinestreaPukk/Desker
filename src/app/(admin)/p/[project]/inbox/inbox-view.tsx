@@ -303,7 +303,7 @@ function ConversationList({
       <EmptyState
         icon={InboxIcon}
         title="No conversations yet"
-        description="Once a client opens a published agent's link or widget and sends a message, the transcript lands here."
+        description="Chats that come in through a published agent's shared link or website widget land here, for roles that talk to clients or the public."
       />
     );
   }

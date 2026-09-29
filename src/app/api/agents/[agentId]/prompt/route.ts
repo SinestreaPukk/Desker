@@ -6,6 +6,7 @@ import { buildSystemPrompt } from "@/lib/agent-prompt";
 import { toolDefinitionsFor } from "@/lib/tools/registry";
 import { buildRunPrompt } from "@/lib/work/prompt";
 import { effectiveContext } from "@/lib/work/context";
+import { spaceKind } from "@/lib/space";
 import { WORK_TOOL_IDS, WORK_TOOL_METADATA, scopeTools } from "@/lib/work/tools";
 import { findIntegration, resolveEmail } from "@/lib/work/integrations";
 import type { AutonomyMode } from "@/lib/work/types";
@@ -27,7 +28,7 @@ export async function GET(_request: Request, { params }: Params) {
 
     const agent = await prisma.agent.findFirst({
       where: { id: agentId, ...agentsVisibleTo(userId) },
-      include: { project: { select: { organizationId: true, context: true } } },
+      include: { project: { select: { organizationId: true, context: true, organization: { select: { kind: true } } } } },
     });
     if (!agent) throw new HttpError(404, "That agent no longer exists.");
 
@@ -50,9 +51,11 @@ export async function GET(_request: Request, { params }: Params) {
       resolveEmail(agent.project.organizationId),
     ]);
 
+    const kind = spaceKind(agent.project.organization.kind);
     const companyContext = effectiveContext({
       projectContext: agent.project.context,
       agentContext: scope?.context,
+      kind,
     });
 
     const prompt = buildSystemPrompt({
@@ -67,6 +70,7 @@ export async function GET(_request: Request, { params }: Params) {
       colleagues,
       recall: null,
       companyContext,
+      kind,
     });
 
     const workPrompt = buildRunPrompt({
@@ -77,9 +81,11 @@ export async function GET(_request: Request, { params }: Params) {
         context: effectiveContext({
           projectContext: agent.project.context,
           agentContext: scope?.context,
+          kind,
         }),
         objectives: scope ? toStringArray(scope.objectives) : [],
       },
+      kind,
       autonomy: (scope?.autonomy as AutonomyMode) ?? "draft_only",
       documentNames: documents.map((document) => document.filename),
       hasPublishing: Boolean(publishing),

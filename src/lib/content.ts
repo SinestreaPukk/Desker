@@ -15,6 +15,7 @@ import templates from "../../content/templates.json";
 import { PLAN_IDS } from "@/lib/billing/plans";
 import { TOOL_IDS } from "@/lib/tools/registry";
 import { WORK_TOOL_IDS } from "@/lib/work/tools";
+import { SPACE_KINDS, type SpaceKind } from "@/lib/space";
 
 const link = z.object({ label: z.string().min(1), href: z.string().min(1) });
 const meta = z.object({ title: z.string().min(1).max(70), description: z.string().min(1).max(200) });
@@ -85,6 +86,24 @@ const landingSchema = z.object({
       .min(1)
       .max(6),
   }),
+  /** Business and personal, side by side: the two things Desker is for. */
+  desks: z.object({
+    ...sectionHead,
+    business: z.object({
+      label: z.string().min(1).max(32),
+      title: z.string().min(1).max(64),
+      body: z.string().min(1).max(200),
+      points: z.array(z.string().min(1).max(80)).min(2).max(4),
+    }),
+    personal: z.object({
+      label: z.string().min(1).max(32),
+      title: z.string().min(1).max(64),
+      body: z.string().min(1).max(200),
+      points: z.array(z.string().min(1).max(80)).min(2).max(4),
+    }),
+    /** The one line between them: what never crosses. */
+    wall: z.string().min(1).max(120),
+  }),
   steps: z.object({
     ...sectionHead,
     items: z
@@ -101,7 +120,7 @@ const landingSchema = z.object({
           title: z.string().min(1).max(64),
           body: z.string().min(1).max(200),
           /** Which piece of the product the tile shows. */
-          demo: z.enum(["support", "marketer", "researcher", "sales", "assistant", "approval"]),
+          demo: z.enum(["support", "marketer", "researcher", "sales", "assistant", "approval", "money", "life"]),
         }),
       )
       .min(2)
@@ -125,7 +144,12 @@ const landingSchema = z.object({
       .min(3)
       .max(8),
   }),
-  roles: z.object({ ...sectionHead, cta: z.string().min(1).max(24) }),
+  roles: z.object({
+    ...sectionHead,
+    cta: z.string().min(1).max(24),
+    /** Headings over each audience's roles. */
+    groups: z.object({ business: z.string().min(1).max(32), personal: z.string().min(1).max(32) }),
+  }),
   comparison: z
     .object({
       ...sectionHead,
@@ -223,10 +247,19 @@ export const TEMPLATE_ICONS = [
   "terminal",
   "target",
   "heart-handshake",
+  // Personal roles
+  "wallet",
+  "calendar-heart",
+  "at-sign",
+  "rocket",
+  "plane",
+  "graduation-cap",
 ] as const;
 
 const templateSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
+  /** Which kind of space hires this role: a business, or one person for their own life. */
+  audience: z.enum(SPACE_KINDS).default("business"),
   name: z.string().min(1),
   icon: z.enum(TEMPLATE_ICONS),
   jobTitle: z.string().min(1),
@@ -279,6 +312,11 @@ export type AgentTemplate = (typeof TEMPLATES)[number];
 
 export function templateById(id: string): AgentTemplate | undefined {
   return TEMPLATES.find((t) => t.id === id);
+}
+
+/** The roles a space of this kind can hire. */
+export function templatesFor(kind: SpaceKind): AgentTemplate[] {
+  return TEMPLATES.filter((t) => t.audience === kind);
 }
 
 /**

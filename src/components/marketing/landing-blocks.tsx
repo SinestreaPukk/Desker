@@ -17,6 +17,9 @@ import {
   ChevronDown,
   CircleCheckBig,
   FileUp,
+  Building,
+  Lock,
+  UserRound,
   X,
 } from "lucide-react";
 import { LANDING_ICONS, TEMPLATES, type PRODUCT_SHOTS } from "@/lib/content";
@@ -258,7 +261,15 @@ const ROLE_STAFF: Record<string, readonly [string, string]> = {
   "dev-support": ["Ada", "ada"],
   "sales-development": ["Leo", "leo-leads"],
   "people-ops": ["Rae", "rae"],
+  "money-manager": ["Penny", "penny"],
+  "personal-assistant": ["Juno", "juno"],
+  "social-media-manager": ["Remy", "remy"],
+  "career-coach": ["Theo", "theo"],
+  "travel-planner": ["Isla", "isla"],
+  "learning-coach": ["Ollie", "ollie"],
 };
+/** Who does each role in the demos, for the showcase too. */
+export { ROLE_STAFF };
 const ROLE_TONES = ["lemon", "sky", "mint", "coral", "lilac", "mint", "lemon", "sky"] as const;
 const ROLE_TILTS = [-1.2, 0.9, -0.5, 1.3, -1, 0.6, 1.1, -0.7];
 
@@ -267,39 +278,108 @@ const ROLE_TILTS = [-1.2, 0.9, -0.5, 1.3, -1, 0.6, 1.1, -0.7];
  * who does it at ABC Inc. - their face, their name, the job - rather than a
  * grid of icon cards. Each note opens that role's run on the showcase.
  */
-export function RoleGrid({ cta }: { cta: string }) {
+export function RoleGrid({ cta, groups }: { cta: string; groups: { business: string; personal: string } }) {
   return (
-    <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-      {TEMPLATES.map((role, index) => {
-        const [name, seed] = ROLE_STAFF[role.id] ?? [role.name, role.id];
-        return (
-          <li key={role.id} className="sd-rise">
-            <Link href={`/showcase#${role.id}`} className="group block h-full rounded-sm focus-visible:outline-offset-4">
-              <StickyNote
-                tone={ROLE_TONES[index % ROLE_TONES.length]!}
-                tilt={ROLE_TILTS[index % ROLE_TILTS.length]!}
-                settle={false}
-                soft
-                className="relative flex h-full flex-col px-5 pb-5 pt-6"
-              >
-                <span className="flex items-center gap-3">
-                  <AgentAvatar name={name} seed={seed} size="lg" />
-                  <span>
-                    <span className="block font-hand text-hand-cta font-bold leading-none">{name}</span>
-                    <span className="mt-1 block text-sm font-semibold">{role.name}</span>
-                  </span>
-                </span>
-                <span className="mt-3 text-sm leading-relaxed">{role.pitch}</span>
-                <span className="mt-auto flex items-center gap-1.5 pt-4 text-sm font-semibold text-accent">
-                  {cta}
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
-                </span>
-              </StickyNote>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="space-y-12">
+      {(["business", "personal"] as const).map((audience) => (
+        <section key={audience} aria-labelledby={`roles-${audience}`}>
+          <h3 id={`roles-${audience}`} className="mb-5 font-hand text-hand-cta font-bold text-ink">
+            {groups[audience]}
+          </h3>
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {TEMPLATES.filter((role) => role.audience === audience).map((role, index) => {
+              const [name, seed] = ROLE_STAFF[role.id] ?? [role.name, role.id];
+              return (
+                <li key={role.id} className="sd-rise">
+                  <Link href={`/showcase#${role.id}`} className="group block h-full rounded-sm focus-visible:outline-offset-4">
+                    <StickyNote
+                      tone={ROLE_TONES[(index + (audience === "personal" ? 2 : 0)) % ROLE_TONES.length]!}
+                      tilt={ROLE_TILTS[index % ROLE_TILTS.length]!}
+                      settle={false}
+                      soft
+                      className="relative flex h-full flex-col px-5 pb-5 pt-6"
+                    >
+                      <span className="flex items-center gap-3">
+                        <AgentAvatar name={name} seed={seed} size="lg" />
+                        <span>
+                          <span className="block font-hand text-hand-cta font-bold leading-none">{name}</span>
+                          <span className="mt-1 block text-sm font-semibold">{role.name}</span>
+                        </span>
+                      </span>
+                      <span className="mt-3 text-sm leading-relaxed">{role.pitch}</span>
+                      <span className="mt-auto flex items-center gap-1.5 pt-4 text-sm font-semibold text-accent">
+                        {cta}
+                        <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
+                      </span>
+                    </StickyNote>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/* --- Two desks: business and personal ------------------------------------- */
+
+interface Desk {
+  label: string;
+  title: string;
+  body: string;
+  points: readonly string[];
+}
+
+/**
+ * The two things Desker is for, as two notes on one desk: the business on
+ * sky, your life on mint, each with three of its people. The wall between
+ * them is the line under both - the promise that nothing crosses.
+ */
+export function Desks({ business, personal, wall }: { business: Desk; personal: Desk; wall: string }) {
+  const desks = [
+    { desk: business, tone: "sky", tilt: -0.8, Icon: Building, roles: ["researcher", "marketer", "customer-support"] },
+    { desk: personal, tone: "mint", tilt: 0.7, Icon: UserRound, roles: ["money-manager", "personal-assistant", "career-coach"] },
+  ] as const;
+  return (
+    <div>
+      <div className="grid gap-6 md:grid-cols-2 md:gap-8">
+        {desks.map(({ desk, tone, tilt, Icon, roles }) => (
+          <StickyNote key={desk.label} tone={tone} tilt={tilt} settle={false} className="sd-rise flex flex-col px-6 pb-6 pt-7 sm:px-8">
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              <Icon className="size-4" aria-hidden />
+              {desk.label}
+            </p>
+            <h3 className="mt-3 font-hand text-hand-cta font-bold leading-tight text-balance">{desk.title}</h3>
+            <p className="mt-3 text-base leading-relaxed">{desk.body}</p>
+            <ul className="mt-4 space-y-2 text-sm">
+              {desk.points.map((point) => (
+                <li key={point} className="flex gap-2">
+                  <Check className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <span className="mt-auto flex items-center gap-3 pt-6">
+              <span className="flex -space-x-2" aria-hidden>
+                {roles.map((id) => {
+                  const [name, seed] = ROLE_STAFF[id] ?? [id, id];
+                  return <AgentAvatar key={id} name={name} seed={seed} size="md" className="ring-2 ring-paper" />;
+                })}
+              </span>
+              <span className="text-sm">
+                {roles.map((id) => ROLE_STAFF[id]?.[0]).join(", ")} and more
+              </span>
+            </span>
+          </StickyNote>
+        ))}
+      </div>
+      <p className="mx-auto mt-8 flex max-w-2xl items-center justify-center gap-2 text-center text-sm font-medium text-ink">
+        <Lock className="size-4 shrink-0 text-accent" aria-hidden />
+        {wall}
+      </p>
+    </div>
   );
 }
 

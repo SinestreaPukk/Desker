@@ -79,6 +79,8 @@ import { DuplicateAgentDialog } from "./duplicate-agent-dialog";
 import { DocumentsPanel } from "./documents-panel";
 import { ProjectContextPanel } from "./project-context-panel";
 import { SharePanel } from "./share-panel";
+import { useSpaceKind } from "@/components/space-kind";
+import { spaceCopy } from "@/lib/space-copy";
 import { useDeleteAgent, useUpdateAgent } from "@/hooks/use-admin-data";
 import { useRunScope, useScope } from "@/hooks/use-work-data";
 import { describeCadence } from "@/lib/work/cadence";
@@ -184,11 +186,21 @@ const FIELD_SECTION: Record<string, EditorSection> = {
   modelProvider: "settings",
 };
 
+/** A personal assistant has no public link or widget: its last section is only the model. */
+const PERSONAL_SECTIONS = SECTIONS.map((item) =>
+  item.id === "settings"
+    ? { ...item, label: "Model", hint: "Which AI model it uses" }
+    : item.id === "knowledge"
+      ? { ...item, hint: "About you and your documents" }
+      : item,
+);
+
 function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next: EditorSection) => void }) {
+  const sections = useSpaceKind() === "personal" ? PERSONAL_SECTIONS : SECTIONS;
   return (
     <nav aria-label="Editor sections" className="-mx-1 overflow-x-auto pb-1">
       <ul className="inline-flex min-w-max items-center gap-1 rounded-lg border border-line bg-surface-2/80 p-1">
-        {SECTIONS.map((item) => {
+        {sections.map((item) => {
           const active = item.id === value;
           const Icon = item.icon;
           return (
@@ -322,6 +334,9 @@ export function AgentBuilder({
   }
 
   const [confirmUnpublish, setConfirmUnpublish] = React.useState(false);
+  const kind = useSpaceKind();
+  const personal = kind === "personal";
+  const copy = spaceCopy(kind);
   // One decision at a time: the form is grouped into sections and only the
   // current one is on screen. Edits in every section persist until saved.
   // A new agent still needs its grounding; an existing one is usually opened
@@ -335,8 +350,10 @@ export function AgentBuilder({
     }
     const result = await save({ status: "published" });
     if (!result) return;
-    toast.success(`${result.name} is live`, {
-      description: "Clients can reach them at the public link and the widget now.",
+    toast.success(personal ? `${result.name} is on` : `${result.name} is live`, {
+      description: personal
+        ? "They work on their schedule and answer you in Chat. Only you can reach them."
+        : "They work on their schedule and join the team chat. Share their link or widget if the role talks to clients.",
     });
     router.refresh();
   }
@@ -345,8 +362,10 @@ export function AgentBuilder({
     const result = await save({ status: "draft" });
     if (!result) return;
     router.refresh();
-    toast(`${result.name} is unpublished`, {
-      description: "The public link and widget stop working immediately.",
+    toast(personal ? `${result.name} is off` : `${result.name} is unpublished`, {
+      description: personal
+        ? "They stop working on their schedule until you switch them back on."
+        : "The public link and widget stop working immediately.",
       action: {
         label: "Undo",
         onClick: () => {
@@ -433,7 +452,7 @@ export function AgentBuilder({
               onClick={() => void togglePublish()}
               loading={update.isPending}
             >
-              {agent.status === "published" ? "Unpublish" : "Publish"}
+              {agent.status === "published" ? (personal ? "Switch off" : "Unpublish") : personal ? "Switch on" : "Publish"}
             </Button>
 
             <DropdownMenu>
@@ -488,9 +507,9 @@ export function AgentBuilder({
       <ConfirmDialog
         open={confirmUnpublish}
         onOpenChange={setConfirmUnpublish}
-        title={`Unpublish ${agent.name}?`}
+        title={personal ? `Switch ${agent.name} off?` : `Unpublish ${agent.name}?`}
         description="Anyone using the public link or the widget gets a 404 from the moment you confirm. Conversations and documents are kept, and you can undo right after."
-        confirmLabel="Unpublish"
+        confirmLabel={personal ? "Switch off" : "Unpublish"}
         onConfirm={unpublish}
       />
       <PromptPreviewDialog
@@ -587,7 +606,7 @@ export function AgentBuilder({
                   </Field>
 
                   <Field
-                    label="Job title"
+                    label={copy.roleLabel}
                     htmlFor="jobTitle"
                     required
                     error={fieldErrors.jobTitle?.[0]}
@@ -595,21 +614,23 @@ export function AgentBuilder({
                     <Input
                       value={form.jobTitle}
                       onChange={(event) => set("jobTitle", event.target.value)}
-                      placeholder="Customer Support Lead"
+                      placeholder={copy.rolePlaceholder}
                     />
                   </Field>
 
-                  <Field
-                    label="Team"
-                    htmlFor="department"
-                    hint="Optional. Groups the roster."
-                  >
-                    <Input
-                      value={form.department}
-                      onChange={(event) => set("department", event.target.value)}
-                      placeholder="Customer Experience"
-                    />
-                  </Field>
+                  {copy.showTeam ? (
+                    <Field
+                      label="Team"
+                      htmlFor="department"
+                      hint="Optional. Groups the roster."
+                    >
+                      <Input
+                        value={form.department}
+                        onChange={(event) => set("department", event.target.value)}
+                        placeholder={copy.teamPlaceholder}
+                      />
+                    </Field>
+                  ) : null}
                 </div>
 
                 <div className="space-y-1.5">
@@ -656,9 +677,7 @@ export function AgentBuilder({
                       set("responsibilitiesText", event.target.value)
                     }
                     rows={4}
-                    placeholder={
-                      "Answer questions about orders, shipping and returns\nHelp clients find the right product\nCollect enough detail on a bug for engineering to reproduce it"
-                    }
+                    placeholder={copy.responsibilitiesPlaceholder}
                   />
                 </Field>
 
@@ -671,7 +690,9 @@ export function AgentBuilder({
                     anyway. What it does on its own is set under Work &amp; schedule.
                   </p>
                   <div className="grid gap-2 sm:grid-cols-2">
-                  {TOOL_IDS.map((tool) => {
+                  {/* In a personal space nobody but you chats with it, so the
+                      client-facing actions (log a bug, transfer) do not apply. */}
+                  {TOOL_IDS.filter((tool) => !personal || tool === "search_documents").map((tool) => {
                     const meta = TOOL_METADATA[tool];
                     const Icon = TOOL_ICONS[meta.icon];
                     const checked = form.allowedTools.includes(tool);
@@ -729,7 +750,7 @@ export function AgentBuilder({
                         value={form.escalationRule}
                         onChange={(event) => set("escalationRule", event.target.value)}
                         rows={3}
-                        placeholder="Escalate if the client is angry, asks for a refund over $200, or mentions legal action."
+                        placeholder={copy.escalationPlaceholder}
                       />
                     </Field>
                     <EscalationRuleHelper
@@ -745,6 +766,12 @@ export function AgentBuilder({
             {/* Sharing & model ------------------------------------------- */}
             {section === "settings" ? (
               <>
+                {personal ? (
+                  <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-muted">
+                    <span className="font-medium text-ink">Private to you.</span> Assistants in your personal space have
+                    no public link or widget, and nobody else can chat with them.
+                  </p>
+                ) : (
                 <SharePanel
                   agentId={agent.id}
                   published={agent.status === "published"}
@@ -762,6 +789,7 @@ export function AgentBuilder({
                   }}
                   widgetFieldError={fieldErrors.widgetColor?.[0]}
                 />
+                )}
 
                 <Panel>
                   <PanelHeader>
@@ -911,14 +939,23 @@ function DeleteAgentItem({
 }
 
 function OnboardingChecklist({ agent }: { agent: AgentDetailDto }) {
+  const personal = useSpaceKind() === "personal";
   return (
     <div className="border-b border-accent-line bg-accent-soft px-4 py-3 sm:px-6">
       <p className="text-sm font-medium text-accent-soft-fg">
         {agent.name} is created. Two steps left:
       </p>
       <ol className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-accent-soft-fg/90">
-        <li>1. Answer company context &amp; upload reference documents</li>
-        <li>2. Chat with your agent to test work &amp; collaborate, then hit Publish</li>
+        <li>
+          {personal
+            ? "1. Answer the questions about you & upload what it should read (a statement, your CV, notes)"
+            : "1. Answer company context & upload reference documents"}
+        </li>
+        <li>
+          {personal
+            ? "2. Try it in the chat beside the editor, then switch it on"
+            : "2. Chat with your agent to test work & collaborate, then hit Publish"}
+        </li>
       </ol>
     </div>
   );

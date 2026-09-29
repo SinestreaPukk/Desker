@@ -28,10 +28,12 @@ import {
 } from "@/hooks/use-admin-data";
 import { api, errorMessage } from "@/lib/api-client";
 import { ACCEPTED_EXTENSIONS } from "@/lib/rag/extract-shared";
+import { useSpaceKind } from "@/components/space-kind";
 import { cn, formatBytes } from "@/lib/utils";
 
 export function DocumentsPanel({ agentId }: { agentId: string }) {
   const { data: documents, isPending, error, refetch } = useDocuments(agentId);
+  const personal = useSpaceKind() === "personal";
   // Deleting a document takes its text out of every future answer, and there
   // is no copy of it here to restore - so it asks first.
   const [removing, setRemoving] = React.useState<{ id: string; filename: string } | null>(null);
@@ -60,8 +62,9 @@ export function DocumentsPanel({ agentId }: { agentId: string }) {
         <div>
           <PanelTitle>Reference documents</PanelTitle>
           <PanelDescription>
-            Longer material this agent looks things up in - policies, specs, brand guidelines.
-            Short facts every agent should always know belong in Company context above.
+            {personal
+              ? "What this assistant reads: a bank or card statement (CSV from your banking app), your CV, notes, plans. Account and card numbers in a statement are masked. Short facts about you belong in About you above."
+              : "Longer material this agent looks things up in - policies, specs, brand guidelines. Short facts every agent should always know belong in Company context above."}
           </PanelDescription>
         </div>
       </PanelHeader>
@@ -287,8 +290,8 @@ function RetrievalTester({
           </p>
           {response.results.length === 0 ? (
             <p className="text-sm text-ink-muted">
-              Nothing matched. The agent would tell the client it doesn&apos;t have that
-              information.
+              Nothing matched. The agent would say it doesn&apos;t have that information
+              rather than guess.
             </p>
           ) : (
             <ul className="space-y-2">

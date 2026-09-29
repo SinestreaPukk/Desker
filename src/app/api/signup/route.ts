@@ -2,8 +2,8 @@ import { prisma } from "@/lib/db";
 import { handle, parseJson, HttpError } from "@/lib/api";
 import { hashPassword } from "@/lib/auth";
 import { signupSchema } from "@/lib/validation";
-import { uniqueSlug } from "@/lib/projects";
-import { createOrganizationFor } from "@/lib/organizations";
+import { createSpaceFor } from "@/lib/projects";
+import { personalSpaceName, spacesFor } from "@/lib/space";
 import { audit } from "@/lib/audit";
 import { findOpenInvitation } from "@/lib/invites";
 import { TERMS_VERSION } from "@/lib/legal";
@@ -85,11 +85,11 @@ export async function POST(request: Request) {
       return user;
     }
 
-    // A new account is its own tenant: it owns a fresh organisation, and that
-    // organisation gets a first project so there is somewhere to put an agent.
-    // All three or none - a user with no organisation can reach nothing.
+    // A new account founds its own spaces: a business, a personal space, or
+    // one of each ("mixed"). Each gets a first project so there is somewhere
+    // to put an agent. All or none - a user with no space can reach nothing.
     const passwordHash = await hashPassword(input.password);
-    const { user, organization } = await prisma.$transaction(async (tx) => {
+    const { user, spaces } = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email: input.email,
@@ -100,26 +100,31 @@ export async function POST(request: Request) {
         },
         select: { id: true, email: true, name: true },
       });
-      const organization = await createOrganizationFor(user.id, input.organization!, tx);
-      await tx.project.create({
-        data: {
-          name: "Default project",
-          slug: await uniqueSlug("default", tx),
-          organizationId: organization.id,
-        },
-      });
-      return { user, organization };
+      const spaces = [];
+      for (const kind of spacesFor(input.useType)) {
+        spaces.push(
+          await createSpaceFor(
+            user.id,
+            kind,
+            kind === "personal" ? personalSpaceName(input.firstName) : input.organization!,
+            tx,
+          ),
+        );
+      }
+      return { user, spaces };
     });
 
-    await audit({
-      organizationId: organization.id,
-      actorType: "user",
-      actorId: user.id,
-      action: "organization.created",
-      targetType: "organization",
-      targetId: organization.id,
-      metadata: { name: organization.name, via: "signup" },
-    });
+    for (const space of spaces) {
+      await audit({
+        organizationId: space.id,
+        actorType: "user",
+        actorId: user.id,
+        action: "organization.created",
+        targetType: "organization",
+        targetId: space.id,
+        metadata: { name: space.name, kind: space.kind, via: "signup" },
+      });
+    }
 
     return user;
   });

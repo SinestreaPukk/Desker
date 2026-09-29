@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { PUBLICLY_REACHABLE } from "@/lib/conversation";
 import { HttpError, jsonError } from "@/lib/api";
 import { sseHeaders } from "@/lib/sse";
 
@@ -37,8 +38,8 @@ export async function GET(request: Request, { params }: Params) {
     const sessionId = url.searchParams.get("sessionId");
     if (!sessionId) throw new HttpError(400, "sessionId is required.");
 
-    const agent = await prisma.agent.findUnique({
-      where: { id: agentId },
+    const agent = await prisma.agent.findFirst({
+      where: { id: agentId, ...PUBLICLY_REACHABLE },
       select: { status: true },
     });
     if (!agent || agent.status !== "published") {

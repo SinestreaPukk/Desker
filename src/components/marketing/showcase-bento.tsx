@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
  * is inert.
  */
 
-type Demo = "support" | "marketer" | "researcher" | "sales" | "assistant" | "approval";
+type Demo = "support" | "marketer" | "researcher" | "sales" | "assistant" | "approval" | "money" | "life";
 type Item = { label: string; title: string; body: string; demo: Demo };
 
 const AGENT: Partial<Record<Demo, { name: string; seed: string }>> = {
@@ -21,6 +21,8 @@ const AGENT: Partial<Record<Demo, { name: string; seed: string }>> = {
   researcher: { name: "Sol", seed: "sol" },
   sales: { name: "Leo", seed: "leo-leads" },
   assistant: { name: "Kai", seed: "kai" },
+  money: { name: "Penny", seed: "penny" },
+  life: { name: "Juno", seed: "juno" },
 };
 
 /**
@@ -35,6 +37,8 @@ const PLACE: Record<Demo, string> = {
   researcher: "",
   sales: "",
   assistant: "sm:col-span-2 lg:col-span-1",
+  money: "",
+  life: "sm:col-span-2 lg:col-span-1",
 };
 
 export function ShowcaseBento({ items }: { items: readonly Item[] }) {
@@ -97,6 +101,10 @@ function Artifact({ demo }: { demo: Demo }) {
       return <MiniLeads />;
     case "assistant":
       return <MiniInvite />;
+    case "money":
+      return <MiniMoney />;
+    case "life":
+      return <MiniBirthday />;
   }
 }
 
@@ -213,6 +221,51 @@ function MiniInvite() {
         <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
           <CalendarClock className="size-3.5" aria-hidden />
           Proposed · sends when you approve
+        </span>
+      </span>
+    </Mini>
+  );
+}
+
+/** Penny's check-in: the month, added up, and the one thing to do about it. */
+function MiniMoney() {
+  const rows = [
+    ["Rent", 18000],
+    ["Eating out", 4900],
+    ["Groceries", 3250],
+  ] as const;
+  return (
+    <Mini className="space-y-2">
+      <span className="flex items-center justify-between gap-2">
+        <span className="meta whitespace-nowrap">March · 46 transactions</span>
+        <span className="text-xs font-semibold text-ink tabular-nums">฿28,697</span>
+      </span>
+      {rows.map(([label, amount]) => (
+        <span key={label} className="grid grid-cols-[5.5rem_1fr] items-center gap-2 text-xs">
+          <span className="truncate text-ink-muted">{label}</span>
+          <span className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+            <span className="block h-full rounded-full bg-accent" style={{ width: `${(amount / 18000) * 100}%` }} />
+          </span>
+        </span>
+      ))}
+      <span className="block text-xs text-ink">Disney+ ฿289 a month, unused since June: cancel?</span>
+    </Mini>
+  );
+}
+
+/** Juno's proposal: an hour for the gift, before the day. */
+function MiniBirthday() {
+  return (
+    <Mini className="flex items-center gap-3">
+      <span className="flex size-10 shrink-0 flex-col items-center justify-center rounded-md border border-line bg-surface leading-none">
+        <span className="meta">Wed</span>
+        <span className="mt-0.5 text-base font-semibold text-ink">18</span>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium text-ink">Gift shopping for Sam</span>
+        <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
+          <CalendarClock className="size-3.5" aria-hidden />
+          Birthday Thursday · added when you approve
         </span>
       </span>
     </Mini>

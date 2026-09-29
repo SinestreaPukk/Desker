@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * A hero note gives a small wiggle when the demo beside it reaches that
- * agent's "waiting for your yes" - Nova's note as her post queues, Kai's as
- * his email does - so the note and the work it is about read as one thing.
+ * agent's "waiting for your yes" - Nova's note as her post queues, Juno's as
+ * the gift hour does - so the note and the work it is about read as one thing.
  * Listens for the event HeroStage sends; no motion under reduced motion.
  */
 export function NoteNudge({ agent, className, children }: { agent: string; className?: string; children: React.ReactNode }) {

@@ -13,6 +13,8 @@ import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { searchDocuments } from "@/lib/rag/search-documents";
 import { searchDocumentsInput } from "@/lib/rag/search-documents-tool";
+import { storage } from "@/lib/storage";
+import { describeSpending, parseStatement, summarizeSpending, type Transaction } from "@/lib/money/statement";
 import type { ToolCall } from "@/lib/llm/provider";
 import { inngest } from "@/lib/jobs/client";
 import { afterResponse } from "@/lib/after-response";
@@ -67,6 +69,9 @@ interface WorkToolOutcome {
 }
 
 const MAX_FOLLOWUP_DELAY_MINUTES = 30 * 24 * 60;
+
+const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "use YYYY-MM-DD");
+const spendingSchema = z.object({ since: day.optional(), until: day.optional() });
 
 const researchSchema = z.object({
   query: z.string().trim().min(1).max(300),
@@ -203,6 +208,61 @@ async function searchDocumentsTool(input: unknown, ctx: RunContext): Promise<Wor
     topK: 6,
   });
   return { content };
+}
+
+/**
+ * The money manager's arithmetic: every CSV statement this agent may read,
+ * parsed and added up here, so the model reports figures instead of guessing
+ * them. Only the summary is returned; raw rows never reach the model.
+ */
+async function reviewSpending(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = spendingSchema.safeParse(input ?? {});
+  if (!parsed.success) return invalid("review_spending", parsed.error);
+  const documents = (
+    await prisma.document.findMany({
+      where: {
+        agentId: ctx.agent.id,
+        status: "ready",
+        ...(ctx.documentIds.length > 0 ? { id: { in: ctx.documentIds } } : {}),
+      },
+      select: { filename: true, storageKey: true },
+      orderBy: { createdAt: "asc" },
+    })
+  ).filter((document) => document.filename.toLowerCase().endsWith(".csv"));
+  if (documents.length === 0) {
+    return {
+      content:
+        "No statements to read: nothing uploaded to this agent is a CSV file. Say in your report that the owner should download a CSV statement from their bank or card app and upload it under Knowledge.",
+      isError: true,
+    };
+  }
+  const seen = new Set<string>();
+  const transactions: Transaction[] = [];
+  let skipped = 0;
+  for (const document of documents) {
+    const statement = parseStatement((await storage.get(document.storageKey)).toString("utf8"));
+    skipped += statement.skipped;
+    for (const row of statement.transactions) {
+      // The same transaction in two overlapping exports counts once.
+      const key = `${row.date}|${row.amount}|${row.description}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      transactions.push(row);
+    }
+  }
+  const { since, until } = parsed.data;
+  const inRange = transactions.filter((row) => (!since || row.date >= since) && (!until || row.date <= until));
+  const summary = summarizeSpending(inRange);
+  if (!summary) {
+    return {
+      content:
+        transactions.length === 0
+          ? "The uploaded CSV files have no rows with a readable date and amount, so they may not be statements. Say so in the report."
+          : "No transactions fall in that date range.",
+      isError: true,
+    };
+  }
+  return { content: describeSpending(summary, documents.map((document) => document.filename), skipped) };
 }
 
 async function webResearch(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
@@ -684,6 +744,9 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
         case "search_documents":
           outcome = await searchDocumentsTool(call.input, ctx);
           break;
+        case "review_spending":
+          outcome = await reviewSpending(call.input, ctx);
+          break;
         case "web_research":
           outcome = await webResearch(call.input, ctx);
           break;
@@ -820,11 +883,14 @@ export async function executePendingAction(
       return { ok: false, status: 0, detail: "The email is missing a recipient, subject or body." };
     }
     // Anti-spam law: a postal address on every email, and nobody who opted out.
+    // A personal space's email is one person writing to people they know, not
+    // commercial mail: no business footer, and no postal address to demand.
     const organization = await prisma.organization.findUniqueOrThrow({
       where: { id: organizationId },
-      select: { id: true, name: true, mailingAddress: true },
+      select: { id: true, name: true, mailingAddress: true, kind: true },
     });
-    if (!organization.mailingAddress?.trim()) {
+    const personal = organization.kind === "personal";
+    if (!personal && !organization.mailingAddress?.trim()) {
       return {
         ok: false,
         status: 0,
@@ -836,7 +902,7 @@ export async function executePendingAction(
     if (allowed.length === 0) {
       return { ok: false, status: 0, detail: `Nothing was sent: ${optedOut.join(", ")} asked not to receive emails from you.` };
     }
-    const optOut = optOutFor(organization, allowed);
+    const optOut = personal ? { footer: "", headers: {} } : optOutFor(organization, allowed);
     delivery = await deliverEmail(email, { to: allowed, subject, text: body + optOut.footer, headers: optOut.headers });
     if (delivery.ok && optedOut.length > 0) {
       delivery = { ...delivery, detail: `${delivery.detail}. Skipped ${optedOut.join(", ")}, who asked not to receive emails from you.` };

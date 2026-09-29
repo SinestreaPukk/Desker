@@ -15,6 +15,7 @@ import { DRAFT_KINDS, GATED_TOOL_IDS } from "./types";
 
 export const WORK_TOOL_IDS = [
   "search_documents",
+  "review_spending",
   "web_research",
   "draft_content",
   "publish_post",
@@ -48,6 +49,7 @@ type RiskLevel = "read" | "draft" | "internal" | "external";
 
 export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
   search_documents: "read",
+  review_spending: "read",
   web_research: "read",
   draft_content: "draft",
   suggest_opportunity: "draft",
@@ -68,7 +70,11 @@ export const GATED_TOOLS = GATED_TOOL_IDS satisfies readonly WorkToolId[];
 export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: string }> = {
   search_documents: {
     label: "Search uploaded documents",
-    blurb: "Look things up in the documents uploaded to this agent. Company Context is always in its instructions.",
+    blurb: "Look things up in the documents uploaded to this agent. The shared context is always in its instructions.",
+  },
+  review_spending: {
+    label: "Review spending",
+    blurb: "Add up the bank or card statements (CSV) uploaded to this agent: totals by category, subscriptions, biggest costs. Worked out exactly, never guessed; account numbers are masked.",
   },
   web_research: {
     label: "Research the web",
@@ -122,6 +128,19 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
 
 const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinition> = {
   search_documents: SEARCH_DOCUMENTS_TOOL,
+  review_spending: {
+    name: "review_spending",
+    description:
+      "Add up the bank or card statements uploaded to you as CSV files. Returns exact totals: money in and out, spending by category and by month, the biggest merchants, recurring charges (subscriptions and bills) and the largest payments. Use these figures instead of adding anything up yourself.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        since: { type: "string", description: "Optional. Only count transactions on or after this date (YYYY-MM-DD)." },
+        until: { type: "string", description: "Optional. Only count transactions on or before this date (YYYY-MM-DD)." },
+      },
+      additionalProperties: false,
+    },
+  },
   web_research: {
     name: "web_research",
     description:

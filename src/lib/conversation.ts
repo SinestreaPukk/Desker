@@ -8,7 +8,17 @@
  * directly.
  */
 import "server-only";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+
+/**
+ * The public chat link, the widget and their APIs only ever reach agents that
+ * match this. A personal space has no public door at all: its assistants are
+ * reachable only from inside the space, so a leaked link is a 404.
+ */
+export const PUBLICLY_REACHABLE = {
+  project: { organization: { kind: { not: "personal" } } },
+} satisfies Prisma.AgentWhereInput;
 
 export async function resolveActiveAgent(conversation: {
   agentId: string;

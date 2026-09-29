@@ -2,7 +2,8 @@ import { prisma } from "@/lib/db";
 import { limitOrganization } from "@/lib/rate-limit";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { findProject } from "@/lib/projects";
-import { ALL_PROJECT_CONTEXT_QUESTIONS } from "@/lib/work/context";
+import { contextQuestionsFor } from "@/lib/work/context";
+import { spaceKind } from "@/lib/space";
 import { NoDocuments, NoModel, draftContextFromDocuments } from "@/lib/work/context-draft";
 
 export const runtime = "nodejs";
@@ -35,7 +36,8 @@ export async function POST(_request: Request, { params }: Params) {
       return await draftContextFromDocuments({
         organizationId: project.organizationId,
         projectId: project.id,
-        questions: ALL_PROJECT_CONTEXT_QUESTIONS,
+        questions: contextQuestionsFor(spaceKind(project.organization.kind)).all,
+        kind: spaceKind(project.organization.kind),
         model: { provider: agent?.modelProvider ?? "anthropic", name: agent?.model ?? null },
         billingAgentId: agent?.id,
       });

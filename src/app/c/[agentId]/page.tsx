@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { PUBLICLY_REACHABLE } from "@/lib/conversation";
 import { BRAND } from "@/lib/brand";
 import { ClientChat } from "@/components/chat/client-chat";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -11,8 +12,8 @@ type Props = { params: Promise<{ agentId: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { agentId } = await params;
-  const agent = await prisma.agent.findUnique({
-    where: { id: agentId },
+  const agent = await prisma.agent.findFirst({
+    where: { id: agentId, ...PUBLICLY_REACHABLE },
     select: { name: true, jobTitle: true, status: true },
   });
 
@@ -30,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ClientChatPage({ params }: Props) {
   const { agentId } = await params;
 
-  const agent = await prisma.agent.findUnique({
-    where: { id: agentId },
+  const agent = await prisma.agent.findFirst({
+    where: { id: agentId, ...PUBLICLY_REACHABLE },
     select: { id: true, status: true },
   });
   if (!agent || agent.status !== "published") notFound();

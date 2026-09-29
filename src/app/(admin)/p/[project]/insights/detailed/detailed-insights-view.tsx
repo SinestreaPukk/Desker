@@ -74,7 +74,7 @@ export function DetailedInsightsView({ project }: { project: string }) {
     <Page>
       <PageHeader
         title="Detailed Insights"
-        description="Deep diagnostics on document retrieval gaps, unhelpful client replies, client escalation rates, and technical model telemetry."
+        description="Deep diagnostics on document retrieval gaps, unhelpful replies, escalation rates, and technical model telemetry."
       />
 
       <PageToolbar>
@@ -119,7 +119,7 @@ export function DetailedInsightsView({ project }: { project: string }) {
           <EmptyState
             icon={InsightTelemetryEmptyIcon}
             title="No detailed data to display yet"
-            description="Detailed telemetry fills in once clients interact with published agents or autonomous tasks are executed."
+            description="Detailed telemetry fills in once your agents chat or finish work on their own."
             action={
               <Button asChild variant="secondary">
                 <Link href={`/p/${project}/insights`}>Return to Insights</Link>
@@ -149,7 +149,7 @@ export function DetailedInsightsView({ project }: { project: string }) {
 
               <Panel className="flex flex-col p-4 transition hover:border-line-strong hover:shadow-xs">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="meta font-semibold">Client conversations</p>
+                  <p className="meta font-semibold">Chat conversations</p>
                   <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-line bg-surface-2 text-ink-muted">
                     <InsightConversationsIcon className="size-4" />
                   </span>
@@ -188,7 +188,7 @@ export function DetailedInsightsView({ project }: { project: string }) {
 
               <Panel className="flex flex-col p-4 transition hover:border-line-strong hover:shadow-xs">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="meta font-semibold">Client satisfaction</p>
+                  <p className="meta font-semibold">Reply ratings</p>
                   <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-positive-line/70 bg-positive-soft text-positive">
                     <InsightHelpfulIcon className="size-4" />
                   </span>
@@ -264,9 +264,9 @@ export function DetailedInsightsView({ project }: { project: string }) {
               <Panel>
                 <PanelHeader>
                   <div>
-                    <PanelTitle>Replies clients marked unhelpful</PanelTitle>
+                    <PanelTitle>Replies marked unhelpful</PanelTitle>
                     <PanelDescription>
-                      Customer questions that received a thumbs-down, with the agent&apos;s answer.
+                      Questions whose answer got a thumbs-down, with the agent&apos;s answer.
                     </PanelDescription>
                   </div>
                 </PanelHeader>
@@ -312,9 +312,9 @@ export function DetailedInsightsView({ project }: { project: string }) {
             <Panel>
               <PanelHeader>
                 <div>
-                  <PanelTitle>How each agent is doing with clients</PanelTitle>
+                  <PanelTitle>How each agent is doing in chat</PanelTitle>
                   <PanelDescription>
-                    Client conversations, escalations, knowledge look-ups, and ratings per agent.
+                    Conversations, escalations, knowledge look-ups, and ratings per agent.
                   </PanelDescription>
                 </div>
               </PanelHeader>
@@ -322,8 +322,8 @@ export function DetailedInsightsView({ project }: { project: string }) {
                 {data!.agents.length === 0 ? (
                   <EmptyState
                     icon={InsightTelemetryEmptyIcon}
-                    title="No client interaction metrics yet"
-                    description="Metrics populate once published agents engage with clients."
+                    title="No chat metrics yet"
+                    description="These fill in once people chat with your published agents."
                     className="py-8"
                   />
                 ) : (

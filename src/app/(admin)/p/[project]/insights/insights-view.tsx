@@ -183,7 +183,7 @@ export function InsightsView({ project }: { project: string }) {
                 icon={InsightCollaborationIcon}
                 value={data!.collab.total.toLocaleString()}
                 line={`${data!.collab.delegations} task handoffs · ${data!.collab.transfers} chat transfers`}
-                hint="Autonomous tasks and client inquiries routed between specialized team members."
+                hint="Tasks and conversations handed between team members."
               />
             </div>
 
@@ -191,14 +191,14 @@ export function InsightsView({ project }: { project: string }) {
             <section className="space-y-2">
               <InsightHeading
                 title="Collaboration between agents"
-                description="Work handed off between specialised roles: research delegated to analysts, copy requests to marketers, and customer transfers."
+                description="Work handed off between specialised roles: research delegated to analysts, copy requests to marketers, and conversations passed to a specialist."
               />
               <Panel className="overflow-hidden">
                 {data!.collab.handoffs.length === 0 ? (
                   <EmptyState
                     icon={InsightCollaborationIcon}
                     title="No agent collaborations recorded in this window"
-                    description="When an agent uses delegate_to_colleague during an autonomous run, or transfers a client conversation to a specialist on your roster, their teamwork is logged here."
+                    description="When an agent uses delegate_to_colleague during an autonomous run, or transfers a conversation to a specialist on your roster, their teamwork is logged here."
                     className="py-8"
                   />
                 ) : (

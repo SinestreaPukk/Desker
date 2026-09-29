@@ -18,6 +18,7 @@ import { toStringArray } from "@/lib/agent-fields";
 import { buildSystemPrompt } from "@/lib/agent-prompt";
 import { getProvider } from "@/lib/llm/provider";
 import { effectiveContext } from "@/lib/work/context";
+import { spaceKind, type SpaceKind } from "@/lib/space";
 import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { RunRefused, startRun } from "@/lib/work/scope";
 import { WORK_TOOL_METADATA, type WorkToolId } from "@/lib/work/tools";
@@ -95,7 +96,7 @@ async function transcript(threadId: string): Promise<string> {
     .join("\n\n");
 }
 
-const ROUTER_PROMPT = `You run a team meeting between a business owner and their AI employees.
+const ROUTER_PROMPT = `You run a group chat between a person (the owner) and their AI team - staff at their business, or assistants in their personal life.
 Given the team and the owner's latest message, pick who should answer: the one to three people whose work it is.
 Pick one unless the message clearly spans several people's work, or asks for everyone's view.
 Reply with JSON only: {"responders": ["Name", ...]}`;
@@ -155,10 +156,10 @@ ${documents.length > 0 ? `Documents uploaded to you: ${documents.join(", ")}.` :
 - If something you need is truly missing - a document, a tool, a connection - say exactly what the owner should add and where. Documents: Roster, open your page, Knowledge tab. Tools: Roster, your page, Work & schedule. Apps and accounts: Integrations. Never say "here": this chat cannot take files.`;
 }
 
-function roomSection(agent: TeamAgent, team: TeamAgent[]): string {
+function roomSection(agent: TeamAgent, team: TeamAgent[], kind: SpaceKind): string {
   const others = team.filter((other) => other.id !== agent.id).map((other) => `${other.name} (${other.jobTitle})`);
   return `## The team room
-You are in a group chat with the business owner${others.length > 0 ? ` and your colleagues ${others.join(", ")}` : ""}. The owner can ask anything or hand out work.
+You are in a group chat with ${kind === "personal" ? "the person you work for (the owner)" : "the business owner"}${others.length > 0 ? ` and your colleagues ${others.join(", ")}` : ""}. The owner can ask anything or hand out work.
 
 Reply with one JSON object and nothing else:
 {"reply": "your message to the room", "task": null | "the task you are starting, written as an instruction to yourself"}
@@ -194,10 +195,14 @@ export async function replyAs(input: {
       reply = "I can't reply here yet: no AI model is set up for this workspace.";
     } else {
       const [project, scope, documents] = await Promise.all([
-        prisma.project.findUnique({ where: { id: projectId }, select: { context: true } }),
+        prisma.project.findUnique({
+          where: { id: projectId },
+          select: { context: true, organization: { select: { kind: true } } },
+        }),
         prisma.scopeOfWork.findUnique({ where: { agentId: agent.id }, select: { context: true, tools: true } }),
         prisma.document.findMany({ where: { agentId: agent.id, status: "ready" }, select: { filename: true }, take: 30 }),
       ]);
+      const kind = spaceKind(project?.organization.kind);
       const systemPrompt = [
         buildSystemPrompt({
           name: agent.name,
@@ -206,14 +211,15 @@ export async function replyAs(input: {
           personality: agent.personality,
           responsibilities: toStringArray(agent.responsibilities),
           allowedTools: [],
-          companyContext: effectiveContext({ projectContext: project?.context, agentContext: scope?.context }),
+          companyContext: effectiveContext({ projectContext: project?.context, agentContext: scope?.context, kind }),
           audience: "colleague",
+          kind,
         }),
         abilitiesSection(
           toStringArray(scope?.tools),
           documents.map((document) => document.filename),
         ),
-        roomSection(agent, team),
+        roomSection(agent, team, kind),
       ].join("\n\n");
       const provider = await getProvider(agent.modelProvider);
       const turn = await provider.complete({

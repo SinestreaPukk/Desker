@@ -2,8 +2,8 @@
   "company": {
     "name": "Desker",
     "legalName": "Desker",
-    "tagline": "AI employees for real work",
-    "description": "Hire AI employees with a role, a personality and your company's context. They answer your clients, do work on a schedule, and stop for your approval before anything goes public.",
+    "tagline": "AI staff for your business, AI help for your life",
+    "description": "Hire AI staff for your company and private AI assistants for your own life. They know your business or you, work on a schedule, and stop for your approval before anything goes out.",
     "email": "sakditouch.pu@gmail.com",
     "location": "Bangkok, Thailand",
     "siteUrl": "https://desker.dev",
@@ -36,7 +36,7 @@
     "href": "/beta"
   },
   "footer": {
-    "blurb": "Desker gives small teams an AI staff they can actually trust: every agent has a job, a voice, your documents, and a human sign-off before it publishes or sends.",
+    "blurb": "Desker gives you an AI team you can actually trust, at work and at home: every agent has a job, your context, and your sign-off before it publishes or sends. Personal spaces stay private to you.",
     "rolesHeading": "Roles",
     "columns": [
       {

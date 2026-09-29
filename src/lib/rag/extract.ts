@@ -7,6 +7,7 @@
 import "server-only";
 import { normalizeText } from "./chunk";
 import { ACCEPTED_EXTENSIONS } from "./extract-shared";
+import { maskNumbers } from "@/lib/money/statement";
 
 export { ACCEPTED_EXTENSIONS };
 
@@ -15,6 +16,7 @@ const ACCEPTED_TYPES = {
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
   "text/plain": [".txt"],
   "text/markdown": [".md", ".markdown"],
+  "text/csv": [".csv"],
 } as const;
 
 
@@ -62,17 +64,19 @@ export async function extractText(
     const result = await mammoth.extractRawText({ buffer: data });
     raw = result.value;
   } else if (
-    [".txt", ".md", ".markdown"].includes(extension) ||
+    [".txt", ".md", ".markdown", ".csv"].includes(extension) ||
     mimeType.startsWith("text/")
   ) {
     raw = data.toString("utf8");
   } else {
     throw new UnsupportedDocumentError(
-      `Cannot read "${filename}". Supported formats: PDF, DOCX, TXT, MD.`,
+      `Cannot read "${filename}". Supported formats: PDF, DOCX, TXT, MD, CSV.`,
     );
   }
 
-  const text = normalizeText(raw);
+  // A CSV is usually a bank or card export: account and card numbers are
+  // masked before the text is chunked, embedded or ever shown to a model.
+  const text = normalizeText(extension === ".csv" || mimeType === "text/csv" ? maskNumbers(raw) : raw);
   if (!text) {
     throw new EmptyDocumentError(
       `No readable text found in "${filename}". Scanned PDFs need OCR before upload.`,

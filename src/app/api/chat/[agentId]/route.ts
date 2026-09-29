@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { PUBLICLY_REACHABLE } from "@/lib/conversation";
 import { handle, HttpError } from "@/lib/api";
 import { toPublicAgent, type MessageDto } from "@/lib/serialize";
 
@@ -30,8 +31,8 @@ export async function GET(request: Request, { params }: Params) {
     const sessionId = url.searchParams.get("sessionId");
     const passcode = request.headers.get(PASSCODE_HEADER);
 
-    const agent = await prisma.agent.findUnique({
-      where: { id: agentId },
+    const agent = await prisma.agent.findFirst({
+      where: { id: agentId, ...PUBLICLY_REACHABLE },
       select: {
         id: true,
         name: true,

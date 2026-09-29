@@ -1,6 +1,7 @@
 /**
  * Sign-up asks who someone is: first and last name, a unique username, the
- * organisation they are founding, and how they use Desker. Needs DATABASE_URL.
+ * business they are founding (if any), and what Desker is for: a business, a
+ * personal space, or both. Needs DATABASE_URL.
  */
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
@@ -17,7 +18,7 @@ const body = (overrides: Record<string, unknown> = {}) => ({
   lastName: "Chen",
   username: `alex-${stamp}`,
   organization: "Chen Studio",
-  useType: "freelancer",
+  useType: "business",
   email: `alex-${stamp}@example.com`,
   password: "long-enough-pass",
   acceptTerms: true,
@@ -54,16 +55,44 @@ describe("sign-up", () => {
       firstName: "Alex",
       lastName: "Chen",
       username: `alex-${stamp}`,
-      useType: "freelancer",
+      useType: "business",
     });
-    expect(user.memberships[0]!.organization.name).toBe("Chen Studio");
+    expect(user.memberships[0]!.organization).toMatchObject({ name: "Chen Studio", kind: "business" });
   });
 
-  it("asks for the organisation and how they use Desker", async () => {
+  it("founds a private personal space without asking for a business name", async () => {
+    const response = await post(
+      body({ email: `p-${stamp}@example.com`, username: `p-${stamp}`, organization: undefined, useType: "personal" }),
+    );
+    expect(response.status).toBe(200);
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: `p-${stamp}@example.com` },
+      include: { memberships: { include: { organization: { include: { projects: true } } } } },
+    });
+    expect(user.memberships).toHaveLength(1);
+    expect(user.memberships[0]!.organization).toMatchObject({ name: "Alex's personal space", kind: "personal" });
+    expect(user.memberships[0]!.organization.projects).toHaveLength(1);
+  });
+
+  it("founds both spaces for someone who wants both", async () => {
+    const response = await post(body({ email: `m-${stamp}@example.com`, username: `m-${stamp}`, useType: "mixed" }));
+    expect(response.status).toBe(200);
+    const memberships = await prisma.membership.findMany({
+      where: { user: { email: `m-${stamp}@example.com` } },
+      include: { organization: true },
+      orderBy: { createdAt: "asc" },
+    });
+    expect(memberships.map((m) => m.organization.kind)).toEqual(["business", "personal"]);
+  });
+
+  it("asks what Desker is for, and a business's name when founding one", async () => {
     const response = await post(body({ email: `b-${stamp}@example.com`, username: `b-${stamp}`, organization: "", useType: "hobby" }));
     expect(response.status).toBe(422);
     const { details } = (await response.json()) as { details: { fieldErrors: Record<string, string[]> } };
     expect(Object.keys(details.fieldErrors)).toEqual(expect.arrayContaining(["useType"]));
+
+    const noName = await post(body({ email: `d-${stamp}@example.com`, username: `d-${stamp}`, organization: "" }));
+    expect(noName.status).toBe(422);
   });
 
   it("refuses a username someone already has", async () => {

@@ -76,7 +76,7 @@ export function PromptPreviewDialog({
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
                 <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
                   <TabsList>
-                    <TabsTrigger value="chat">When a client writes</TabsTrigger>
+                    <TabsTrigger value="chat">In a chat</TabsTrigger>
                     {data?.workPrompt ? (
                       <TabsTrigger value="work">When it works on its own</TabsTrigger>
                     ) : null}

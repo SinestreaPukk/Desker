@@ -27,11 +27,12 @@ import {
   type TriggerType,
 } from "@/lib/work/types";
 import { ContextHelper, ObjectivesHelper } from "./live-example";
+import { useSpaceKind } from "@/components/space-kind";
 import { ContextQuestions } from "./context-questions";
 import { badRecipients, looksLikeCron } from "@/lib/form-errors";
 import { HelpLink } from "@/components/help/help-panel";
 import {
-  AGENT_CONTEXT_QUESTIONS,
+  contextQuestionsFor,
   answeredCount,
   type ContextAnswers,
 } from "@/lib/work/context";
@@ -428,6 +429,7 @@ export function ContextSection({
   heading?: boolean;
 }) {
   const set = updater({ value, onChange });
+  const agentQuestions = contextQuestionsFor(useSpaceKind()).agent;
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -449,7 +451,7 @@ export function ContextSection({
       {inherited}
 
       <ContextQuestions
-        questions={AGENT_CONTEXT_QUESTIONS}
+        questions={agentQuestions}
         value={value.contextAnswers}
         onChange={(next) => set("contextAnswers", next)}
         idPrefix={`${idPrefix}-context`}
@@ -457,8 +459,8 @@ export function ContextSection({
       />
 
       <ContextHelper
-        answered={answeredCount(value.contextAnswers, AGENT_CONTEXT_QUESTIONS)}
-        total={AGENT_CONTEXT_QUESTIONS.length}
+        answered={answeredCount(value.contextAnswers, agentQuestions)}
+        total={agentQuestions.length}
       />
     </div>
   );

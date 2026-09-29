@@ -11,6 +11,7 @@
  * No server imports for the same reason.
  */
 import { GUIDE_SOURCES } from "../../content/guides";
+import type { SpaceKind } from "@/lib/space";
 
 interface GuideSection {
   /** Slugified heading; the anchor a contextual link points at. */
@@ -22,6 +23,8 @@ interface GuideSection {
 
 export interface Guide {
   slug: string;
+  /** Whose help panel lists it: a business space, a personal space, or both. */
+  audience: SpaceKind | "all";
   title: string;
   summary: string;
   /** Rounded reading time, in minutes. Every guide is meant to be one or two. */
@@ -82,6 +85,7 @@ function toGuide(source: (typeof GUIDE_SOURCES)[number]): Guide {
   const { intro, sections } = splitSections(source.body);
   return {
     slug: source.slug,
+    audience: source.audience,
     title: source.title,
     summary: source.summary,
     minutes: source.minutes,
@@ -93,6 +97,14 @@ function toGuide(source: (typeof GUIDE_SOURCES)[number]): Guide {
 }
 
 export const GUIDES: Guide[] = GUIDE_SOURCES.map(toGuide);
+
+/** The guides for one kind of space: its own first, then the ones every space shares. */
+export function guidesFor(kind: SpaceKind): Guide[] {
+  return [
+    ...GUIDES.filter((guide) => guide.audience === kind),
+    ...GUIDES.filter((guide) => guide.audience === "all"),
+  ];
+}
 
 export function guideBySlug(slug: string): Guide | null {
   return GUIDES.find((guide) => guide.slug === slug) ?? null;
@@ -210,3 +222,21 @@ export const HELP_TOPICS = {
 } as const;
 
 export type HelpTopic = keyof typeof HELP_TOPICS;
+
+/** The same "?" links in a personal space, pointing at its own guides. */
+export const PERSONAL_HELP_TOPICS: Record<HelpTopic, { slug: string; section: string }> = {
+  escalationRule: { slug: "approvals", section: "escalation-rules" },
+  flowView: { slug: "personal-routines", section: "see-it-as-a-flow" },
+  trust: { slug: "approvals", section: "extending-trust" },
+  projectContext: { slug: "about-you", section: "the-four-questions" },
+  agentContext: { slug: "about-you", section: "each-assistants-own-brief" },
+  draftFromDocuments: { slug: "about-you", section: "draft-it-from-a-document" },
+  digest: { slug: "personal-space", section: "your-two-minutes-a-day" },
+  webhookTrigger: { slug: "personal-routines", section: "when-it-runs" },
+  integrationSecret: { slug: "integrations", section: "keys-and-secrets" },
+  approvals: { slug: "approvals", section: "your-three-options" },
+};
+
+export function helpTopic(topic: HelpTopic, kind: SpaceKind) {
+  return kind === "personal" ? PERSONAL_HELP_TOPICS[topic] : HELP_TOPICS[topic];
+}

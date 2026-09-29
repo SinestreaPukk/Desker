@@ -3,13 +3,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { hasCoreContext } from "@/lib/work/context";
+import { spaceKind } from "@/lib/space";
 import { ArrowRight, Check } from "lucide-react";
 import { currentUser } from "@/lib/auth";
-import { defaultProject } from "@/lib/projects";
+import { defaultProject, projectsVisibleTo } from "@/lib/projects";
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import {
   ComparisonTable,
+  Desks,
   Faq,
   ProductShotImage,
   RoleGrid,
@@ -23,13 +25,13 @@ import { CTA_PRIMARY, CTA_SECONDARY } from "@/components/marketing/cta";
 import { HeroNotes, PhoneNote, SoftNotes, StickyNote } from "@/components/marketing/desk-notes";
 import { AgentAvatar } from "@/components/ui/avatar";
 
-/** The five staff in the hero's reel, by the seeds that draw their faces there. */
+/** The staff in the hero's reel, by the seeds that draw their faces there: three at work, two at home. */
 const HERO_STAFF = [
   ["Sol", "sol"],
   ["Nova", "nova"],
-  ["Leo", "leo-leads"],
-  ["Kai", "kai"],
   ["Mia", "mia"],
+  ["Penny", "penny"],
+  ["Juno", "juno"],
 ] as const;
 import { BrandMark } from "@/components/brand-logo";
 import { HeroStage } from "@/components/marketing/hero-stage";
@@ -51,8 +53,8 @@ export const metadata: Metadata = pageMetadata({
 
 /**
  * The front door, in the order a visitor's questions arrive: what is it
- * (hero), can I believe it (built on), why would I (problem), how (three
- * steps), what exactly (showcase), is it safe (trust), which one (roles),
+ * (hero), can I believe it (built on), who is it for (two desks: a business,
+ * your own life, or both), how (three steps), what exactly (showcase), is it safe (trust), which one (roles),
  * does it work (quotes), what does it cost (pricing), but what
  * about (FAQ), and go (CTA).
  *
@@ -65,12 +67,21 @@ export default async function LandingPage({
 }) {
   const user = await currentUser();
   if (user) {
-    const project = await defaultProject(user.id);
-    // A role chosen on the showcase goes straight into the hire wizard.
+    // A role chosen on the showcase goes straight into the hire wizard - of
+    // the space it belongs to, when the account has both kinds.
     const { template } = await searchParams;
-    const picked = template && templateById(template) ? template : null;
-    // A brand-new workspace starts by describing the business, then hires.
-    if (!hasCoreContext(project) && (await prisma.agent.count({ where: { projectId: project.id } })) === 0) {
+    const role = template ? templateById(template) : undefined;
+    const picked = role ? role.id : null;
+    const project =
+      (role
+        ? await prisma.project.findFirst({
+            where: { ...projectsVisibleTo(user.id), organization: { kind: role.audience } },
+            orderBy: { createdAt: "asc" },
+            include: { organization: { select: { kind: true } } },
+          })
+        : null) ?? (await defaultProject(user.id));
+    // A brand-new space starts by describing the business (or the person), then hires.
+    if (!hasCoreContext(project, spaceKind(project.organization.kind)) && (await prisma.agent.count({ where: { projectId: project.id } })) === 0) {
       redirect(`/p/${project.slug}/welcome${picked ? `?template=${encodeURIComponent(picked)}` : ""}`);
     }
     if (picked) {
@@ -79,7 +90,7 @@ export default async function LandingPage({
     redirect(`/p/${project.slug}/roster`);
   }
 
-  const { hero, trustStrip, steps, features, trust, roles, comparison, testimonials, pricing, faq, cta } =
+  const { hero, trustStrip, desks, steps, features, trust, roles, comparison, testimonials, pricing, faq, cta } =
     LANDING;
   // Placeholders are for review only: outside production an unmeasured number
   // shows as a marked TODO; in production the section waits for real values.
@@ -118,7 +129,8 @@ export default async function LandingPage({
                 ))}
               </span>
               <p className="text-sm leading-snug text-ink-muted">
-                <span className="font-semibold text-ink">Sol, Nova, Leo, Kai and Mia</span>
+                <span className="font-semibold text-ink">Sol, Nova and Mia</span> at work ·{" "}
+                <span className="font-semibold text-ink">Penny and Juno</span> at home
               </p>
             </div>
           </div>
@@ -135,6 +147,15 @@ export default async function LandingPage({
       {/* Built on ------------------------------------------------------- */}
       <Section containerClassName="py-8 sm:py-10">
         <TrustStrip label={trustStrip.label} items={trustStrip.items} />
+      </Section>
+
+      {/* Two desks ------------------------------------------------------- */}
+      {/* The answer to "who is it for": both, side by side, walled apart. */}
+      <Section id="desks" labelledBy="desks-heading" containerClassName="pt-2 sm:pt-4">
+        <SectionHeader id="desks-heading" eyebrow={desks.eyebrow} heading={desks.heading} intro={desks.intro} />
+        <div className="mt-12">
+          <Desks business={desks.business} personal={desks.personal} wall={desks.wall} />
+        </div>
       </Section>
 
       {/* How it works ----------------------------------------------------- */}
@@ -187,7 +208,7 @@ export default async function LandingPage({
       <Section id="roles" labelledBy="roles-heading">
         <SectionHeader id="roles-heading" eyebrow={roles.eyebrow} heading={roles.heading} intro={roles.intro} />
         <div className="mt-12">
-          <RoleGrid cta={roles.cta} />
+          <RoleGrid cta={roles.cta} groups={roles.groups} />
         </div>
       </Section>
 

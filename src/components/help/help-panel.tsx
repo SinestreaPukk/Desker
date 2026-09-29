@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Input } from "@/components/ui/field";
 import { Markdown } from "@/components/markdown";
 import { EmptyState } from "@/components/ui/states";
-import { GUIDES, HELP_TOPICS, guideBySlug, searchGuides, type HelpTopic } from "@/lib/guides";
+import { guideBySlug, guidesFor, helpTopic, searchGuides, type HelpTopic } from "@/lib/guides";
+import { useSpaceKind } from "@/components/space-kind";
 import { CHECKLIST_REOPEN_EVENT, showChecklist } from "@/components/help/checklist-state";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +56,7 @@ export function HelpProvider({
 }) {
   const [target, setTarget] = React.useState<HelpTarget | null>(null);
   const [isOpen, setIsOpen] = React.useState(false);
+  const kind = useSpaceKind();
 
   const value = React.useMemo<HelpContextValue>(
     () => ({
@@ -63,12 +65,12 @@ export function HelpProvider({
         setIsOpen(true);
       },
       openTopic: (topic) => {
-        setTarget(HELP_TOPICS[topic]);
+        setTarget(helpTopic(topic, kind));
         setIsOpen(true);
       },
       close: () => setIsOpen(false),
     }),
-    [],
+    [kind],
   );
 
   // "?" opens help from anywhere that is not a text field, the way every
@@ -118,7 +120,11 @@ function HelpDialog({
   const [query, setQuery] = React.useState("");
   const bodyRef = React.useRef<HTMLDivElement>(null);
   const guide = target ? guideBySlug(target.slug) : null;
-  const results = React.useMemo(() => searchGuides(query), [query]);
+  // A business and a personal space are different products: each panel
+  // lists and searches only its own guides, plus the shared ones.
+  const kind = useSpaceKind();
+  const guides = React.useMemo(() => guidesFor(kind), [kind]);
+  const results = React.useMemo(() => searchGuides(query, guides), [query, guides]);
 
   // Opening at a heading should land on that heading, not at the top of a
   // page the reader has to scan.
@@ -230,7 +236,7 @@ function HelpDialog({
                 )
               ) : (
                 <>
-                  {GUIDES.map((entry) => (
+                  {guides.map((entry) => (
                     <button
                       key={entry.slug}
                       type="button"

@@ -16,6 +16,7 @@ import {
   Menu,
   MessagesSquare,
   Plus,
+  UserRound,
   UsersRound,
   Workflow,
   X,
@@ -33,6 +34,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NewProjectDialog } from "@/components/new-project-dialog";
+import { NewSpaceDialog } from "@/components/new-space-dialog";
+import { SpaceKindProvider } from "@/components/space-kind";
+import type { SpaceKind } from "@/lib/space";
 import { FeedbackButton } from "@/components/feedback-dialog";
 import { HelpButton, HelpProvider } from "@/components/help/help-panel";
 import { UsageTracker } from "@/components/usage-tracker";
@@ -51,12 +55,24 @@ interface OrganizationRef {
   id: string;
   name: string;
   role: string;
+  kind: SpaceKind;
 }
 
 interface NavItem {
   segment: string;
   label: string;
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+}
+
+/** A personal space has no organisation to manage: its settings are "Your space". */
+function navGroups(kind: SpaceKind): { title: string; items: readonly NavItem[] }[] {
+  if (kind === "business") return NAV_GROUPS;
+  return NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.map((item) =>
+      item.segment === "organization" ? { ...item, label: "Your space", icon: UserRound } : item.segment === "team" ? { ...item, label: "Chat" } : item,
+    ),
+  }));
 }
 
 const NAV_GROUPS: { title: string; items: readonly NavItem[] }[] = [
@@ -84,6 +100,7 @@ export function AdminShell({
   email,
   name,
   project,
+  kind,
   projects,
   organizations,
   children,
@@ -91,6 +108,7 @@ export function AdminShell({
   email: string;
   name: string | null;
   project: ProjectRef;
+  kind: SpaceKind;
   projects: ProjectRef[];
   organizations: OrganizationRef[];
   children: React.ReactNode;
@@ -111,7 +129,7 @@ export function AdminShell({
 
   const navLinks = (
     <nav aria-label="Main" className="flex flex-col gap-5">
-      {NAV_GROUPS.map((group) => (
+      {navGroups(kind).map((group) => (
         <div key={group.title} className="space-y-0.5">
           <div className="px-3 pb-1 text-xs font-semibold text-ink-muted">{group.title}</div>
           {group.items.map((item) => {
@@ -172,6 +190,7 @@ export function AdminShell({
   );
 
   return (
+    <SpaceKindProvider kind={kind}>
     <HelpProvider project={project.slug}>
       <div data-app className="flex min-h-dvh flex-col lg:flex-row">
       {/* Skip link: first tab stop on every admin page. */}
@@ -297,6 +316,7 @@ export function AdminShell({
       <UsageTracker project={project.slug} />
       </div>
     </HelpProvider>
+    </SpaceKindProvider>
   );
 }
 
@@ -312,7 +332,15 @@ function ProjectSwitcher({
   pathname: string;
 }) {
   const [creating, setCreating] = React.useState(false);
+  const [addingSpace, setAddingSpace] = React.useState<SpaceKind | null>(null);
   const organization = organizations.find((org) => org.id === project.organizationId);
+  const SpaceIcon = organization?.kind === "personal" ? UserRound : Building;
+  // "Both" can be chosen after sign-up too: offer whichever kind is missing.
+  const missingKind: SpaceKind | null = !organizations.some((org) => org.kind === "personal" && org.role === "owner")
+    ? "personal"
+    : !organizations.some((org) => org.kind === "business")
+      ? "business"
+      : null;
   // Only this organisation's projects belong in the project list; the other
   // organisations sit in their own section and switching lands on their
   // first project.
@@ -339,11 +367,11 @@ function ProjectSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            aria-label={`Switch project or organisation (${organization?.name ?? ""}: ${project.name})`}
+            aria-label={`Switch project or space (${organization?.name ?? ""}: ${project.name})`}
             className="group flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-ink/[0.05]"
           >
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-fg">
-              <Building className="size-4" aria-hidden />
+              <SpaceIcon className="size-4" aria-hidden />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-ink leading-tight">{project.name}</span>
@@ -379,22 +407,39 @@ function ProjectSwitcher({
           {others.length > 0 ? (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel>Switch organisation</DropdownMenuLabel>
-              {others.map(({ org, first }) => (
-                <DropdownMenuItem key={org.id} asChild>
-                  <Link href={`/p/${first!.slug}/${tab}`}>
-                    <Building className="size-3.5 text-ink-subtle" aria-hidden />
-                    <span className="truncate">{org.name}</span>
-                    <span className="ml-auto text-xs text-ink-muted">{org.role}</span>
-                  </Link>
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuLabel>Switch space</DropdownMenuLabel>
+              {others.map(({ org, first }) => {
+                const Icon = org.kind === "personal" ? UserRound : Building;
+                return (
+                  <DropdownMenuItem key={org.id} asChild>
+                    <Link href={`/p/${first!.slug}/${tab}`}>
+                      <Icon className="size-3.5 text-ink-subtle" aria-hidden />
+                      <span className="truncate">{org.name}</span>
+                      <span className="ml-auto text-xs text-ink-muted">{org.kind === "personal" ? "Personal" : org.role}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
+            </>
+          ) : null}
+          {missingKind ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setAddingSpace(missingKind)}>
+                {missingKind === "personal" ? <UserRound aria-hidden /> : <Building aria-hidden />}
+                {missingKind === "personal" ? "Add a personal space" : "Add a business"}
+              </DropdownMenuItem>
             </>
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 
       <NewProjectDialog open={creating} onOpenChange={setCreating} project={project.slug} />
+      <NewSpaceDialog
+        kind={addingSpace ?? "personal"}
+        open={addingSpace !== null}
+        onOpenChange={(open) => !open && setAddingSpace(null)}
+      />
     </>
   );
 }

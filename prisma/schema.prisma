@@ -31,7 +31,8 @@ model User {
   lastName     String?
   /// Chosen at sign-up; lowercase letters, numbers, dots, dashes, underscores.
   username     String?  @unique
-  /// How they said they use Desker: freelancer | business | startup | personal.
+  /// What they said Desker is for at sign-up: business | personal | mixed.
+  /// "mixed" founds one space of each kind.
   useType      String?
   /// When the password last changed. Sessions signed in before it are ended.
   passwordChangedAt DateTime?
@@ -108,6 +109,10 @@ model Organization {
   name      String
   /// URL-safe handle, reserved for when organisations get their own segment.
   slug      String   @unique
+  /// business | personal. A personal space belongs to one person: no members,
+  /// no invitations, no public chat links, and its context is about them
+  /// rather than a company. See lib/space.ts.
+  kind      String   @default("business")
   /// free | starter | growth - see lib/billing/plans.ts. Set by the Stripe
   /// webhook; never trusted from the client.
   plan                 String    @default("free")

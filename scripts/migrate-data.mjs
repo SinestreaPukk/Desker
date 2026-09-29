@@ -6,6 +6,8 @@
  *   1. The chat tool `search_company_context` and the work tool
  *      `search_context` became the one `search_documents`. Saved tool lists
  *      on agents and scopes of work are rewritten to the new id.
+ *   2. The sign-up question became business | personal | mixed. The old
+ *      "freelancer" and "startup" answers were both business use.
  */
 // Must precede @prisma/client (see backfill-projects.mjs).
 import "./load-env.mjs";
@@ -36,6 +38,12 @@ async function main() {
     scopes++;
   }
   console.log(`[migrate-data] search_documents: ${agents} agent(s), ${scopes} scope(s) updated`);
+
+  const users = await prisma.user.updateMany({
+    where: { useType: { in: ["freelancer", "startup"] } },
+    data: { useType: "business" },
+  });
+  console.log(`[migrate-data] useType: ${users.count} user(s) updated`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

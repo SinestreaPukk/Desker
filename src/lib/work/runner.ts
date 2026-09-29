@@ -25,12 +25,8 @@ import { findIntegration, resolveEmail } from "./integrations";
 import { captureMessage } from "@/lib/monitoring";
 import { notifyInBackground } from "@/lib/notify";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
-import {
-  AGENT_CONTEXT_QUESTIONS,
-  answersFor,
-  effectiveContext,
-  PROJECT_CONTEXT_QUESTIONS,
-} from "./context";
+import { answersFor, contextQuestionsFor, effectiveContext } from "./context";
+import { spaceKind } from "@/lib/space";
 import { missingGrounding } from "./preflight";
 import { connectorForTool } from "@/lib/integrations/catalog";
 import { summarizeRun } from "./summary";
@@ -101,7 +97,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
           scopeOfWork: true,
           documents: { where: { status: "ready" }, select: { id: true, filename: true } },
           // The project's shared context is inherited by every agent in it.
-          project: { select: { context: true, contextAnswers: true } },
+          project: { select: { context: true, contextAnswers: true, organization: { select: { kind: true } } } },
         },
       },
       parent: { select: { result: true } },
@@ -110,6 +106,8 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
   if (!item || item.status !== "queued") return null;
 
   const scope = item.agent.scopeOfWork;
+  const kind = spaceKind(item.agent.project.organization.kind);
+  const questions = contextQuestionsFor(kind);
   const autonomy = (scope?.autonomy ?? "draft_only") as AutonomyMode;
   const documentIds = scope ? toStringArray(scope.documentIds) : [];
   const objectives = scope ? toStringArray(scope.objectives) : [];
@@ -164,9 +162,12 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       },
       autonomy,
       toolAutonomy: (scope?.toolAutonomy as ToolAutonomy | null) ?? null,
-      // No documents means search_documents can only come back empty.
+      // No documents means search_documents can only come back empty, and
+      // no CSV means there is no statement to add up.
       tools: (tools ?? [...WORK_TOOL_IDS]).filter(
-        (tool) => documents.length > 0 || tool !== "search_documents",
+        (tool) =>
+          (documents.length > 0 || tool !== "search_documents") &&
+          (tool !== "review_spending" || documents.some((d) => d.filename.toLowerCase().endsWith(".csv"))),
       ),
       documentIds,
       trigger: item.trigger,
@@ -177,9 +178,11 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
         context: effectiveContext({
           projectContext: item.agent.project.context,
           agentContext: scope?.context,
+          kind,
         }),
         objectives,
       },
+      kind,
       autonomy,
       documentNames: documents.map((d) => d.filename),
       hasPublishing: Boolean(publishing),
@@ -191,13 +194,14 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       projectAnswers: answersFor(
         item.agent.project.contextAnswers,
         item.agent.project.context,
-        PROJECT_CONTEXT_QUESTIONS,
+        questions.core,
       ),
-      agentAnswers: answersFor(scope?.contextAnswers, scope?.context, AGENT_CONTEXT_QUESTIONS),
+      agentAnswers: answersFor(scope?.contextAnswers, scope?.context, questions.agent),
       objectives,
       tools,
       documentCount: documents.length,
       trigger: item.trigger,
+      kind,
     }),
     kickoff: kickoffMessage({
       trigger: item.trigger,

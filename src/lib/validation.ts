@@ -6,6 +6,7 @@ import { z } from "zod";
 import { MAX_AVATAR_DATA_URI_LENGTH } from "@/lib/avatars";
 import { PROVIDER_IDS } from "@/lib/llm/provider";
 import { TOOL_IDS } from "@/lib/tools/registry";
+import { USE_TYPES } from "@/lib/space";
 
 export const agentInputSchema = z.object({
   name: z.string().trim().min(1, "Give your agent a name.").max(80, "Keep the name under 80 characters."),
@@ -56,9 +57,7 @@ export const agentInputSchema = z.object({
 
 export type AgentInput = z.infer<typeof agentInputSchema>;
 
-/** How someone uses Desker, asked at sign-up. */
-export const USE_TYPES = ["freelancer", "business", "startup", "personal"] as const;
-export type UseType = (typeof USE_TYPES)[number];
+export { USE_TYPES, type UseType } from "@/lib/space";
 
 /** One rule for every password Desker sets: sign-up and reset. */
 export const passwordRule = z.string().min(8, "Use at least 8 characters.").max(200, "That password is too long.");
@@ -83,9 +82,9 @@ export const signupSchema = z
       .trim()
       .toLowerCase()
       .regex(USERNAME_PATTERN, "Use 3-30 letters, numbers, dots, dashes or underscores, starting with a letter or number."),
-    /** The new organisation's name. Not asked when joining through an invitation. */
-    organization: z.string().trim().max(80, "That organisation name is too long.").optional(),
-    useType: z.enum(USE_TYPES, { message: "Choose how you'll use Desker." }),
+    /** The new business's name. Asked only when a business space is being founded. */
+    organization: z.string().trim().max(80, "That business name is too long.").optional(),
+    useType: z.enum(USE_TYPES, { message: "Choose what you'll use Desker for." }),
     email: z.string().trim().toLowerCase().email("Enter a valid email address."),
     password: passwordRule,
     /** An invitation token; joins that organisation instead of creating one. */
@@ -96,9 +95,9 @@ export const signupSchema = z
     }),
   })
   .strict()
-  .refine((input) => Boolean(input.invite) || Boolean(input.organization), {
+  .refine((input) => Boolean(input.invite) || input.useType === "personal" || Boolean(input.organization), {
     path: ["organization"],
-    message: "Enter your organisation's name.",
+    message: "Enter your business's name.",
   });
 
 export const chatRequestSchema = z.object({

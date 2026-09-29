@@ -36,7 +36,7 @@ export const TOOL_METADATA: Record<
   search_documents: {
     label: "Search uploaded documents",
     blurb:
-      "Look up passages in the documents you have uploaded for this agent. Company Context is always in its instructions, so it never needs this for that.",
+      "Look up passages in the documents you have uploaded for this agent. The shared context (about your business, or about you) is always in its instructions, so it never needs this for that.",
     icon: "search",
   },
   log_issue: {

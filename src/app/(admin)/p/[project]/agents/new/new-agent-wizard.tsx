@@ -31,7 +31,9 @@ import { connectorById } from "@/lib/integrations/catalog";
 import { api, ApiError, errorMessage } from "@/lib/api-client";
 import { parseLines, randomAgentName } from "@/lib/agent-fields";
 import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
-import { TEMPLATES, templateById, type AgentTemplate } from "@/lib/content";
+import { templateById, templatesFor, type AgentTemplate } from "@/lib/content";
+import { useSpaceKind } from "@/components/space-kind";
+import { spaceCopy } from "@/lib/space-copy";
 import { TemplateIcon, ScratchCuteIcon } from "@/components/marketing/template-icon";
 import { WORK_TOOL_IDS } from "@/lib/work/tools";
 import { AGENT_CONTEXT_QUESTIONS } from "@/lib/work/context";
@@ -61,10 +63,14 @@ export function NewAgentWizard({ project }: { project: string }) {
   const router = useRouter();
   const search = useSearchParams();
   const create = useCreateAgent(project);
+  // A business hires staff; a personal space hires assistants for one person.
+  const kind = useSpaceKind();
+  const roles = templatesFor(kind);
+  const copy = spaceCopy(kind);
 
   // A showcase link (/signup?template=x) arrives here with the role chosen.
   const preselected = search.get("template");
-  const initial = preselected ? templateById(preselected) : undefined;
+  const initial = preselected ? roles.find((role) => role.id === preselected) : undefined;
 
   const [step, setStep] = React.useState(initial ? 1 : 0);
   const [template, setTemplate] = React.useState<string | null>(initial ? initial.id : null);
@@ -179,15 +185,18 @@ export function NewAgentWizard({ project }: { project: string }) {
         <Breadcrumbs
           items={[
             { label: "Roster", href: `/p/${project}/roster` },
-            { label: "Hire an AI employee" },
+            { label: kind === "personal" ? "Add an assistant" : "Hire an AI employee" },
           ]}
           className="mb-4"
         />
 
-        <h1 className="text-xl font-bold tracking-tight text-ink">Hire an AI employee</h1>
+        <h1 className="text-xl font-bold tracking-tight text-ink">
+          {kind === "personal" ? "Add an assistant" : "Hire an AI employee"}
+        </h1>
         <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
-          Pick a role, give them a name, check how they behave. About five minutes,
-          then you&apos;ll add a document and publish.
+          {kind === "personal"
+            ? "Pick what you want help with, give them a name, check how they behave. About five minutes, then you can add a document and switch them on."
+            : "Pick a role, give them a name, check how they behave. About five minutes, then you'll add a document and publish."}
         </p>
 
         {/* Progress */}
@@ -238,8 +247,10 @@ export function NewAgentWizard({ project }: { project: string }) {
                 {
                   [
                     "Every field below is pre-filled from the role you pick. Change anything.",
-                    "Give them a name, a job and a face. Clients see all three.",
-                    "How they talk, what falls to them, and when they fetch a human.",
+                    copy.profileStep,
+                    kind === "personal"
+                      ? "How they talk, what they look after, and when they check with you first."
+                      : "How they talk, what falls to them, and when they stop and ask you.",
                     "What they can draw on, and what they do on their own.",
                     "Optional. Connect the tools this role works with - now, or any time later from Integrations.",
                   ][step]
@@ -253,7 +264,7 @@ export function NewAgentWizard({ project }: { project: string }) {
 
             {step === 0 ? (
               <div className="grid gap-2 sm:grid-cols-2">
-                {TEMPLATES.map((role) => (
+                {roles.map((role) => (
                   <TemplateCard
                     key={role.id}
                     selected={template === role.id}
@@ -304,7 +315,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                     />
                   </Field>
                   <Field
-                    label="Job title"
+                    label={copy.roleLabel}
                     htmlFor="jobTitle"
                     required
                     error={fieldErrors.jobTitle?.[0]}
@@ -312,22 +323,24 @@ export function NewAgentWizard({ project }: { project: string }) {
                     <Input
                       value={form.jobTitle}
                       onChange={(event) => set("jobTitle", event.target.value)}
-                      placeholder="Customer Support Lead"
+                      placeholder={copy.rolePlaceholder}
                     />
                   </Field>
                 </div>
 
-                <Field
-                  label="Team"
-                  htmlFor="department"
-                  hint="Optional. Only used to group the roster once you have a few agents."
-                >
-                  <Input
-                    value={form.department}
-                    onChange={(event) => set("department", event.target.value)}
-                    placeholder="Customer Experience"
-                  />
-                </Field>
+                {copy.showTeam ? (
+                  <Field
+                    label="Team"
+                    htmlFor="department"
+                    hint="Optional. Only used to group the roster once you have a few agents."
+                  >
+                    <Input
+                      value={form.department}
+                      onChange={(event) => set("department", event.target.value)}
+                      placeholder={copy.teamPlaceholder}
+                    />
+                  </Field>
+                ) : null}
 
                 <div className="space-y-1.5">
                   <Label>Avatar</Label>
@@ -358,7 +371,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                     autoFocus
                     rows={5}
                     onChange={(event) => set("personality", event.target.value)}
-                    placeholder="Warm but efficient. Gets to the point in two sentences and says plainly when something isn't possible."
+                    placeholder={copy.personalityPlaceholder}
                   />
                 </Field>
 
@@ -373,20 +386,20 @@ export function NewAgentWizard({ project }: { project: string }) {
                     onChange={(event) =>
                       set("responsibilitiesText", event.target.value)
                     }
-                    placeholder={"Answer order and return questions\nLog bugs clients report"}
+                    placeholder={copy.responsibilitiesPlaceholder}
                   />
                 </Field>
 
                 <Field
                   label="Escalation rule"
                   htmlFor="escalationRule"
-                  hint="Plain language. The agent judges it from what the client actually says, not from keywords."
+                  hint={copy.escalationHint}
                 >
                   <Textarea
                     value={form.escalationRule}
                     rows={3}
                     onChange={(event) => set("escalationRule", event.target.value)}
-                    placeholder="Escalate if the client is angry, asks for a refund over $200, or mentions legal action."
+                    placeholder={copy.escalationPlaceholder}
                   />
                 </Field>
                 <EscalationRuleHelper
@@ -413,9 +426,9 @@ export function NewAgentWizard({ project }: { project: string }) {
                         Answer from context documents
                       </Label>
                       <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
-                        Upload policies, product sheets or FAQs after this step. The agent
-                        searches them before answering and cites what it found instead of
-                        guessing.
+                        {kind === "personal"
+                          ? "Upload a bank statement (CSV), your CV or notes after this step. The assistant reads them before answering instead of guessing."
+                          : "Upload policies, product sheets or FAQs after this step. The agent searches them before answering and cites what it found instead of guessing."}
                       </p>
                     </div>
                   </div>
@@ -433,10 +446,12 @@ export function NewAgentWizard({ project }: { project: string }) {
                   />
                 </div>
 
-                <p className="text-xs leading-relaxed text-ink-muted">
-                  Logging issues and suggestions, and escalating to a human, are on by
-                  default. Adjust those in the editor once the agent exists.
-                </p>
+                {kind === "personal" ? null : (
+                  <p className="text-xs leading-relaxed text-ink-muted">
+                    Logging issues and suggestions, and escalating to a human, are on by
+                    default. Adjust those in the editor once the agent exists.
+                  </p>
+                )}
 
                 <div className="border-t border-line pt-5">
                   <h3 className="text-base font-semibold text-ink">Scope of work</h3>

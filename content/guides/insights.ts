@@ -1,4 +1,5 @@
 export const guide = {
+  audience: "business",
   slug: "insights",
   title: "Read Insights without being an analyst",
   summary: "What the numbers on that page actually tell you, and which two are worth acting on.",
@@ -7,7 +8,7 @@ export const guide = {
 
 ## The numbers worth acting on
 
-**Escalation rate** - how often an agent hands a conversation to a person. Climbing means the agent is out of its depth: usually a missing document, occasionally a job description that promises more than it knows.
+**Escalation rate** - how often an agent stops and hands something to a person. Climbing means the agent is out of its depth: usually a missing document, occasionally a job description that promises more than it knows.
 
 **Retrieval hit rate** - how often a search of your documents found something useful. A low rate with plenty of searches means people are asking about things you have not uploaded. The **content gaps** list on the **Detailed Insights** page names those questions directly; it is the most useful diagnostic list available.
 
@@ -21,7 +22,7 @@ export const guide = {
 
 ## Detailed Insights & Disliked replies
 
-For deeper analysis, click **View Detailed Insights** at any time. Clients can rate replies with a thumbs-down; each is listed with the question that produced it so you can inspect the transcript and close the gap.
+For deeper analysis, click **View Detailed Insights** at any time. Anyone chatting with a published agent can rate a reply; each thumbs-down is listed with the question that produced it so you can inspect the transcript and close the gap.
 
 ## A sensible weekly loop
 

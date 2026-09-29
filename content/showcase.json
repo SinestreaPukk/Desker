@@ -1,10 +1,10 @@
 {
   "meta": {
     "title": "Agent roles",
-    "description": "Customer support, onboarding, research, marketing, executive assistant, dev support, sales development, people ops - every role Desker agents can fill, with an example of each at work."
+    "description": "Fourteen roles: support, onboarding, research, marketing, sales and more for your business; money, life admin, social media, career, travel and learning for you. Each with an example at work."
   },
   "heading": "Roles you can hire today",
-  "intro": "Each role is a starting point in the hire wizard: a job title, a tone of voice, a default escalation rule and the tools it may use. Adjust anything; the agent is yours.",
+  "intro": "Eight roles for a business, six for your own life. Each is a starting point in the hire wizard: a job, a tone of voice, a rule for when to ask you, and the tools it may use. Adjust anything.",
   "exampleLabel": "A real run",
   "cta": {
     "label": "Join the beta",

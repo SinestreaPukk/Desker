@@ -3,6 +3,8 @@
 import * as React from "react";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSpaceKind } from "@/components/space-kind";
+import { spaceCopy } from "@/lib/space-copy";
 
 /**
  * Recognition over recall. Fields that take plain-language instructions show
@@ -10,13 +12,6 @@ import { cn } from "@/lib/utils";
  * owner has typed as the agent will understand it - so they see the effect
  * while writing, not after the first bad conversation.
  */
-
-const RULE_EXAMPLES = [
-  "Escalate if the client is angry, asks for a refund over $200, or mentions legal action.",
-  "Escalate if a topic returns no reliable sources.",
-  "Escalate if a request involves money or a legal commitment.",
-  "Escalate if an action would email more than 20 people at once.",
-];
 
 function Chip({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
@@ -49,18 +44,19 @@ export function EscalationRuleHelper({
   value: string;
   onPick: (text: string) => void;
 }) {
+  const copy = spaceCopy(useSpaceKind());
   const text = value.trim();
   const condition = text.replace(/^escalate\s+(immediately\s+)?(if|when)\s+/i, "").replace(/\.$/, "");
   return (
     <div className="space-y-2">
       <Reading label="The agent reads this as">
         {text
-          ? <>Stop and fetch a person when <strong className="font-medium text-ink">{condition}</strong>. It judges this from the conversation, not from keywords.</>
-          : "No rule yet - the agent only fetches a person when a client asks for one. Try one of these, then make it yours:"}
+          ? <>Stop and check with you when <strong className="font-medium text-ink">{condition}</strong>. It judges this from what happens, not from keywords.</>
+          : copy.noRuleYet}
       </Reading>
       {!text ? (
         <div className="flex flex-wrap gap-1.5">
-          {RULE_EXAMPLES.map((example) => (
+          {copy.ruleExamples.map((example) => (
             <Chip key={example} onClick={() => onPick(example)}>
               {example}
             </Chip>
@@ -73,12 +69,8 @@ export function EscalationRuleHelper({
 
 /** Empty-state only: once there are objectives the textarea above already shows them. */
 export function ObjectivesHelper({ objectives, onPick }: { objectives: string[]; onPick?: (text: string) => void }) {
+  const examples = spaceCopy(useSpaceKind()).objectiveExamples;
   if (objectives.length > 0) return null;
-  const examples = [
-    "Research what our three main competitors announced this week",
-    "Draft one LinkedIn post about the lifetime warranty and queue it for approval",
-    "Email a summary of open support issues to ops@company.com",
-  ];
   return (
     <div className="space-y-2">
       <Reading label="Each run will try to">

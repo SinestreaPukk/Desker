@@ -12,6 +12,7 @@
  * what every run believes about the business.
  */
 import "server-only";
+import type { SpaceKind } from "@/lib/space";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getProvider, type ChatMessage } from "@/lib/llm/provider";
@@ -43,7 +44,7 @@ interface ContextDraft {
   sources: string[];
 }
 
-const SYSTEM_PROMPT = `You are helping a small-business owner set up an AI worker.
+const BUSINESS_PROMPT = `You are helping a business owner set up an AI worker.
 
 You are given extracts from the documents they have uploaded, and a short list of questions they have to answer about their business and their work. Propose an answer to each question, using only what the documents actually say.
 
@@ -55,6 +56,18 @@ Rules:
 - Write the answer as the owner would write it: plain sentences in the first person plural ("We sell..."), specific, no marketing language.
 - Two to four sentences each. No markdown, no bullet points, no headings.
 - These answers become standing instructions to a worker, so write what is true, not what sounds good.`;
+
+/** The same job for one person's own space: first person singular, and no copying of identifiers. */
+const PERSONAL_PROMPT = BUSINESS_PROMPT.replace(
+  "You are helping a business owner set up an AI worker.",
+  "You are helping someone set up a personal AI assistant for their own life.",
+)
+  .replace("about their business and their work", "about themselves and what they want help with")
+  .replace("Never invent a product, a customer, a policy or a number.", "Never invent a fact about them, a person they know, or a number.")
+  .replace('plain sentences in the first person plural ("We sell...")', 'plain sentences in the first person ("I work as...")')
+  .concat(
+    "\n- Never copy an account number, card number, password, ID number or full address into an answer, even when a document contains one.",
+  );
 
 function questionList(questions: readonly ContextQuestion[]): string {
   return questions
@@ -73,6 +86,8 @@ export async function draftContextFromDocuments(input: {
   agentId?: string;
   projectId?: string;
   questions: readonly ContextQuestion[];
+  /** Whose space it is: decides how the answers are written. */
+  kind: SpaceKind;
   /** Which agent's model to bill and use. */
   model: { provider: string; name: string | null };
   billingAgentId?: string;
@@ -143,7 +158,7 @@ export async function draftContextFromDocuments(input: {
   const provider = await getProvider(input.model.provider);
   const turn = await provider.complete({
     billing: { organizationId: input.organizationId, agentId: input.billingAgentId },
-    systemPrompt: SYSTEM_PROMPT,
+    systemPrompt: input.kind === "personal" ? PERSONAL_PROMPT : BUSINESS_PROMPT,
     messages,
     tools: [],
     model: input.model.name,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSpaceKind } from "@/components/space-kind";
 import * as React from "react";
 import Link from "next/link";
 import {
@@ -37,6 +38,7 @@ import type { AgentSummaryDto } from "@/lib/serialize";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 export function RosterView({ project }: { project: string }) {
+  const personal = useSpaceKind() === "personal";
   const { data: agents, isPending, error, refetch, isRefetching } = useAgents(project);
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState("all");
@@ -65,12 +67,16 @@ export function RosterView({ project }: { project: string }) {
     <Page>
       <PageHeader
         title="Roster"
-        description="Everyone on your AI staff. Published agents are reachable by clients; drafts are not."
+        description={
+          personal
+            ? "Your assistants. Switched on, they work on their schedule and answer you in Chat; off, they do nothing."
+            : "Everyone on your AI staff. Published agents work on their schedule and answer in Team; drafts do nothing until you publish them."
+        }
         actions={
           <Button asChild>
             <Link href={`/p/${project}/agents/new`}>
               <UserRoundPlus aria-hidden />
-              New agent
+              {personal ? "New assistant" : "New agent"}
             </Link>
           </Button>
         }
@@ -92,7 +98,7 @@ export function RosterView({ project }: { project: string }) {
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by name, title or team…"
+            placeholder={personal ? "Search by name or what they help with…" : "Search by name, title or team…"}
             className="pl-9 pr-10"
           />
           <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
@@ -160,13 +166,17 @@ export function RosterView({ project }: { project: string }) {
         ) : agents!.length === 0 ? (
           <EmptyState
             icon={UserRoundPlus}
-            title="Nobody on the roster yet"
-            description="An AI employee answers your clients and, once you trust it, does work on its own. Hiring the first one takes about five minutes."
+            title={personal ? "No assistants yet" : "Nobody on the roster yet"}
+            description={
+              personal
+                ? "An assistant takes one part of your life off your plate - your money, your week, your job hunt - and asks before it acts. The first one takes about five minutes."
+                : "An AI employee takes a job off your hands - research, marketing, support, sales, ops - does it on its own, and asks before anything goes out. Hiring the first one takes about five minutes."
+            }
             action={
               <Button asChild>
                 <Link href={`/p/${project}/agents/new`}>
                   <UserRoundPlus aria-hidden />
-                  Hire your first agent
+                  {personal ? "Add your first assistant" : "Hire your first agent"}
                 </Link>
               </Button>
             }

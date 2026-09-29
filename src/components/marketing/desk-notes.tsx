@@ -73,11 +73,11 @@ const NOTES = [
     tone: "coral",
     tilt: 5,
     place: "-bottom-[8.75rem] right-8 w-56",
-    name: "Kai",
-    seed: "kai",
-    role: "Assistant",
-    text: "Follow-up to Dana is drafted. It sends when you approve.",
-    scribble: "Thursday 10:00",
+    name: "Juno",
+    seed: "juno",
+    role: "Life admin",
+    text: "Sam's birthday is Thursday. Shall I block an hour for a gift?",
+    scribble: "Wednesday 18:00",
   },
 ] as const;
 

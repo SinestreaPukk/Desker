@@ -1,9 +1,10 @@
 export const guide = {
+  audience: "all",
   slug: "integrations",
   title: "Connect a publishing webhook or email",
   summary: "The two ways work leaves the building, and how to test one safely.",
   minutes: 2,
-  body: `Integrations live under **Integrations**, per organisation. Until one is connected an agent can still research and draft - it simply has nowhere to send anything.
+  body: `Integrations live under **Integrations**, per space. Until one is connected an agent can still research and draft - it simply has nowhere to send anything.
 
 ## A publishing webhook
 

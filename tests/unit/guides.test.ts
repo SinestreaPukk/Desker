@@ -7,7 +7,9 @@ import { describe, expect, it } from "vitest";
 import {
   GUIDES,
   HELP_TOPICS,
+  PERSONAL_HELP_TOPICS,
   guideBySlug,
+  guidesFor,
   headingId,
   plainText,
   searchGuides,
@@ -28,8 +30,27 @@ describe("the guides themselves", () => {
       "approvals",
       "insights",
       "integrations",
+      "personal-space",
+      "about-you",
+      "personal-routines",
+      "money-manager",
+      "personal-privacy",
     ]) {
       expect(slugs).toContain(expected);
+    }
+  });
+
+  it("gives a personal space its own tutorial, free of business setup", () => {
+    const personal = guidesFor("personal");
+    const business = guidesFor("business");
+    expect(personal.map((g) => g.slug)).toContain("personal-space");
+    expect(personal.map((g) => g.slug)).not.toContain("hire-an-agent");
+    expect(business.map((g) => g.slug)).not.toContain("personal-space");
+    for (const guide of personal.filter((g) => g.audience === "personal")) {
+      const text = plainText(guide.body).toLowerCase();
+      for (const word of ["job title", "company context", "organisation", "hire"]) {
+        expect(text, `${guide.slug} mentions "${word}"`).not.toContain(word);
+      }
     }
   });
 
@@ -81,8 +102,8 @@ describe("splitting a body into sections", () => {
 });
 
 describe("the contextual links", () => {
-  it("every one points at a guide and a heading that exist", () => {
-    for (const [topic, target] of Object.entries(HELP_TOPICS)) {
+  it("every one points at a guide and a heading that exist, in both kinds of space", () => {
+    for (const [topic, target] of [...Object.entries(HELP_TOPICS), ...Object.entries(PERSONAL_HELP_TOPICS)]) {
       const guide = guideBySlug(target.slug);
       expect(guide, `${topic} points at a missing guide`).not.toBeNull();
       expect(

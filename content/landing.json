@@ -1,11 +1,11 @@
 {
   "meta": {
     "title": "Team of AI agents who do the work. On call 24/7",
-    "description": "A researcher, a marketer, a sales rep, an assistant and a support desk. They work from your documents, pass work to each other, and bring you anything that goes out."
+    "description": "A team of AI agents for your company, and private AI assistants for your own money, week and plans. They work on their own and ask before anything goes out."
   },
   "hero": {
     "headline": "Team of AI agents who do the work. On call 24/7",
-    "subhead": "A researcher, a marketer, a sales rep, an assistant and a support desk. They work from your documents, pass work to each other, and bring you anything that goes out.",
+    "subhead": "Staff that run research, marketing and support for your company. Assistants that handle your money, your week and your job hunt. They work on their own and ask before anything goes out.",
     "primaryCta": {
       "label": "Join the beta",
       "href": "/beta"
@@ -31,18 +31,18 @@
   },
   "steps": {
     "eyebrow": "How it works",
-    "heading": "From your documents to a first draft",
+    "heading": "From what you know to work done",
     "intro": "Setup takes about five minutes once you're in, and the app walks you through each part.",
     "items": [
       {
         "icon": "upload",
-        "title": "Upload what you already know",
-        "body": "Policies, product guides, meeting notes. Your agents answer from them and name the file they used."
+        "title": "Tell it once",
+        "body": "Your business, or yourself, in four short answers. Add documents: policies and guides, or a statement and your CV."
       },
       {
         "icon": "calendar",
         "title": "Give it a job and a time",
-        "body": "Pick one of eight roles and when it works: every Monday at nine, every Friday, or the moment a customer writes."
+        "body": "Pick one of fourteen roles and when it works: every Monday at eight, every weekday morning, or when a client writes."
       },
       {
         "icon": "approve",
@@ -53,8 +53,8 @@
   },
   "features": {
     "eyebrow": "The work, done",
-    "heading": "One morning's output, before you start",
-    "intro": "One morning at ABC Inc.: what's done, and what's waiting on you.",
+    "heading": "One morning's work, at the office and at home",
+    "intro": "What's done, and what's waiting on you: three from a business, two from a personal space.",
     "items": [
       {
         "label": "Approvals inbox",
@@ -81,23 +81,23 @@
         "demo": "researcher"
       },
       {
-        "label": "Leo · Sales rep",
-        "title": "Five new leads, each with a reason",
-        "body": "Leo finds businesses that fit your ideal customer and drafts a first email to each. They wait for your approval.",
-        "demo": "sales"
+        "label": "Penny · Money manager",
+        "title": "Where last month's money went",
+        "body": "Penny adds up the statement you uploaded, to the cent, and finds the subscription you forgot. Your card number is masked before any AI reads it.",
+        "demo": "money"
       },
       {
-        "label": "Kai · Assistant",
-        "title": "The follow-up that didn't slip",
-        "body": "Kai drafts the email from your meeting notes and proposes the next date. It sends when you confirm.",
-        "demo": "assistant"
+        "label": "Juno · Life admin",
+        "title": "The birthday that didn't slip",
+        "body": "Juno reads your week on Sunday night, spots Sam's birthday on Thursday, and blocks an hour to sort a gift. You say yes first.",
+        "demo": "life"
       }
     ]
   },
   "trust": {
     "eyebrow": "Trust & control",
     "heading": "It asks before it acts",
-    "intro": "Handing work to an AI is a bigger ask than trying another app. So an agent drafts, and a person decides.",
+    "intro": "Handing work, or your life admin, to an AI is a big ask. So it drafts, and you decide.",
     "shots": [
       {
         "image": "approval",
@@ -138,8 +138,8 @@
       },
       {
         "icon": "lock",
-        "title": "Your documents are yours",
-        "body": "Nothing you upload is used to train an AI model. Saved credentials are encrypted."
+        "title": "Private by design",
+        "body": "A personal space can't be shared or reached from outside. Nothing trains AI models. Download or delete it all yourself."
       },
       {
         "icon": "handoff",
@@ -150,16 +150,20 @@
   },
   "roles": {
     "eyebrow": "Roles",
-    "heading": "Eight roles, ready to hire",
-    "intro": "Pick one and change anything: its job, its voice, the documents it reads, when it asks you.",
-    "cta": "Explore role"
+    "heading": "Fourteen roles, ready to hire",
+    "intro": "Eight for your business, six for your own life. Pick one and change anything: its job, its voice, its documents, when it asks you.",
+    "cta": "Explore role",
+    "groups": {
+      "business": "For your business",
+      "personal": "For your life"
+    }
   },
   "comparison": {
     "eyebrow": "The difference",
-    "heading": "Why prompt windows aren't coworkers",
-    "intro": "A chat assistant answers quick prompts. Desker gives you staff that work on your schedule, know your business, and ask for your approval before anything goes out.",
+    "heading": "Why a chat window isn't a team",
+    "intro": "A chat assistant answers when you ask. Desker gives you staff and assistants that work on a schedule, know your business or you, and ask before anything goes out.",
     "competitorLabel": "A chat assistant",
-    "deskerLabel": "Desker staff",
+    "deskerLabel": "Desker",
     "items": [
       {
         "dimension": "When it works",
@@ -167,24 +171,29 @@
         "desker": "On a schedule, or the moment someone writes in"
       },
       {
-        "dimension": "Your business",
-        "generic": "Forgets it between chats",
-        "desker": "Knows it, and reads your documents"
+        "dimension": "What it knows",
+        "generic": "Starts over, or half-remembers",
+        "desker": "Your business, or you, from answers you gave once, plus your documents"
       },
       {
         "dimension": "Real work",
         "generic": "Gives you text to copy and paste",
-        "desker": "Researches, drafts emails and posts, and logs issues"
+        "desker": "Researches, drafts emails and posts, plans your week, logs issues"
+      },
+      {
+        "dimension": "Money",
+        "generic": "Does the maths in its head",
+        "desker": "Adds up your statements exactly, then explains them"
       },
       {
         "dimension": "Approvals",
         "generic": "Nothing to review before it goes out",
-        "desker": "Every post and email waits for your approval"
+        "desker": "Every post and email waits for your yes"
       },
       {
-        "dimension": "Roles",
-        "generic": "One general assistant for everything",
-        "desker": "Eight roles, each with its own job and limits"
+        "dimension": "Work and life",
+        "generic": "One chat history for everything",
+        "desker": "A business space and a private personal space, walled apart"
       }
     ]
   },
@@ -217,42 +226,46 @@
         "a": "Beta opens soon. Join the list for an invite. Until then, sign-in is limited to the people testing it."
       },
       {
+        "q": "Is it for businesses or for individuals?",
+        "a": "Both. When you sign up you choose a business, a personal space, or both. A business gets AI staff that work with clients and your team. A personal space gets assistants for your own life: money, your week, social media, your career, travel and learning."
+      },
+      {
+        "q": "Can I have a business and a personal space?",
+        "a": "Yes. Pick \"Both\" at sign-up, or add the other one later from the switcher at the top of the sidebar. They are separate spaces with separate assistants, context and history; nothing crosses from one to the other."
+      },
+      {
+        "q": "How private is my personal space?",
+        "a": "It has one member, you, and nobody can be invited in. Its assistants have no public chat link or widget. Account and card numbers in uploaded statements are masked before any AI reads them. Nothing you share trains an AI model, and you can download or delete everything yourself from Your space."
+      },
+      {
         "q": "What can an agent actually do?",
-        "a": "It answers your clients on a chat link or a widget on your site, searches the documents you upload, researches the web with citations, drafts posts and emails, logs bugs and requests, and schedules its own follow-ups. It can work on a schedule or the moment someone writes in."
+        "a": "It searches the documents you upload, researches the web with citations, drafts posts and emails, plans around your calendar, adds up bank statements, schedules its own follow-ups and hands work to a colleague. In a business it can also answer clients on a chat link or a widget on your site."
+      },
+      {
+        "q": "Can it spend my money or book things?",
+        "a": "No. There is no tool for paying, buying, booking or signing anything. The money manager reads statements and tells you what to change; the travel planner finds the options; you do the booking."
       },
       {
         "q": "Will it ever send something I haven't seen?",
-        "a": "No. Every agent starts in draft-only mode, so posts and emails wait for your approval in the Inbox. You can loosen that per agent and per tool once one has earned it."
-      },
-      {
-        "q": "What happens if an agent gets it wrong?",
-        "a": "You catch it in the inbox, because the draft is the thing you approve: reject it, or edit it and send the version you want. Every agent also has an escalation rule that stops it and brings in a person, and the audit log shows what it did and which sources it used."
+        "a": "No. Every agent starts in draft-only mode, so posts and emails wait for your approval. You can loosen that per agent and per tool once one has earned it."
       },
       {
         "q": "Where do its answers come from?",
-        "a": "From the documents you upload (PDF, Word, Markdown, text) and from cited web pages. When the answer is in neither, the agent says it doesn't know rather than inventing one."
+        "a": "From what you told it, the documents you upload (PDF, Word, Markdown, text, CSV) and cited web pages. When the answer is in none of them, it says it doesn't know rather than inventing one."
       },
       {
         "q": "Is my data secure?",
-        "a": "Nothing you upload is used to train an AI model, and your documents are readable only inside your organisation. Integration credentials such as API keys are encrypted at rest with AES-256-GCM. It is stored with our hosting and database providers, Vercel and Neon, and deleted when you close your organisation."
-      },
-      {
-        "q": "Can I connect my own tools?",
-        "a": "Today an agent can send email through your own Resend account, post notifications to Slack or any webhook, take work in through an inbound webhook, and talk to clients through a hosted link or the embed widget. Direct Gmail, LinkedIn and Slack posting are not built yet."
+        "a": "Nothing you upload is used to train an AI model. Every space is readable only by its members, and a personal space only by you. Saved credentials are encrypted at rest with AES-256-GCM. Data is stored with our hosting and database providers, Vercel and Neon, and deleted when you delete your account."
       },
       {
         "q": "How long does setup take?",
-        "a": "About five minutes: pick a role, upload a document, test it live in the playground, publish. The app has a step-by-step guide for each part, from hiring an agent to reading the audit log."
-      },
-      {
-        "q": "What languages does it work in?",
-        "a": "An agent reads your documents and replies in the language you write its job in, and the models behind it handle the major languages well. The Desker interface itself is English only today."
+        "a": "About five minutes: answer four questions, pick a role, upload a document if you have one, try it, switch it on. The app has a step-by-step guide for each part."
       }
     ]
   },
   "cta": {
     "heading": "Be in the next beta group",
-    "body": "Beta opens soon. Join the list for an invite.",
+    "body": "Beta opens soon. Join the list for an invite, for your business, your life, or both.",
     "button": {
       "label": "Join the beta",
       "href": "/beta"
@@ -262,5 +275,31 @@
       "href": "/showcase"
     },
     "microcopy": "No payment during the beta · Every post and email needs your approval"
+  },
+  "desks": {
+    "eyebrow": "Two desks, one Desker",
+    "heading": "Hire for the office. Hire for home.",
+    "intro": "Choose a business, a personal space, or both when you sign up. Each has its own team, its own context, and a wall between them.",
+    "business": {
+      "label": "For your business",
+      "title": "A team that runs while you run the company",
+      "body": "Tell it what the business does once. Your staff answer clients, write, research and follow up, and bring you anything that goes out.",
+      "points": [
+        "Support, sales, marketing, research and ops roles",
+        "Answers clients from your own policies",
+        "Invite your team, roles and approvals for everyone"
+      ]
+    },
+    "personal": {
+      "label": "For your life",
+      "title": "Assistants who know you, and only you",
+      "body": "Tell them about you once. They plan your week, add up your spending, grow your profile and hunt for your next job, and ask before acting.",
+      "points": [
+        "Money, life admin, social media, career, travel and learning",
+        "Adds up your bank statements exactly, not by guessing",
+        "Private: no invites, no public link, delete it any time"
+      ]
+    },
+    "wall": "Nothing in your personal space is visible to your business, its team or its clients."
   }
 }

@@ -3,6 +3,7 @@ import { currentUser } from "@/lib/auth";
 import { findProject, projectsFor } from "@/lib/projects";
 import { organizationsFor } from "@/lib/organizations";
 import { AdminShell } from "@/components/admin-shell";
+import { spaceKind } from "@/lib/space";
 
 /**
  * The chrome every admin page sits inside.
@@ -49,8 +50,9 @@ export default async function ProjectLayout({
         slug: project.slug,
         organizationId: project.organizationId,
       }}
+      kind={spaceKind(project.organization.kind)}
       projects={projects}
-      organizations={organizations.map((org) => ({ id: org.id, name: org.name, role: org.role }))}
+      organizations={organizations.map((org) => ({ id: org.id, name: org.name, role: org.role, kind: org.kind }))}
     >
       {children}
     </AdminShell>

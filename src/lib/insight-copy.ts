@@ -42,13 +42,13 @@ interface ConversationCopy {
 
 export function conversationsCaption(input: ConversationCopy): string {
   if (input.conversations === 0) {
-    return "No client has talked to a published agent in this range yet.";
+    return "Nobody has chatted with a published agent in this range yet.";
   }
   const change = describeChange(input.conversations, input.previousConversations);
   const handled = input.conversations - input.escalated;
   const share = Math.round((handled / input.conversations) * 100);
   return [
-    `${plural(input.conversations, "client conversation")} ${rangeWords(input.days)}`,
+    `${plural(input.conversations, "chat conversation")} ${rangeWords(input.days)}`,
     change,
     `${share}% finished without needing a person`,
   ]
@@ -71,7 +71,7 @@ export function escalationCaption(escalated: number, conversations: number): str
 
 export function helpfulCaption(up: number, down: number): string {
   const rated = up + down;
-  if (rated === 0) return "Nobody has rated a reply yet. Ratings appear as clients use the chat.";
+  if (rated === 0) return "Nobody has rated a reply yet. Ratings appear as people use the chat.";
   const share = Math.round((up / rated) * 100);
   return down === 0
     ? `Every one of the ${rated} rated replies was marked helpful.`
@@ -90,9 +90,9 @@ export function searchesCaption(searches: number, misses: number): string {
 }
 
 export function issuesCaption(issues: number, suggestions: number): string {
-  if (issues === 0 && suggestions === 0) return "Nothing raised by a client or an agent in this range.";
+  if (issues === 0 && suggestions === 0) return "Nothing raised in a chat or by an agent in this range.";
   const parts: string[] = [];
-  if (issues > 0) parts.push(`${plural(issues, "thing")} a client reported`);
+  if (issues > 0) parts.push(`${plural(issues, "thing")} reported in chat`);
   if (suggestions > 0) parts.push(`${plural(suggestions, "suggestion")} an agent raised`);
   return `${parts.join(" and ")}. Both wait in the Inbox until you deal with them.`;
 }

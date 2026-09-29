@@ -120,7 +120,7 @@ describe("the project's shared context", () => {
   it("is typed once and read by every agent in the project", async () => {
     const project = await prisma.project.findUniqueOrThrow({ where: { id: projectId } });
     const saved = await saveProjectContext(
-      { id: projectId, organizationId },
+      { id: projectId, organizationId, organization: { kind: "business" } },
       {
         business: "Northwind Supply Co. sells hand tools to tradespeople.",
         tone: "Plain and direct. No hype.",
@@ -150,7 +150,10 @@ describe("the project's shared context", () => {
   });
 
   it("reports how much is answered and what can be drafted from", async () => {
-    const project = await prisma.project.findUniqueOrThrow({ where: { id: projectId } });
+    const project = await prisma.project.findUniqueOrThrow({
+      where: { id: projectId },
+      include: { organization: { select: { kind: true } } },
+    });
     const dto = await readProjectContext(project);
     expect(dto.answered).toBe(2);
     expect(dto.total).toBe(4);

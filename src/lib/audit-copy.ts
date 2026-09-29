@@ -110,6 +110,15 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
         icon: "documents",
       };
     }
+    case "review_spending": {
+      if (!ok) return failed("Tried to add up your statements");
+      return {
+        title: "Added up your statements",
+        detail: "Totals, categories and recurring charges, worked out from the uploaded CSV files. Only the totals were shared with the model.",
+        tone: "neutral",
+        icon: "documents",
+      };
+    }
     case "draft_content": {
       const title = text(input.title);
       const kind = text(input.kind)?.replace(/_/g, " ") ?? "something";

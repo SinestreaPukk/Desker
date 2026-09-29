@@ -8,14 +8,22 @@ web
 
 ## Users
 
-Small-business owners and founders: solo founders, freelancers and small teams who "hire" AI employees to take on research, content, customer support and admin. They check in a few times a day rather than living in the app: to see what their staff did, to approve what is about to go out, and to hand over new work.
+Two audiences, one product (repositioned 2026-09-29):
+
+- **Business:** owners, founders, freelancers and small teams who "hire" AI employees for research, content, customer support, sales and admin.
+- **Personal:** individuals who want private AI assistants for their own life: money, the week's admin, social media, career, travel and learning.
+
+Many people are both, so sign-up asks Business / Personal / Both, and "both" founds two walled-apart spaces. Either way they check in a few times a day rather than living in the app: to see what was done, approve what is about to go out, and hand over new work.
 
 ## Product Purpose
 
-Desker lets a small business run a team of AI employees. Each employee has a role, a scope of work and a schedule; it does the work on its own, reports back, and asks before anything leaves the building. Success is an owner who spends minutes a day in Desker and gets hours of work done, trusting what went out because they approved it.
+Desker gives a business a team of AI employees, and a person a set of private AI assistants. For a business: Each employee has a role, a scope of work and a schedule; it does the work on its own, reports back, and asks before anything leaves the building. Success is an owner who spends minutes a day in Desker and gets hours of work done, trusting what went out because they approved it.
 
 ## Positioning
 
+- **Work and life, walled apart.** One account can hold a business space and a personal space. A personal space has one member, no invitations, no public chat link or widget (enforced server-side), and asks about the person instead of a company.
+- **Numbers computed, not guessed.** The money manager adds up uploaded CSV statements in code (`review_spending`); account and card numbers are masked before any model reads a statement.
+- **Your data is yours, as buttons.** Download everything or delete the account from Your space / Organisation.
 - **They work on their own.** Agents run on a schedule, a webhook or a manual start with nobody watching, and report back like staff.
 - **Nothing goes out unapproved.** Everything is a draft by default; posts and emails wait for the owner's yes.
 - **A team, not a single bot.** Agents have roles and hand work to each other (a researcher briefs a writer), and the owner sees the collaboration.
@@ -23,6 +31,7 @@ Desker lets a small business run a team of AI employees. Each employee has a rol
 ## Operating Context
 
 - The owner's day: open the app, read what was done (Work, Inbox updates), approve or reject what is waiting, review suggestions, adjust an employee's scope.
+- A personal space renames things for one person: "Chat" for the team room, "Your space" for settings, "Switch on" for publish, "About you" for company context.
 - Surfaces: Roster (the staff), agent editor (profile, knowledge, work and schedule), Work (runs: active and finished, each with its own report page), Inbox (conversations, approvals, issues, suggestions, updates), Insights, Integrations, Audit log, Organisation.
 - Clients also meet the agents through a public chat link or an embeddable widget.
 - A public marketing site sells the product.

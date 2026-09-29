@@ -1,13 +1,14 @@
 export const guide = {
+  audience: "all",
   slug: "approvals",
-  title: "Approve what an agent wants to send",
-  summary: "Nothing reaches a client until you say so. Here is where it waits and what your options are.",
+  title: "Approve what goes out",
+  summary: "Nothing leaves until you say so. Here is where it waits and what your options are.",
   minutes: 2,
-  body: `Every agent starts in draft-only mode: it can research, write and queue work, but anything that would leave the building stops for you.
+  body: `Every agent and assistant starts in draft-only mode: it can research, write and queue work, but anything that would leave - an email, a post, a calendar event, a Slack message - stops for you.
 
 ## Where things wait
 
-**Inbox → Approvals** lists every run that is holding something: a post for a connected publishing webhook, or an email. You see the full text, not a summary of it, along with the agent's own account of why it is asking.
+**Inbox → Approvals** lists every run that is holding something: a post, an email, a calendar event or a message. You see the full text, not a summary of it, along with the agent's own account of why it is asking.
 
 The same card appears under **Work** on the run itself, so you can approve from wherever you noticed it.
 
@@ -29,9 +30,9 @@ Move one tool at a time, once the agent has earned it, and check the audit log a
 
 An escalation rule is a plain sentence about when to fetch a person:
 
-> Escalate if the client is angry, asks for a refund over $200, or mentions legal action.
+> Escalate if a request involves money, a legal commitment, or anything you haven't done before.
 
-The agent judges it from what actually happens in the conversation or the run, not from keywords. When it fires, the item lands in **Inbox → Issues** marked *Escalated*, with the agent's reason - and the run carries on with whatever is still safe to do.
+The agent judges it from what actually happens in its work or a chat, not from keywords. When it fires, the item lands in **Inbox → Issues** marked *Escalated*, with the agent's reason - and the run carries on with whatever is still safe to do.
 
 ## If nothing is waiting
 

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { AtSign, CalendarHeart, GraduationCap, Plane, Rocket, Wallet } from "lucide-react";
 import type { TEMPLATE_ICONS } from "@/lib/content";
 import {
   CustomerSupportIcon,
@@ -64,6 +65,14 @@ const ICONS: Record<
 
   // Fallbacks / accents
   sparkles: SparklesCuteIcon,
+
+  // Personal roles: line icons at the same size as the drawn ones.
+  wallet: Wallet,
+  "calendar-heart": CalendarHeart,
+  "at-sign": AtSign,
+  rocket: Rocket,
+  plane: Plane,
+  "graduation-cap": GraduationCap,
 };
 
 /** Direct mapping by role template ID for convenience */

@@ -69,7 +69,7 @@ describe("the captions under the numbers", () => {
       escalated: 4,
       days: 7,
     });
-    expect(caption).toContain("42 client conversations");
+    expect(caption).toContain("42 chat conversations");
     expect(caption).toContain("this week");
     expect(caption).toContain("up 14%");
     expect(caption).toContain("90% finished without needing a person");

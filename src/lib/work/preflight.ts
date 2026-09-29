@@ -12,6 +12,7 @@
  *
  * Pure: the runner loads the facts, this decides.
  */
+import type { SpaceKind } from "@/lib/space";
 import type { ContextAnswers } from "./context";
 
 /** Tools whose output is written in the company's voice for its customers. */
@@ -29,6 +30,8 @@ export interface PreflightInput {
   documentCount: number;
   /** The action item's trigger: manual | schedule | webhook | followup. */
   trigger: string;
+  /** A personal space is grounded in the person, not a company. */
+  kind?: SpaceKind;
 }
 
 /** What is missing, in the owner's words. Empty means the run may start. */
@@ -39,10 +42,15 @@ export function missingGrounding(input: PreflightInput): string[] {
   const writes = !input.tools || input.tools.some((tool) => WRITING_TOOLS.includes(tool));
   const scopedWriter = Boolean(input.tools) && writes;
 
-  if (!project("business")) missing.push("What the business does (Company context)");
-  if (writes) {
-    if (!project("audience")) missing.push("Who the customers are (Company context)");
-    if (!project("tone")) missing.push("How agents should sound (Company context)");
+  if (input.kind === "personal") {
+    if (!project("about")) missing.push("Who you are (About you)");
+    if (writes && !project("tone")) missing.push("How your assistants should talk (About you)");
+  } else {
+    if (!project("business")) missing.push("What the business does (Company context)");
+    if (writes) {
+      if (!project("audience")) missing.push("Who the customers are (Company context)");
+      if (!project("tone")) missing.push("How agents should sound (Company context)");
+    }
   }
   // The content calendar, the campaign, the brief: said in the agent's own
   // context or in a document it can search. Neither means it writes blind.

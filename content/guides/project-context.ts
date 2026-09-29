@@ -1,4 +1,5 @@
 export const guide = {
+  audience: "business",
   slug: "project-context",
   title: "Write context an agent can use",
   summary: "Four short answers beat one blank box - and the company is typed once, not once per agent.",
@@ -15,7 +16,7 @@ Two or three sentences each is plenty. Specific beats long:
 
 ## Type the company once
 
-**About your business** at the top of the roster - and on the Organisation page - holds what every agent in the project shares: what the business does, who its customers are, how agents should sound, and what none of them should say.
+**Company context** at the top of the roster - and on the Organisation page - holds what every agent in the project shares: what the business does, who its customers are, how agents should sound, and what none of them should say.
 
 Every agent inherits it automatically. Nothing is copied into them, so editing it once changes what all of them read from their next run on. Their own four questions are then only about what is different for that role.
 

@@ -13,7 +13,11 @@
  * Two sets, one mechanism: the project's set is typed once and inherited by
  * every agent in it, and each agent's set says only what is specific to that
  * role. No server imports - the forms use this too.
+ *
+ * A personal space asks about the person instead (PERSONAL_*): same
+ * mechanism, different questions, chosen by contextQuestionsFor(kind).
  */
+import type { SpaceKind } from "@/lib/space";
 
 export interface ContextQuestion {
   id: string;
@@ -162,6 +166,157 @@ export const AGENT_CONTEXT_QUESTIONS: readonly ContextQuestion[] = [
   },
 ] as const;
 
+/**
+ * A personal space's shared context: about the person, not a company. Typed
+ * once, read by every assistant in the space. Nothing here asks for an
+ * account number, a password or an ID - the hints say so, because the most
+ * helpful thing to type is not always the safest.
+ */
+export const PERSONAL_CONTEXT_QUESTIONS: readonly ContextQuestion[] = [
+  {
+    id: "about",
+    label: "Tell your assistants about you",
+    hint: "Who you are, what you do, where you live and your time zone. Only what helps them help you.",
+    placeholder:
+      "I'm Maya, a product designer in Bangkok (GMT+7). I live with my partner Sam. I freelance on the side and I'm saving for a flat.",
+    promptLabel: "About me",
+    rows: 3,
+  },
+  {
+    id: "goals",
+    label: "What do you want help with right now?",
+    hint: "The two or three things that would make the biggest difference this month.",
+    placeholder:
+      "Getting my spending under control and building a three-month emergency fund. Posting on LinkedIn every week to win better freelance clients. Planning a trip to Japan in April.",
+    promptLabel: "What I want help with",
+    rows: 3,
+  },
+  {
+    id: "tone",
+    label: "How should they talk to you?",
+    hint: "Short or detailed, gentle or blunt. Every assistant starts from this.",
+    placeholder: "Short and friendly, no lectures. Bullet points over paragraphs. Tell me the one thing to do first.",
+    promptLabel: "How to talk to me",
+    rows: 2,
+  },
+  {
+    id: "never",
+    label: "Anything they should never do?",
+    hint: "Your limits. Each assistant can add its own underneath.",
+    placeholder:
+      "Never post or email in my name without asking. Never book anything non-refundable. Never mention my health or money to anyone else.",
+    promptLabel: "Never",
+    rows: 3,
+  },
+] as const;
+
+/** More about the person, all optional. Sharpens the work; the four above are the bar. */
+export const PERSONAL_CONTEXT_EXTRA_QUESTIONS: readonly ContextQuestion[] = [
+  {
+    id: "week",
+    label: "What does your week look like?",
+    hint: "Working hours, busy days, when you like to get updates.",
+    placeholder: "Work 9-6 weekdays, gym Tuesday and Thursday evenings. Sunday evening is when I plan my week.",
+    promptLabel: "My week",
+    rows: 2,
+  },
+  {
+    id: "money",
+    label: "Money basics",
+    hint: "Your currency, rough monthly budget and what you're saving for. Never an account or card number - they're never needed.",
+    placeholder:
+      "THB. Take-home about 85,000 a month; rent 18,000. Saving 10,000 a month towards a flat deposit. Trying to spend less on food delivery.",
+    promptLabel: "Money",
+    rows: 3,
+  },
+  {
+    id: "people",
+    label: "People who matter",
+    hint: "Names, how you know them, birthdays. So reminders, gifts and messages land right.",
+    placeholder: "Sam (partner, birthday 14 March). Mum in Chiang Mai - I call her Sundays. Nok, my accountant.",
+    promptLabel: "People",
+    rows: 2,
+  },
+  {
+    id: "preferences",
+    label: "Likes, dislikes and limits",
+    hint: "Food, travel style, brands, budgets - anything that decides between two options.",
+    placeholder: "Vegetarian. Window seats, no red-eyes. Prefer small hotels over chains. Hate phone calls.",
+    promptLabel: "Preferences",
+    rows: 2,
+  },
+  {
+    id: "voice",
+    label: "How you sound online",
+    hint: "For anything posted or written in your name: topics, phrases you use, things you'd never say.",
+    placeholder: "Plain and a bit dry. I write about design systems and freelancing. No emoji walls, no 'thrilled to announce'.",
+    promptLabel: "My voice online",
+    rows: 2,
+  },
+] as const;
+
+export const ALL_PERSONAL_CONTEXT_QUESTIONS: readonly ContextQuestion[] = [
+  ...PERSONAL_CONTEXT_QUESTIONS,
+  ...PERSONAL_CONTEXT_EXTRA_QUESTIONS,
+];
+
+/**
+ * An assistant's own questions in a personal space. Same ids and prompt
+ * labels as the business set - so saving, composing and every stored answer
+ * work unchanged - asked in words that fit a person rather than a company.
+ */
+export const PERSONAL_AGENT_CONTEXT_QUESTIONS: readonly ContextQuestion[] = [
+  {
+    id: "project",
+    label: "What should this assistant focus on?",
+    hint: "The one job, in a sentence or two: the budget, the trip, the job hunt.",
+    placeholder: "Keep my monthly spending under 40,000 THB and find subscriptions I've stopped using.",
+    promptLabel: "About this work",
+    rows: 3,
+  },
+  {
+    id: "stakeholders",
+    label: "Who else is involved?",
+    hint: "People it may mention or write to. Leave it empty if it's just you.",
+    placeholder: "Just me. Sam and I split rent and groceries 50/50.",
+    promptLabel: "Working for",
+    rows: 2,
+  },
+  {
+    id: "success",
+    label: "What does a good week look like?",
+    hint: "How it should judge its own work when you're not there to ask.",
+    placeholder: "One short money check-in on Monday with the three things worth changing, and nothing I have to redo.",
+    promptLabel: "A good result",
+    rows: 3,
+  },
+  {
+    id: "never",
+    label: "Anything this assistant should never do?",
+    hint: "Limits for this role. Your general ones already apply.",
+    placeholder: "Never suggest a loan, a credit card or an investment product.",
+    promptLabel: "Never",
+    rows: 2,
+  },
+] as const;
+
+/** Every question set a space of this kind uses, by where it is asked. */
+export function contextQuestionsFor(kind: SpaceKind) {
+  return kind === "personal"
+    ? {
+        core: PERSONAL_CONTEXT_QUESTIONS,
+        extra: PERSONAL_CONTEXT_EXTRA_QUESTIONS,
+        all: ALL_PERSONAL_CONTEXT_QUESTIONS,
+        agent: PERSONAL_AGENT_CONTEXT_QUESTIONS,
+      }
+    : {
+        core: PROJECT_CONTEXT_QUESTIONS,
+        extra: PROJECT_CONTEXT_EXTRA_QUESTIONS,
+        all: ALL_PROJECT_CONTEXT_QUESTIONS,
+        agent: AGENT_CONTEXT_QUESTIONS,
+      };
+}
+
 export type ContextAnswers = Record<string, string>;
 
 /** A Json column, made safe: known ids, trimmed strings, nothing else. */
@@ -204,12 +359,17 @@ export function composeContext(
 export function effectiveContext(input: {
   projectContext: string | null | undefined;
   agentContext: string | null | undefined;
+  kind?: SpaceKind;
 }): string {
   const project = (input.projectContext ?? "").trim();
   const agent = (input.agentContext ?? "").trim();
   if (!project) return agent;
   if (!agent) return project;
-  return `About this company and its customers - shared by every agent here:\n${project}\n\nSpecific to you and this work:\n${agent}`;
+  const shared =
+    input.kind === "personal"
+      ? "About the person you work for - shared by all of their assistants"
+      : "About this company and its customers - shared by every agent here";
+  return `${shared}:\n${project}\n\nSpecific to you and this work:\n${agent}`;
 }
 
 /**
@@ -239,8 +399,12 @@ export function answeredCount(
 /** The longest an answer may be. Generous; the cap is there to stop a paste of a whole handbook. */
 export const MAX_CONTEXT_ANSWER = 4_000;
 
-/** Whether the four core company questions are answered: the bar for publishing an agent. */
-export function hasCoreContext(project: { context: string | null; contextAnswers: unknown }): boolean {
-  const answers = answersFor(project.contextAnswers, project.context, PROJECT_CONTEXT_QUESTIONS);
-  return answeredCount(answers, PROJECT_CONTEXT_QUESTIONS) === PROJECT_CONTEXT_QUESTIONS.length;
+/** Whether the four core questions for this kind of space are answered: the bar for publishing an agent. */
+export function hasCoreContext(
+  project: { context: string | null; contextAnswers: unknown },
+  kind: SpaceKind,
+): boolean {
+  const { core } = contextQuestionsFor(kind);
+  const answers = answersFor(project.contextAnswers, project.context, core);
+  return answeredCount(answers, core) === core.length;
 }

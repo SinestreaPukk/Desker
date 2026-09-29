@@ -5,7 +5,7 @@ import { checkRateLimit, limitOrganization } from "@/lib/rate-limit";
 import { canAcceptClientMessage } from "@/lib/billing/limits";
 import { audit } from "@/lib/audit";
 import { runAgentTurn } from "@/lib/agent-runtime";
-import { resolveActiveAgent } from "@/lib/conversation";
+import { PUBLICLY_REACHABLE, resolveActiveAgent } from "@/lib/conversation";
 import { publishAdminEvent } from "@/lib/events";
 import { sseResponse } from "@/lib/sse";
 import { env } from "@/lib/env";
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const agent = await prisma.agent.findUnique({ where: { id: input.agentId } });
+    const agent = await prisma.agent.findFirst({ where: { id: input.agentId, ...PUBLICLY_REACHABLE } });
     if (!agent) throw new HttpError(404, "This chat is no longer available.");
 
     // Draft agents are not reachable from the public surface at all - the same

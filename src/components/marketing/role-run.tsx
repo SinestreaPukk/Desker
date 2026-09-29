@@ -17,12 +17,34 @@ import * as React from "react";
 import { Check, RotateCcw, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecisionStamp } from "@/components/ui/decision-stamp";
-import { DecideContext, DecidedStatusContext, ROLE_SCENES, SCENE_BEATS } from "@/components/marketing/hero-stage";
+import {
+  DecideContext,
+  DecidedStatusContext,
+  ROLE_SCENES,
+  SCENE_BEATS,
+  WorkScene,
+  type WorkRecord,
+} from "@/components/marketing/hero-stage";
 
 const BEAT_MS = 1500;
 
-export function RoleRun({ roleId, agent, place }: { roleId: string; agent: string; place: string }) {
-  const Scene = ROLE_SCENES[roleId];
+export function RoleRun({
+  roleId,
+  agent,
+  seed,
+  place,
+  work,
+}: {
+  roleId: string;
+  agent: string;
+  seed: string;
+  place: string;
+  /** The role's own run, played when it has no scene drawn for it. */
+  work: WorkRecord;
+}) {
+  const Drawn = ROLE_SCENES[roleId];
+  const scene = (at: number) =>
+    Drawn ? <Drawn beat={at} /> : <WorkScene beat={at} work={work} agent={agent} seed={seed} />;
   const root = React.useRef<HTMLDivElement>(null);
   // null: not started, shown finished (server render, no JS, reduced motion).
   const [beat, setBeat] = React.useState<number | null>(null);
@@ -93,7 +115,6 @@ export function RoleRun({ roleId, agent, place }: { roleId: string; agent: strin
     [decision, agent],
   );
 
-  if (!Scene) return null;
   return (
     <div ref={root} className="window relative overflow-hidden text-left">
       {decision !== "waiting" ? (
@@ -115,12 +136,12 @@ export function RoleRun({ roleId, agent, place }: { roleId: string; agent: strin
           shrinks it. */}
       <div className="grid grid-cols-1 bg-paper p-4 text-ink sm:p-5">
         <div className="invisible [grid-area:1/1]" aria-hidden inert>
-          <Scene beat={SCENE_BEATS - 1} />
+          {scene(SCENE_BEATS - 1)}
         </div>
         <div className="min-w-0 [grid-area:1/1]">
           <DecidedStatusContext.Provider value={decision === "waiting" ? null : decision === "approved" ? approvedAs : decision}>
             <DecideContext.Provider value={decide}>
-              <Scene beat={beat ?? SCENE_BEATS - 1} />
+              {scene(beat ?? SCENE_BEATS - 1)}
             </DecideContext.Provider>
           </DecidedStatusContext.Provider>
         </div>

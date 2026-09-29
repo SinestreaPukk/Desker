@@ -11,10 +11,10 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { HttpError } from "@/lib/http-error";
 import { audit } from "@/lib/audit";
+import { spaceKind, type SpaceKind } from "@/lib/space";
 import {
-  ALL_PROJECT_CONTEXT_QUESTIONS,
-  PROJECT_CONTEXT_QUESTIONS,
   answeredCount,
+  contextQuestionsFor,
   hasCoreContext,
   answersFor,
   composeContext,
@@ -22,10 +22,21 @@ import {
   type ContextAnswers,
 } from "./context";
 
+type ProjectRow = {
+  id: string;
+  slug: string;
+  name: string;
+  context: string;
+  contextAnswers: unknown;
+  organization: { kind: string };
+};
+
 export interface ProjectContextDto {
   projectId: string;
   slug: string;
   name: string;
+  /** Business or personal: decides which questions the form asks. */
+  kind: SpaceKind;
   answers: ContextAnswers;
   /** The composed string every agent in the project inherits. */
   context: string;
@@ -36,14 +47,10 @@ export interface ProjectContextDto {
   documentCount: number;
 }
 
-export async function readProjectContext(project: {
-  id: string;
-  slug: string;
-  name: string;
-  context: string;
-  contextAnswers: unknown;
-}): Promise<ProjectContextDto> {
-  const answers = answersFor(project.contextAnswers, project.context, ALL_PROJECT_CONTEXT_QUESTIONS);
+export async function readProjectContext(project: ProjectRow): Promise<ProjectContextDto> {
+  const kind = spaceKind(project.organization.kind);
+  const questions = contextQuestionsFor(kind);
+  const answers = answersFor(project.contextAnswers, project.context, questions.all);
   const documentCount = await prisma.document.count({
     where: { status: "ready", agent: { projectId: project.id } },
   });
@@ -51,25 +58,34 @@ export async function readProjectContext(project: {
     projectId: project.id,
     slug: project.slug,
     name: project.name,
+    kind,
     answers,
     context: project.context,
-    answered: answeredCount(answers, PROJECT_CONTEXT_QUESTIONS),
-    total: PROJECT_CONTEXT_QUESTIONS.length,
+    answered: answeredCount(answers, questions.core),
+    total: questions.core.length,
     documentCount,
   };
 }
 
 export async function saveProjectContext(
-  project: { id: string; organizationId: string },
+  project: { id: string; organizationId: string; organization: { kind: string } },
   input: ContextAnswers,
   userId: string,
 ): Promise<ProjectContextDto> {
-  const answers = toContextAnswers(input, ALL_PROJECT_CONTEXT_QUESTIONS);
-  const context = composeContext(answers, ALL_PROJECT_CONTEXT_QUESTIONS);
+  const questions = contextQuestionsFor(spaceKind(project.organization.kind));
+  const answers = toContextAnswers(input, questions.all);
+  const context = composeContext(answers, questions.all);
   const updated = await prisma.project.update({
     where: { id: project.id },
     data: { context, contextAnswers: answers as Prisma.InputJsonValue },
-    select: { id: true, slug: true, name: true, context: true, contextAnswers: true },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      context: true,
+      contextAnswers: true,
+      organization: { select: { kind: true } },
+    },
   });
 
   await audit({
@@ -79,7 +95,7 @@ export async function saveProjectContext(
     action: "project.context_updated",
     targetType: "project",
     targetId: project.id,
-    metadata: { answered: answeredCount(answers, PROJECT_CONTEXT_QUESTIONS) },
+    metadata: { answered: answeredCount(answers, questions.core) },
   });
 
   return readProjectContext(updated);
@@ -92,12 +108,15 @@ export async function saveProjectContext(
 export async function assertProjectGrounded(projectId: string): Promise<void> {
   const project = await prisma.project.findUniqueOrThrow({
     where: { id: projectId },
-    select: { context: true, contextAnswers: true },
+    select: { context: true, contextAnswers: true, organization: { select: { kind: true } } },
   });
-  if (!hasCoreContext(project)) {
+  const kind = spaceKind(project.organization.kind);
+  if (!hasCoreContext(project, kind)) {
     throw new HttpError(
       409,
-      "Answer the four Company context questions before publishing - every agent needs them to work from.",
+      kind === "personal"
+        ? "Answer the four questions about you before switching an assistant on - every assistant works from them."
+        : "Answer the four Company context questions before publishing - every agent needs them to work from.",
     );
   }
 }

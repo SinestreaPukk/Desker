@@ -1,4 +1,5 @@
 export const guide = {
+  audience: "business",
   slug: "scope-of-work",
   title: "Give an agent work to do on its own",
   summary: "Objectives, a trigger, and the flow view that shows what a run will actually do.",

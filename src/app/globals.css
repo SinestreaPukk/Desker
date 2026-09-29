@@ -849,19 +849,34 @@
 }
 
 /* --- Sign-in and account pages -----------------------------------------------
-   The walk in from the site stays in its world: the form sits on a pale
-   lemon note, and the page's title is written by hand. Scoped to the auth
-   layout ([data-auth]), so every form there - sign in, sign up, reset,
-   invite, unsubscribe - follows without its own styling. */
+   The walk in from the site: a clean white form in a pool of light, with the
+   cast circling it (components/auth-orbit.tsx), and a handwritten title.
+   Scoped to the auth layout ([data-auth]), so every form there - sign in,
+   sign up, reset, invite, unsubscribe - follows without its own styling. */
 [data-auth] .window {
-  border: 0;
-  border-radius: 3px;
-  background: color-mix(in oklch, var(--note-lemon) 45%, var(--surface));
-  rotate: -0.4deg;
-  box-shadow:
-    0 16px 30px -18px hsl(var(--shadow-color) / 0.45),
-    0 1px 2px hsl(var(--shadow-color) / 0.12);
+  background: color-mix(in oklch, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
 }
+
+@keyframes orbit-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+.orbit {
+  animation: orbit-spin var(--orbit-duration, 160s) linear infinite;
+}
+/* Each face turns back as its ring turns, so it stays upright. */
+.orbit-face {
+  animation: orbit-spin var(--orbit-duration, 160s) linear infinite reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .orbit,
+  .orbit-face {
+    animation: none;
+  }
+}
+
 [data-auth] h1 {
   font-family: var(--font-hand);
   font-size: var(--text-hand-title);

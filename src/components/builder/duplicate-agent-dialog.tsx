@@ -73,8 +73,8 @@ export function DuplicateAgentDialog({
       <DialogContent>
         <DialogTitle>Duplicate {agentName}</DialogTitle>
         <DialogDescription>
-          Copies the persona, permissions and settings as a new draft. The copy is
-          not reachable by clients until you publish it.
+          Copies the persona, permissions and settings as a new draft. The copy does
+          nothing until you publish it.
         </DialogDescription>
 
         <div className="mt-5 space-y-5">
