@@ -36,7 +36,7 @@ export function BrandMark({ className }: { className?: string }) {
       role="img"
       aria-label={BRAND.name}
       style={maskStyle(MASK.mark)}
-      className={cn("inline-block size-6 shrink-0 bg-accent", className)}
+      className={cn("inline-block size-6 shrink-0 bg-brand", className)}
     />
   );
 }
@@ -53,7 +53,7 @@ export function BrandLockup({ className }: { className?: string }) {
       role="img"
       aria-label={`${BRAND.name} — ${BRAND.tagline}`}
       style={maskStyle(MASK.lockup)}
-      className={cn("inline-block aspect-[1734/722] h-16 bg-accent", className)}
+      className={cn("inline-block aspect-[1734/722] h-16 bg-brand", className)}
     />
   );
 }

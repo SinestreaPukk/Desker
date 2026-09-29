@@ -12,6 +12,7 @@ export function Section({
   containerClassName,
   children,
   labelledBy,
+  backdrop,
 }: {
   id?: string;
   className?: string;
@@ -19,9 +20,12 @@ export function Section({
   children: React.ReactNode;
   /** The id of the heading that names this section for assistive tech. */
   labelledBy?: string;
+  /** Scenery behind the whole section, full width (the band's soft notes). */
+  backdrop?: React.ReactNode;
 }) {
   return (
     <section id={id} aria-labelledby={labelledBy} className={cn("scroll-mt-14", className)}>
+      {backdrop}
       <div className={cn("mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28", containerClassName)}>{children}</div>
     </section>
   );
@@ -43,15 +47,23 @@ export function SectionHeader({
   heading: string;
   intro?: string;
   align?: "center" | "left";
-  /** "inverse" for a section on the indigo band. */
+  /** "inverse" for a section on the accent band. */
   tone?: "default" | "inverse";
   className?: string;
 }) {
   const inverse = tone === "inverse";
   return (
     <div className={cn(align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-2xl", className)}>
-      <p className={cn("eyebrow sd-rise", inverse ? "text-accent-fg/80" : "text-accent")}>{eyebrow}</p>
-      <h2 id={id} className={cn("sd-rise mt-3 text-title text-balance", inverse ? "text-accent-fg" : "text-ink")}>
+      {/* The module's tab: a small sticky-note label, as on a divider. */}
+      <p
+        className={cn(
+          "sd-rise inline-block rounded-sm px-2.5 py-0.5 font-hand text-xl leading-snug font-bold",
+          inverse ? "bg-accent-fg/15 text-accent-fg" : "bg-note-lemon text-note-ink",
+        )}
+      >
+        {eyebrow}
+      </p>
+      <h2 id={id} className={cn("sd-rise mt-4 text-title font-bold text-balance", inverse ? "text-accent-fg" : "text-ink")}>
         <Words text={heading} />
       </h2>
       {intro ? (

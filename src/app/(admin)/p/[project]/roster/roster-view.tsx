@@ -18,7 +18,8 @@ import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
-import { Panel } from "@/components/ui/panel";
+import { Note, type NoteTone } from "@/components/ui/note";
+import { defaultAvatar, parseBuiltIn } from "@/components/agent-figure";
 import {
   Select,
   SelectContent,
@@ -210,14 +211,18 @@ export function RosterView({ project }: { project: string }) {
   );
 }
 
+/** Each agent's note is in its own avatar's colour, so a face and its note match. */
+const NOTE_FOR_TONE: Record<number, NoteTone> = { 1: "lilac", 2: "sky", 3: "mint", 4: "lemon", 5: "coral", 6: "sky" };
+
 function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string }) {
   const live = agent.status === "published";
+  const tone = (parseBuiltIn(agent.avatarUrl) ?? defaultAvatar(agent.id)).tone;
   // `relative` is load-bearing: the title below uses a stretched link
   // (`after:absolute inset-0`) to make the whole card clickable, and without a
   // positioned ancestor that hit area escapes the card and covers unrelated
   // controls elsewhere on the page.
   return (
-    <Panel className="group relative flex h-full flex-col transition duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md focus-within:border-line-strong focus-within:shadow-md">
+    <Note tone={NOTE_FOR_TONE[tone] ?? "sky"} className="card-hover group flex h-full flex-col">
       {/* Name and role carry the hierarchy; status sits apart, top right. */}
       <div className="flex items-start gap-3.5 p-5 pb-3.5">
         <div className="relative shrink-0">
@@ -226,11 +231,11 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
             src={agent.avatarUrl}
             seed={agent.id}
             size="lg"
-            className="ring-2 ring-line/50 transition-transform duration-200 group-hover:scale-105"
+            className="ring-2 ring-surface/70 transition-transform duration-200 group-hover:scale-105"
           />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-lg font-semibold leading-tight text-ink transition-colors group-hover:text-accent">
+          <h2 className="truncate font-hand text-hand-cta font-bold text-ink transition-colors group-hover:text-accent">
             <Link
               href={`/p/${project}/agents/${agent.id}`}
               className="after:absolute after:inset-0 after:content-['']"
@@ -244,8 +249,8 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
       </div>
 
       {/* What it has done, in words, not icons. */}
-      <dl className="mx-5 flex flex-wrap gap-2 border-t border-line py-3 text-xs text-ink-muted">
-        <div className="flex items-center gap-1.5 rounded-md bg-surface-2/60 px-2.5 py-1">
+      <dl className="mx-5 flex flex-wrap gap-2 border-t border-note-ink/10 py-3 text-xs text-ink-muted">
+        <div className="flex items-center gap-1.5 rounded-full bg-surface/70 px-2.5 py-1">
           <BotMessageSquare className="size-3.5 text-ink-subtle" aria-hidden />
           <dt className="sr-only">Conversations</dt>
           <dd>
@@ -253,7 +258,7 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
             conversation{agent.conversationCount === 1 ? "" : "s"}
           </dd>
         </div>
-        <div className="flex items-center gap-1.5 rounded-md bg-surface-2/60 px-2.5 py-1">
+        <div className="flex items-center gap-1.5 rounded-full bg-surface/70 px-2.5 py-1">
           <BookOpen className="size-3.5 text-ink-subtle" aria-hidden />
           <dt className="sr-only">Context documents</dt>
           <dd>
@@ -275,7 +280,7 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
         ) : null}
       </dl>
 
-      <div className="mt-auto flex items-center justify-between rounded-b-panel border-t border-line/40 bg-surface-2/30 px-5 py-3">
+      <div className="mt-auto flex items-center justify-between border-t border-note-ink/10 px-5 py-3">
         <p className="meta min-w-0 truncate">
           {agent.department ? `${agent.department} · ` : ""}
           <span title={formatDateTime(agent.updatedAt)}>Updated {formatRelativeTime(agent.updatedAt)}</span>
@@ -287,7 +292,7 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
           {live ? "Open editor →" : "Finish setting up →"}
         </Link>
       </div>
-    </Panel>
+    </Note>
   );
 }
 

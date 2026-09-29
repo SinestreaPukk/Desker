@@ -104,7 +104,9 @@ const TEXT_PAIRS = [
   // .meta moved to ink-muted; ink-subtle is now only icons, placeholders and
   // list markers, which are non-text and answer to 3:1.
   ["ink-subtle", "paper", 3.0, "icon tints and placeholders (non-text)"],
-  ["accent-fg", "accent", 4.5, "primary button label"],
+  ["primary-fg", "primary", 4.5, "primary button label on the pastel blue"],
+  ["primary-fg", "primary-hover", 4.5, "primary button label, hovered"],
+  ["accent-fg", "accent", 4.5, "label on a solid accent mark"],
   ["accent-soft-fg", "accent-soft", 4.5, "accent badge"],
   ["positive", "positive-soft", 4.5, "published badge"],
   ["warning", "warning-soft", 4.5, "draft / medium badge"],
@@ -112,7 +114,8 @@ const TEXT_PAIRS = [
   ["danger", "paper", 4.5, "inline error message"],
   ["accent", "paper", 4.5, "accent link on the page"],
   ["accent", "surface", 4.5, "accent link on a card"],
-  ["sky-cta-fg", "sky-ink", 4.5, "call to action on the sky: indigo label on white"],
+  ["sky-cta-fg", "sky-ink", 4.5, "deep terracotta label on a white panel over the sky"],
+  ["primary-fg", "primary", 4.5, "amber call to action on the sky: charcoal label"],
   ["danger-fg", "danger", 4.5, "danger button label"],
   ["positive-fg", "positive", 4.5, "label on a solid positive fill"],
   // The landing page's sky, the same in both themes. White copy sits only
@@ -123,15 +126,21 @@ const TEXT_PAIRS = [
   ["sky-glass-fg", "sky-glass-deep", 4.5, "glass button label, foot of the gradient"],
 ];
 
-// Avatar figure against its own tile. Decorative (the agent's name is always
-// rendered as text alongside), but a silhouette nobody can make out is a
-// pointless one, so they are held to the 3:1 non-text threshold.
+// Avatars: a navy face on a sticky-note colour field. The face is what
+// identifies the character, so it is held to text contrast on its field.
 for (let i = 1; i <= 6; i++) {
-  TEXT_PAIRS.push([`av-${i}-fg`, `av-${i}-bg`, 3.0, `agent avatar tone ${i}`]);
+  TEXT_PAIRS.push(["av-face", `av-${i}-fg`, 4.5, `avatar tone ${i}: face on its colour`]);
+}
+
+// Sticky notes carry navy ink only; hold every colour to text contrast.
+for (const note of ["lemon", "sky", "mint", "coral", "lilac"]) {
+  TEXT_PAIRS.push(["note-ink", `note-${note}`, 4.5, `text on a ${note} sticky note`]);
 }
 
 // Non-text: borders and focus rings need 3:1 against what they sit on.
 const UI_PAIRS = [
+  ["brand", "paper", 3.0, "the ink-blue logo on the page"],
+  ["brand", "rail", 3.0, "the ink-blue logo on the sidebar"],
   ["line-strong", "surface", 3.0, "input border"],
   ["focus", "paper", 3.0, "focus ring on the page"],
   ["focus", "surface", 3.0, "focus ring on a card"],
@@ -156,7 +165,7 @@ for (const [theme, tokens] of Object.entries(themes)) {
   }
 }
 
-// Informational: oklch past sRGB is deliberate for some tokens (the indigo
+// Informational: oklch past sRGB is deliberate for some tokens (the saturated
 // is wider on a P3 screen). The ratios above are computed on the clipped
 // sRGB value, which is the conservative reading.
 if (outOfGamut.length) {

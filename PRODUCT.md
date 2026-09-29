@@ -38,7 +38,7 @@ Desker lets a small business run a team of AI employees. Each employee has a rol
 
 - **Name:** Desker.
 - **Logo:** the current Desker logo artwork (`public/brand/`), kept as is.
-- **Brand colour:** the logo indigo, #1800AD, stays the brand colour.
+- **Brand colour:** the sticky-note studio (user decision, 2026-09-28): a clear ink blue #3558E6 for the logo, app icon, buttons and links; navy ink #1E2A45 on crisp white paper with a faint dot grid; soft sticky-note fills (lemon, sky, mint, coral, lilac) always under navy ink. Vivid yet calm: nothing neon, nothing brown.
 - Not binding (open to change in a redesign): the landing page's night-sky world, the drawn agent figures, the rest of the palette and the typography.
 
 ## Evidence on Hand

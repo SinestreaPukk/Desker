@@ -78,6 +78,16 @@ export function SiteNav({ items }: { items: readonly { label: string; href: stri
   );
 }
 
+/** The header's call to action, left out on the page it leads to. */
+export function NavCta({ href, label, className }: { href: string; label: string; className: string }) {
+  if (usePathname() === href) return null;
+  return (
+    <Link href={href} className={className}>
+      {label}
+    </Link>
+  );
+}
+
 /**
  * The same links below md, where the row above is hidden: a disclosure
  * button and a sheet under the header. Closes on a link, on Escape (focus

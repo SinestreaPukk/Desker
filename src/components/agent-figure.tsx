@@ -115,9 +115,9 @@ export function AgentFigure({
 
   const field = `var(--av-${tone}-fg)`;
   const ground = `var(--av-${tone}-bg)`;
-  // The face sits on the colour field, so it is drawn in the ground colour:
-  // that pair is contrast-checked at 3:1 or better in both themes.
-  const ink = ground;
+  // The face is navy ink on a sticky-note colour field, in every tone and
+  // theme; that pair is contrast-checked at 4.5:1 (scripts/check-contrast.mjs).
+  const ink = "var(--av-face)";
 
   return (
     <svg

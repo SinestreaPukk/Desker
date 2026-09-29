@@ -36,7 +36,7 @@ export function LargeTitle({ title }: { title: string }) {
       >
         <span className="text-sm font-semibold text-ink">{title}</span>
       </div>
-      <h1 ref={ref} className="text-large-title font-bold tracking-tight text-ink">
+      <h1 ref={ref} className="font-display text-large-title font-bold tracking-tight text-ink">
         {title}
       </h1>
     </>

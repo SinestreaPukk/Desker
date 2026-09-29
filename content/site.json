@@ -16,7 +16,7 @@
     },
     {
       "label": "Roles",
-      "href": "/#roles"
+      "href": "/showcase"
     },
     {
       "label": "FAQ",
@@ -33,7 +33,7 @@
   ],
   "navCta": {
     "label": "Join the beta",
-    "href": "/login"
+    "href": "/beta"
   },
   "footer": {
     "blurb": "Desker gives small teams an AI staff they can actually trust: every agent has a job, a voice, your documents, and a human sign-off before it publishes or sends.",

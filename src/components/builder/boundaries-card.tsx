@@ -2,6 +2,7 @@
 
 import { Check, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Note } from "@/components/ui/note";
 import { useScope } from "@/hooks/use-work-data";
 import { describeBoundaries } from "@/lib/work/boundaries";
 
@@ -25,7 +26,7 @@ export function BoundariesCard({
   const { can, cannot } = describeBoundaries(scope.data);
 
   return (
-    <section aria-labelledby="boundaries-title" className="rounded-lg border border-line bg-surface px-4 py-3.5">
+    <Note tone="mint" aria-labelledby="boundaries-title" className="px-4 py-3.5 text-note-ink">
       <div className="flex items-center gap-2">
         <ShieldCheck className="size-4 shrink-0 text-accent" aria-hidden />
         <h2 id="boundaries-title" className="flex-1 text-sm font-semibold text-ink">
@@ -44,7 +45,7 @@ export function BoundariesCard({
           <span className="font-medium text-ink">It stops and asks you when:</span> {escalationRule.trim()}
         </p>
       ) : null}
-    </section>
+    </Note>
   );
 }
 

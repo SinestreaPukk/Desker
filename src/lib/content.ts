@@ -101,7 +101,7 @@ const landingSchema = z.object({
           title: z.string().min(1).max(64),
           body: z.string().min(1).max(200),
           /** Which piece of the product the tile shows. */
-          demo: z.enum(["support", "marketer", "researcher", "dev-support", "assistant", "approval"]),
+          demo: z.enum(["support", "marketer", "researcher", "sales", "assistant", "approval"]),
         }),
       )
       .min(2)
@@ -232,7 +232,14 @@ const templateSchema = z.object({
   jobTitle: z.string().min(1),
   team: z.string(),
   pitch: z.string().min(1).max(220),
-  example: z.object({ prompt: z.string().min(1), response: z.string().min(1) }),
+  /** One real run, for the showcase: what set it off, what it did, what it made. */
+  work: z.object({
+    trigger: z.string().min(1).max(60),
+    task: z.string().min(1).max(60),
+    steps: z.array(z.string().min(1).max(90)).min(2).max(4),
+    output: z.object({ label: z.string().min(1).max(60), title: z.string().min(1).max(70), lines: z.array(z.string().min(1).max(90)).min(1).max(4) }),
+    status: z.enum(["done", "needs_approval", "open"]),
+  }),
   personality: z.string().min(10),
   welcomeMessage: z.string(),
   escalationRule: z.string(),

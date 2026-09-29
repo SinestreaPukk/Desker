@@ -7,7 +7,7 @@ import { extendTailwindMerge } from "tailwind-merge";
  * text-ink "wins" and silently deletes the size.
  */
 const twMerge = extendTailwindMerge({
-  extend: { classGroups: { "font-size": [{ text: ["display", "hero", "title"] }] } },
+  extend: { classGroups: { "font-size": [{ text: ["display", "hero", "title", "hand-hero", "hand-title", "hand-cta"] }] } },
 });
 
 /** Tailwind-aware className joiner: later classes win over earlier conflicts. */

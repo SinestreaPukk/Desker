@@ -10,11 +10,11 @@ export const BRAND = {
   /** Used in the assembled system prompt so agents know what platform they run on. */
   platformDescription: "an agentic AI platform",
   /**
-   * Brand colour as drawn in the logo artwork. The UI reads it from the
-   * `--accent` design token rather than from here; this is the reference value
+   * The brand ink blue. The UI reads it from the `--brand` design token
+   * rather than from here; this is the reference value
    * for anything that needs a literal (the widget launcher, the app icon).
    */
-  color: "#1800AD",
+  color: "#3558E6",
 } as const;
 
 /**
@@ -24,10 +24,10 @@ export const BRAND = {
  * scripts/check-contrast.mjs fails if one drifts from globals.css.
  */
 export const TOKEN_HEX = {
-  paper: "#F2F2F5",
-  "paper@dark": "#18191B",
-  ink: "#1C2024",
-  "ink-muted": "#60646C",
-  "ink-subtle": "#80838D",
-  "accent-soft": "#F0F1FE",
+  paper: "#F8FAFD",
+  "paper@dark": "#0E141F",
+  ink: "#1E2A45",
+  "ink-muted": "#56627A",
+  "ink-subtle": "#8390A6",
+  "accent-soft": "#C7E6FF",
 } as const;

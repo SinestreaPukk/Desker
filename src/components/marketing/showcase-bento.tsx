@@ -1,7 +1,7 @@
-import { AlertCircle, CalendarClock, FileSearch, Globe } from "lucide-react";
+import { CalendarClock, FileSearch, Globe } from "lucide-react";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/badge";
-import { ApprovalScene, Frame } from "@/components/marketing/hero-stage";
+import { LiveApproval } from "@/components/marketing/live-product";
 import { cn } from "@/lib/utils";
 
 /**
@@ -12,14 +12,14 @@ import { cn } from "@/lib/utils";
  * is inert.
  */
 
-type Demo = "support" | "marketer" | "researcher" | "dev-support" | "assistant" | "approval";
+type Demo = "support" | "marketer" | "researcher" | "sales" | "assistant" | "approval";
 type Item = { label: string; title: string; body: string; demo: Demo };
 
 const AGENT: Partial<Record<Demo, { name: string; seed: string }>> = {
   marketer: { name: "Nova", seed: "nova" },
   support: { name: "Mia", seed: "mia" },
   researcher: { name: "Sol", seed: "sol" },
-  "dev-support": { name: "Ada", seed: "ada" },
+  sales: { name: "Leo", seed: "leo-leads" },
   assistant: { name: "Kai", seed: "kai" },
 };
 
@@ -33,7 +33,7 @@ const PLACE: Record<Demo, string> = {
   marketer: "",
   support: "",
   researcher: "",
-  "dev-support": "",
+  sales: "",
   assistant: "sm:col-span-2 lg:col-span-1",
 };
 
@@ -52,9 +52,17 @@ export function ShowcaseBento({ items }: { items: readonly Item[] }) {
             <h3 className="mt-3 text-xl font-semibold tracking-tight text-balance text-ink">{item.title}</h3>
             <p className="mt-2 text-base leading-relaxed text-ink-muted">{item.body}</p>
             {/* The approvals window fills its tall tile; the minis sit at the foot of theirs. */}
-            <div className={cn("mt-5 flex flex-1 flex-col", item.demo !== "approval" && "justify-end")} inert>
-              <Artifact demo={item.demo} />
-            </div>
+            {/* The approvals window is live - approve, edit, reject all
+                work; the small pieces of work in the other tiles are pictures. */}
+            {item.demo === "approval" ? (
+              <div className="mt-5 flex flex-1 flex-col">
+                <Artifact demo={item.demo} />
+              </div>
+            ) : (
+              <div className="mt-5 flex flex-1 flex-col justify-end" inert>
+                <Artifact demo={item.demo} />
+              </div>
+            )}
           </article>
         </li>
       ))}
@@ -66,10 +74,17 @@ function Artifact({ demo }: { demo: Demo }) {
   switch (demo) {
     case "approval":
       return (
-        <div className="mat flex flex-1 flex-col justify-center rounded-lg p-3 sm:p-5">
-          <Frame title="Inbox · Approvals">
-            <ApprovalScene beat={2} />
-          </Frame>
+        <div className="mat flex flex-1 flex-col justify-center rounded-lg sm:p-5">
+          <LiveApproval
+            agent="Nova"
+            seed="nova"
+            action="publish a post"
+            where="Website news"
+            done="Published to"
+            heading="Monday's post"
+            initialText="A drill that quits in month 23 is still ours to fix. Every power tool we sell carries a 24-month warranty, and a claim takes one email."
+            why="Sol's Friday brief showed two competitors moved on warranty. I wrote this week's post from it."
+          />
         </div>
       );
     case "marketer":
@@ -78,8 +93,8 @@ function Artifact({ demo }: { demo: Demo }) {
       return <MiniAnswer />;
     case "researcher":
       return <MiniSources />;
-    case "dev-support":
-      return <MiniTicket />;
+    case "sales":
+      return <MiniLeads />;
     case "assistant":
       return <MiniInvite />;
   }
@@ -103,7 +118,7 @@ function MiniDraft() {
         <StatusBadge status="needs_approval" />
       </span>
       <span className="mt-2 block leading-relaxed text-ink">
-        Every tool we sell now carries a lifetime warranty. Not 24 months. Lifetime.
+        A drill that quits in month 23 is still ours to fix. 24 months, one email to claim.
       </span>
     </Mini>
   );
@@ -133,7 +148,7 @@ function MiniAnswer() {
 function MiniSources() {
   const sources = [
     "Fabrikam moves to a 36-month warranty",
-    "Northwind Tools launches the Pro line",
+    "Tailspin Tools launches the Pro line",
     "Contoso Hardware Q3 update",
   ];
   return (
@@ -145,7 +160,7 @@ function MiniSources() {
       <ol className="sd-stagger mt-2 space-y-1.5">
         {sources.map((title, index) => (
           <li key={title} className="flex items-center gap-2">
-            <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-accent-soft font-mono text-xs text-accent-soft-fg">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-accent-soft text-xs font-semibold text-accent-soft-fg">
               {index + 1}
             </span>
             <span className="truncate text-ink">{title}</span>
@@ -156,20 +171,30 @@ function MiniSources() {
   );
 }
 
-/** Ada's bug report, as engineering receives it. */
-function MiniTicket() {
+/** Leo's leads, each with its reason, and the intros waiting for you. */
+function MiniLeads() {
+  const leads = [
+    ["Hale & Sons", "Two new sites this year"],
+    ["Crane Joinery", "Buys drills each spring"],
+  ] as const;
   return (
     <Mini>
-      <span className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted">
-          <AlertCircle className="size-3.5" aria-hidden />
-          Issue · engineering
-        </span>
-        <StatusBadge status="open" />
-      </span>
-      <span className="mt-2 block font-medium text-ink">POST /v1/agents fails without project</span>
-      <span className="mt-1.5 block font-mono text-xs leading-relaxed text-ink-muted">
-        1. create agent · 2. omit project · 3. TypeError
+      <ul className="space-y-1.5">
+        {leads.map(([name, why]) => (
+          <li key={name} className="flex items-center gap-2">
+            <span className="flex gap-0.5" aria-hidden>
+              {[1, 2, 3].map((dot) => (
+                <span key={dot} className="size-1.5 rounded-full bg-positive" />
+              ))}
+            </span>
+            <span className="font-medium text-ink">{name}</span>
+            <span className="truncate text-xs text-ink-muted">{why}</span>
+          </li>
+        ))}
+      </ul>
+      <span className="mt-2 flex items-center justify-between gap-2 border-t border-line pt-2">
+        <span className="text-xs text-ink-muted">5 intro emails drafted</span>
+        <StatusBadge status="needs_approval" />
       </span>
     </Mini>
   );

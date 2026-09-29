@@ -1,12 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { GLASS_BUTTON } from "@/components/marketing/glass-button";
-import { NightSky } from "@/components/marketing/night-sky";
+import { CTA_PRIMARY } from "@/components/marketing/cta";
+import { SoftNotes, StickyNote } from "@/components/marketing/desk-notes";
 import { PageHeader } from "@/components/marketing/page-header";
 import { TemplateIcon } from "@/components/marketing/template-icon";
 import { Reveal } from "@/components/marketing/reveal";
+import { RoleRun } from "@/components/marketing/role-run";
+
+/** Who does each role in the demo workspace: the landing page's cast, and a few more. */
+const STAFF: Record<string, readonly [string, string]> = {
+  "customer-support": ["Mia", "mia"],
+  "client-onboarding": ["Ivy", "ivy"],
+  researcher: ["Sol", "sol"],
+  marketer: ["Nova", "nova"],
+  secretary: ["Kai", "kai"],
+  "dev-support": ["Ada", "ada"],
+  "sales-development": ["Leo", "leo-leads"],
+  "people-ops": ["Rae", "rae"],
+};
 import { LANDING, SHOWCASE, TEMPLATES, pageMetadata } from "@/lib/content";
 
 export const metadata: Metadata = pageMetadata({
@@ -22,7 +34,7 @@ export const metadata: Metadata = pageMetadata({
  * Eight roles is a long page and most arrivals are deep links - every card in
  * the landing page's bento points at an anchor here - so the sky band carries
  * an index, and each role is a block of its own with the worked example in a
- * frame beside it.
+ * frame beside it: a real run, not a chat.
  */
 export default function ShowcasePage() {
   return (
@@ -37,7 +49,7 @@ export default function ShowcasePage() {
         aria-label="Roles"
         className="sticky top-14 z-20 border-y border-line bg-paper/85 backdrop-blur-md"
       >
-        <ul className="no-scrollbar mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 py-2.5 sm:px-6">
+        <ul className="no-scrollbar mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 py-2.5 [mask-image:linear-gradient(to_right,#000_calc(100%-3rem),transparent)] sm:px-6">
           {TEMPLATES.map((role) => (
             <li key={role.id}>
               <Link
@@ -62,7 +74,7 @@ export default function ShowcasePage() {
                     <span className="flex size-12 items-center justify-center rounded-panel bg-accent-soft text-accent-soft-fg shadow-xs">
                       <TemplateIcon icon={role.icon} className="size-6" />
                     </span>
-                    <h2 className="mt-4 text-xl font-medium tracking-tight text-ink">{role.name}</h2>
+                    <h2 className="mt-4 text-xl font-bold tracking-tight text-ink">{role.name}</h2>
                     <p className="mt-1 text-sm text-ink-muted">
                       {role.jobTitle}
                       {role.team ? ` · ${role.team}` : ""}
@@ -74,27 +86,19 @@ export default function ShowcasePage() {
                         {role.escalationRule.replace(/^Escalate\s+(immediately\s+)?if\s+/i, "")}
                       </p>
                     ) : null}
-                    <Button asChild size="sm" className="mt-6 self-start">
-                      <Link href={`${SHOWCASE.cta.href}?template=${role.id}`}>
-                        {SHOWCASE.cta.label}
-                        <ArrowRight aria-hidden />
-                      </Link>
-                    </Button>
+                    <Link href={SHOWCASE.cta.href} className={`${CTA_PRIMARY} mt-6 self-start`}>
+                      {SHOWCASE.cta.label}
+                      <ArrowRight aria-hidden />
+                    </Link>
                   </div>
 
-                  {/* The same cushion the landing page's product frames sit on. */}
-                  <div className="mat rounded-panel p-3 sm:p-4">
-                    <div className="h-full rounded-lg border border-line bg-surface p-4 sm:p-5">
-                      <p className="eyebrow">{SHOWCASE.exampleLabel}</p>
-                      <div className="mt-3 space-y-3 text-base leading-relaxed">
-                        <p className="ml-auto max-w-[85%] rounded-panel rounded-br-md bg-accent px-4 py-2.5 text-accent-fg">
-                          {role.example.prompt}
-                        </p>
-                        <p className="max-w-[92%] rounded-panel rounded-tl-md border border-line bg-paper px-4 py-2.5 text-ink">
-                          {role.example.response}
-                        </p>
-                      </div>
-                    </div>
+                  {/* A real run, played like the landing page's demo. */}
+                  <div className="mat min-w-0 rounded-panel p-3 sm:p-4">
+                    <RoleRun
+                      roleId={role.id}
+                      agent={STAFF[role.id]?.[0] ?? "Your agent"}
+                      place={`ABC Inc. · ${STAFF[role.id]?.[0] ?? role.name} · ${role.work.trigger}`}
+                    />
                   </div>
                 </div>
               </Reveal>
@@ -105,17 +109,17 @@ export default function ShowcasePage() {
 
       {/* The same closing call the landing page makes, so the catalogue ends
           somewhere rather than just stopping. */}
-      <section className="sky relative overflow-hidden">
-        <NightSky uid="cta-sky" />
-        <div className="relative mx-auto max-w-6xl px-4 pb-40 pt-24 text-center sm:px-6 sm:pb-56 sm:pt-32">
-          <h2 className="mx-auto max-w-3xl font-display text-hero text-balance text-[var(--sky-ink)]">
-            {LANDING.cta.heading}
-          </h2>
-          <p className="mt-5 text-lg font-medium text-[var(--sky-ink)]">{LANDING.cta.body}</p>
-          <Link href={LANDING.cta.button.href} className={`${GLASS_BUTTON} mt-8`}>
-            {LANDING.cta.button.label}
-            <ArrowRight aria-hidden />
-          </Link>
+      <section className="relative overflow-hidden border-t border-line">
+        <SoftNotes preset="cta" />
+        <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32">
+          <StickyNote tone="lemon" tilt={-1.5} className="relative mx-auto max-w-2xl px-6 py-12 text-center sm:px-12 sm:py-16">
+            <h2 className="mx-auto max-w-xl font-hand text-hand-title text-balance">{LANDING.cta.heading}</h2>
+            <p className="mt-4 text-lg">{LANDING.cta.body}</p>
+            <Link href={LANDING.cta.button.href} className={`${CTA_PRIMARY} mt-8`}>
+              {LANDING.cta.button.label}
+              <ArrowRight aria-hidden />
+            </Link>
+          </StickyNote>
         </div>
       </section>
     </>

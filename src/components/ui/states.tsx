@@ -3,6 +3,7 @@
 import * as React from "react";
 import { RefreshCw, TriangleAlert } from "lucide-react";
 import { Button } from "./button";
+import { Note } from "./note";
 import { cn } from "@/lib/utils";
 
 export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
@@ -33,28 +34,18 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        // A hairline, not a dashed one. Dashed at line-strong reads as a drop
-        // target, and this is a finished thing: an icon, a heading, a line
-        // telling you what to do next.
-        "flex flex-col items-center justify-center rounded-panel border border-line",
-        "bg-surface/50 px-6 py-12 text-center",
-        className,
-      )}
-    >
-      <div className="relative mb-4 flex items-center justify-center">
-        <div className="absolute size-16 rounded-full bg-accent-soft/40 blur-xs" aria-hidden />
-        <div className="relative flex size-12 items-center justify-center rounded-lg border border-accent-line/80 bg-accent-soft shadow-xs">
-          <Icon className="size-5 text-accent-soft-fg" />
-        </div>
+    // A note left in the empty place: pale sky, the icon in an ink stamp,
+    // the heading written by hand, and a line telling you what to do next.
+    <Note tone="sky" className={cn("flex flex-col items-center justify-center px-6 py-12 text-center text-note-ink", className)}>
+      <div className="mb-3 flex size-12 items-center justify-center rounded-full border-[1.5px] border-current/60">
+        <Icon className="size-5" />
       </div>
-      <h3 className="text-base font-semibold text-ink">{title}</h3>
+      <h3 className="font-hand text-hand-cta font-bold">{title}</h3>
       <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-ink-muted">
         {description}
       </p>
       {action ? <div className="mt-5">{action}</div> : null}
-    </div>
+    </Note>
   );
 }
 

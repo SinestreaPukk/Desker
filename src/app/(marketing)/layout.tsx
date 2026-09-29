@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-logo";
 import { SITE, TEMPLATES } from "@/lib/content";
-import { GLASS_BUTTON_SM } from "@/components/marketing/glass-button";
+import { CTA_NAV } from "@/components/marketing/cta";
 import { SiteHeader } from "@/components/marketing/site-header";
-import { SiteMenu, SiteNav } from "@/components/marketing/site-nav";
+import { NavCta, SiteMenu, SiteNav } from "@/components/marketing/site-nav";
 
 /**
  * The public shell: what a stranger sees. Same tokens and components as the
@@ -12,7 +12,7 @@ import { SiteMenu, SiteNav } from "@/components/marketing/site-nav";
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   const year = new Date().getFullYear();
   return (
-    <div className="flex min-h-dvh flex-col bg-paper text-ink">
+    <div data-site className="flex min-h-dvh flex-col bg-paper font-site text-ink">
       <a
         href="#site-main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-surface focus:px-3 focus:py-2 focus:shadow-md"
@@ -22,21 +22,18 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <SiteHeader>
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" className="focus-current inline-flex min-h-[44px] items-center gap-2 text-lg font-semibold tracking-tight text-current">
-            <BrandMark className="[[data-clear]_&]:bg-current" />
+            <BrandMark />
             {SITE.company.name}
           </Link>
           <SiteNav items={SITE.nav} />
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Full strength, not /75: on the sky the dimmed white fell under 4.5:1. */}
             <Link
               href="/login"
               className="focus-current hidden min-h-[44px] items-center rounded-md px-3 text-sm font-medium text-current underline-offset-4 hover:underline md:inline-flex"
             >
               Sign in
             </Link>
-            <Link href={SITE.navCta.href} className={GLASS_BUTTON_SM}>
-              {SITE.navCta.label}
-            </Link>
+            <NavCta href={SITE.navCta.href} label={SITE.navCta.label} className={CTA_NAV} />
             <SiteMenu items={SITE.nav} signIn={{ label: "Sign in", href: "/login" }} />
           </div>
         </div>
@@ -47,8 +44,8 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       </main>
 
       <footer className="border-t border-line bg-surface">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
-          <div className="sm:col-span-2 lg:col-span-1">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
+          <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-ink">
               <BrandMark />
               {SITE.company.name}

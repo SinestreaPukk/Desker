@@ -1,41 +1,41 @@
-import { NightSky } from "@/components/marketing/night-sky";
 import { cn } from "@/lib/utils";
+import { SoftNotes } from "@/components/marketing/desk-notes";
 
 /**
- * The top of every public page that is not the landing page.
- * Grounded editorial minimalism: paper neutral background with clean hairline rule.
+ * The top of every public page that is not the landing page: the desk with
+ * its out-of-focus notes, a small sticky-note tab, a bold title and an intro. The band's
+ * padding leaves room for a panel to rise into it (the contact form).
  */
 export function PageHeader({
   title,
   intro,
   eyebrow,
+  hand = false,
   children,
   className,
 }: {
   title: string;
   intro?: string;
-  /** A small mono line above the title - a version, a count, a category. */
+  /** The title in the hand (Caveat), for the pages where the visitor acts. */
+  hand?: boolean;
+  /** A short label above the title - a version, a count, a category. */
   eyebrow?: string;
   children?: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={cn("sky-band relative -mt-14 pt-14", className)}>
-      {/* The same night sky as the landing page, clipped to the band. */}
-      <div className="absolute inset-0 overflow-hidden" aria-hidden>
-        <NightSky uid="header-sky" />
-      </div>
-
-      {/* pb must stay at or above the 8rem the fade is anchored at, so the
-          copy is always on the deep plateau. */}
-      <div className="relative mx-auto max-w-6xl px-4 pb-40 pt-12 sm:px-6 sm:pb-44 sm:pt-16">
+    <section className={cn("relative -mt-14 overflow-hidden pt-14", className)}>
+      <SoftNotes preset="header" />
+      <div className="relative mx-auto max-w-6xl px-4 pb-36 pt-14 sm:px-6 sm:pb-40 sm:pt-20">
         {eyebrow ? (
-          <p className="meta mb-3 text-[var(--sky-ink)]">{eyebrow}</p>
+          <p className="mb-4 inline-block rounded-sm bg-note-sky px-2.5 py-1 text-xs font-semibold tracking-wide text-note-ink">
+            {eyebrow}
+          </p>
         ) : null}
-        <h1 className="max-w-3xl font-display text-title text-balance text-[var(--sky-ink)]">{title}</h1>
-        {intro ? (
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--sky-ink)]">{intro}</p>
-        ) : null}
+        <h1 className={cn("max-w-3xl text-balance text-ink", hand ? "font-hand text-hand-title" : "text-title font-bold")}>
+          {title}
+        </h1>
+        {intro ? <p className="mt-4 max-w-2xl text-lg leading-relaxed text-pretty text-ink-muted">{intro}</p> : null}
         {children}
       </div>
     </section>

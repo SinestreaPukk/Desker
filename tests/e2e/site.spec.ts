@@ -9,7 +9,7 @@ test.use({ storageState: ANONYMOUS });
 test("the landing page renders the content file and links to sign-up", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(landing.hero.headline);
-  await expect(page.getByRole("link", { name: landing.hero.primaryCta.label }).first()).toHaveAttribute("href", "/signup");
+  await expect(page.getByRole("link", { name: landing.hero.primaryCta.label }).first()).toHaveAttribute("href", "/beta");
   await expect(page).toHaveTitle(/Desker/);
   const og = page.locator('meta[property="og:title"]');
   await expect(og).toHaveAttribute("content", /Desker/);
@@ -71,11 +71,11 @@ test("every public page carries a preview image for shared links", async ({ page
   expect(image.headers()["content-type"]).toContain("image/png");
 });
 
-test("the showcase lists every template with its example", async ({ page }) => {
+test("the showcase lists every template with a real run", async ({ page }) => {
   await page.goto("/showcase");
   for (const t of templates.templates) {
     await expect(page.getByRole("heading", { name: t.name, exact: true })).toBeVisible();
-    await expect(page.getByText(t.example.prompt)).toBeVisible();
+    await expect(page.getByText(t.work.task, { exact: true })).toBeVisible();
   }
 });
 

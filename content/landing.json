@@ -1,20 +1,20 @@
 {
   "meta": {
-    "title": "Autonomous AI agents that work for you 24/7",
-    "description": "A marketer, a researcher, developer support, personal assistant, you name it. Every agent has a job, your context, and tools that reach the outside world"
+    "title": "Team of AI agents who do the work. On call 24/7",
+    "description": "A researcher, a marketer, a sales rep, an assistant and a support desk. They work from your documents, pass work to each other, and bring you anything that goes out."
   },
   "hero": {
-    "headline": "Autonomous AI agents that work for you 24/7",
-    "subhead": "A marketer, a researcher, developer support, personal assistant, you name it. Every agent has a job, your context, and tools that reach the outside world",
+    "headline": "Team of AI agents who do the work. On call 24/7",
+    "subhead": "A researcher, a marketer, a sales rep, an assistant and a support desk. They work from your documents, pass work to each other, and bring you anything that goes out.",
     "primaryCta": {
       "label": "Join the beta",
-      "href": "/login"
+      "href": "/beta"
     },
     "secondaryCta": {
       "label": "See it work",
       "href": "/showcase"
     },
-    "microcopy": "Being built now · Beta invites go out first · Nothing sends without your OK"
+    "microcopy": ""
   },
   "trustStrip": {
     "label": "Built on models from",
@@ -31,8 +31,8 @@
   },
   "steps": {
     "eyebrow": "How it works",
-    "heading": "Working by Monday morning",
-    "intro": "Five minutes to set up. A step-by-step guide for each part lives in the app.",
+    "heading": "From your documents to a first draft",
+    "intro": "Setup takes about five minutes once you're in, and the app walks you through each part.",
     "items": [
       {
         "icon": "upload",
@@ -54,7 +54,7 @@
   "features": {
     "eyebrow": "The work, done",
     "heading": "One morning's output, before you start",
-    "intro": "Real drafts from real roles — a researcher, a marketer, an assistant and a support desk, each working from your documents.",
+    "intro": "One morning at ABC Inc.: what's done, and what's waiting on you.",
     "items": [
       {
         "label": "Approvals inbox",
@@ -81,10 +81,10 @@
         "demo": "researcher"
       },
       {
-        "label": "Ada · Dev support",
-        "title": "A bug report engineers can act on",
-        "body": "Ada answers the developer from your API docs, reproduces the error, and logs it with the steps to repeat it.",
-        "demo": "dev-support"
+        "label": "Leo · Sales rep",
+        "title": "Five new leads, each with a reason",
+        "body": "Leo finds businesses that fit your ideal customer and drafts a first email to each. They wait for your approval.",
+        "demo": "sales"
       },
       {
         "label": "Kai · Assistant",
@@ -101,7 +101,7 @@
     "shots": [
       {
         "image": "approval",
-        "title": "Nothing goes out until you approve it",
+        "title": "Every email and post waits with its full text",
         "body": "Every email, post, calendar event and Slack message waits with its full text. Approve, edit or reject."
       },
       {
@@ -157,34 +157,34 @@
   "comparison": {
     "eyebrow": "The difference",
     "heading": "Why prompt windows aren't coworkers",
-    "intro": "ChatGPT and Claude answer quick prompts. Desker gives you autonomous staff that work on your schedule, know your business, and stop for your OK.",
-    "competitorLabel": "Generic AI (ChatGPT / Claude)",
-    "deskerLabel": "Desker Autonomous Agents",
+    "intro": "A chat assistant answers quick prompts. Desker gives you staff that work on your schedule, know your business, and ask for your approval before anything goes out.",
+    "competitorLabel": "A chat assistant",
+    "deskerLabel": "Desker staff",
     "items": [
       {
-        "dimension": "Schedule & initiative",
-        "generic": "Reactive only — sits idle in a browser tab until you manually prompt it",
-        "desker": "Autonomous 24/7 — runs on schedules, events, and background triggers"
+        "dimension": "When it works",
+        "generic": "Only when you open it and ask",
+        "desker": "On a schedule, or the moment someone writes in"
       },
       {
-        "dimension": "Company context",
-        "generic": "Forgotten between sessions or re-pasted into prompt windows repeatedly",
-        "desker": "Permanent company context, structured profile, and reference documents"
+        "dimension": "Your business",
+        "generic": "Forgets it between chats",
+        "desker": "Knows it, and reads your documents"
       },
       {
-        "dimension": "Taking real action",
-        "generic": "Outputs text in a chat bubble; cannot reach external tools or workflows",
-        "desker": "Searches the web, drafts emails, and prepares ready-to-send action items"
+        "dimension": "Real work",
+        "generic": "Gives you text to copy and paste",
+        "desker": "Researches, drafts emails and posts, and logs issues"
       },
       {
-        "dimension": "Safety & approvals",
-        "generic": "No review gate — you manually copy-paste or risk unverified automations",
-        "desker": "Draft-only by default — every post and email waits for your 1-click OK"
+        "dimension": "Approvals",
+        "generic": "Nothing to review before it goes out",
+        "desker": "Every post and email waits for your approval"
       },
       {
-        "dimension": "Job specialization",
-        "generic": "One generic chat window with no defined role, tools, or boundaries",
-        "desker": "8 tailored roles with assigned responsibilities and escalation rules"
+        "dimension": "Roles",
+        "generic": "One general assistant for everything",
+        "desker": "Eight roles, each with its own job and limits"
       }
     ]
   },
@@ -214,7 +214,7 @@
     "items": [
       {
         "q": "When can I use Desker?",
-        "a": "We're building it now and opening a beta soon. Until then, sign-in is limited to the people testing it."
+        "a": "Beta opens soon. Join the list for an invite. Until then, sign-in is limited to the people testing it."
       },
       {
         "q": "What can an agent actually do?",
@@ -251,16 +251,16 @@
     ]
   },
   "cta": {
-    "heading": "Beta testing is coming soon",
-    "body": "Desker is still being built. Beta testing opens soon.",
+    "heading": "Be in the next beta group",
+    "body": "Beta opens soon. Join the list for an invite.",
     "button": {
       "label": "Join the beta",
-      "href": "/login"
+      "href": "/beta"
     },
     "secondary": {
       "label": "See it work first",
       "href": "/showcase"
     },
-    "microcopy": "No payment during the beta · Nothing sends without your OK"
+    "microcopy": "No payment during the beta · Every post and email needs your approval"
   }
 }

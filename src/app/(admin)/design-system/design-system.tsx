@@ -138,7 +138,7 @@ export function DesignSystem() {
         <ThemeToggle />
       </header>
 
-      <Section title="Colour" blurb="Neutrals and the brand indigo family; emphasis by contrast, not a second hue. Three semantic tones. Each pair checked against WCAG AA.">
+      <Section title="Colour" blurb="Warm neutrals, the brand terracotta and the amber call to action; emphasis by contrast. Three semantic tones. Each pair checked against WCAG AA.">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[40rem] text-sm">
             <thead>

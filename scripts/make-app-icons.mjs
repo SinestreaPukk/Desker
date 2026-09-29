@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * The favicon set, from the brand mark: the `d` in white on the accent, with
+ * The favicon set, from the brand mark: the `d` in white on the brand
+ * ink blue, with
  * a corner radius that reads as an app icon at 16px and 180px alike.
  *
  *   node scripts/make-app-icons.mjs
@@ -24,7 +25,7 @@ mark = Image.open(sys.argv[1]).convert("RGBA")
 alpha_src = mark.getchannel("A")
 peak = max(alpha_src.getextrema()[1], 1)
 alpha_src = alpha_src.point(lambda a: min(255, round(a * 255 / peak)))
-accent = (24, 0, 173)  # #1800AD, the accent as drawn in the artwork
+accent = (53, 88, 230)  # #3558E6, the brand ink blue
 
 def icon(size):
     radius = round(size * 0.22)

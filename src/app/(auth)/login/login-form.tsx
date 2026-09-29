@@ -59,7 +59,11 @@ export function LoginForm() {
         <BrandLockup />
         <h1 className="mt-5 text-xl font-semibold tracking-tight text-ink">Sign in</h1>
         <p className="mt-1.5 text-sm text-ink-muted">
-          Desker is in private beta. Sign-in is open to our testers for now, and beta testing opens soon.
+          Desker is in private beta. Sign-in is open to our testers for now.{" "}
+          <Link href="/beta" className="font-medium text-accent hover:underline">
+            Join the beta list
+          </Link>{" "}
+          to get an invite.
         </p>
       </div>
 

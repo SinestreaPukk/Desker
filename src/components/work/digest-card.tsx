@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { RemoveButton } from "@/components/work/row-actions";
-import { Panel } from "@/components/ui/panel";
+import { Note } from "@/components/ui/note";
 import { useSetDigestRead } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
 import type { DigestDto } from "@/lib/work/serialize";
@@ -62,7 +62,7 @@ export function DigestCard({ digest, project }: { digest: DigestDto; project: st
   }
 
   return (
-    <Panel>
+    <Note tone="lemon">
       <div className="flex items-start gap-3 px-4 py-3">
         {/* Unread, the Mail way: one dot, not a stripe and a badge. */}
         <span
@@ -136,6 +136,6 @@ export function DigestCard({ digest, project }: { digest: DigestDto; project: st
           See the runs behind this
         </Link>
       </div>
-    </Panel>
+    </Note>
   );
 }

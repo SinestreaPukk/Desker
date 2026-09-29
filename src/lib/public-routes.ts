@@ -7,7 +7,7 @@
  * a dark variant of this one. The product behind the login keeps all three
  * theme choices; this list is only the shop window.
  */
-const PUBLIC_PATHS = new Set(["/", "/contact", "/privacy", "/terms", "/showcase"]);
+const PUBLIC_PATHS = new Set(["/", "/beta", "/contact", "/privacy", "/terms", "/showcase"]);
 
 /**
  * The sign-up and sign-in pages are the last step of the same walk, reached

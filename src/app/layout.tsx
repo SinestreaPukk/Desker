@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { EB_Garamond, Geist, Geist_Mono } from "next/font/google";
+import { Caveat, Geist, Geist_Mono, Quicksand } from "next/font/google";
 import { BRAND, TOKEN_HEX } from "@/lib/brand";
 import { SITE } from "@/lib/content";
 import { Providers } from "@/components/providers";
@@ -7,14 +7,20 @@ import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-// The landing hero's serif. Declared here so the token resolves everywhere,
-// but a browser only fetches it where a headline uses it.
-const garamond = EB_Garamond({
-  variable: "--font-garamond",
+// The public site's text face: rounded and friendly, everywhere on the public
+// pages except the handwritten title.
+const quicksand = Quicksand({
+  variable: "--font-quicksand-face",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
-  preload: false,
+});
+// The hand: the landing page's title and the scribbles on its sticky notes.
+const hand = Caveat({
+  variable: "--font-hand-face",
+  subsets: ["latin"],
+  weight: ["500", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -49,7 +55,7 @@ export default function RootLayout({
       // next-themes writes the class before paint; suppress the expected
       // server/client attribute mismatch on <html> only.
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${garamond.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${hand.variable} ${quicksand.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-paper text-ink">
         <Providers>{children}</Providers>

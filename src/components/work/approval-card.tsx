@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
+import { DecisionStamp, type StampKind } from "@/components/ui/decision-stamp";
 import {
   useApproveActionItem,
   useRejectActionItem,
@@ -81,6 +82,9 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
   const [editing, setEditing] = React.useState(false);
   const [rejecting, setRejecting] = React.useState(false);
   const [reason, setReason] = React.useState("");
+  // The decision lands as a stamp on the card for a moment before the card
+  // leaves the queue - the same stamp as the public site's demos.
+  const [stamp, setStamp] = React.useState<StampKind | null>(null);
 
   const pending = item.pendingAction;
   const draft = pending?.draftId ? item.drafts.find((d) => d.id === pending.draftId) : null;
@@ -114,6 +118,10 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
 
   async function decide(verb: "approve" | "reject") {
     setNote(null);
+    setStamp(verb === "reject" ? "rejected" : pending?.tool === "publish_post" ? "published" : "sent");
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      await new Promise((resolve) => window.setTimeout(resolve, 650));
+    }
     try {
       if (verb === "approve") {
         await approve.mutateAsync({ id: item.id });
@@ -136,6 +144,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
         });
       }
     } catch (caught) {
+      setStamp(null);
       setNote(errorMessage(caught));
       toast.error(errorMessage(caught));
       throw caught;
@@ -145,7 +154,8 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
   if (!pending) return null;
 
   return (
-    <Panel className="overflow-hidden shadow-sm">
+    <Panel className="relative overflow-hidden shadow-sm">
+      {stamp ? <DecisionStamp kind={stamp} className="right-6 top-20 z-10" /> : null}
       <div className="flex items-start gap-3 border-b border-warning-line/60 bg-warning-soft/40 px-4 py-3.5">
         <div className="shrink-0 rounded-full ring-1 ring-warning-line">
           <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" />

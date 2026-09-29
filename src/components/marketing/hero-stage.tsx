@@ -1,40 +1,31 @@
 "use client";
 
 /**
- * The showreel in the hero: five agents, each doing the thing its role is
- * for, on a loop - support answering from a document, a marketer drafting
- * on a schedule, a researcher citing sources, developer support reproducing
- * a bug, an assistant moving a follow-up along. Role tabs with a progress
- * bar make it read as a demo, and a caption says what is happening.
+ * The hero's demo: a work desk. Five of the staff sit in a rail on the left,
+ * and the one on duty does a real piece of work on the right - a researcher's
+ * brief with its comparison and sources, a marketer's post with its graphic,
+ * a sales rep's lead list filling in, an assistant's meeting booked and
+ * followed up, a support desk's overnight inbox triaged. Real output, not a
+ * chat. Each step ticks as it happens; anything that would leave the
+ * building ends waiting for your yes.
  *
- * Built from the components the app renders, so when those change, this
- * changes with them. The server renders the first scene finished, which is
- * also what a visitor with JavaScript off, or reduced motion on, sees.
- * Timing is plain timers and CSS transitions; nothing here waits for Motion.
+ * Built from the components the app renders (avatars, badges, buttons), so
+ * when those change this changes with them. The server renders the first
+ * scene finished, which is also what a visitor with JavaScript off, or
+ * reduced motion on, sees; the loop then carries on from the second scene,
+ * so nothing on screen empties as the page loads. Plain timers and CSS transitions; no Motion.
+ *
+ * The visitor can always stop it: the pause button, or picking an agent,
+ * which shows that scene finished and holds it.
  */
 import * as React from "react";
-import {
-  AlertCircle,
-  Calendar,
-  Check,
-  FileSearch,
-  Globe,
-  Mail,
-  Sparkles,
-} from "lucide-react";
-import {
-  CustomerSupportIcon,
-  DevSupportIcon,
-  MarketerIcon,
-  ResearcherIcon,
-  SecretaryIcon,
-} from "@/components/icons/role-icons";
+import { Check, FileSearch, Globe, Mail, Pause, Play } from "lucide-react";
 import { AgentAvatar } from "@/components/ui/avatar";
-import { Badge, StatusBadge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const BEAT_MS = 1500;
+const BEAT_MS = 1900;
 const BEATS = 4;
 
 const REDUCED = "(prefers-reduced-motion: reduce)";
@@ -54,239 +45,282 @@ function useReducedMotionPref() {
 
 interface Scene {
   id: string;
-  role: string;
   agent: string;
   seed: string;
-  icon: React.ComponentType<{ className?: string }>;
-  frame: string;
+  role: string;
+  /** What the rail says once the scene is done. */
+  result: string;
+  /** Needs the owner when finished: the rail marks it. */
+  waits: boolean;
+  /** One line per beat, for the caption in the title bar. */
   captions: [string, string, string, string];
   render: (beat: number) => React.ReactNode;
 }
 
 const SCENES: readonly Scene[] = [
   {
-    id: "support",
-    role: "Support",
-    agent: "Mia",
-    seed: "mia",
-    icon: CustomerSupportIcon,
-    frame: "Client chat · Mia",
-    captions: [
-      "A client asks about a broken drill",
-      "Mia searches the returns policy you uploaded",
-      "She answers from it, in your voice",
-      "Answered from one source, nothing invented",
-    ],
-    render: (beat) => <SupportScene beat={beat} />,
-  },
-  {
-    id: "marketer",
-    role: "Marketer",
-    agent: "Nova",
-    seed: "nova",
-    icon: MarketerIcon,
-    frame: "Work · Nova · scheduled run",
-    captions: [
-      "Monday, 09:00: Nova's scheduled run starts",
-      "She reads what three competitors announced this week",
-      "She drafts the post in your voice",
-      "Queued for your approval - nothing was published",
-    ],
-    render: (beat) => <MarketerScene beat={beat} />,
-  },
-  {
-    id: "researcher",
-    role: "Researcher",
+    id: "research",
     agent: "Sol",
     seed: "sol",
-    icon: ResearcherIcon,
-    frame: "Work · Sol · weekly brief",
+    role: "Researcher",
+    result: "Brief sent",
+    waits: false,
     captions: [
-      "A standing question, every Friday",
-      "Sol searches the web and keeps the sources",
-      "He writes the brief with numbered citations",
-      "Emailed to you - every claim has a source you can open",
+      "Friday 16:00 - Sol's weekly brief starts",
+      "Reading three competitors' sites and news",
+      "Comparing warranty terms, with sources",
+      "Brief emailed to you",
     ],
-    render: (beat) => <ResearcherScene beat={beat} />,
+    render: (beat) => <ResearchScene beat={beat} />,
   },
   {
-    id: "dev-support",
-    role: "Dev support",
-    agent: "Ada",
-    seed: "ada",
-    icon: DevSupportIcon,
-    frame: "Client chat · Ada",
+    id: "marketing",
+    agent: "Nova",
+    seed: "nova",
+    role: "Marketer",
+    result: "Needs your yes",
+    waits: true,
     captions: [
-      "A developer pastes an error from your API",
-      "Ada finds the cause in your docs and explains the fix",
-      "She reproduces it with their steps",
-      "Logged for engineering with steps to reproduce",
+      "Monday 08:40 - Nova picks up Sol's brief",
+      "Making the post's graphic",
+      "Writing the caption in your voice",
+      "Scheduled for 09:00, waiting for your yes",
     ],
-    render: (beat) => <DevScene beat={beat} />,
+    render: (beat) => <MarketingScene beat={beat} />,
+  },
+  {
+    id: "sales",
+    agent: "Leo",
+    seed: "leo-leads",
+    role: "Sales rep",
+    result: "5 leads found",
+    waits: true,
+    captions: [
+      "Tuesday 09:00 - Leo looks for new leads",
+      "Scoring builders against your ideal customer",
+      "Five leads, each with a reason",
+      "Five intro emails drafted for your yes",
+    ],
+    render: (beat) => <SalesScene beat={beat} />,
   },
   {
     id: "assistant",
-    role: "Assistant",
     agent: "Kai",
     seed: "kai",
-    icon: SecretaryIcon,
-    frame: "Work · Kai · follow-ups",
+    role: "Assistant",
+    result: "Needs your yes",
+    waits: true,
     captions: [
-      "A follow-up that would otherwise slip",
-      "Kai drafts the email with the numbers from your notes",
-      "He schedules the next step himself",
-      "Waiting for your approval before it sends",
+      "After Thursday's meeting - Kai reads your notes",
+      "Booking the next call in your calendar",
+      "Pulling out the action items",
+      "Follow-up to Dana drafted for your yes",
     ],
     render: (beat) => <AssistantScene beat={beat} />,
   },
+  {
+    id: "support",
+    agent: "Mia",
+    seed: "mia",
+    role: "Support",
+    result: "1 for you",
+    waits: true,
+    captions: [
+      "Overnight - clients write in",
+      "Answering from your policies",
+      "Handing a refund request to you",
+      "11 answered, 1 waiting for you",
+    ],
+    render: (beat) => <SupportScene beat={beat} />,
+  },
 ];
+
+/** What the reel shows where a scene asks for a decision. */
+function waitingNote() {
+  return (
+    <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold text-warning">
+      <span className="size-1.5 rounded-full bg-warning" aria-hidden />
+      Waiting for your yes
+    </span>
+  );
+}
 
 export function HeroStage({ className, ...props }: React.ComponentProps<"div">) {
   const still = useReducedMotionPref();
   // The server renders the first scene finished. On mount the loop starts
   // from its first beat, so the visitor sees it build.
   const [pos, setPos] = React.useState<{ scene: number; beat: number } | null>(null);
-  const tablist = React.useRef<HTMLDivElement>(null);
-  // Which sides of the tab strip have more tabs off-screen, so the fade only
-  // ever covers something there is more of - never the active tab at an end.
-  const [edge, setEdge] = React.useState<"none" | "left" | "right" | "both">("none");
+  const [playing, setPlaying] = React.useState(true);
+  const rail = React.useRef<HTMLDivElement>(null);
+  const panelId = React.useId();
 
   React.useEffect(() => {
-    if (still) return;
+    if (still || !playing) return;
     const id = window.setTimeout(
       () =>
         setPos((current) => {
-          if (!current) return { scene: 0, beat: 0 };
+          // The first scene is already on screen, finished: move on to the
+          // next rather than wiping it and building it again.
+          if (!current) return { scene: 1, beat: 0 };
           if (current.beat < BEATS - 1) return { scene: current.scene, beat: current.beat + 1 };
           return { scene: (current.scene + 1) % SCENES.length, beat: 0 };
         }),
-      pos === null ? 400 : BEAT_MS,
+      pos === null ? BEAT_MS * 2 : BEAT_MS,
     );
     return () => window.clearTimeout(id);
-  }, [pos, still]);
+  }, [pos, still, playing]);
 
   const scene = pos?.scene ?? 0;
   const beat = still ? BEATS - 1 : (pos?.beat ?? BEATS - 1);
   const current = SCENES[scene]!;
-  const running = pos !== null && !still;
+  const running = pos !== null && !still && playing;
 
-  const syncEdges = React.useCallback(() => {
-    const strip = tablist.current;
-    if (!strip) return;
-    const more = { left: strip.scrollLeft > 4, right: strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 4 };
-    setEdge(more.left && more.right ? "both" : more.left ? "left" : more.right ? "right" : "none");
-  }, []);
-
-  // On a phone the five tabs are wider than the window, so the strip scrolls
-  // and the reel keeps the running one in view. scrollLeft rather than
-  // scrollIntoView, which would drag the whole page up with it.
+  // When a scene that ends waiting on the owner gets there, the hero note
+  // for that agent (if there is one) nudges (note-nudge.tsx).
   React.useEffect(() => {
-    const strip = tablist.current;
-    const tab = strip?.children[scene];
-    if (!strip || !(tab instanceof HTMLElement)) return;
-    const target = tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2;
-    strip.scrollTo({ left: Math.max(0, target), behavior: still ? "auto" : "smooth" });
-    syncEdges();
-  }, [scene, still, syncEdges]);
+    if (running && beat === BEATS - 1 && current.waits) {
+      window.dispatchEvent(new CustomEvent("desker:waiting", { detail: current.agent }));
+    }
+  }, [running, beat, current]);
+
+  /** Picking an agent shows their work finished and holds it there. */
+  const pick = (index: number) => {
+    setPlaying(false);
+    setPos({ scene: index, beat: BEATS - 1 });
+  };
+  const onKey = (event: React.KeyboardEvent) => {
+    const last = SCENES.length - 1;
+    const next = ["ArrowDown", "ArrowRight"].includes(event.key);
+    const prev = ["ArrowUp", "ArrowLeft"].includes(event.key);
+    const to = next
+      ? scene === last ? 0 : scene + 1
+      : prev
+        ? scene === 0 ? last : scene - 1
+        : event.key === "Home" ? 0 : event.key === "End" ? last : null;
+    if (to === null) return;
+    event.preventDefault();
+    pick(to);
+    (rail.current?.children[to] as HTMLElement | undefined)?.focus();
+  };
 
   return (
     <div {...props} className={cn("window overflow-hidden", className)}>
-      {/* Role tabs: which agent is on, and how far through its scene. */}
-      <div
-        ref={tablist}
-        role="tablist"
-        aria-label="Agents in the demo"
-        data-edge={edge}
-        onScroll={syncEdges}
-        className="tab-strip no-scrollbar flex gap-1 overflow-x-auto border-b border-line bg-surface-2/60 p-1.5"
-      >
-        {SCENES.map((entry, index) => {
-          const Icon = entry.icon;
-          const active = index === scene;
-          return (
-            <button
-              key={entry.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setPos({ scene: index, beat: 0 })}
-              className={cn(
-                // Natural width on a phone - equal fifths of 358px truncated
-                // every label to "Su…" - and equal fifths from sm up.
-                "relative flex shrink-0 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-colors sm:min-w-0 sm:flex-1 sm:shrink sm:px-2.5 sm:text-sm",
-                active ? "bg-surface text-ink shadow-xs" : "text-ink-muted hover:bg-surface/70 hover:text-ink",
-              )}
-            >
-              <Icon className="size-3.5 shrink-0" aria-hidden />
-              <span className="truncate">{entry.role}</span>
-              {active && running ? (
-                <span
-                  key={scene}
-                  aria-hidden
-                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-accent"
-                  style={{ animation: `reel-progress ${(BEAT_MS * BEATS) / 1000}s linear forwards` }}
-                />
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex items-center gap-2 border-b border-line px-4 py-2 text-xs">
-        <AgentAvatar name={current.agent} seed={current.seed} size="sm" />
-        <span className="meta hidden shrink-0 sm:inline">{current.frame}</span>
+      {/* Title bar: the workspace, what is happening now, and the pause. */}
+      <div className="flex items-center gap-3 border-b border-line bg-surface-2/60 py-1.5 pl-4 pr-2">
+        <span className="flex gap-1.5" aria-hidden>
+          <i className="size-2.5 rounded-full bg-line-strong/40" />
+          <i className="size-2.5 rounded-full bg-line-strong/40" />
+          <i className="size-2.5 rounded-full bg-line-strong/40" />
+        </span>
+        <span className="hidden shrink-0 text-xs font-semibold text-ink sm:inline">ABC Inc. · Work</span>
         <span
           key={`${scene}-${beat}`}
-          className="ml-auto truncate text-right text-ink-muted animate-in fade-in duration-500"
-          aria-live="polite"
+          className="ml-auto truncate text-right text-xs text-ink-muted animate-in fade-in duration-500"
+          aria-live={playing ? "off" : "polite"}
         >
           {current.captions[beat]}
         </span>
-      </div>
-
-      {/* The tabs above are real controls; the scene under them is a picture,
-          so its Approve and Reject buttons stay out of the tab order.
-          Every scene sits in the same grid cell, finished and invisible
-          except the running one, so the stage is always as tall as its
-          tallest scene at this width. A fixed min-height did that at one
-          width only: the reel grew and shrank the page under the reader
-          every few seconds, which is layout shift. */}
-      <div className="grid grid-cols-1 bg-paper p-4 text-ink sm:p-5" inert>
-        {SCENES.map((entry, index) => (
-          <div
-            key={entry.id}
-            aria-hidden={index !== scene}
-            className={cn("min-w-0 self-center [grid-area:1/1]", index !== scene && "invisible")}
+        {still ? null : (
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => {
+              if (!playing && beat === BEATS - 1) setPos({ scene, beat: 0 });
+              setPlaying((value) => !value);
+            }}
+            aria-label={playing ? "Pause the demo" : "Play the demo"}
           >
-            {entry.render(index === scene ? beat : BEATS - 1)}
-          </div>
-        ))}
+            {playing ? <Pause aria-hidden /> : <Play aria-hidden />}
+          </Button>
+        )}
       </div>
-    </div>
-  );
-}
 
-/** A product window at rest, for the frames under the feature headings. */
-export function Frame({
-  title,
-  children,
-  className,
-}: {
-  title: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("window overflow-hidden", className)}>
-      <div className="flex items-center gap-2 border-b border-line bg-surface-2/60 px-4 py-2.5">
-        <span className="flex gap-1.5">
-          <i className="size-2.5 rounded-full bg-line-strong/40" />
-          <i className="size-2.5 rounded-full bg-line-strong/40" />
-          <i className="size-2.5 rounded-full bg-line-strong/40" />
-        </span>
-        <span className="meta">{title}</span>
+      <div className="grid grid-cols-1 sm:grid-cols-[10.5rem_minmax(0,1fr)]">
+        {/* The staff on the rail: who is on it now, and how the others' work
+            ended. A real tab list: arrows move between them. */}
+        <div
+          ref={rail}
+          role="tablist"
+          aria-label="Staff in the demo"
+          aria-orientation="vertical"
+          onKeyDown={onKey}
+          className="flex gap-1 border-b border-line bg-surface-2/40 p-1.5 sm:flex-col sm:border-b-0 sm:border-r sm:p-2"
+        >
+          {SCENES.map((entry, index) => {
+            const active = index === scene;
+            return (
+              <button
+                key={entry.id}
+                type="button"
+                role="tab"
+                id={`${panelId}-tab-${index}`}
+                aria-selected={active}
+                aria-controls={panelId}
+                tabIndex={active ? 0 : -1}
+                onClick={() => pick(index)}
+                className={cn(
+                  "relative flex min-h-11 flex-1 items-center justify-center gap-2 overflow-hidden rounded-lg px-1.5 py-1.5 text-left transition-colors sm:flex-none sm:justify-start sm:px-2",
+                  active ? "bg-surface shadow-xs" : "hover:bg-surface/70",
+                )}
+              >
+                <AgentAvatar name={entry.agent} seed={entry.seed} size="sm" />
+                <span className="hidden min-w-0 sm:block">
+                  <span className="block text-sm font-semibold leading-tight text-ink">{entry.agent}</span>
+                  <span className="flex items-center gap-1 truncate text-xs leading-tight text-ink-muted">
+                    {active && running && beat < BEATS - 1 ? (
+                      <>
+                        <span className="size-1.5 animate-pulse rounded-full bg-accent" aria-hidden />
+                        Working
+                      </>
+                    ) : (
+                      <>
+                        {entry.waits && (index < scene || (active && beat === BEATS - 1)) ? <span className="size-1.5 rounded-full bg-warning" aria-hidden /> : null}
+                        {active ? entry.result : entry.role}
+                      </>
+                    )}
+                  </span>
+                </span>
+                <span className="relative text-xs font-semibold text-ink sm:hidden">
+                  {entry.agent}
+                  {entry.waits && index < scene ? (
+                    <span className="absolute -right-2 -top-0.5 size-1.5 rounded-full bg-warning" aria-hidden />
+                  ) : null}
+                </span>
+                {active && running ? (
+                  <span
+                    key={scene}
+                    aria-hidden
+                    className="absolute inset-x-2 bottom-0.5 h-0.5 origin-left rounded-full bg-accent"
+                    style={{ animation: `reel-progress ${(BEAT_MS * BEATS) / 1000}s linear forwards` }}
+                  />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* The work itself: a picture, so its buttons stay out of the tab
+            order. Every scene sits in the same grid cell, finished and
+            invisible except the running one, so the desk is always as tall
+            as its tallest scene - no layout shift as the reel moves on. */}
+        <div role="tabpanel" id={panelId} aria-labelledby={`${panelId}-tab-${scene}`} className="min-w-0">
+          {/* The reel plays on its own, so a decision it reaches is shown as
+              what it is - waiting for you - not as a button that does nothing. */}
+          <DecideContext.Provider value={waitingNote}>
+          <div className="grid grid-cols-1 bg-paper p-4 text-ink sm:p-5" inert>
+            {SCENES.map((entry, index) => (
+              <div
+                key={entry.id}
+                aria-hidden={index !== scene}
+                className={cn("min-w-0 self-start [grid-area:1/1]", index === scene ? "scene-in" : "invisible")}
+              >
+                {entry.render(index === scene ? beat : BEATS - 1)}
+              </div>
+            ))}
+          </div>
+          </DecideContext.Provider>
+        </div>
       </div>
-      <div className="min-h-[15rem] bg-paper p-4 text-ink sm:p-5">{children}</div>
     </div>
   );
 }
@@ -304,27 +338,6 @@ function Appear({ when, children, className }: { when: boolean; children: React.
       aria-hidden={!when || undefined}
     >
       {children}
-    </div>
-  );
-}
-
-function ClientBubble({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex justify-end">
-      <p className="max-w-[85%] rounded-panel rounded-br-md bg-accent px-3.5 py-2.5 text-sm leading-relaxed text-accent-fg">
-        {children}
-      </p>
-    </div>
-  );
-}
-
-function AgentBubble({ name, seed, children }: { name: string; seed: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-end gap-2">
-      <AgentAvatar name={name} seed={seed} size="sm" />
-      <div className="max-w-[88%] space-y-2 rounded-panel rounded-tl-md border border-line bg-surface px-3.5 py-2.5">
-        {children}
-      </div>
     </div>
   );
 }
@@ -370,6 +383,9 @@ function Step({ done, active, children }: { done: boolean; active?: boolean; chi
   );
 }
 
+/** A host can override a waiting run's badge once the owner decides (the showcase). */
+export const DecidedStatusContext = React.createContext<string | null>(null);
+
 function RunHeader({
   name,
   seed,
@@ -383,13 +399,14 @@ function RunHeader({
   meta: string;
   status: string;
 }) {
+  const decided = React.useContext(DecidedStatusContext);
   return (
     <div className="flex items-start gap-3">
       <AgentAvatar name={name} seed={seed} size="md" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-base font-semibold text-ink">{title}</p>
-          <StatusBadge status={status} />
+          <StatusBadge status={(status === "needs_approval" && decided) || status} />
         </div>
         <p className="mt-0.5 text-sm text-ink-muted">{meta}</p>
       </div>
@@ -397,7 +414,28 @@ function RunHeader({
   );
 }
 
+/**
+ * Where a scene asks for a decision, a host can put a working control. The
+ * landing page's reel leaves these as pictures (it is a demo that plays on
+ * its own); the showcase provides live buttons through this context.
+ */
+export const DecideContext = React.createContext<((label: string) => React.ReactNode) | null>(null);
+
+/** The primary decision button of a scene: a picture, or the host's live control. */
+function Decide({ label }: { label: string }) {
+  const live = React.useContext(DecideContext);
+  if (live) return <>{live(label)}</>;
+  return (
+    <Button size="sm" className="ml-auto">
+      <Check aria-hidden />
+      {label}
+    </Button>
+  );
+}
+
 function ApprovalActions({ what }: { what: string }) {
+  const live = React.useContext(DecideContext);
+  if (live) return <div className="mt-3">{live(`Approve and ${what}`)}</div>;
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2">
       <Button size="sm">
@@ -414,258 +452,467 @@ function ApprovalActions({ what }: { what: string }) {
   );
 }
 
-/* --- Scenes ------------------------------------------------------------------ */
+/* --- The work ------------------------------------------------------------------ */
 
-const SUPPORT_REPLY =
-  "Power tools carry a 24-month warranty, so this is a warranty claim rather than a return. Reply to your order email with the order number and we'll arrange a replacement.";
-
-function SupportScene({ beat }: { beat: number }) {
-  const shown = beat < 2 ? 0 : beat === 2 ? Math.round(SUPPORT_REPLY.length * 0.5) : SUPPORT_REPLY.length;
+/** A run's steps, ticking as the agent gets to each. */
+function Steps({ beat, steps }: { beat: number; steps: readonly string[] }) {
   return (
-    <div className="space-y-3">
-      <ClientBubble>I ordered a drill two weeks ago and it stopped working. Can I return it?</ClientBubble>
-      <Appear when={beat >= 1}>
-        <AgentBubble name="Mia" seed="mia">
-          <ToolChip icon={FileSearch}>Searched returns-policy.pdf</ToolChip>
-          {beat >= 2 ? (
-            <p className={cn("text-sm leading-relaxed text-ink", beat === 2 && "stream-caret")}>
-              {SUPPORT_REPLY.slice(0, shown)}
-            </p>
-          ) : (
-            <p className="text-sm text-ink-subtle">Reading the policy…</p>
-          )}
-        </AgentBubble>
-      </Appear>
-      <Appear when={beat >= 3} className="pl-9">
-        <Badge tone="positive">
-          <Check aria-hidden />1 source cited · nothing invented
-        </Badge>
-      </Appear>
-    </div>
+    <ol className="space-y-1.5">
+      {steps.map((step, index) => (
+        <Step key={step} done={beat > index} active={beat === index}>
+          {step}
+        </Step>
+      ))}
+    </ol>
   );
 }
 
-function MarketerScene({ beat }: { beat: number }) {
-  return (
-    <div className="space-y-4">
-      <RunHeader
-        name="Nova"
-        seed="nova"
-        title="Weekly post"
-        meta="Every Monday 09:00 · LinkedIn · draft-only"
-        status={beat >= 3 ? "needs_approval" : "in_progress"}
-      />
-      <ol className="space-y-2 rounded-lg border border-line bg-surface p-3.5">
-        <Step done={beat >= 1} active={beat === 0}>
-          Read the project context and this month&apos;s push
-        </Step>
-        <Step done={beat >= 2} active={beat === 1}>
-          Researched what 3 competitors announced this week
-          {beat >= 2 ? <span className="ml-1 text-xs text-ink-subtle">· 3 sources</span> : null}
-        </Step>
-        <Step done={beat >= 3} active={beat === 2}>
-          Drafted the post in your voice
-        </Step>
-        <Step done={false} active={beat >= 3}>
-          Publish - waiting for your approval
-        </Step>
-      </ol>
-      <Appear when={beat >= 3}>
-        <div className="rounded-lg border border-line bg-surface-2 px-3.5 py-3">
-          <p className="meta">Draft · LinkedIn</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-ink">
-            Every tool we sell now carries a lifetime warranty. Not 24 months. Lifetime. Because a drill that
-            quits in year three was never really yours.
-          </p>
-          <ApprovalActions what="publish" />
-        </div>
-      </Appear>
-    </div>
-  );
-}
-
-const SOURCES = [
-  { n: 1, title: "Northwind Tools launches the Pro line", host: "northwindtools.example" },
-  { n: 2, title: "Fabrikam moves to a 36-month warranty", host: "fabrikam.example/news" },
-  { n: 3, title: "Contoso Hardware Q3 update", host: "contoso.example/blog" },
+const WARRANTY = [
+  { name: "Tailspin Pro", months: 60, label: "Lifetime", cite: 1 },
+  { name: "Fabrikam", months: 36, label: "36 mo", cite: 2 },
+  { name: "Contoso", months: 24, label: "24 mo", cite: 3 },
+  { name: "You", months: 24, label: "24 mo", cite: 0 },
 ];
 
 function Cite({ n }: { n: number }) {
   return (
-    <sup className="mx-0.5 rounded-sm bg-accent-soft px-1 font-mono text-[0.7em] text-accent-soft-fg">{n}</sup>
+    <sup className="ml-0.5 rounded-sm bg-accent-soft px-1 font-mono text-[0.7em] text-accent-soft-fg">{n}</sup>
   );
 }
 
-function ResearcherScene({ beat }: { beat: number }) {
+export function ResearchScene({ beat }: { beat: number }) {
   return (
     <div className="space-y-4">
       <RunHeader
         name="Sol"
         seed="sol"
-        title="Competitor brief"
-        meta="Every Friday 16:00 · emailed to you"
-        status={beat >= 3 ? "needs_approval" : "in_progress"}
+        title="Weekly competitor brief"
+        meta="Every Friday 16:00 · web research"
+        status={beat >= 3 ? "done" : "in_progress"}
       />
-      <p className="rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm text-ink">
-        <span className="text-ink-subtle">Objective · </span>What did our three main competitors announce this
-        week?
-      </p>
-      <Appear when={beat >= 1}>
-        <ToolChip icon={Globe}>Researched the web · 3 pages read</ToolChip>
-        <ol className="mt-2 space-y-1.5">
-          {SOURCES.map((source) => (
-            <li key={source.n} className="flex items-center gap-2.5 text-sm">
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-accent-soft font-mono text-xs text-accent-soft-fg">
-                {source.n}
-              </span>
-              <span className="truncate text-ink">{source.title}</span>
-              <span className="ml-auto hidden shrink-0 font-mono text-xs text-ink-subtle sm:inline">{source.host}</span>
+      <Steps
+        beat={beat}
+        steps={["Read 14 pages from three competitors", "Compared warranty terms", "Wrote the brief, a source for every claim"]}
+      />
+      {/* The pages it is reading, as it reads them. */}
+      <Appear when={beat === 0 || beat === 1} className={cn(beat >= 2 && "hidden")}>
+        <ul className="space-y-1.5 rounded-lg border border-line bg-surface p-3 text-xs">
+          {["tailspintools.example/pro-line", "fabrikam.example/news/warranty", "contoso.example/blog/q3"].map((url, index) => (
+            <li key={url} className={cn("flex items-center gap-2 transition-opacity duration-500", beat * 2 + 1 >= index ? "opacity-100" : "opacity-0")}>
+              <Globe className="size-3.5 shrink-0 text-ink-subtle" aria-hidden />
+              <span className="truncate font-mono text-ink-muted">{url}</span>
             </li>
           ))}
-        </ol>
+        </ul>
       </Appear>
       <Appear when={beat >= 2}>
-        <div className="rounded-lg border border-line bg-surface-2 px-3.5 py-3 text-sm leading-relaxed text-ink">
-          Two of three moved on warranty this week: Fabrikam went to 36 months <Cite n={2} /> and Northwind
-          bundled lifetime cover with its Pro line <Cite n={1} />. Contoso said nothing on warranty{" "}
-          <Cite n={3} />. Our lifetime offer is now table stakes, not a differentiator.
+        <div className="rounded-lg border border-line bg-surface p-3.5">
+          <p className="text-sm font-semibold text-ink">Two of three competitors moved on warranty</p>
+          <ul className="mt-3 space-y-2">
+            {WARRANTY.map((row) => (
+              <li key={row.name} className="grid grid-cols-[5.5rem_1fr_4rem] items-center gap-2 text-xs">
+                <span className={cn("truncate", row.cite ? "text-ink-muted" : "font-semibold text-ink")}>{row.name}</span>
+                <span className="h-2 overflow-hidden rounded-full bg-surface-2">
+                  <span
+                    className={cn("block h-full rounded-full transition-[width] duration-700 ease-out", row.cite ? "bg-accent/45" : "bg-accent")}
+                    style={{ width: beat >= 2 ? `${(row.months / 60) * 100}%` : "0%" }}
+                  />
+                </span>
+                <span className="text-right text-ink">
+                  {row.label}
+                  {row.cite ? <Cite n={row.cite} /> : null}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </Appear>
       <Appear when={beat >= 3} className="flex flex-wrap items-center gap-2">
-        <ToolChip icon={Mail}>Emailed the summary · to you</ToolChip>
-        <Badge tone="positive">
-          <Check aria-hidden />3 sources cited
-        </Badge>
+        <ToolChip icon={Mail}>Emailed to you</ToolChip>
+        <ToolChip icon={Globe}>3 sources, each one linked</ToolChip>
       </Appear>
     </div>
   );
 }
 
-function DevScene({ beat }: { beat: number }) {
+const CAPTION =
+  "A drill that quits in month 23 is still ours to fix. Every power tool we sell carries a 24-month warranty, and a claim takes one email.";
+
+export function MarketingScene({ beat }: { beat: number }) {
+  const typed = beat < 2 ? 0 : beat === 2 ? Math.round(CAPTION.length * 0.55) : CAPTION.length;
   return (
-    <div className="space-y-3">
-      <ClientBubble>
-        Calling <code className="font-mono text-xs">POST /v1/agents</code> throws{" "}
-        <code className="font-mono text-xs">TypeError: cannot read &apos;id&apos; of undefined</code>. Worked
-        yesterday.
-      </ClientBubble>
-      <Appear when={beat >= 1}>
-        <AgentBubble name="Ada" seed="ada">
-          <ToolChip icon={FileSearch}>Searched api-reference.md</ToolChip>
-          <p className="text-sm leading-relaxed text-ink">
-            That happens when <code className="font-mono text-xs">project</code> is missing from the body - since
-            yesterday&apos;s release it is required. Add it and the call goes through:
+    <div className="space-y-4">
+      <RunHeader
+        name="Nova"
+        seed="nova"
+        title="This week's post"
+        meta="Every Monday 08:40 · from Sol's brief"
+        status={beat >= 3 ? "needs_approval" : "in_progress"}
+      />
+      <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-3 rounded-lg border border-line bg-surface p-3 sm:grid-cols-[8.5rem_minmax(0,1fr)]">
+        {/* The post's graphic, made from the brief. */}
+        <Appear when={beat >= 1}>
+          <div className="relative flex min-h-32 flex-col justify-between gap-1 overflow-hidden rounded-md bg-note-lemon p-3 text-note-ink sm:aspect-square">
+            <span className="text-xs font-semibold">ABC Inc.</span>
+            <span className="font-hand text-hand-cta font-bold">24 months</span>
+            <span className="text-xs font-semibold leading-tight">one email to claim</span>
+            <span aria-hidden className="absolute -right-4 -top-4 size-14 rounded-full bg-note-coral" />
+          </div>
+        </Appear>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-ink-muted">Website news · Monday 09:00</p>
+          <p className={cn("mt-1.5 text-sm leading-relaxed text-ink", beat === 2 && "stream-caret")}>
+            {typed ? CAPTION.slice(0, typed) : <span className="text-ink-subtle">Writing in your voice…</span>}
           </p>
-          <pre className="overflow-x-auto rounded-md border border-line bg-surface-2 px-3 py-2 font-mono text-xs leading-relaxed text-ink">
-            {'{ "name": "Iris", "project": "acme-support", ... }'}
-          </pre>
-        </AgentBubble>
+        </div>
+      </div>
+      <Appear when={beat >= 3}>
+        <ApprovalActions what="publish" />
       </Appear>
-      <Appear when={beat >= 2} className="pl-9">
-        <ToolChip icon={AlertCircle}>Reproduced with your steps · Chrome 129, Node 22</ToolChip>
-      </Appear>
-      <Appear when={beat >= 3} className="pl-9">
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm">
-          <StatusBadge status="open" />
-          <span className="font-medium text-ink">Issue logged for engineering</span>
-          <span className="text-ink-muted">· POST /v1/agents without project · steps 1-3 · high</span>
+    </div>
+  );
+}
+
+const LEADS = [
+  { name: "Hale & Sons", fit: 3, why: "Two new sites this year" },
+  { name: "Crane Joinery", fit: 3, why: "Buys drills each spring" },
+  { name: "Ash Lane Homes", fit: 2, why: "Asked about trade prices" },
+  { name: "Mercer & Co", fit: 2, why: "New depot in Leeds" },
+  { name: "Bright Kitchens", fit: 2, why: "Your ideal customer" },
+];
+
+export function SalesScene({ beat }: { beat: number }) {
+  const shown = beat === 0 ? 1 : beat === 1 ? 3 : 5;
+  return (
+    <div className="space-y-4">
+      <RunHeader
+        name="Leo"
+        seed="leo-leads"
+        title="Five new leads"
+        meta="Every Tuesday 09:00 · from your CRM export"
+        status={beat >= 3 ? "needs_approval" : "in_progress"}
+      />
+      <div className="overflow-hidden rounded-lg border border-line bg-surface">
+        <div className="grid grid-cols-[minmax(0,1fr)_3rem_minmax(0,1.4fr)] gap-2 border-b border-line bg-surface-2/60 px-3 py-1.5 text-xs font-semibold text-ink-muted">
+          <span>Company</span>
+          <span>Fit</span>
+          <span>Why</span>
+        </div>
+        <ul>
+          {LEADS.map((lead, index) => (
+            <li
+              key={lead.name}
+              className={cn(
+                "grid grid-cols-[minmax(0,1fr)_3rem_minmax(0,1.4fr)] items-center gap-2 border-b border-line/70 px-3 py-2 text-xs transition-opacity duration-500 last:border-b-0",
+                index < shown ? "opacity-100" : "opacity-0",
+              )}
+            >
+              <span className="truncate font-medium text-ink">{lead.name}</span>
+              <span className="flex gap-0.5" aria-label={`Fit ${lead.fit} of 3`}>
+                {[1, 2, 3].map((dot) => (
+                  <span key={dot} className={cn("size-2 rounded-full", dot <= lead.fit ? "bg-positive" : "bg-line")} />
+                ))}
+              </span>
+              <span className="truncate text-ink-muted">{lead.why}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <Appear when={beat >= 3}>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface-2 px-3.5 py-2.5">
+          <Mail className="size-4 text-ink-muted" aria-hidden />
+          <span className="text-sm text-ink">5 intro emails drafted</span>
+          <Decide label="Approve and send" />
         </div>
       </Appear>
     </div>
   );
 }
 
-function AssistantScene({ beat }: { beat: number }) {
+const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+export function AssistantScene({ beat }: { beat: number }) {
   return (
     <div className="space-y-4">
       <RunHeader
         name="Kai"
         seed="kai"
-        title="Follow up with Dana about the 40-seat quote"
-        meta="From your notes · Thursday 10:00"
+        title="Thursday's meeting"
+        meta="From your meeting notes · Dana, Litware"
         status={beat >= 3 ? "needs_approval" : "in_progress"}
       />
-      <Appear when={beat >= 1}>
-        <div className="rounded-lg border border-line bg-surface px-3.5 py-3 text-sm">
-          <p className="text-ink-muted">
-            <span className="text-ink-subtle">To</span> dana@northwind.example ·{" "}
-            <span className="text-ink-subtle">Subject</span> Re: pricing for 40 seats
-          </p>
-          <p className="mt-2 leading-relaxed text-ink">
-            Thanks for the detail on the rollout. For 40 seats the Growth plan fits: every role, unlimited
-            teammates, and a 2,000-run budget. The one-page summary you asked for is attached - happy to walk
-            through it Thursday.
-          </p>
-        </div>
-      </Appear>
+      {/* Next week, with the call Kai proposes. */}
+      <div className="grid grid-cols-5 gap-1.5">
+        {WEEK.map((day) => (
+          <div key={day} className="rounded-md border border-line bg-surface p-1.5">
+            <p className="text-center text-xs font-semibold text-ink-muted">{day}</p>
+            <div className="mt-1.5 h-12 space-y-1">
+              {day === "Mon" ? <span className="block h-2.5 rounded-sm bg-surface-3" /> : null}
+              {day === "Wed" ? <span className="block h-2.5 rounded-sm bg-surface-3" /> : null}
+              {day === "Thu" ? (
+                <span
+                  className={cn(
+                    "block rounded-sm bg-accent-soft px-1 py-0.5 text-xs font-semibold leading-tight text-accent-soft-fg transition-opacity duration-500",
+                    beat >= 1 ? "opacity-100" : "opacity-0",
+                  )}
+                >
+                  10:00 Dana
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
       <Appear when={beat >= 2}>
-        <ToolChip icon={Calendar}>schedule_followup · Thursday 10:00 · &ldquo;Did Dana reply?&rdquo;</ToolChip>
+        <ul className="space-y-1 text-sm text-ink">
+          <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-positive" aria-hidden />Send the 40-drill quote</li>
+          <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-positive" aria-hidden />Confirm delivery to the new site</li>
+        </ul>
       </Appear>
       <Appear when={beat >= 3}>
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface-2 px-3.5 py-2.5">
-          <StatusBadge status="needs_approval" />
-          <span className="text-sm text-ink">Nothing sends until you say so.</span>
-          <span className="ml-auto flex gap-2">
-            <Button size="sm">
-              <Check aria-hidden />
-              Approve and send
-            </Button>
-            <Button size="sm" variant="ghost">
-              Edit
-            </Button>
+          <span className="text-sm text-ink">
+            <span className="font-medium">Re: quote for 40 drills</span>
+            <span className="text-ink-muted"> · to Dana</span>
           </span>
+          <Decide label="Approve and send" />
         </div>
       </Appear>
     </div>
   );
 }
 
-/** The approvals inbox row, for the frame under "you approve anything that leaves". */
-export function ApprovalScene({ beat }: { beat: number }) {
-  const done = beat >= 3;
+const TICKETS = [
+  { topic: "Drill stopped working", how: "Answered · returns-policy.pdf", status: "resolved" },
+  { topic: "Delivery to Hull", how: "Answered · delivery-faq.md", status: "resolved" },
+  { topic: "Refund, order #4471", how: "Money is your call · handed to you", status: "escalated" },
+];
+
+export function SupportScene({ beat }: { beat: number }) {
   return (
-    <div className="rounded-panel border border-line bg-surface p-4">
+    <div className="space-y-4">
       <RunHeader
-        name="Nova"
-        seed="nova"
-        title="Nova wants to publish a post"
-        meta="LinkedIn · scheduled run · Monday 09:00"
-        status={done ? "sent" : "needs_approval"}
+        name="Mia"
+        seed="mia"
+        title="Overnight client inbox"
+        meta="22:00 to 07:00 · chat and email"
+        status={beat >= 3 ? "escalated" : "in_progress"}
       />
-      <blockquote className="mt-3 rounded-lg border border-line bg-surface-2 px-3.5 py-3 text-sm leading-relaxed text-ink">
-        Every tool we sell now carries a lifetime warranty. Not 24 months. Lifetime. Because a drill that quits
-        in year three was never really yours.
-      </blockquote>
-      <div className="mt-3 flex items-center gap-2">
-        <Button
-          size="sm"
-          disabled={done}
-          className={cn(done && "bg-positive text-positive-fg disabled:opacity-100")}
-        >
-          {done ? (
-            <>
-              <Check aria-hidden />
-              Published
-            </>
-          ) : (
-            <>
-              <Sparkles aria-hidden />
-              Approve
-            </>
-          )}
-        </Button>
-        <Button size="sm" variant="ghost" disabled={done}>
-          Reject
-        </Button>
-        <span
-          className={cn(
-            "ml-auto text-xs text-ink-subtle transition-opacity duration-500",
-            done ? "opacity-100" : "opacity-0",
-          )}
-        >
-          Logged in the audit trail
-        </span>
-      </div>
+      <ul className="overflow-hidden rounded-lg border border-line bg-surface">
+        {TICKETS.map((ticket, index) => (
+          <li
+            key={ticket.topic}
+            className={cn(
+              "flex items-center gap-3 border-b border-line/70 px-3.5 py-2.5 transition-opacity duration-500 last:border-b-0",
+              beat >= index ? "opacity-100" : "opacity-0",
+            )}
+          >
+            <FileSearch className="size-4 shrink-0 text-ink-subtle" aria-hidden />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium text-ink">{ticket.topic}</span>
+              <span className="block truncate text-xs text-ink-muted">{ticket.how}</span>
+            </span>
+            <StatusBadge status={ticket.status} />
+          </li>
+        ))}
+      </ul>
+      <Appear when={beat >= 3}>
+        <p className="text-sm text-ink">
+          <span className="font-semibold">11 answered</span> from your documents,{" "}
+          <span className="font-semibold">1 waiting for you</span> in the Inbox.
+        </p>
+      </Appear>
     </div>
   );
 }
+
+/* --- More of the staff, for the showcase -------------------------------------- */
+
+const ONBOARDING = [
+  { item: "Contract signed", by: "Harbour Café" },
+  { item: "Account set up", by: "Ivy" },
+  { item: "Delivery address", by: "Harbour Café" },
+  { item: "VAT number", by: "Harbour Café" },
+  { item: "First order", by: "Harbour Café" },
+];
+
+/** Client onboarding: the checklist filling up, then the welcome email. */
+export function OnboardingScene({ beat }: { beat: number }) {
+  const done = beat === 0 ? 1 : 2;
+  return (
+    <div className="space-y-4">
+      <RunHeader
+        name="Ivy"
+        seed="ivy"
+        title="Welcome Harbour Café"
+        meta="When a new client signs · onboarding checklist"
+        status={beat >= 3 ? "needs_approval" : "in_progress"}
+      />
+      <div className="rounded-lg border border-line bg-surface p-3.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-semibold text-ink">Onboarding</span>
+          <span className="text-ink-muted tabular-nums">{done} of {ONBOARDING.length}</span>
+        </div>
+        <span className="mt-2 block h-2 overflow-hidden rounded-full bg-surface-2">
+          <span
+            className="block h-full rounded-full bg-positive transition-[width] duration-700 ease-out"
+            style={{ width: `${(done / ONBOARDING.length) * 100}%` }}
+          />
+        </span>
+        <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
+          {ONBOARDING.map((step, index) => {
+            const ok = index < done;
+            const flagged = !ok && beat >= 1;
+            return (
+              <li key={step.item} className="flex items-center gap-2 text-sm">
+                <span
+                  className={cn(
+                    "flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-300",
+                    ok ? "border-positive bg-positive text-positive-fg" : flagged ? "border-warning" : "border-line-strong/50",
+                  )}
+                >
+                  {ok ? <Check className="size-2.5" aria-hidden /> : null}
+                </span>
+                <span className={ok ? "text-ink" : "text-ink-muted"}>{step.item}</span>
+                {flagged ? <span className="text-xs text-warning">from them</span> : null}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      <Appear when={beat >= 2}>
+        <div className="rounded-lg border border-line bg-surface px-3.5 py-3 text-sm">
+          <p className="text-ink-muted">
+            <span className="text-ink-subtle">To</span> hello@harbourcafe.example ·{" "}
+            <span className="text-ink-subtle">Subject</span> Welcome to ABC Inc.
+          </p>
+          <p className="mt-2 leading-relaxed text-ink">
+            Here is what happens this week. We still need your delivery address, VAT number and first order. Shall we
+            do a kickoff call on Tuesday at 10:00?
+          </p>
+        </div>
+      </Appear>
+      <Appear when={beat >= 3}>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface-2 px-3.5 py-2.5">
+          <Mail className="size-4 text-ink-muted" aria-hidden />
+          <span className="text-sm text-ink">Welcome email drafted</span>
+          <Decide label="Approve and send" />
+        </div>
+      </Appear>
+    </div>
+  );
+}
+
+/** Developer support: the failing request, the fix, the issue for engineering. */
+export function DevScene({ beat }: { beat: number }) {
+  return (
+    <div className="space-y-4">
+      <RunHeader
+        name="Ada"
+        seed="ada"
+        title="POST /v1/orders is failing"
+        meta="When a developer writes in · API reference"
+        status={beat >= 3 ? "open" : "in_progress"}
+      />
+      {/* The request the developer sent, and the answer they got. */}
+      <div className="overflow-hidden rounded-lg border border-line bg-surface font-mono text-xs leading-relaxed">
+        <div className="border-b border-line bg-surface-2/60 px-3 py-1.5 text-ink-muted">POST /v1/orders</div>
+        <pre className="whitespace-pre-wrap px-3 py-2 text-ink">
+          {"{\n  \"sku\": \"DRL-18V\",\n  \"qty\": 40"}
+          {beat >= 1 ? (
+            <span className="block rounded-sm bg-positive-soft text-positive transition-colors">{'+ "store_id": "leeds-01"'}</span>
+          ) : null}
+          {"}"}
+        </pre>
+        <div
+          className={cn(
+            "border-t border-line px-3 py-1.5 transition-colors duration-500",
+            beat >= 1 ? "bg-positive-soft text-positive" : "bg-danger-soft text-danger",
+          )}
+        >
+          {beat >= 1 ? "201 Created · order 88412" : "500 TypeError: cannot read 'id' of undefined"}
+        </div>
+      </div>
+      <Appear when={beat >= 2}>
+        <p className="text-sm leading-relaxed text-ink">
+          <span className="font-semibold">Found in your API reference:</span> since yesterday&apos;s release{" "}
+          <code className="rounded-sm bg-surface-2 px-1 font-mono text-xs">store_id</code> is required. Ada replied with
+          the fix above.
+        </p>
+      </Appear>
+      <Appear when={beat >= 3}>
+        <div className="rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm">
+          <p className="flex flex-wrap items-center gap-2">
+            <StatusBadge status="open" />
+            <span className="font-semibold text-ink">Logged for engineering</span>
+          </p>
+          <p className="mt-1 text-xs text-ink-muted">1. Place an order without store_id · 2. API returns 500 · since release 4.2</p>
+        </div>
+      </Appear>
+    </div>
+  );
+}
+
+const FIRST_WEEK = [
+  { day: "Mon", plan: "Welcome, laptop, handbook" },
+  { day: "Tue", plan: "A day at the Leeds branch" },
+  { day: "Wed", plan: "Stock system training" },
+  { day: "Thu", plan: "Shadow the trade desk" },
+  { day: "Fri", plan: "Check-in with you" },
+];
+
+/** People ops: a new hire's first week, laid out day by day. */
+export function PeopleScene({ beat }: { beat: number }) {
+  const shown = beat === 0 ? 2 : beat === 1 ? 4 : 5;
+  return (
+    <div className="space-y-4">
+      <RunHeader
+        name="Rae"
+        seed="rae"
+        title="Priya starts on Monday"
+        meta="When a new hire is added · from your handbook"
+        status={beat >= 3 ? "needs_approval" : "in_progress"}
+      />
+      <ol className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
+        {FIRST_WEEK.map((day, index) => (
+          <li
+            key={day.day}
+            className={cn(
+              "rounded-md border border-line bg-surface p-2 transition-opacity duration-500",
+              index < shown ? "opacity-100" : "opacity-0",
+            )}
+          >
+            <p className="text-xs font-semibold text-ink">{day.day}</p>
+            <p className="mt-1 text-xs leading-snug text-ink-muted">{day.plan}</p>
+          </li>
+        ))}
+      </ol>
+      <Appear when={beat >= 2}>
+        <ul className="space-y-1 text-sm text-ink">
+          <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-positive" aria-hidden />Laptop request drafted for IT</li>
+          <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-positive" aria-hidden />Heads-up written for the team channel</li>
+        </ul>
+      </Appear>
+      <Appear when={beat >= 3}>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface-2 px-3.5 py-2.5">
+          <Mail className="size-4 text-ink-muted" aria-hidden />
+          <span className="text-sm text-ink">Welcome email to Priya</span>
+          <Decide label="Approve and send" />
+        </div>
+      </Appear>
+    </div>
+  );
+}
+
+/** Each role's own scene, for the showcase. */
+export const ROLE_SCENES: Record<string, (props: { beat: number }) => React.ReactNode> = {
+  "customer-support": SupportScene,
+  "client-onboarding": OnboardingScene,
+  researcher: ResearchScene,
+  marketer: MarketingScene,
+  secretary: AssistantScene,
+  "dev-support": DevScene,
+  "sales-development": SalesScene,
+  "people-ops": PeopleScene,
+};
+export const SCENE_BEATS = BEATS;

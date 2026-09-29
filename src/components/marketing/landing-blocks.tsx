@@ -6,23 +6,26 @@ import threadShot from "../../../public/product/handoff-thread.png";
 import activityShot from "../../../public/product/activity.png";
 import {
   ArrowRight,
-  BookOpenCheck,
+  FileLock,
+  Hand,
+  NotebookPen,
+  Quote,
+  ScrollText,
+  Stamp,
   CalendarClock,
   Check,
   ChevronDown,
   CircleCheckBig,
-  FilePen,
   FileUp,
-  History,
-  LifeBuoy,
-  LockKeyhole,
-  UserCheck,
   X,
 } from "lucide-react";
 import { LANDING_ICONS, TEMPLATES, type PRODUCT_SHOTS } from "@/lib/content";
 
 type ProductShot = (typeof PRODUCT_SHOTS)[number];
-import { TemplateIcon } from "@/components/marketing/template-icon";
+import { StickyNote } from "@/components/marketing/desk-notes";
+import { AgentAvatar } from "@/components/ui/avatar";
+import { LiveApproval, LiveHandoff, LiveLimits } from "@/components/marketing/live-product";
+import { PromiseDoodle, type PromiseDoodleId } from "@/components/marketing/promise-doodles";
 import { BrandLogo, type BrandLogoId } from "@/components/marketing/brand-logos";
 import { cn } from "@/lib/utils";
 
@@ -38,12 +41,14 @@ const ICONS: Record<(typeof LANDING_ICONS)[number], React.ComponentType<{ classN
   upload: FileUp,
   calendar: CalendarClock,
   approve: CircleCheckBig,
-  draft: FilePen,
-  person: UserCheck,
-  source: BookOpenCheck,
-  log: History,
-  lock: LockKeyhole,
-  handoff: LifeBuoy,
+  // The promises, each as the thing itself: a draft in a notebook, the
+  // owner's stamp, a quotation, the record, a locked file, a raised hand.
+  draft: NotebookPen,
+  person: Stamp,
+  source: Quote,
+  log: ScrollText,
+  lock: FileLock,
+  handoff: Hand,
 };
 
 function LandingIcon({ icon, className }: { icon: (typeof LANDING_ICONS)[number]; className?: string }) {
@@ -79,7 +84,7 @@ export function TrustStrip({
     >
       <p
         className={cn(
-          "text-xs font-semibold uppercase tracking-wider",
+          "text-xs font-semibold",
           isSky ? "text-[var(--sky-ink)]/75" : "eyebrow sd-rise",
         )}
       >
@@ -118,7 +123,7 @@ export function Steps({
         <li key={step.title} className="relative flex flex-col items-center text-center">
           <span className="relative flex size-12 items-center justify-center rounded-full border border-accent-line bg-surface text-accent shadow-xs">
             <LandingIcon icon={step.icon} className="size-5" />
-            <span className="sd-pop absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-accent font-mono text-xs text-accent-fg">
+            <span className="sd-pop absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-accent text-xs text-accent-fg">
               {index + 1}
             </span>
           </span>
@@ -132,22 +137,55 @@ export function Steps({
 
 /* --- Trust & control --------------------------------------------------------- */
 
+/**
+ * The six promises, pinned to the desk as a board rather than laid out as a
+ * table: the middle column sits a little lower, each note has its own colour
+ * and a barely-there angle, and each carries a small drawing of the promise
+ * (promise-doodles.tsx) above its title. A sky note would vanish into the
+ * band's sky wash, so the colours run lemon, mint, coral, lilac.
+ */
+const PROMISE_NOTES = [
+  { tone: "lemon", tilt: -1.2 },
+  { tone: "mint", tilt: 0.8 },
+  { tone: "coral", tilt: -0.6 },
+  { tone: "lilac", tilt: 1 },
+  { tone: "lemon", tilt: -0.8 },
+  { tone: "mint", tilt: 1.2 },
+] as const;
+
+const DOODLE_FOR: Partial<Record<(typeof LANDING_ICONS)[number], PromiseDoodleId>> = {
+  draft: "draft",
+  person: "person",
+  source: "source",
+  log: "log",
+  lock: "lock",
+  handoff: "handoff",
+};
+
 export function TrustGrid({
   items,
 }: {
   items: readonly { icon: (typeof LANDING_ICONS)[number]; title: string; body: string }[];
 }) {
   return (
-    <ul className="sd-stagger grid gap-px overflow-hidden rounded-panel border border-accent-fg/15 bg-accent-fg/15 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((item) => (
-        <li key={item.title} className="bg-accent p-6">
-          <span className="flex size-10 items-center justify-center rounded-lg bg-accent-fg/10 text-accent-fg">
-            <LandingIcon icon={item.icon} className="size-5" />
-          </span>
-          <h3 className="mt-4 text-lg font-semibold tracking-tight text-accent-fg">{item.title}</h3>
-          <p className="mt-2 text-base leading-relaxed text-accent-fg/85">{item.body}</p>
-        </li>
-      ))}
+    <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 lg:[&>li:nth-child(3n+2)]:translate-y-8">
+      {items.map((item, index) => {
+        const note = PROMISE_NOTES[index % PROMISE_NOTES.length]!;
+        const doodle = DOODLE_FOR[item.icon];
+        return (
+          <li key={item.title} className="sd-rise">
+            <StickyNote tone={note.tone} tilt={note.tilt} settle={false} soft className="note-plain note-fold relative h-full px-6 pb-7 pt-6">
+              {doodle ? (
+                <PromiseDoodle id={doodle} className="size-16" />
+              ) : (
+                <LandingIcon icon={item.icon} className="size-8" />
+              )}
+              <h3 className="mt-4 text-lg font-bold tracking-tight">{item.title}</h3>
+              <p className="mt-1.5 text-base leading-relaxed">{item.body}</p>
+            </StickyNote>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -183,15 +221,22 @@ export function TrustShots({ shots }: { shots: { image: ProductShot; title: stri
       {shots.map((shot, index) => (
         <li key={shot.image}>
           <figure className="grid items-center gap-6 lg:grid-cols-12 lg:gap-12">
-            <ProductShotImage
-              image={shot.image}
-              alt={shot.title}
-              sizes="(min-width: 1024px) 640px, 100vw"
-              className={cn("sd-rise lg:col-span-7", index % 2 === 1 && "lg:order-last")}
-            />
+            {/* The product itself, live: every button in it works. A
+                screenshot stands in only where no live piece exists. */}
+            <div className={cn("sd-rise min-w-0 lg:col-span-7", index % 2 === 1 && "lg:order-last")}>
+              {shot.image === "approval" ? (
+                <LiveApproval />
+              ) : shot.image === "boundaries" ? (
+                <LiveLimits />
+              ) : shot.image === "handoff-thread" ? (
+                <LiveHandoff />
+              ) : (
+                <ProductShotImage image={shot.image} alt={shot.title} sizes="(min-width: 1024px) 640px, 100vw" />
+              )}
+            </div>
             <figcaption className="lg:col-span-5">
-              <span className="block text-xl font-semibold tracking-tight text-accent-fg">{shot.title}</span>
-              <span className="mt-2 block text-base leading-relaxed text-accent-fg/85">{shot.body}</span>
+              <span className="block text-xl font-bold tracking-tight text-ink">{shot.title}</span>
+              <span className="mt-2 block text-base leading-relaxed text-ink-muted">{shot.body}</span>
             </figcaption>
           </figure>
         </li>
@@ -203,27 +248,57 @@ export function TrustShots({ shots }: { shots: { image: ProductShot; title: stri
 /* --- Roles ------------------------------------------------------------------- */
 
 /** Every role, from the same records the wizard and showcase use. One card each. */
+/** Who fills each role at ABC Inc., as the demo cast them. */
+const ROLE_STAFF: Record<string, readonly [string, string]> = {
+  "customer-support": ["Mia", "mia"],
+  "client-onboarding": ["Ivy", "ivy"],
+  researcher: ["Sol", "sol"],
+  marketer: ["Nova", "nova"],
+  secretary: ["Kai", "kai"],
+  "dev-support": ["Ada", "ada"],
+  "sales-development": ["Leo", "leo-leads"],
+  "people-ops": ["Rae", "rae"],
+};
+const ROLE_TONES = ["lemon", "sky", "mint", "coral", "lilac", "mint", "lemon", "sky"] as const;
+const ROLE_TILTS = [-1.2, 0.9, -0.5, 1.3, -1, 0.6, 1.1, -0.7];
+
+/**
+ * The roles as a roster pinned to the desk: a note per role, in the person
+ * who does it at ABC Inc. - their face, their name, the job - rather than a
+ * grid of icon cards. Each note opens that role's run on the showcase.
+ */
 export function RoleGrid({ cta }: { cta: string }) {
   return (
-    <ul className="sd-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {TEMPLATES.map((role) => (
-        <li key={role.id}>
-          <Link
-            href={`/showcase#${role.id}`}
-            className="group lift flex h-full flex-col rounded-panel border border-line bg-surface p-5 shadow-xs hover:border-accent-line hover:shadow-md"
-          >
-            <span className="flex size-11 items-center justify-center rounded-panel bg-accent-soft text-accent-soft-fg transition duration-200 group-hover:scale-110 group-hover:bg-accent group-hover:text-accent-fg group-hover:shadow-sm">
-              <TemplateIcon icon={role.icon} className="size-6" />
-            </span>
-            <span className="mt-4 text-lg font-semibold tracking-tight text-ink">{role.name}</span>
-            <span className="mt-2 text-sm leading-relaxed text-ink-muted">{role.pitch}</span>
-            <span className="mt-auto flex items-center justify-between pt-5 text-sm font-medium text-accent">
-              <span>{cta}</span>
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
-            </span>
-          </Link>
-        </li>
-      ))}
+    <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {TEMPLATES.map((role, index) => {
+        const [name, seed] = ROLE_STAFF[role.id] ?? [role.name, role.id];
+        return (
+          <li key={role.id} className="sd-rise">
+            <Link href={`/showcase#${role.id}`} className="group block h-full rounded-sm focus-visible:outline-offset-4">
+              <StickyNote
+                tone={ROLE_TONES[index % ROLE_TONES.length]!}
+                tilt={ROLE_TILTS[index % ROLE_TILTS.length]!}
+                settle={false}
+                soft
+                className="relative flex h-full flex-col px-5 pb-5 pt-6"
+              >
+                <span className="flex items-center gap-3">
+                  <AgentAvatar name={name} seed={seed} size="lg" />
+                  <span>
+                    <span className="block font-hand text-hand-cta font-bold leading-none">{name}</span>
+                    <span className="mt-1 block text-sm font-semibold">{role.name}</span>
+                  </span>
+                </span>
+                <span className="mt-3 text-sm leading-relaxed">{role.pitch}</span>
+                <span className="mt-auto flex items-center gap-1.5 pt-4 text-sm font-semibold text-accent">
+                  {cta}
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
+                </span>
+              </StickyNote>
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -236,6 +311,11 @@ interface ComparisonItem {
   desker: string;
 }
 
+/**
+ * The difference, as two pieces of paper side by side: a plain grey scrap
+ * for the chat assistant, and a lemon note for your staff, each answering the
+ * same five questions. On a phone they stack, chat first.
+ */
 export function ComparisonTable({
   competitorLabel,
   deskerLabel,
@@ -246,75 +326,35 @@ export function ComparisonTable({
   items: readonly ComparisonItem[];
 }) {
   return (
-    <div className="sd-stagger mx-auto max-w-4xl">
-      {/* Desktop view (table) */}
-      <div className="hidden overflow-hidden rounded-panel border border-line bg-surface shadow-xs md:block">
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-line bg-surface-2/60 text-xs font-semibold uppercase tracking-wider text-ink-muted">
-              <th scope="col" className="w-[26%] px-6 py-4">Capability</th>
-              <th scope="col" className="w-[37%] px-6 py-4 text-ink-subtle">{competitorLabel}</th>
-              <th scope="col" className="w-[37%] border-l border-line bg-accent-soft/40 px-6 py-4 text-accent">
-                <span className="flex items-center gap-2">
-                  <span className="font-bold">{deskerLabel}</span>
-                  <span className="rounded-full bg-accent px-2 py-0.5 text-meta font-semibold uppercase tracking-wide text-accent-fg">
-                    24/7
-                  </span>
-                </span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line text-sm">
-            {items.map((item) => (
-              <tr key={item.dimension} className="transition-colors hover:bg-surface-2/40">
-                <th scope="row" className="align-top px-6 py-4 font-semibold text-ink">
-                  {item.dimension}
-                </th>
-                <td className="align-top px-6 py-4 leading-relaxed text-ink-muted">
-                  <div className="flex items-start gap-2.5">
-                    <X className="mt-0.5 size-4 shrink-0 text-ink-subtle" aria-hidden />
-                    <span>{item.generic}</span>
-                  </div>
-                </td>
-                <td className="align-top border-l border-line bg-accent-soft/15 px-6 py-4 font-medium leading-relaxed text-ink">
-                  <div className="flex items-start gap-2.5">
-                    <Check className="mt-0.5 size-4 shrink-0 text-positive" aria-hidden />
-                    <span>{item.desker}</span>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile view (cards per capability) */}
-      <div className="space-y-4 md:hidden">
-        {items.map((item) => (
-          <div key={item.dimension} className="rounded-panel border border-line bg-surface p-5 shadow-xs">
-            <h3 className="text-base font-semibold text-ink">{item.dimension}</h3>
-            <div className="mt-3.5 space-y-2.5 text-sm">
-              <div className="rounded-lg bg-surface-2/70 p-3">
-                <p className="text-meta font-medium uppercase tracking-wider text-ink-subtle">{competitorLabel}</p>
-                <div className="mt-1.5 flex items-start gap-2 text-ink-muted leading-relaxed">
-                  <X className="mt-0.5 size-3.5 shrink-0 text-ink-subtle" aria-hidden />
-                  <span>{item.generic}</span>
-                </div>
-              </div>
-              <div className="rounded-lg border border-accent-line bg-accent-soft/30 p-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-meta font-semibold uppercase tracking-wider text-accent">{deskerLabel}</p>
-                  <span className="rounded-full bg-accent px-1.5 py-0.2 text-meta font-semibold text-accent-fg">24/7</span>
-                </div>
-                <div className="mt-1.5 flex items-start gap-2 font-medium text-ink leading-relaxed">
-                  <Check className="mt-0.5 size-3.5 shrink-0 text-positive" aria-hidden />
-                  <span>{item.desker}</span>
-                </div>
-              </div>
+    <div className="mx-auto grid max-w-5xl items-start gap-8 md:grid-cols-2 md:gap-10">
+      <div className="sd-rise note note-plain relative rotate-[-0.8deg] rounded-sm bg-surface-2 p-6 text-ink-muted sm:p-7">
+        <p className="font-hand text-hand-cta font-bold text-ink-muted">{competitorLabel}</p>
+        <dl className="mt-4 space-y-4">
+          {items.map((item) => (
+            <div key={item.dimension}>
+              <dt className="text-xs font-semibold text-ink-muted">{item.dimension}</dt>
+              <dd className="mt-1 flex gap-2.5 text-base leading-relaxed">
+                <X className="mt-1 size-4 shrink-0 text-ink-subtle" aria-hidden />
+                {item.generic}
+              </dd>
             </div>
-          </div>
-        ))}
+          ))}
+        </dl>
       </div>
+      <StickyNote tone="lemon" tilt={1} settle={false} className="sd-rise relative p-6 sm:p-7">
+        <p className="font-hand text-hand-cta font-bold">{deskerLabel}</p>
+        <dl className="mt-4 space-y-4">
+          {items.map((item) => (
+            <div key={item.dimension}>
+              <dt className="text-xs font-semibold">{item.dimension}</dt>
+              <dd className="mt-1 flex gap-2.5 text-base font-medium leading-relaxed">
+                <Check className="mt-1 size-4 shrink-0 text-positive" aria-hidden />
+                {item.desker}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </StickyNote>
     </div>
   );
 }
@@ -343,21 +383,25 @@ export function Testimonials({ items }: { items: readonly { quote: string; name:
 /* --- FAQ ------------------------------------------------------------------------- */
 
 /** Native disclosure, so it opens without JavaScript and works from the keyboard. */
+/**
+ * The FAQ as a notepad: a pale sky sheet with a margin rule, each question a
+ * line on it. Native disclosure, so it opens without JavaScript and works
+ * from the keyboard.
+ */
 export function Faq({ items }: { items: readonly { q: string; a: string }[] }) {
   return (
-    <div className="sd-stagger divide-y divide-line border-y border-line">
-      {items.map((item, index) => (
-        <details key={item.q} className="group" open={index === 0}>
-          <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-6 rounded-md py-4 text-lg font-medium tracking-tight text-ink transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
-            <span>{item.q}</span>
-            <ChevronDown
-              className="size-4 shrink-0 text-ink-subtle transition-transform duration-300 group-open:rotate-180"
-              aria-hidden
-            />
-          </summary>
-          <p className="max-w-2xl pb-6 text-base leading-relaxed text-ink-muted">{item.a}</p>
-        </details>
-      ))}
-    </div>
+    <StickyNote tone="sky" tilt={0.4} settle={false} soft className="note-plain sd-rise relative px-5 py-3 sm:px-8">
+      <div className="divide-y divide-note-ink/10">
+        {items.map((item, index) => (
+          <details key={item.q} className="group" open={index === 0}>
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-6 rounded-md py-4 text-lg font-semibold tracking-tight transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
+              <span>{item.q}</span>
+              <ChevronDown className="size-4 shrink-0 opacity-60 transition-transform duration-300 group-open:rotate-180" aria-hidden />
+            </summary>
+            <p className="max-w-[36rem] pb-6 text-base leading-relaxed">{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </StickyNote>
   );
 }

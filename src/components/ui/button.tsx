@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 const touchArea = "pointer-coarse:after:absolute pointer-coarse:after:content-['']";
 
 const button = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium " +
+  // Pills, as on the public site.
+    "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium " +
     // The press is the feedback: it lands on pointer-down, 150ms, strong ease-out.
     "transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 ease-out " +
     "disabled:pointer-events-none disabled:opacity-50 " +
@@ -20,7 +21,7 @@ const button = cva(
     variants: {
       variant: {
         primary:
-          "bg-accent text-accent-fg hover:bg-accent-hover shadow-xs hover:shadow-sm active:scale-[0.97] ring-1 ring-inset ring-white/20 dark:ring-white/10",
+          "bg-primary text-primary-fg hover:bg-primary-hover shadow-xs hover:shadow-sm active:scale-[0.97] ring-1 ring-inset ring-white/40 dark:ring-white/10",
         secondary:
           "bg-surface text-ink border border-line hover:border-line-strong hover:bg-surface-2 shadow-xs active:scale-[0.97]",
         ghost: "text-ink-muted hover:bg-surface-2 hover:text-ink active:scale-[0.97]",

@@ -32,7 +32,7 @@ test("the wizard creates an agent from a role template", async ({ page }) => {
 
   // Step 1 - pick a role. Nothing else is possible until one is chosen.
   await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
-  await page.getByRole("button", { name: /Customer support/ }).click();
+  await page.getByRole("button", { name: /^Support\b/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Step 2 - the role brings the job and team; the name is the admin's own.

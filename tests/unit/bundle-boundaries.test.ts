@@ -67,7 +67,7 @@ describe("the animation library stays on the public site", () => {
       // reusing them costs the app nothing.
       "marketing/night-sky.tsx",
       "marketing/template-icon.tsx",
-      "marketing/glass-button.tsx",
+      "marketing/cta.tsx",
     ]);
     const offenders = FILES.filter(
       ({ path: file }) => file.startsWith("app/(admin)/") || file === "components/admin-shell.tsx",

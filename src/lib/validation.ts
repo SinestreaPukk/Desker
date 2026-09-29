@@ -48,7 +48,7 @@ export const agentInputSchema = z.object({
   widgetColor: z
     .string()
     .trim()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #1800AD.")
+    .regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #3558E6.")
     .optional()
     .or(z.literal("")),
   widgetSide: z.enum(["right", "left"]).optional(),

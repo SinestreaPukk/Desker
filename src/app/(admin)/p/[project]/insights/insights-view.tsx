@@ -14,6 +14,8 @@ import { Page, PageBody, PageHeader, PageToolbar } from "@/components/page-heade
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Note, type NoteTone } from "@/components/ui/note";
+import { SectionTab } from "@/components/ui/section-tab";
 import { Panel } from "@/components/ui/panel";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState, ErrorState, LoadingKpis, LoadingRows } from "@/components/ui/states";
@@ -29,6 +31,13 @@ import {
 } from "@/lib/insight-copy";
 
 /** One headline figure. The line stays on one line; the fuller reading is the tooltip. */
+const STAT_TONES: Record<string, NoteTone> = {
+  "Tasks done on their own": "mint",
+  "Tokens used": "sky",
+  "Hours saved for your team": "lemon",
+  "Collaboration between agents": "lilac",
+};
+
 function StatCard({
   label,
   icon: Icon,
@@ -44,21 +53,23 @@ function StatCard({
 }) {
   return (
     // Health-style: the category in the tint, the number large, one quiet line.
-    <Panel className="p-5" title={hint}>
-      <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-accent">
+    <Note tone={STAT_TONES[label] ?? "sky"} className="p-5 text-note-ink" title={hint}>
+      <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
         <Icon className="size-4 shrink-0" />
         {label}
       </p>
-      <p className="mt-3 text-display font-bold leading-none tracking-tight text-ink tabular-nums">{value}</p>
-      <p className="mt-2 truncate text-sm text-ink-muted">{line}</p>
-    </Panel>
+      <p className="mt-3 font-display text-display font-bold leading-none tracking-tight text-ink tabular-nums">{value}</p>
+      <p className="mt-2 truncate text-sm">{line}</p>
+    </Note>
   );
 }
 
 function InsightHeading({ title, description }: { title: string; description: string }) {
   return (
     <div className="px-1">
-      <h2 className="text-lg font-semibold text-ink">{title}</h2>
+      <h2>
+        <SectionTab>{title}</SectionTab>
+      </h2>
       <p className="mt-0.5 max-w-2xl text-sm text-ink-muted">{description}</p>
     </div>
   );

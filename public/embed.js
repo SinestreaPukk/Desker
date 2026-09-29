@@ -13,7 +13,7 @@
  *   data-desker-origin  Where the app is hosted. Defaults to this script's origin.
  *   data-desker-label   Launcher tooltip / accessible name. Default "Chat with us".
  *   data-desker-side    "right" (default) or "left".
- *   data-desker-color   CSS colour for the launcher. Default #1800AD.
+ *   data-desker-color   CSS colour for the launcher. Default #3558E6.
  *
  * Design constraints, because this runs inside somebody else's page:
  *   - No globals beyond one namespaced key, no library, no CSS file.
@@ -57,7 +57,7 @@
   var origin = attr("origin") || new URL(script.src, window.location.href).origin;
   var label = attr("label") || "Chat with us";
   var side = attr("side") === "left" ? "left" : "right";
-  var color = attr("color") || "#1800AD";
+  var color = attr("color") || "#3558E6";
 
   var open = false;
   var iframe = null;

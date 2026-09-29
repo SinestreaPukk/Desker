@@ -19,10 +19,20 @@ import {
   TrustShots,
   TrustStrip,
 } from "@/components/marketing/landing-blocks";
-import { GLASS_BUTTON, SKY_LINK } from "@/components/marketing/glass-button";
+import { CTA_PRIMARY, CTA_SECONDARY } from "@/components/marketing/cta";
+import { HeroNotes, PhoneNote, SoftNotes, StickyNote } from "@/components/marketing/desk-notes";
+import { AgentAvatar } from "@/components/ui/avatar";
+
+/** The five staff in the hero's reel, by the seeds that draw their faces there. */
+const HERO_STAFF = [
+  ["Sol", "sol"],
+  ["Nova", "nova"],
+  ["Leo", "leo-leads"],
+  ["Kai", "kai"],
+  ["Mia", "mia"],
+] as const;
+import { BrandMark } from "@/components/brand-logo";
 import { HeroStage } from "@/components/marketing/hero-stage";
-import { Dunes, NightSky } from "@/components/marketing/night-sky";
-import { HeroSnap } from "@/components/marketing/hero-snap";
 import { LinkButton } from "@/components/marketing/link-button";
 import { HeroWords } from "@/components/marketing/words";
 import { Section, SectionHeader } from "@/components/marketing/section";
@@ -78,59 +88,48 @@ export default async function LandingPage({
   return (
     <>
       {/* Hero ---------------------------------------------------------- */}
-      {/* overflow-x-clip, not overflow-hidden: the stage hangs below the sky
-          on purpose (-mb below), and hidden cut its foot off; clip is also
-          what lets the stage stick. The sky and dunes are clipped by their
-          own boxes. */}
-      <section className="sky relative -mt-14 overflow-x-clip pt-14" data-header-clear>
-        <NightSky uid="hero-sky" />
-        {/* The dunes crest just above the first screen's fold, whatever the
-            hero's length - the hold makes it long - at a fixed height, since
-            a share of the section would blow them up past the crest. Below
-            them the sand falls into shadow for the stretch the window is
-            pinned over, then the whole hero dissolves into the paper. */}
-        <div className="absolute inset-x-0 top-[calc(100svh-16rem)] h-[36rem] sm:h-[40rem]">
-          <Dunes uid="hero-dunes" />
-        </div>
-        <div
-          aria-hidden
-          className="hero-dissolve absolute inset-x-0 bottom-0 top-[calc(100svh-4rem)]"
-        />
-
-        <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-24 text-center sm:px-6 sm:pb-14 sm:pt-36">
-          {/* hero-copy rises and fades as the window rises, gone by the time
-              it pins, so nothing is left under the clear header. */}
-          <div className="hero-copy">
-          <h1 className="mx-auto max-w-4xl font-display text-hero text-balance text-[var(--sky-ink)]">
-            <HeroWords text={hero.headline} />
-          </h1>
-          <p className="hero-in mx-auto mt-5 max-w-2xl text-lg font-medium leading-relaxed text-pretty text-[var(--sky-ink)] [--in:4] sm:text-xl sm:leading-snug">
-            {hero.subhead}
-          </p>
-          <div className="hero-in mt-7 flex flex-wrap items-center justify-center gap-4 [--in:5]">
-            <Link href={hero.primaryCta.href} className={GLASS_BUTTON}>
-              {hero.primaryCta.label}
-              <ArrowRight aria-hidden />
-            </Link>
-            <Link href={hero.secondaryCta.href} className={SKY_LINK}>
-              {hero.secondaryCta.label}
-            </Link>
-          </div>
-          <p className="hero-in mt-4 text-sm font-medium text-[var(--sky-ink)] [--in:6]">{hero.microcopy}</p>
+      {/* Split, not centred: the promise on the left in the hand, and on the
+          right the product itself, working, with two of the staff's notes
+          stuck to its corners. The soft notes run up behind the header. */}
+      <section className="relative -mt-14 overflow-x-clip pt-14">
+        <SoftNotes preset="hero" />
+        <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-14 px-4 pb-20 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[0.82fr_1.18fr] lg:gap-12 lg:pb-28 lg:pt-20 xl:px-10">
+          <div className="min-w-0">
+            <h1 className="max-w-xl font-hand text-hand-hero text-balance text-ink">
+              <HeroWords text={hero.headline} highlight={[8, 11]} />
+            </h1>
+            <p className="hero-in mt-6 max-w-lg text-lg leading-relaxed text-pretty text-ink-muted [--in:4]">
+              {hero.subhead}
+            </p>
+            <div className="hero-in mt-8 flex flex-wrap items-center gap-3 [--in:5]">
+              <Link href={hero.primaryCta.href} className={CTA_PRIMARY}>
+                {hero.primaryCta.label}
+                <ArrowRight aria-hidden />
+              </Link>
+              <Link href={hero.secondaryCta.href} className={CTA_SECONDARY}>
+                {hero.secondaryCta.label}
+              </Link>
+            </div>
+            {/* Who you would be hiring: the five in the demo, by name. */}
+            <div className="hero-in mt-8 flex items-center gap-3 [--in:6]">
+              <span className="flex -space-x-2" aria-hidden>
+                {HERO_STAFF.map(([name, seed]) => (
+                  <AgentAvatar key={name} name={name} seed={seed} size="md" className="ring-2 ring-paper" />
+                ))}
+              </span>
+              <p className="text-sm leading-snug text-ink-muted">
+                <span className="font-semibold text-ink">Sol, Nova, Leo, Kai and Mia</span>
+              </p>
+            </div>
           </div>
 
-          {/* The product, floating over the horizon and down into the page.
-              stage-rise tilts it back at the top of the page and scrolling
-              stands it up; it pins in the middle of the screen, holds there
-              for a stretch of scroll while the reel plays, then the page
-              moves on. HeroSnap finishes a scroll that stops on the way, so
-              the window lands whole (globals.css, "The hero's stage"). */}
-          <div className="stage-track relative z-10 mx-auto mt-10 max-w-4xl [perspective:1600px] sm:mt-12">
-            <HeroStage data-header-solid className="stage-rise stage-pin text-left" />
-            <div className="stage-hold" aria-hidden />
+          {/* The product, working: the reel, with two notes taped on. */}
+          <div className="relative mx-auto w-full min-w-0 max-w-2xl lg:max-w-none">
+            <PhoneNote />
+            <HeroNotes />
+            <HeroStage className="relative text-left" />
           </div>
         </div>
-        <HeroSnap />
       </section>
 
       {/* Built on ------------------------------------------------------- */}
@@ -160,11 +159,18 @@ export default async function LandingPage({
       </Section>
 
       {/* Trust & control ---------------------------------------------------- */}
-      <Section id="trust" labelledBy="trust-heading" className="bg-accent text-accent-fg">
+      {/* On a pale sky wash with its own out-of-focus notes: the calm middle
+          of the page, where the product's promises are shown. */}
+      <Section
+        id="trust"
+        labelledBy="trust-heading"
+        className="trust-band relative overflow-clip"
+        containerClassName="relative"
+        backdrop={<SoftNotes preset="band" />}
+      >
         <SectionHeader
           id="trust-heading"
           align="left"
-          tone="inverse"
           eyebrow={trust.eyebrow}
           heading={trust.heading}
           intro={trust.intro}
@@ -302,52 +308,29 @@ export default async function LandingPage({
       </Section>
 
       {/* CTA ---------------------------------------------------------------- */}
-      {/* The page's bookend: it opens on the night sky and closes on it. The
-          sand runs to the bottom edge and settles into shadow rather than
-          fading to paper - a wash of near-white directly above a white footer
-          read as a printing fault rather than as a horizon. */}
-      <section className="sky relative overflow-hidden">
-        <NightSky uid="cta-sky" />
-        {/* Masked at the top so the sand rises out of the night instead of
-            starting on a ruled line across the width of the page, and mirrored
-            so the closing band is the other side of the same landscape rather
-            than a repeat of the hero's. */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-[46%] -scale-x-100 [mask-image:linear-gradient(to_bottom,transparent,black_22%)]"
-        >
-          <Dunes uid="cta-dunes" haze={false} />
-        </div>
-        {/* Night falling down the slope: the crest keeps the last of the light
-            and everything below it goes to shadow, so the sand reads as a
-            horizon rather than as a flat blue panel above the footer. */}
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 h-[46%] bg-linear-to-b from-transparent via-[var(--dune-deep)]/55 to-[var(--dune-deep)]"
-        />
-        {/* The last of the light along that edge. */}
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-[var(--dune-crest)] to-transparent opacity-40"
-        />
-        <div className="relative mx-auto max-w-6xl px-4 pb-32 pt-24 text-center sm:px-6 sm:pb-40 sm:pt-32">
+      {/* The page's bookend: one big note on the dotted paper, with the one
+          call the page makes on it. */}
+      <section className="relative overflow-clip border-t border-line">
+        <SoftNotes preset="cta" />
+        <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32">
           <Reveal>
-            {/* A bookend, not a second hero: same serif, section scale. */}
-            <h2 className="mx-auto max-w-3xl font-display text-title text-balance text-[var(--sky-ink)]">
-              {cta.heading}
-            </h2>
-            <p className="mt-4 text-lg font-medium text-[var(--sky-ink)]">{cta.body}</p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <Link href={cta.button.href} className={GLASS_BUTTON}>
-                {cta.button.label}
-                <ArrowRight aria-hidden />
-              </Link>
-              {cta.secondary ? (
-                <Link href={cta.secondary.href} className={SKY_LINK}>
-                  {cta.secondary.label}
+            <StickyNote tone="lemon" tilt={-1.5} className="relative mx-auto max-w-2xl px-6 py-12 text-center sm:px-12 sm:py-16">
+              <h2 className="mx-auto max-w-xl font-hand text-hand-title text-balance">{cta.heading}</h2>
+              <p className="mt-4 text-lg">{cta.body}</p>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <Link href={cta.button.href} className={CTA_PRIMARY}>
+                  {cta.button.label}
+                  <ArrowRight aria-hidden />
                 </Link>
-              ) : null}
-            </div>
-            <p className="mt-4 text-sm font-medium text-[var(--sky-ink)]">{cta.microcopy}</p>
+                {cta.secondary ? (
+                  <Link href={cta.secondary.href} className={CTA_SECONDARY}>
+                    {cta.secondary.label}
+                  </Link>
+                ) : null}
+              </div>
+              <p className="mt-4 text-sm">{cta.microcopy}</p>
+              <BrandMark className="absolute bottom-4 right-5 size-6 -rotate-12 opacity-40" />
+            </StickyNote>
           </Reveal>
         </div>
       </section>
