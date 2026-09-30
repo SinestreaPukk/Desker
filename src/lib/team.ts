@@ -22,7 +22,7 @@ import { spaceKind, type SpaceKind } from "@/lib/space";
 import { rulesFor } from "@/lib/work/rules";
 import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { RunRefused, startRun } from "@/lib/work/scope";
-import { WORK_TOOL_METADATA, type WorkToolId } from "@/lib/work/tools";
+import { WORK_TOOL_IDS, WORK_TOOL_METADATA, scopeTools, type WorkToolId } from "@/lib/work/tools";
 
 const MAX_RESPONDERS = 3;
 const HISTORY = 30;
@@ -36,6 +36,8 @@ export interface TeamAgent {
   responsibilities: unknown;
   modelProvider: string;
   model: string | null;
+  /** Its tools, which decide what its tasks can do (null = every tool). */
+  scopeOfWork: { tools: unknown } | null;
 }
 
 const agentSelect = {
@@ -47,7 +49,17 @@ const agentSelect = {
   responsibilities: true,
   modelProvider: true,
   model: true,
+  scopeOfWork: { select: { tools: true } },
 } as const;
+
+// Everyone's tasks can search, draft and hand off: what tells agents apart is the rest.
+const COMMON = new Set<WorkToolId>(["search_documents", "draft_content", "schedule_followup", "delegate_to_colleague", "suggest_opportunity", "escalate_to_human"]);
+
+/** What this agent's tasks can do that not every agent's can, in the owner's words. */
+export function specialAbilities(agent: Pick<TeamAgent, "scopeOfWork">): string[] {
+  const tools = agent.scopeOfWork ? scopeTools(agent.scopeOfWork.tools) : null;
+  return (tools ?? [...WORK_TOOL_IDS]).filter((tool) => !COMMON.has(tool)).map((tool) => WORK_TOOL_METADATA[tool].label);
+}
 
 /** Everyone who can speak in the room: the project's published agents. */
 export function teamOf(projectId: string): Promise<TeamAgent[]> {
@@ -100,6 +112,7 @@ async function transcript(threadId: string): Promise<string> {
 const ROUTER_PROMPT = `You run a group chat between a person (the owner) and their AI team - staff at their business, or assistants in their personal life.
 Given the team and the owner's latest message, pick who should answer: the one to three people whose work it is.
 Pick one unless the message clearly spans several people's work, or asks for everyone's view.
+Each person's "Can" list is what their tasks can actually do. When the message needs one of those abilities - a calendar, email, GitHub, Slack, the web, a statement - pick someone who has it, even over someone whose job title sounds closer.
 Reply with JSON only: {"responders": ["Name", ...]}`;
 
 /** Who answers a message that names nobody. Falls back to the first agent when no model is available. */
@@ -111,7 +124,10 @@ export async function chooseResponders(
 ): Promise<TeamAgent[]> {
   if (team.length <= 1 || (!env.hasAnthropicKey && !env.hasOpenAiKey)) return team.slice(0, 1);
   const roster = team
-    .map((agent) => `- ${agent.name}, ${agent.jobTitle}: ${toStringArray(agent.responsibilities).slice(0, 4).join("; ")}`)
+    .map((agent) => {
+      const can = specialAbilities(agent);
+      return `- ${agent.name}, ${agent.jobTitle}: ${toStringArray(agent.responsibilities).slice(0, 4).join("; ")}. Can: ${can.length > 0 ? can.join(", ") : "search its documents and draft"}.`;
+    })
     .join("\n");
   try {
     const provider = await getProvider(team[0]!.modelProvider);
@@ -158,12 +174,17 @@ ${documents.length > 0 ? `Documents uploaded to you: ${documents.join(", ")}.` :
 }
 
 function roomSection(agent: TeamAgent, team: TeamAgent[], kind: SpaceKind): string {
-  const others = team.filter((other) => other.id !== agent.id).map((other) => `${other.name} (${other.jobTitle})`);
+  const others = team
+    .filter((other) => other.id !== agent.id)
+    .map((other) => {
+      const can = specialAbilities(other);
+      return `${other.name} (${other.jobTitle}${can.length > 0 ? `; their tasks can: ${can.join(", ")}` : ""})`;
+    });
   return `## The team room
 You are in a group chat with ${kind === "personal" ? "the person you work for (the owner)" : "the business owner"}${others.length > 0 ? ` and your colleagues ${others.join(", ")}` : ""}. The owner can ask anything or hand out work.
 
 Reply with one JSON object and nothing else:
-{"reply": "your message to the room", "task": null | "the task you are starting, written as an instruction to yourself"}
+{"reply": "your message to the room", "task": null | "the task you are starting, written as an instruction to yourself", "handoff": null | "a colleague's name"}
 
 - Be short and straight to the point: lead with the answer, usually in one or two short sentences. Plain everyday words.
 - No paragraphs unless the question truly needs one. When you list things, use a short bullet list ("- " lines, at most four).
@@ -172,6 +193,7 @@ Reply with one JSON object and nothing else:
 - Start a task only when the owner's latest message plainly asks you (or the team) to do work - research, writing, drafting, checking something - or says yes to work you offered. Then put a clear, complete instruction in "task" and say in "reply" that you are on it. The task runs in the background with your full tools; you will report back here.
 - A question, an opinion or a plan is not a request for work: answer it, and if work would help, offer it ("Want me to…?") with "task": null. Wait for the owner's yes.
 - Never start a task for work that is a colleague's.
+- If the owner asks for work that needs something your tasks can't do but a colleague's can (a calendar, email, GitHub...), do not start it and do not offer to flag it: set "handoff" to that colleague's name and say in one short line that you are passing it to them. They pick it up straight away.
 - Never claim to have done work you have not done.`;
 }
 
@@ -187,10 +209,11 @@ export async function replyAs(input: {
   threadId: string;
   organizationId: string;
   userId: string;
-}): Promise<void> {
+}): Promise<TeamAgent | null> {
   const { agent, team, projectId, threadId, organizationId, userId } = input;
   let reply = "";
   let task = "";
+  let handoff: TeamAgent | null = null;
   try {
     if (!env.hasAnthropicKey && !env.hasOpenAiKey) {
       reply = "I can't reply here yet: no AI model is set up for this workspace.";
@@ -237,6 +260,10 @@ export async function replyAs(input: {
       // A model that ignored the JSON still said something worth showing.
       reply = parsed ? stringField(parsed, "reply") : turn.message.content.trim();
       task = parsed ? stringField(parsed, "task") : "";
+      const to = parsed ? stringField(parsed, "handoff").toLowerCase() : "";
+      handoff = to ? (team.find((other) => other.id !== agent.id && other.name.toLowerCase() === to) ?? null) : null;
+      // Passing it on and starting it yourself are one or the other.
+      if (handoff) task = "";
     }
   } catch (error) {
     console.error("[team] reply failed", error);
@@ -259,6 +286,7 @@ export async function replyAs(input: {
   }
 
   await addTeamMessage({ projectId, threadId, agentId: agent.id, content: clamp(reply || "…", 4000), actionItemId });
+  return handoff;
 }
 
 /** Everyone picked answers in turn, so each sees what the ones before said. */
@@ -270,7 +298,17 @@ export async function runMeetingTurn(input: {
   organizationId: string;
   userId: string;
 }): Promise<void> {
+  const spoke = new Set<string>();
+  const passedTo: TeamAgent[] = [];
   for (const agent of input.responders) {
+    spoke.add(agent.id);
+    const handoff = await replyAs({ ...input, agent });
+    if (handoff) passedTo.push(handoff);
+  }
+  // Whoever was handed the work answers next - once, so hand-offs never loop.
+  for (const agent of passedTo) {
+    if (spoke.has(agent.id)) continue;
+    spoke.add(agent.id);
     await replyAs({ ...input, agent });
   }
 }
