@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, BookOpen, CircleHelp, ExternalLink, ListChecks, Search } from "lucide-react";
+import { ArrowLeft, BookOpen, CircleHelp, Compass, ExternalLink, ListChecks, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/field";
@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/states";
 import { guideBySlug, guidesFor, helpTopic, searchGuides, type HelpTopic } from "@/lib/guides";
 import { useSpaceKind } from "@/components/space-kind";
 import { CHECKLIST_REOPEN_EVENT, showChecklist } from "@/components/help/checklist-state";
+import { openTour } from "@/components/tour/tour";
 import { cn } from "@/lib/utils";
 
 interface HelpTarget {
@@ -183,6 +184,20 @@ function HelpDialog({
             <DialogDescription>
               Short answers to one thing at a time. Every guide is a two-minute read.
             </DialogDescription>
+            <button
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+                openTour();
+              }}
+              className="mt-4 flex w-full items-center gap-3 rounded-lg border border-accent-line bg-accent-soft/40 px-3.5 py-3 text-left hover:bg-accent-soft"
+            >
+              <Compass className="size-4 shrink-0 text-accent" aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-ink">Take the tour</span>
+                <span className="block text-xs text-ink-muted">Where to press to get set up, and what makes Desker different.</span>
+              </span>
+            </button>
 
             <div className="relative mt-4">
               <Search

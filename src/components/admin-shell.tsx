@@ -41,6 +41,7 @@ import { SpaceKindProvider } from "@/components/space-kind";
 import type { SpaceKind } from "@/lib/space";
 import { FeedbackButton } from "@/components/feedback-dialog";
 import { HelpButton, HelpProvider } from "@/components/help/help-panel";
+import { Tour } from "@/components/tour/tour";
 import { UsageTracker } from "@/components/usage-tracker";
 import { useAdminLiveFeed, useIssues } from "@/hooks/use-admin-data";
 import { useActionItems, useSuggestions } from "@/hooks/use-work-data";
@@ -197,6 +198,7 @@ export function AdminShell({
   return (
     <SpaceKindProvider kind={kind}>
     <HelpProvider project={project.slug}>
+      <Tour project={project.slug} />
       <div data-app className="flex min-h-dvh flex-col lg:flex-row">
       {/* Skip link: first tab stop on every admin page. */}
       <a

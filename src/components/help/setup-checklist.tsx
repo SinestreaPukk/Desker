@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import { useAgents } from "@/hooks/use-admin-data";
 import { useProjectContext } from "@/hooks/use-work-data";
+import { openTour } from "@/components/tour/tour";
 import { useHelp } from "@/components/help/help-panel";
 import {
   dismissChecklist,
@@ -206,13 +207,18 @@ export function SetupChecklist({ project }: { project: string }) {
 
       <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-2 text-xs text-ink-muted">
         <span>Dismiss it any time; the help panel brings it back.</span>
-        <button
-          type="button"
-          onClick={() => help.open({ slug: personal ? "personal-space" : "hire-an-agent" })}
-          className="-my-2 py-3 text-accent hover:underline"
-        >
-          Read the two-minute guide
-        </button>
+        <span className="flex items-center gap-4">
+          <button type="button" onClick={openTour} className="-my-2 py-3 font-medium text-accent hover:underline">
+            Take the tour
+          </button>
+          <button
+            type="button"
+            onClick={() => help.open({ slug: personal ? "personal-space" : "hire-an-agent" })}
+            className="-my-2 py-3 text-accent hover:underline"
+          >
+            Read the two-minute guide
+          </button>
+        </span>
       </div>
     </Panel>
   );
