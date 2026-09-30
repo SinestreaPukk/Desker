@@ -90,7 +90,38 @@ export default function TermsPage() {
         handling of personal data is described in the Privacy Policy.
       </p>
 
-      <h2>8. Termination</h2>
+      <h2>8. Connected integrations and Google API services</h2>
+      <p>
+        If you choose to connect third-party integrations (such as Google Calendar or Gmail) to the Service:
+      </p>
+      <ul>
+        <li>
+          You authorize the Service to access and process the specific data necessary to provide the features you request
+          (such as reading calendar events to check for clashes and create or move meetings, and reading email threads to draft replies you approve).
+        </li>
+        <li>
+          Data received from Google APIs is used strictly to provide and improve these user-facing features. It is not sold, is not used for advertising,
+          and is not used to train artificial intelligence (AI) or machine learning (ML) models.
+        </li>
+        <li>
+          {"Desker's use and transfer to any other app of information received from Google APIs will adhere to the "}
+          <a
+            href="https://developers.google.com/terms/api-services-user-data-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent underline underline-offset-4 hover:text-accent-hover"
+          >
+            Google API Services User Data Policy (https://developers.google.com/terms/api-services-user-data-policy)
+          </a>
+          {", including the Limited Use requirements."}
+        </li>
+        <li>
+          You can disconnect your connected accounts at any time from within the Service under Integrations or through your third-party account permissions,
+          which immediately revokes access and deletes stored OAuth credentials from our systems.
+        </li>
+      </ul>
+
+      <h2>9. Termination</h2>
       <p>
         You may delete your account, and every space you alone own, at any time from inside the
         Service. We may suspend or terminate accounts that
@@ -98,14 +129,14 @@ export default function TermsPage() {
         practicable.
       </p>
 
-      <h2>9. Liability</h2>
+      <h2>10. Liability</h2>
       <p>
         To the extent permitted by law, the Service is provided as is, and {LEGAL.companyName}
         &rsquo;s total liability for any claim is limited to the fees you paid in the twelve
         months before the claim arose.
       </p>
 
-      <h2>10. Changes and contact</h2>
+      <h2>11. Changes and contact</h2>
       <p>
         We may update these terms; material changes will be announced in the Service and take
         effect no sooner than 14 days after notice. These terms are governed by the laws of{" "}

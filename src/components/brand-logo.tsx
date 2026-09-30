@@ -4,9 +4,8 @@ import { BRAND } from "@/lib/brand";
 /**
  * The Desker logo.
  *
- * The artwork is a single-colour mask rather than two exported images, and the
- * colour comes from a design token - so the mark follows the theme
- * automatically and the light and dark variants cannot drift apart. Source
+ * The artwork is a single-colour mask rather than exported images, and the
+ * colour comes from a design token. Source
  * assets are generated from the original artwork by
  * scripts/make-brand-assets.mjs.
  */

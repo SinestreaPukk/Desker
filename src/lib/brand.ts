@@ -20,12 +20,11 @@ export const BRAND = {
 /**
  * Hex mirrors of design tokens, for the few places that cannot read a CSS
  * variable: the browser's theme-color and the generated social card.
- * Keyed by token name, `@dark` for the dark theme's value.
+ * Keyed by token name.
  * scripts/check-contrast.mjs fails if one drifts from globals.css.
  */
 export const TOKEN_HEX = {
   paper: "#F8FAFD",
-  "paper@dark": "#0E141F",
   ink: "#1E2A45",
   "ink-muted": "#56627A",
   "ink-subtle": "#8390A6",

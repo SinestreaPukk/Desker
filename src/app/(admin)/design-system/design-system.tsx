@@ -11,7 +11,6 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { Panel, PanelBody, PanelDescription, PanelHeader, PanelTitle } from "@/components/ui/panel";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState, Skeleton } from "@/components/ui/states";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { NightSky } from "@/components/marketing/night-sky";
 
 const COLOR_PAIRS: { fg: string; bg: string; use: string; min: number }[] = [
@@ -131,11 +130,9 @@ export function DesignSystem() {
           <h1 className="mt-1 text-xl font-semibold text-ink">Design system</h1>
           <p className="mt-2 max-w-2xl text-base text-ink-muted">
             Every screen is built from these tokens and components. If something you need is not
-            here, add it here first, then use it. Contrast is computed live for the theme you are
-            looking at - switch themes to check the other.
+            here, add it here first, then use it. Contrast is computed live against the design tokens.
           </p>
         </div>
-        <ThemeToggle />
       </header>
 
       <Section title="Colour" blurb="Warm neutrals, the brand terracotta and the amber call to action; emphasis by contrast. Three semantic tones. Each pair checked against WCAG AA.">

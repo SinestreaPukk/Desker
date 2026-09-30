@@ -1,9 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* next-themes writes .dark on <html>; Tailwind v4 needs to be told. */
-@custom-variant dark (&:where(.dark, .dark *));
-
 /* ---------------------------------------------------------------------------
    Design tokens.
 
@@ -12,8 +9,7 @@
    and a drawer of soft sticky-note colours - lemon, sky, mint, coral, lilac -
    that carry the charm. Vivid, never loud: the notes are fills under navy
    ink, and nothing but the ink blue is solid.
-   Every colour is defined here in both themes - nothing may be declared only
-   inside a dark block, or the light theme inherits a hole.
+   Every colour is defined here in :root.
 
    Status colours are Radix Colors steps (teal, amber, red), inlined as oklch
    so scripts/check-contrast.mjs can read them. The warm neutrals, the
@@ -27,11 +23,8 @@
   --surface-2: oklch(0.965 0.010 258); /* slate-3 */
   --surface-3: oklch(0.940 0.014 258); /* slate-4 */
   /* The app's navigation rail, and only that.
-     It needs to sit a step below the page in both themes so the chrome
-     recedes and a panel is the brightest thing on screen. No existing surface
-     does that: --surface-2 is darker than the page in light and lighter than
-     it in dark, so a rail painted with it receded in one theme and advanced
-     in the other. This one is defined as "below paper" in each. */
+     It sits one step below the page so the chrome recedes and a panel is
+     the brightest thing on screen. */
   --rail: oklch(0.968 0.009 258); /* one step below the ground, so the chrome recedes */
 
   /* text */
@@ -142,76 +135,6 @@
   --highlight: oklch(0.930 0.117 96 / 0.85);
 
   color-scheme: light;
-}
-
-:root.dark {
-  --paper: oklch(0.190 0.025 265); /* slate-2 */
-  --surface: oklch(0.235 0.030 265); /* slate-3 */
-  --surface-2: oklch(0.270 0.032 265); /* slate-4 */
-  --surface-3: oklch(0.305 0.034 265); /* slate-5 */
-  --rail: oklch(0.170 0.022 265); /* slate-1 */
-
-  --ink: oklch(0.965 0.008 258); /* slate-12 */
-  --ink-muted: oklch(0.790 0.030 260); /* slate-11 */
-  --ink-subtle: oklch(0.600 0.030 262); /* slate-10 */
-
-  --line: oklch(0.340 0.030 264); /* slate-6 */
-  --line-strong: oklch(0.550 0.035 262); /* slate-9 */
-
-  /* At night the paper goes deep navy, the ink blue lifts to periwinkle so it
-     reads on it, and the notes become deeper tints under light ink. */
-  --brand: oklch(0.720 0.150 268);
-  --primary: oklch(0.720 0.150 268);
-  --primary-hover: oklch(0.790 0.120 268);
-  --primary-fg: oklch(0.200 0.040 265);
-  --accent: oklch(0.720 0.150 268);
-  --accent-hover: oklch(0.790 0.120 268);
-  --accent-fg: oklch(0.200 0.040 265);
-  --accent-soft: oklch(0.320 0.070 255);
-  --accent-soft-fg: oklch(0.860 0.070 242);
-  --accent-line: oklch(0.450 0.090 255);
-
-  --positive: oklch(0.789 0.147 175.7); /* teal-11 */
-  --positive-fg: oklch(0.187 0.012 186.7); /* teal-1 */
-  --positive-soft: oklch(0.273 0.038 186.8); /* teal-3 */
-  --positive-line: oklch(0.414 0.066 184.7); /* teal-6 */
-  --warning: oklch(0.800 0.120 45);
-  --warning-soft: oklch(0.270 0.050 40);
-  --warning-line: oklch(0.420 0.080 40);
-  --danger: oklch(0.780 0.128 22.1); /* red-11 */
-  /* White on this lifted red was 2.5:1 - the dark danger button was unreadable. */
-  --danger-fg: oklch(0.188 0.013 18.4); /* red-1 */
-  --danger-soft: oklch(0.251 0.065 12.7); /* red-3 */
-  --danger-line: oklch(0.381 0.111 16.8); /* red-6 */
-
-  --focus: oklch(0.720 0.150 268);
-  --shadow-color: 230 40% 3%;
-
-  /* Avatars invert in dark: a deep tile with a luminous figure, so they sit on
-     near-black without glowing like stickers. */
-  --av-face: oklch(0.240 0.050 265);
-  --av-1-bg: oklch(0.320 0.060 299);
-  --av-1-fg: oklch(0.820 0.090 299);
-  --av-2-bg: oklch(0.320 0.060 242);
-  --av-2-fg: oklch(0.820 0.090 242);
-  --av-3-bg: oklch(0.320 0.060 165);
-  --av-3-fg: oklch(0.820 0.090 165);
-  --av-4-bg: oklch(0.320 0.060 96);
-  --av-4-fg: oklch(0.820 0.090 96);
-  --av-5-bg: oklch(0.320 0.060 37);
-  --av-5-fg: oklch(0.820 0.090 37);
-  --av-6-bg: oklch(0.320 0.060 200);
-  --av-6-fg: oklch(0.820 0.090 200);
-
-  --note-lemon: oklch(0.360 0.070 96);
-  --note-sky: oklch(0.340 0.060 245);
-  --note-mint: oklch(0.345 0.055 165);
-  --note-coral: oklch(0.345 0.060 37);
-  --note-lilac: oklch(0.340 0.070 299);
-  --note-ink: oklch(0.965 0.008 258);
-  --highlight: oklch(0.600 0.110 96 / 0.45);
-
-  color-scheme: dark;
 }
 
 @theme inline {
@@ -636,15 +559,9 @@
   filter: blur(64px);
   opacity: 0.55;
 }
-:root.dark .soft-notes > span {
-  opacity: 0.35;
-}
 /* Behind app screens the notes are fainter still: a working surface. */
 .soft-notes-quiet > span {
   opacity: 0.32;
-}
-:root.dark .soft-notes-quiet > span {
-  opacity: 0.16;
 }
 @media (prefers-reduced-transparency: reduce) {
   .soft-notes {

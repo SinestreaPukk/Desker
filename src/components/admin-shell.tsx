@@ -26,7 +26,6 @@ import {
 import { BRAND } from "@/lib/brand";
 import { BrandMark } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -236,7 +235,6 @@ export function AdminShell({
         <div id="mobile-nav" className="space-y-3 border-b border-line bg-rail p-3 lg:hidden">
           {projectSwitcher}
           {navLinks}
-          <ThemeToggle className="w-full [&>button]:flex-1" />
         </div>
       ) : null}
 
@@ -260,7 +258,6 @@ export function AdminShell({
           {/* Always the same spot, on every screen in the app. */}
           <HelpButton className="w-full justify-start hover:bg-surface" />
           <FeedbackButton project={project.slug} className="w-full justify-start hover:bg-surface" />
-          <ThemeToggle className="w-full [&>button]:flex-1" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button

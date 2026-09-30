@@ -10,7 +10,6 @@ export function Panel({
     <div
       className={cn(
         "rounded-panel border border-line/50 bg-surface",
-        "dark:shadow-none dark:border-line dark:ring-1 dark:ring-white/[0.04]",
         "transition-[border-color,box-shadow,transform]",
         className,
       )}

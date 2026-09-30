@@ -39,7 +39,7 @@ Desker gives a business a team of AI employees, and a person a set of private AI
 ## Capabilities and Constraints
 
 - Next.js 16 (App Router), React 19, Tailwind 4, Radix primitives, Prisma on SQLite (local) and Postgres (production), Inngest for background work, Auth.js credentials.
-- Light and dark themes; every colour pair is gated at WCAG 4.5:1 by `npm run check:contrast`.
+- Light theme; every colour pair is gated at WCAG 4.5:1 by `npm run check:contrast`.
 - Multi-tenant: organisations, projects, roles and invitations.
 - Integrations: Google Calendar, Slack and GitHub via OAuth (apps not yet registered), publishing webhooks, Resend email.
 

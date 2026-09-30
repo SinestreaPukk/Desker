@@ -38,10 +38,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   // Do not block pinch-zoom; capping it fails WCAG 1.4.4.
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: TOKEN_HEX.paper },
-    { media: "(prefers-color-scheme: dark)", color: TOKEN_HEX["paper@dark"] },
-  ],
+  themeColor: TOKEN_HEX.paper,
 };
 
 export default function RootLayout({

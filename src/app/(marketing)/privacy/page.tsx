@@ -26,6 +26,7 @@ export default function PrivacyPage() {
       <ul>
         <li>We use your data to run your assistants and agents for you. That is the only reason we have it.</li>
         <li>We never sell it, never use it for advertising, and never use it to train AI models - ours or anyone else&rsquo;s.</li>
+        <li>Google data (Calendar and Gmail) is used only to check clashes, schedule meetings, and draft replies you approve. It is not sold, not used for ads, and not used to train AI models.</li>
         <li>A personal space is yours alone: nobody can be invited into it and its assistants have no public link.</li>
         <li>Nothing leaves on your behalf without your approval, unless you switch that on yourself for a specific tool.</li>
         <li>You can download everything, or delete everything, yourself, at any time, from inside the app.</li>
@@ -67,8 +68,9 @@ export default function PrivacyPage() {
           events (which screens and features are used) kept on our own servers.
         </li>
         <li>
-          <strong>Connections you choose to make:</strong> for connected apps (a calendar, an email provider, Slack)
-          we keep the access credentials, encrypted.
+          <strong>Connections you choose to make:</strong> for connected services (such as Google Calendar, Gmail, Slack)
+          we keep the access credentials encrypted at rest. When connected, we read calendar events to check for clashes and schedule meetings,
+          and email threads to draft replies you approve.
         </li>
         <li>
           <strong>Billing:</strong> your plan and its status. Card details go straight to our payment provider; we
@@ -103,6 +105,78 @@ export default function PrivacyPage() {
         specific problem, or when the law requires it, and then only what is needed.
       </p>
 
+      <h2>Google user data and API services</h2>
+      <p>
+        If you choose to connect your Google account (such as Google Calendar or Gmail) to {LEGAL.companyName},
+        we access and process specific Google user data solely to enable user-directed scheduling and communication
+        features for your assistants and agents:
+      </p>
+      <ul>
+        <li>
+          <strong>Which Google data Desker reads and why:</strong>
+          <ul>
+            <li>
+              <strong>Google Calendar events:</strong> We read calendar events to check for clashes and create or move meetings upon your instructions.
+            </li>
+            <li>
+              <strong>Gmail and email data:</strong> We read email threads to understand context and draft replies you approve. Agents only prepare draft replies; no email is ever sent without your explicit review and approval.
+            </li>
+          </ul>
+        </li>
+        <li>
+          <strong>Used only to provide these features:</strong> Data received from Google APIs is used strictly to provide and improve these user-facing calendar and email features. It is not used for any other purpose.
+        </li>
+        <li>
+          <strong>Not sold:</strong> Google user data is not sold to any third party.
+        </li>
+        <li>
+          <strong>Not used for ads:</strong> Google user data is not used for advertising, personalized marketing, or retargeting.
+        </li>
+        <li>
+          <strong>Not used to train AI models:</strong> Information received from Google APIs is not used to train AI models—neither our own models nor those of any third party.
+        </li>
+        <li>
+          <strong>Human access:</strong> No humans read your Google data unless you give explicit permission for technical support, it is necessary for security investigations, or we are compelled by law.
+        </li>
+      </ul>
+
+      <h3>Disconnecting your Google account and deleting your data</h3>
+      <p>
+        You have complete control over your Google connection at all times:
+      </p>
+      <ul>
+        <li>
+          <strong>Disconnecting inside Desker:</strong> You can disconnect your Google account at any time in the app under{" "}
+          <strong>Integrations</strong> by clicking <strong>Disconnect</strong>.
+        </li>
+        <li>
+          <strong>Revoking access via Google:</strong> You can also revoke Desker&apos;s access at any time through your{" "}
+          <a
+            href="https://myaccount.google.com/permissions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent underline underline-offset-4 hover:text-accent-hover"
+          >
+            Google Account Security permissions
+          </a>.
+        </li>
+        <li>
+          <strong>How data gets deleted:</strong> Disconnecting your Google account immediately deletes all stored OAuth access tokens and credentials from our database. Any drafts or meeting records created by agents can be deleted individually at any time. Furthermore, using <strong>Delete my account</strong> immediately and permanently purges all your account data, spaces, drafts, and connected-app credentials from our systems.
+        </li>
+      </ul>
+      <p>
+        {"Desker's use and transfer to any other app of information received from Google APIs will adhere to the "}
+        <a
+          href="https://developers.google.com/terms/api-services-user-data-policy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent underline underline-offset-4 hover:text-accent-hover"
+        >
+          Google API Services User Data Policy (https://developers.google.com/terms/api-services-user-data-policy)
+        </a>
+        {", including the Limited Use requirements."}
+      </p>
+
       <h2>Who else processes it</h2>
       <p>We use a small set of providers, each only for its part of running the service:</p>
       <ul>
@@ -128,8 +202,8 @@ export default function PrivacyPage() {
 
       <h2>Cookies and tracking</h2>
       <p>
-        We set one cookie, to keep you signed in. Your browser also remembers a few display preferences (like the
-        colour theme and the setup checklist) on your own device. There is no advertising or third-party
+        We set one cookie, to keep you signed in. Your browser also remembers display preferences (like the
+        setup checklist) on your own device. There is no advertising or third-party
         analytics tracking and no session recording.
       </p>
 

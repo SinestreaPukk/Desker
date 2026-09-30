@@ -2,7 +2,7 @@
 /**
  * WCAG contrast audit of the design tokens in src/app/globals.css.
  *
- * Parses the oklch() values out of the :root and :root.dark blocks, converts
+ * Parses the oklch() values out of the :root block, converts
  * them to sRGB, and checks the foreground/background pairs the UI actually
  * uses. Run with `node scripts/check-contrast.mjs`; exits non-zero on a failure
  * so it can gate CI.
@@ -86,10 +86,8 @@ function tokensFrom(selector) {
   return tokens;
 }
 
-// Dark redefines a subset; anything it leaves alone (the landing stage) is
-// inherited from :root, so the dark table is layered on the light one.
 const light = tokensFrom(":root");
-const themes = { light, dark: { ...light, ...tokensFrom(":root.dark") } };
+const themes = { light };
 
 // --- the pairs the UI actually renders -------------------------------------
 
@@ -176,9 +174,8 @@ if (outOfGamut.length) {
 const brand = readFileSync(join(root, "src", "lib", "brand.ts"), "utf8");
 const mirror = /TOKEN_HEX = \{([\s\S]*?)\}/.exec(brand)?.[1] ?? "";
 console.log("\n  HEX MIRRORS (src/lib/brand.ts)");
-for (const [, key, hex] of mirror.matchAll(/"?([\w-]+(?:@dark)?)"?:\s*"(#[0-9A-Fa-f]{6})"/g)) {
-  const [name, theme] = key.split("@");
-  const token = themes[theme ?? "light"][name];
+for (const [, key, hex] of mirror.matchAll(/"?([\w-]+)"?:\s*"(#[0-9A-Fa-f]{6})"/g)) {
+  const token = themes.light[key];
   if (!token) {
     console.log(`  ?  ${key} - no such token`);
     failures++;

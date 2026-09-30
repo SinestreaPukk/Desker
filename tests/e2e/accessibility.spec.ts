@@ -57,16 +57,12 @@ test("the roster does not scroll sideways at 360px", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
-test("dark mode applies and survives a reload", async ({ page }) => {
+test("the interface renders in light theme", async ({ page }) => {
   const project = await currentProjectSlug(page);
   await page.goto(`/p/${project}/roster`);
-  await page.getByRole("radio", { name: "Dark" }).click();
-  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
 
-  await page.reload();
-  await expect(page.locator("html")).toHaveClass(/dark/);
-
-  // The page must actually repaint, not just carry a class.
+  // The page must actually paint a background.
   const background = await page.evaluate(
     () => getComputedStyle(document.body).backgroundColor,
   );

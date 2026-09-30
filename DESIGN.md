@@ -214,13 +214,13 @@ The public marketing site (night sky over desert dunes, an EB Garamond hero, its
 A single indigo tint on a slate-grey grouped ground, with teal, amber and red reserved for state.
 
 ### Primary
-- **Desker Indigo** (`indigo`, `--accent`): the logo colour. The page's one solid action (Review on the waiting run, Approve and send in its report), links, the focus ring, sidebar icons, the pulsing "Working" mark and the today strip's now line. In dark mode it lifts to a periwinkle at the same hue so it stays legible on near-black.
+- **Desker Indigo** (`indigo`, `--accent`): the logo colour. The page's one solid action (Review on the waiting run, Approve and send in its report), links, the focus ring, sidebar icons, the pulsing "Working" mark and the today strip's now line.
 - **Deep Indigo** (`indigo-deep`, `--accent-hover`): the solid action's hover only.
 - **Soft Indigo** (`indigo-soft`) with **Soft Indigo Text** (`indigo-soft-text`) and **Indigo Edge** (`indigo-edge`): selection and attention without weight. The sidebar's selected pill, the selected run row in the split view, the Work count of runs waiting on the owner, accent badges, text selection. Radix iris 3, 11 and 6.
 
 ### Neutral
 - **Grouped Ground** (`grouped-ground`, `--paper`): the page ground everything sits on; a step darker than white so inset groups read as white cards of the list.
-- **Sidebar** (`sidebar`, `--rail`): the source list and the base of every translucent material; defined as one step below the ground in both themes so the chrome recedes.
+- **Sidebar** (`sidebar`, `--rail`): the source list and the base of every translucent material; defined as one step below the ground so the chrome recedes.
 - **Inset Surface** (`inset-surface`, `--surface`): inset groups, the reading pane, dialogs, inputs; the brightest thing on screen in light mode.
 - **Fill** (`fill`) and **Fill Strong** (`fill-strong`): row hover, ghost hover, neutral badges, inner blocks. Slate 3 and 4.
 - **Ink** (`ink`): titles and body. Slate 12.
@@ -229,7 +229,7 @@ A single indigo tint on a slate-grey grouped ground, with teal, amber and red re
 - **Hairline** (`hairline`): row separators (at 70%), inset-group borders (at 50%), the sidebar edge. Slate 6.
 - **Control Edge** (`control-edge`): borders on inputs and selects (at 80%), which must clear 3:1. Slate 9.
 
-Six avatar tones (`--av-1` to `--av-6`, tile and figure pairs) make a roster read as distinct people; they invert in dark mode (deep tile, luminous figure) and are contrast-checked with everything else.
+Six avatar tones (`--av-1` to `--av-6`, tile and figure pairs) make a roster read as distinct people; each pair is contrast-checked with everything else.
 
 ### Status
 - **Positive** (`positive`, `positive-soft`, `positive-edge`): Done, Published, Sent, Ready. Teal 11, darkened to pass 4.5:1.
@@ -241,7 +241,7 @@ Six avatar tones (`--av-1` to `--av-6`, tile and figure pairs) make a roster rea
 
 **The Status-Only Rule.** Green, amber and red always mean a state, through the one status map in the badge component. They are never emphasis or decoration.
 
-**The Both-Themes Rule.** A colour is defined in `:root` and `:root.dark` or not at all.
+**The Token Rule.** All colours are defined in `:root` and verified by `scripts/check-contrast.mjs` against WCAG AA standards.
 
 ## Typography
 
@@ -286,7 +286,7 @@ Rows pad 0.875rem vertically; finished history packs to 0.625rem. Separators sta
 
 ## Elevation & Depth
 
-Depth is tonal, not cast. White inset groups sit on the grey ground with a faint hairline edge (hairline at 50%) and no resting shadow; in dark mode the border takes full hairline and a 4% white ring. Shadows answer state or overlay: controls (primary and secondary buttons) carry the smallest lift, the primary rises on hover, and menus, dialogs and the hovered roster card take the overlay shadow. Chrome floats as material: the mobile top bar and the condensed title bar are a translucent sidebar-tinted material (78% sidebar, 16px blur, 160% saturation) that content scrolls under, turning solid under reduced transparency.
+Depth is tonal, not cast. White inset groups sit on the grey ground with a faint hairline edge (hairline at 50%) and no resting shadow. Shadows answer state or overlay: controls (primary and secondary buttons) carry the smallest lift, the primary rises on hover, and menus, dialogs and the hovered roster card take the overlay shadow. Chrome floats as material: the mobile top bar and the condensed title bar are a translucent sidebar-tinted material (78% sidebar, 16px blur, 160% saturation) that content scrolls under, turning solid under reduced transparency.
 
 ### Shadow Vocabulary
 - **Control** (`box-shadow: 0 1px 2px hsl(var(--shadow-color) / 0.06)`): primary and secondary buttons at rest.
@@ -323,7 +323,7 @@ Quiet and physical: feedback lands on pointer-down.
 - **Corner Style:** 0.875rem.
 - **Background:** inset surface on the grouped ground.
 - **Shadow Strategy:** none at rest (see Elevation & Depth).
-- **Border:** hairline at 50%; full hairline plus a 4% white ring in dark mode.
+- **Border:** hairline at 50%.
 - **Internal Padding:** 1.25rem for headers and bodies; list groups are padding-free and let their rows pad.
 
 ### Inputs / Fields

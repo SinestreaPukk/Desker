@@ -4,7 +4,6 @@ import { prisma } from "@/lib/db";
 import { PUBLICLY_REACHABLE } from "@/lib/conversation";
 import { BRAND } from "@/lib/brand";
 import { ClientChat } from "@/components/chat/client-chat";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -40,16 +39,15 @@ export default async function ClientChatPage({ params }: Props) {
   return (
     <div className="flex h-dvh flex-col bg-paper">
       <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col sm:py-6">
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-line bg-surface sm:rounded-panel sm:border sm:shadow-xs dark:sm:shadow-none dark:sm:ring-1 dark:sm:ring-white/[0.04]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-line bg-surface sm:rounded-panel sm:border sm:shadow-xs">
           <ClientChat agentId={agentId} variant="page" />
         </div>
 
-        <footer className="flex items-center justify-between gap-3 px-4 py-3 sm:px-0 sm:pt-4">
+        <footer className="px-4 py-3 sm:px-0 sm:pt-4">
           <p className="text-xs text-ink-muted">
             An AI assistant on {BRAND.name}. Replies may be imperfect — ask for a
             human any time.
           </p>
-          <ThemeToggle />
         </footer>
       </div>
     </div>
