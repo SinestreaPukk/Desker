@@ -45,7 +45,7 @@ export function RulesPanel({ agentId, agentName, project }: { agentId: string; a
 
   const list = rules.data ?? [];
   return (
-    <Panel>
+    <Panel id="agent-rules" className="scroll-mt-4">
       <PanelHeader>
         <div>
           <PanelTitle>

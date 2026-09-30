@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -200,7 +201,7 @@ const PERSONAL_SECTIONS = SECTIONS.map((item) =>
 function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next: EditorSection) => void }) {
   const sections = useSpaceKind() === "personal" ? PERSONAL_SECTIONS : SECTIONS;
   return (
-    <nav aria-label="Editor sections" className="-mx-1 overflow-x-auto pb-1">
+    <nav id="editor-sections" aria-label="Editor sections" className="-mx-1 scroll-mt-4 overflow-x-auto pb-1">
       <ul className="inline-flex min-w-max items-center gap-1 rounded-lg border border-line bg-surface-2/80 p-1">
         {sections.map((item) => {
           const active = item.id === value;
@@ -346,6 +347,13 @@ export function AgentBuilder({
   // A new agent still needs its grounding; an existing one is usually opened
   // to change what it does and when.
   const [section, setSection] = React.useState<EditorSection>(onboarding ? "knowledge" : "work");
+  // The summary cards' "Change" buttons: open the section and bring the exact
+  // settings into view - the section is often open already, just off screen.
+  // The flow view has no form to land on: the section tabs are the next best place.
+  function openAt(next: EditorSection, anchor: string) {
+    flushSync(() => setSection(next));
+    (document.getElementById(anchor) ?? document.getElementById("editor-sections"))?.scrollIntoView({ block: "start" });
+  }
 
   async function togglePublish() {
     if (agent.status === "published") {
@@ -544,12 +552,12 @@ export function AgentBuilder({
             <FormError message={saveError} />
 
             {health ? <AgentHealth status={health} project={project} /> : null}
-            <ScheduleSummary agentId={agent.id} onEdit={() => setSection("work")} />
+            <ScheduleSummary agentId={agent.id} onEdit={() => openAt("work", "scope-trigger")} />
             <BoundariesCard
               agentId={agent.id}
               escalationRule={saved.escalationRule}
-              onEdit={() => setSection("work")}
-              onRules={() => setSection("profile")}
+              onEdit={() => openAt("work", "scope-tools")}
+              onRules={() => openAt("profile", "agent-rules")}
             />
 
             <SectionNav value={section} onChange={setSection} />

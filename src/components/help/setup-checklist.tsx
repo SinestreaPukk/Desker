@@ -112,7 +112,8 @@ export function SetupChecklist({ project }: { project: string }) {
           title: "Tell it about your business",
           body: "Four short answers, shared by every agent here. Or draft them from a document you already have.",
           done: (context.data?.answered ?? 0) > 0,
-          href: `/p/${project}/roster`,
+          // The checklist sits on the Roster: a plain link here would go nowhere.
+          href: `/p/${project}/roster?context=open`,
           cta: "Open Company context",
         },
         {

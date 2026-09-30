@@ -590,7 +590,7 @@ export function ToolsSection({
   if (only) return <div className="grid gap-1.5">{toolCard(only)}</div>;
 
   return (
-    <fieldset className="space-y-3">
+    <fieldset id={`${idPrefix}-tools`} className="scroll-mt-4 space-y-3">
       <div>
         <legend className="text-sm font-medium text-ink">Work tools</legend>
         <p className="mt-0.5 text-xs text-ink-muted">
@@ -631,7 +631,7 @@ export function TriggerSection({
 }: ScopeSectionProps & { webhookUrl?: string | null }) {
   const set = updater({ value, onChange });
   return (
-    <div className="space-y-3">
+    <div id={`${idPrefix}-trigger`} className="scroll-mt-4 space-y-3">
       <div>
         <Label htmlFor={`${idPrefix}-trigger`}>When it runs</Label>
         <Select

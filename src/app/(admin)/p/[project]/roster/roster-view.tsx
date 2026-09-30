@@ -4,6 +4,7 @@ import { useSpaceKind } from "@/components/space-kind";
 import { AgentHealth } from "@/components/work/agent-health";
 import * as React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   BookOpen,
@@ -39,6 +40,8 @@ import type { AgentSummaryDto } from "@/lib/serialize";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 export function RosterView({ project }: { project: string }) {
+  // "Open Company context" from the setup checklist.
+  const openContext = useSearchParams().get("context") === "open";
   const personal = useSpaceKind() === "personal";
   const { data: agents, isPending, error, refetch, isRefetching } = useAgents(project);
   const [search, setSearch] = React.useState("");
@@ -154,7 +157,7 @@ export function RosterView({ project }: { project: string }) {
             work, then the company context every agent below inherits. */}
         <ActivityStrip project={project} />
         <SetupChecklist project={project} />
-        <ProjectContextPanel project={project} />
+        <ProjectContextPanel project={project} initialOpen={openContext} />
 
         {isPending ? (
           <LoadingCards />

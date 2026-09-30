@@ -186,6 +186,10 @@ function StartCard({ workflow, agents, project }: { workflow: WorkflowDef; agent
         </Field>
         {agents.length === 0 ? (
           <p className="text-xs text-ink-muted">Publish the agents it needs first, then start it here.</p>
+        ) : !ready ? (
+          <p className="text-xs text-ink-muted" aria-live="polite">
+            {!chosen.every(Boolean) ? "Choose who does each step" : `Fill in "${workflow.input.label}"`} to start.
+          </p>
         ) : null}
         <Button
           size="sm"

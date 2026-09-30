@@ -89,6 +89,17 @@ function ContextEditor({
   // Default open state; when inside the agent builder's Company Context section,
   // it opens automatically.
   const [open, setOpen] = React.useState(initialOpen);
+  const panel = React.useRef<HTMLDivElement>(null);
+  // Asked for from elsewhere on the page (the setup checklist): open it, even
+  // when the panel was already on screen, closed - then bring it into view.
+  const [askedOpen, setAskedOpen] = React.useState(initialOpen);
+  if (initialOpen !== askedOpen) {
+    setAskedOpen(initialOpen);
+    if (initialOpen) setOpen(true);
+  }
+  React.useEffect(() => {
+    if (initialOpen && !embedded) panel.current?.scrollIntoView({ block: "start" });
+  }, [initialOpen, embedded]);
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
 
@@ -117,7 +128,7 @@ function ContextEditor({
   }
 
   return (
-    <Panel className={cn("overflow-hidden", !embedded && "mb-4")}>
+    <Panel ref={panel} className={cn("scroll-mt-4 overflow-hidden", !embedded && "mb-4")}>
       {embedded ? (
         <div className="flex items-center gap-3.5 px-4 py-3.5">
           <ContextHeading
