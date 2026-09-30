@@ -16,6 +16,7 @@ import { executePendingAction, executeWorkTool, type RunContext } from "@/lib/wo
 import { saveConnection } from "@/lib/integrations/oauth";
 import { POST as reject } from "@/app/api/action-items/[actionItemId]/reject/route";
 import type { PendingAction } from "@/lib/work/types";
+import { checkCalendar } from "@/lib/chat-calendar";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);
@@ -188,5 +189,20 @@ describe("an Outlook calendar", () => {
     const patch = JSON.parse(calls.find((c) => c.method === "PATCH")!.body) as { start: { dateTime: string } };
     // The series started 7 Sep at 09:00; moving this occurrence an hour later moves them all an hour later.
     expect(patch.start.dateTime).toBe("2026-09-07T10:00:00");
+  });
+});
+
+describe("the calendar in the owner's chat", () => {
+  it("reads the connected calendar, and never looks further than a month", async () => {
+    fake();
+    const read = await checkCalendar(organizationId, { from: "2026-10-05T00:00:00Z", to: "2026-10-06T00:00:00Z" });
+    expect(read.isError).toBeFalsy();
+    expect(read.content).toContain("Board call");
+    expect(calls.every((c) => c.method === "GET")).toBe(true);
+
+    calls.length = 0;
+    const tooLong = await checkCalendar(organizationId, { from: "2026-10-01T00:00:00Z", to: "2026-12-01T00:00:00Z" });
+    expect(tooLong.isError).toBe(true);
+    expect(calls).toHaveLength(0);
   });
 });

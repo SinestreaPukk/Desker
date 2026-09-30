@@ -23,6 +23,9 @@ import {
   type ToolCall,
 } from "@/lib/llm/provider";
 import { toolDefinitionsFor } from "@/lib/tools/registry";
+import { CALENDAR_CHAT_NOTE, CHECK_CALENDAR, checkCalendar } from "@/lib/chat-calendar";
+import { audit } from "@/lib/audit";
+import { WORK_TOOL_IDS, scopeTools } from "@/lib/work/tools";
 import { executeToolCall, type ToolOutcome } from "@/lib/tools/execute";
 import { recallForSession, refreshSummaryInBackground } from "@/lib/summarize";
 
@@ -170,7 +173,7 @@ export async function* runAgentTurn(
       : Promise.resolve(null),
     prisma.scopeOfWork.findUnique({
       where: { agentId: agent.id },
-      select: { context: true },
+      select: { context: true, tools: true },
     }),
     rulesFor(agent.id),
   ]);
@@ -181,6 +184,11 @@ export async function* runAgentTurn(
     documents.length > 0
       ? allowedTools
       : allowedTools.filter((tool) => tool !== "search_documents");
+
+  // The owner's own chat can read the calendar when this agent's runs may.
+  // Never a client's chat: that would hand the owner's diary to strangers.
+  const calendarInChat =
+    isColleague && (scope ? (scopeTools(scope.tools) ?? [...WORK_TOOL_IDS]) : []).includes("calendar_list_events");
 
   const kind = spaceKind(project.organization.kind);
   const companyContext = effectiveContext({
@@ -218,6 +226,7 @@ export async function* runAgentTurn(
       kind,
       rules,
     });
+    if (calendarInChat) systemPrompt += `\n\n${CALENDAR_CHAT_NOTE}`;
   }
 
   const history = messagesFromRows(historyRows);
@@ -234,6 +243,22 @@ export async function* runAgentTurn(
   const effects = new Map<string, ToolOutcome["effect"]>();
 
   const executeTool = async (call: ToolCall) => {
+    if (calendarInChat && call.name === CHECK_CALENDAR.name) {
+      const result = await checkCalendar(project.organizationId, call.input).catch((error: unknown) => ({
+        content: `The calendar could not be read: ${error instanceof Error ? error.message : "unknown error"}`,
+        isError: true,
+      }));
+      await audit({
+        organizationId: project.organizationId,
+        actorType: "agent",
+        actorId: agent.id,
+        action: "tool.called",
+        targetType: "conversation",
+        targetId: conversationId,
+        metadata: { tool: CHECK_CALENDAR.name, ok: !result.isError, trigger: "conversation", result: result.content.slice(0, 600) },
+      });
+      return result;
+    }
     // Preview runs execute the real tools too - an admin testing an escalation
     // rule needs to see it actually fire. Preview conversations carry a
     // `preview:` session prefix and are filtered out of the inbox by default.
@@ -259,7 +284,7 @@ export async function* runAgentTurn(
       billing: { organizationId: project.organizationId, agentId: agent.id },
       systemPrompt,
       messages,
-      tools: toolDefinitionsFor(offeredTools),
+      tools: [...toolDefinitionsFor(offeredTools), ...(calendarInChat ? [CHECK_CALENDAR] : [])],
       executeTool,
       model: agent.model,
       signal,

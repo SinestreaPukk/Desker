@@ -94,19 +94,23 @@ function useWedgeAgent(project: string, run: FirstRun) {
   const agents = useAgents(project);
   const create = useCreateAgent(project);
   const template = templateById(run.templateId)!;
-  const agent = agents.data?.find((row) => row.templateId === run.templateId) ?? null;
-  // A second click before the list refetches must not hire a second one.
+  // The switched-on one first, when there is more than one of the role.
+  const matching = (agents.data ?? []).filter((row) => row.templateId === run.templateId);
+  const agent = matching.find((row) => row.status === "published") ?? matching[0] ?? null;
+  // A second click before the list refetches must not hire a second one - nor
+  // a retry after its settings failed to save: the agent exists by then.
   const creating = React.useRef<Promise<string> | null>(null);
+  const created = React.useRef<string | null>(null);
 
   function ensure(): Promise<string> {
     if (agent) return Promise.resolve(agent.id);
     creating.current ??= (async () => {
-      const created = await create.mutateAsync(agentFromTemplate(template, randomAgentName()));
-      await api(`/api/agents/${created.id}/scope`, {
+      created.current ??= (await create.mutateAsync(agentFromTemplate(template, randomAgentName()))).id;
+      await api(`/api/agents/${created.current}/scope`, {
         method: "PUT",
         body: JSON.stringify(scopeFromTemplate(template, browserTimezone())),
       });
-      return created.id;
+      return created.current;
     })().catch((error) => {
       creating.current = null;
       throw error;
