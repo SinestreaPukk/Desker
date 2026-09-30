@@ -40,7 +40,6 @@ import { HeroWords } from "@/components/marketing/words";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { ShowcaseBento } from "@/components/marketing/showcase-bento";
 import { Reveal } from "@/components/marketing/reveal";
-import { Walkthrough } from "@/components/marketing/walkthrough";
 import { LANDING, SITE, pageMetadata, templateById } from "@/lib/content";
 import { PLANS } from "@/lib/billing/plans";
 import { cn } from "@/lib/utils";
@@ -93,7 +92,7 @@ export default async function LandingPage({
     redirect(`/p/${project.slug}/roster`);
   }
 
-  const { hero, trustStrip, desks, steps, features, trust, roles, comparison, testimonials, walkthrough, beta, pricing, faq, cta } =
+  const { hero, trustStrip, desks, steps, features, trust, roles, comparison, testimonials, beta, pricing, faq, cta } =
     LANDING;
   // Placeholders are for review only: outside production an unmeasured number
   // shows as a marked TODO; in production the section waits for real values.
@@ -245,21 +244,6 @@ export default async function LandingPage({
             />
           <div className="mt-12">
             <Testimonials items={testimonials.items} />
-          </div>
-        </Section>
-      ) : null}
-
-      {/* No customer quotes yet: the first run itself, labelled as example data */}
-      {!showTestimonials ? (
-        <Section id="walkthrough" labelledBy="walkthrough-heading" className="border-t border-line">
-          <SectionHeader
-            id="walkthrough-heading"
-            eyebrow={walkthrough.eyebrow}
-            heading={walkthrough.heading}
-            intro={walkthrough.intro}
-          />
-          <div className="mt-12">
-            <Walkthrough label={walkthrough.label} cta={cta.button} />
           </div>
         </Section>
       ) : null}

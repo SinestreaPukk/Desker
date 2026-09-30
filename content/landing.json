@@ -11,8 +11,8 @@
       "href": "/beta"
     },
     "secondaryCta": {
-      "label": "Step through a run",
-      "href": "/#walkthrough"
+      "label": "See it work",
+      "href": "/showcase"
     },
     "microcopy": ""
   },
@@ -203,12 +203,6 @@
     "heading": "What teams say",
     "items": []
   },
-  "walkthrough": {
-    "eyebrow": "Walkthrough",
-    "heading": "Step through one run yourself",
-    "intro": "No customer quotes yet - we're in beta. Instead, here is the product's own first run, on example data. Make the decision at the end: it's the same one you'd make in Needs you.",
-    "label": "Product walkthrough on example data - not a customer story. Nothing is sent."
-  },
   "beta": {
     "eyebrow": "The beta",
     "heading": "What the beta is, exactly",
@@ -300,8 +294,8 @@
       "href": "/beta"
     },
     "secondary": {
-      "label": "Step through a run first",
-      "href": "/#walkthrough"
+      "label": "See it work first",
+      "href": "/showcase"
     },
     "microcopy": "No payment during the beta · Every post and email needs your approval"
   },

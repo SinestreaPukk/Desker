@@ -4,9 +4,7 @@
  * up an agent from a blank state. The two are the product's wedges: support
  * answered from your own documents, and a weekly plan from your calendar.
  *
- * Pure and free of server imports: the in-app first run and the landing
- * page's walkthrough read the same definitions, so what a visitor is shown
- * is what a new user gets.
+ * Pure and free of server imports.
  */
 import type { SpaceKind } from "@/lib/space";
 
