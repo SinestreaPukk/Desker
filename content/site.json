@@ -27,6 +27,10 @@
       "href": "/guides"
     },
     {
+      "label": "Blog",
+      "href": "/blog"
+    },
+    {
       "label": "Contact",
       "href": "/contact"
     }
@@ -67,6 +71,10 @@
       {
         "heading": "Company",
         "links": [
+          {
+            "label": "Blog",
+            "href": "/blog"
+          },
           {
             "label": "Contact",
             "href": "/contact"

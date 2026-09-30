@@ -16,6 +16,7 @@ import {
   LogOut,
   Menu,
   MessagesSquare,
+  Newspaper,
   Plus,
   Route,
   UserRound,
@@ -291,6 +292,12 @@ export function AdminShell({
                 {email}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/blog">
+                  <Newspaper aria-hidden />
+                  Blog & Updates
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => void signOut({ callbackUrl: "/login" })}>
                 <LogOut aria-hidden />
                 Sign out

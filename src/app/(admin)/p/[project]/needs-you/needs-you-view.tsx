@@ -56,18 +56,33 @@ const LABELS: Record<NeedsYouKind, string> = {
  * queue, most urgent kind first, newest first within it. Every decision is
  * made here and only here: Work and the run pages point back to this list.
  */
-export function NeedsYouView({ project, focus }: { project: string; focus: string | null }) {
+export interface NeedsYouViewProps {
+  project: string;
+  focus: string | null;
+  initialAgentId?: string;
+}
+
+export function NeedsYouView({
+  project,
+  focus,
+  initialAgentId,
+}: NeedsYouViewProps) {
   const personal = useSpaceKind() === "personal";
   const [kind, setKind] = React.useState<NeedsYouKind | "all">("all");
   const [view, setView] = React.useState<"waiting" | "handled">("waiting");
-  const [agentId, setAgentId] = React.useState("all");
+  const [agentId, setAgentId] = React.useState(initialAgentId ?? "all");
+  const [prevInitialAgentId, setPrevInitialAgentId] = React.useState(initialAgentId);
+  if (initialAgentId !== prevInitialAgentId) {
+    setPrevInitialAgentId(initialAgentId);
+    setAgentId(initialAgentId ?? "all");
+  }
   const [search, setSearch] = React.useState("");
   const agent = agentId === "all" ? undefined : agentId;
   const { data: agents } = useAgents(project);
 
   const approvals = useActionItems({ project, status: "needs_approval", agentId: agent }, { refetchInterval: 5_000 });
-  const issues = useIssues({ project, agentId, status: view === "waiting" ? "open" : "resolved" });
-  const suggestions = useSuggestions({ project, agentId });
+  const issues = useIssues({ project, ...(agent ? { agentId: agent } : {}), status: view === "waiting" ? "open" : "resolved" });
+  const suggestions = useSuggestions({ project, ...(agent ? { agentId: agent } : {}) });
   const setIssueStatus = useSetIssueStatus();
 
   const entries = React.useMemo<Entry[]>(() => {

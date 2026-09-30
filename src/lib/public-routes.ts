@@ -12,6 +12,7 @@ const PUBLIC_PATHS = new Set([
   "/terms",
   "/showcase",
   "/guides",
+  "/blog",
 ]);
 
 /**
@@ -19,7 +20,7 @@ const PUBLIC_PATHS = new Set([
  * from every call to action on the landing page. /invite is here for the same reason:
  * it is a stranger's front door.
  */
-const PUBLIC_PREFIXES = ["/invite/", "/guides/"];
+const PUBLIC_PREFIXES = ["/invite/", "/guides/", "/blog/"];
 
 export function isPublicPath(pathname: string | null | undefined): boolean {
   if (!pathname) return false;

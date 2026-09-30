@@ -832,6 +832,38 @@
   }
 }
 
+/* Tactile interactive pill and badge buttons (e.g. agent roster cards).
+   Lifts slightly with a warm shadow on hover, gives physical press feedback on click,
+   and stays smooth with GPU-accelerated transforms and custom ease curves. */
+.pill-interactive {
+  display: inline-flex;
+  transition:
+    transform 160ms var(--ease-out),
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+  transform: translateZ(0);
+}
+@media (hover: hover) and (pointer: fine) {
+  .pill-interactive:hover {
+    transform: translateY(-1.5px) scale(1.025);
+    box-shadow: var(--shadow-sm);
+  }
+}
+.pill-interactive:active {
+  transform: translateY(0.5px) scale(0.97);
+  box-shadow: none;
+  transition-duration: 90ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill-interactive,
+  .pill-interactive:hover,
+  .pill-interactive:active {
+    transform: none;
+  }
+}
+
 /* --- Moments -------------------------------------------------------------------
    The decision stamp lands: a short press, big to small, settling at its
    angle - no bounce. A hero scene arrives with a small rise. A hero note

@@ -9,6 +9,8 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/privacy")).toBe(true);
     expect(isPublicPath("/terms")).toBe(true);
     expect(isPublicPath("/showcase")).toBe(true);
+    expect(isPublicPath("/blog")).toBe(true);
+    expect(isPublicPath("/blog/welcome")).toBe(true);
   });
 
   it("recognizes guide pages as public routes so they render in light theme", () => {

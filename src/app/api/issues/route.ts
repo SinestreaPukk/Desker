@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       ...(type && type !== "all" ? { type } : {}),
       ...(source && source !== "all" ? { source } : {}),
       agent: project ? { projectId: project.id } : { project: projectsVisibleTo(userId) },
-      ...(agentId ? { agentId } : {}),
+      ...(agentId && agentId !== "all" ? { agentId } : {}),
       ...(includePreviews
         ? {}
         : {

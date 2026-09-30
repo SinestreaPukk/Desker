@@ -264,31 +264,53 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
 
       {/* What it has done, in words, not icons. */}
       <dl className="mx-5 flex flex-wrap gap-2 border-t border-note-ink/10 py-3 text-xs text-ink-muted">
-        <div className="flex items-center gap-1.5 rounded-full bg-surface/70 px-2.5 py-1">
-          <BotMessageSquare className="size-3.5 text-ink-subtle" aria-hidden />
+        <div className="flex items-center">
           <dt className="sr-only">Conversations</dt>
           <dd>
-            <span className="font-semibold tabular-nums text-ink">{agent.conversationCount}</span>{" "}
-            conversation{agent.conversationCount === 1 ? "" : "s"}
+            <Link
+              href={`/p/${project}/conversations?agent=${agent.id}`}
+              className="pill-interactive group/pill relative z-10 items-center gap-1.5 rounded-full border border-note-ink/10 bg-surface/80 px-2.5 py-0.5 text-xs font-medium leading-5 text-ink-muted hover:border-note-ink/25 hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+              title={`View ${agent.name}'s conversations`}
+            >
+              <BotMessageSquare className="size-3 text-ink-subtle transition-colors duration-150 group-hover/pill:text-ink" aria-hidden />
+              <span>
+                <span className="font-semibold tabular-nums text-ink">{agent.conversationCount}</span>{" "}
+                conversation{agent.conversationCount === 1 ? "" : "s"}
+              </span>
+            </Link>
           </dd>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-surface/70 px-2.5 py-1">
-          <BookOpen className="size-3.5 text-ink-subtle" aria-hidden />
+        <div className="flex items-center">
           <dt className="sr-only">Context documents</dt>
           <dd>
-            <span className="font-semibold tabular-nums text-ink">{agent.documentCount}</span>{" "}
-            document{agent.documentCount === 1 ? "" : "s"}
+            <Link
+              href={`/p/${project}/agents/${agent.id}?section=knowledge`}
+              className="pill-interactive group/pill relative z-10 items-center gap-1.5 rounded-full border border-note-ink/10 bg-surface/80 px-2.5 py-0.5 text-xs font-medium leading-5 text-ink-muted hover:border-note-ink/25 hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+              title={`View and edit ${agent.name}'s knowledge documents`}
+            >
+              <BookOpen className="size-3 text-ink-subtle transition-colors duration-150 group-hover/pill:text-ink" aria-hidden />
+              <span>
+                <span className="font-semibold tabular-nums text-ink">{agent.documentCount}</span>{" "}
+                document{agent.documentCount === 1 ? "" : "s"}
+              </span>
+            </Link>
           </dd>
         </div>
-        <RunsOnItsOwn runs={agent.runs} />
+        <RunsOnItsOwn runs={agent.runs} project={project} agentId={agent.id} agentName={agent.name} />
         {agent.openIssueCount > 0 ? (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center">
             <dt className="sr-only">Open issues</dt>
             <dd>
-              <Badge tone="danger">
-                <AlertCircle aria-hidden />
-                {agent.openIssueCount} open
-              </Badge>
+              <Link
+                href={`/p/${project}/needs-you?agent=${agent.id}`}
+                className="pill-interactive group/pill relative z-10 rounded-full focus-visible:outline-2 focus-visible:outline-accent"
+                title={`View ${agent.openIssueCount} open issue${agent.openIssueCount === 1 ? "" : "s"} for ${agent.name}`}
+              >
+                <Badge tone="danger" className="cursor-pointer transition-colors duration-150 group-hover/pill:border-danger/50">
+                  <AlertCircle aria-hidden />
+                  {agent.openIssueCount} open
+                </Badge>
+              </Link>
             </dd>
           </div>
         ) : null}
@@ -318,7 +340,17 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
 }
 
 /** Whether the agent works without anyone opening the app, and when. */
-function RunsOnItsOwn({ runs }: { runs: AgentSummaryDto["runs"] }) {
+function RunsOnItsOwn({
+  runs,
+  project,
+  agentId,
+  agentName,
+}: {
+  runs: AgentSummaryDto["runs"];
+  project: string;
+  agentId: string;
+  agentName: string;
+}) {
   const view = {
     scheduled: { icon: CalendarClock, tone: "positive", label: runs.cadence ?? "Scheduled" },
     triggered: { icon: Zap, tone: "positive", label: "Runs when triggered" },
@@ -327,13 +359,19 @@ function RunsOnItsOwn({ runs }: { runs: AgentSummaryDto["runs"] }) {
   } as const;
   const { icon: Icon, tone, label } = view[runs.mode];
   return (
-    <div className="flex min-w-0 items-center gap-1.5">
+    <div className="flex min-w-0 items-center">
       <dt className="sr-only">How it runs</dt>
       <dd className="min-w-0">
-        <Badge tone={tone} className="max-w-full">
-          <Icon aria-hidden />
-          <span className="truncate">{label}</span>
-        </Badge>
+        <Link
+          href={`/p/${project}/agents/${agentId}?section=work#scope-trigger`}
+          className="pill-interactive group/pill relative z-10 max-w-full rounded-full focus-visible:outline-2 focus-visible:outline-accent"
+          title={`Configure ${agentName}'s schedule and triggers`}
+        >
+          <Badge tone={tone} className="max-w-full cursor-pointer transition-colors duration-150 group-hover/pill:border-note-ink/30">
+            <Icon aria-hidden />
+            <span className="truncate">{label}</span>
+          </Badge>
+        </Link>
       </dd>
     </div>
   );

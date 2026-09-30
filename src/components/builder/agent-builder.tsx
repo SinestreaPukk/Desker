@@ -159,7 +159,7 @@ function toPayload(form: FormState) {
   };
 }
 
-type EditorSection = "work" | "knowledge" | "profile" | "settings";
+export type EditorSection = "work" | "knowledge" | "profile" | "settings";
 
 const SECTIONS: {
   id: EditorSection;
@@ -235,10 +235,12 @@ export function AgentBuilder({
   agent,
   project,
   onboarding,
+  initialSection,
 }: {
   agent: AgentDetailDto;
   project: string;
   onboarding: boolean;
+  initialSection?: EditorSection;
 }) {
   const router = useRouter();
   const update = useUpdateAgent(agent.id);
@@ -346,7 +348,30 @@ export function AgentBuilder({
   // current one is on screen. Edits in every section persist until saved.
   // A new agent still needs its grounding; an existing one is usually opened
   // to change what it does and when.
-  const [section, setSection] = React.useState<EditorSection>(onboarding ? "knowledge" : "work");
+  const validInitial =
+    initialSection && ["work", "knowledge", "profile", "settings"].includes(initialSection)
+      ? initialSection
+      : undefined;
+  const [section, setSection] = React.useState<EditorSection>(
+    validInitial ?? (onboarding ? "knowledge" : "work"),
+  );
+
+  React.useEffect(() => {
+    if (initialSection && ["work", "knowledge", "profile", "settings"].includes(initialSection)) {
+      setSection(initialSection);
+    }
+  }, [initialSection]);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash) {
+      const id = window.location.hash.replace("#", "");
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+      }
+    }
+  }, [section]);
+
   // The summary cards' "Change" buttons: open the section and bring the exact
   // settings into view - the section is often open already, just off screen.
   // The flow view has no form to land on: the section tabs are the next best place.

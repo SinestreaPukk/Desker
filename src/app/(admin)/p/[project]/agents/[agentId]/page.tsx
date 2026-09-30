@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { toAgentDetail } from "@/lib/serialize";
 import { findAgentFor } from "@/lib/projects";
-import { AgentBuilder } from "@/components/builder/agent-builder";
+import { AgentBuilder, type EditorSection } from "@/components/builder/agent-builder";
 
 export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ project: string; agentId: string }>;
-  searchParams: Promise<{ onboarding?: string }>;
+  searchParams: Promise<{ onboarding?: string; section?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -28,7 +27,7 @@ export default async function AgentPage({ params, searchParams }: Props) {
   if (!user) redirect("/login");
 
   const { project, agentId } = await params;
-  const { onboarding } = await searchParams;
+  const { onboarding, section } = await searchParams;
 
   // Scoped lookup: an agent from another project - or another organisation -
   // must not resolve here, or the URL would quietly cross a tenant boundary.
@@ -41,6 +40,7 @@ export default async function AgentPage({ params, searchParams }: Props) {
       agent={toAgentDetail(agent)}
       project={project}
       onboarding={onboarding === "1"}
+      initialSection={section as EditorSection | undefined}
     />
   );
 }

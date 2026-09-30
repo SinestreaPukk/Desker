@@ -31,7 +31,7 @@ const siteSchema = z.object({
     siteUrl: z.string().url(),
     twitter: z.string(),
   }),
-  nav: z.array(link).max(6),
+  nav: z.array(link).max(8),
   /** The header's call to action. */
   navCta: link,
   footer: z.object({

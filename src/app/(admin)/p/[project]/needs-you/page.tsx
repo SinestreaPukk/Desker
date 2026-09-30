@@ -8,9 +8,9 @@ export default async function NeedsYouPage({
   searchParams,
 }: {
   params: Promise<{ project: string }>;
-  searchParams: Promise<{ item?: string }>;
+  searchParams: Promise<{ item?: string; agent?: string }>;
 }) {
   const { project } = await params;
-  const { item } = await searchParams;
-  return <NeedsYouView project={project} focus={item ?? null} />;
+  const { item, agent } = await searchParams;
+  return <NeedsYouView project={project} focus={item ?? null} initialAgentId={agent} />;
 }

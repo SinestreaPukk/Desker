@@ -3,7 +3,14 @@ import { ConversationsView } from "./conversations-view";
 
 export const metadata: Metadata = { title: "Conversations" };
 
-export default async function ConversationsPage({ params }: { params: Promise<{ project: string }> }) {
+export default async function ConversationsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ project: string }>;
+  searchParams: Promise<{ agent?: string }>;
+}) {
   const { project } = await params;
-  return <ConversationsView project={project} />;
+  const { agent } = await searchParams;
+  return <ConversationsView project={project} initialAgentId={agent} />;
 }

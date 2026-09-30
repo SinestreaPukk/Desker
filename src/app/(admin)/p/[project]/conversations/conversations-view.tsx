@@ -25,8 +25,18 @@ import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
  * browse, not a queue: anything in a chat that needs a person (an escalation,
  * a reported problem) is raised in Needs you, which is the only action queue.
  */
-export function ConversationsView({ project }: { project: string }) {
-  const [agentId, setAgentId] = React.useState("all");
+export interface ConversationsViewProps {
+  project: string;
+  initialAgentId?: string;
+}
+
+export function ConversationsView({ project, initialAgentId }: ConversationsViewProps) {
+  const [agentId, setAgentId] = React.useState(initialAgentId ?? "all");
+  const [prevInitialAgentId, setPrevInitialAgentId] = React.useState(initialAgentId);
+  if (initialAgentId !== prevInitialAgentId) {
+    setPrevInitialAgentId(initialAgentId);
+    setAgentId(initialAgentId ?? "all");
+  }
   const [view, setView] = React.useState<"active" | "done">("active");
   const [includePreviews, setIncludePreviews] = React.useState(false);
   const [search, setSearch] = React.useState("");

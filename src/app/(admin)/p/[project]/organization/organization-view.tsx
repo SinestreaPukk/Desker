@@ -44,7 +44,7 @@ import {
 } from "@/hooks/use-work-data";
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { renewalTerms } from "@/lib/billing/plans";
-import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 const ROLE_BLURB: Record<string, string> = {
   owner: "People, billing, everything.",
