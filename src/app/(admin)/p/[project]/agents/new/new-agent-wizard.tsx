@@ -2,181 +2,162 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, FileText, Shuffle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Label, Textarea } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
+import { Field, Input, Label } from "@/components/ui/field";
 import { AvatarPicker } from "@/components/builder/avatar-picker";
-import { EscalationRuleHelper } from "@/components/builder/live-example";
 import { InheritedProjectContext } from "@/components/builder/context-questions";
+import { EscalationPicker, ResponsibilitiesPicker } from "@/components/builder/agent-setup";
 import {
-  ScopeOfWorkForm,
+  ContextSection,
+  ObjectivesSection,
+  ToolsSection,
+  TriggerSection,
   defaultScopeForm,
   parseObjectives,
   type ScopeFormState,
 } from "@/components/builder/scope-of-work-form";
-import {
-  Panel,
-  PanelBody,
-  PanelDescription,
-  PanelFooter,
-  PanelHeader,
-  PanelTitle,
-} from "@/components/ui/panel";
+import { Panel, PanelBody, PanelDescription, PanelFooter, PanelHeader, PanelTitle } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { useCreateAgent } from "@/hooks/use-admin-data";
-import { useIntegrations, useOAuthProviders } from "@/hooks/use-work-data";
-import { ConnectorCard } from "@/components/integrations/connector-card";
-import { connectorById } from "@/lib/integrations/catalog";
 import { api, ApiError, errorMessage } from "@/lib/api-client";
-import { parseLines, randomAgentName } from "@/lib/agent-fields";
-import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
+import { randomAgentName } from "@/lib/agent-fields";
+import type { ToolId } from "@/lib/tools/registry";
 import { templateById, templatesFor, type AgentTemplate } from "@/lib/content";
 import { useSpaceKind } from "@/components/space-kind";
 import { spaceCopy } from "@/lib/space-copy";
 import { TemplateIcon, ScratchCuteIcon } from "@/components/marketing/template-icon";
-import { WORK_TOOL_IDS } from "@/lib/work/tools";
 import { AGENT_CONTEXT_QUESTIONS } from "@/lib/work/context";
+import type { WorkToolId } from "@/lib/work/tools";
 import type { TriggerType } from "@/lib/work/types";
 import { cn } from "@/lib/utils";
-
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 /**
- * The role templates come from content/templates.json - the same records the
- * public showcase renders - plus one blank card. Picking one pre-fills every
- * field; nothing is locked, the admin edits whatever they like afterwards.
+ * Hiring in two steps: pick a role, then one page to make it yours - its
+ * name, what it looks after, when it stops and asks, its goals, when it
+ * works and its tools, all pre-filled from the role and changed by ticking.
+ * No voice to write (the role brings one), no documents or connections to
+ * sort out first: those come on the agent's own page, when they matter.
  */
 const SCRATCH = "scratch";
 
-const STEPS = ["Pick a role", "Who they are", "How they behave", "What they can do", "Connect tools"] as const;
+/** A blank agent still starts able to do something useful, and nothing that reaches outside. */
+const SCRATCH_TOOLS: WorkToolId[] = ["search_documents", "web_research", "draft_content", "schedule_followup", "escalate_to_human"];
 
-/**
- * The one chat capability the wizard exposes. Everything else in the chat
- * tool set (logging issues, escalating, transferring) stays on by default and
- * is adjusted in the editor. The rest of this step is the scope of work: what
- * the agent does when nobody is talking to it.
- */
-const CONTEXT_TOOL: ToolId = "search_documents";
+/** In chat it can always search what it was given; the rest follow the role. */
+const CHAT_TOOL: ToolId = "search_documents";
+
+interface HireForm {
+  name: string;
+  jobTitle: string;
+  department: string;
+  avatarUrl: string | null;
+  responsibilities: string[];
+  escalationRule: string;
+}
+
+function formFrom(preset: AgentTemplate | undefined, name?: string): HireForm {
+  return {
+    name: name ?? randomAgentName(),
+    jobTitle: preset?.jobTitle ?? "",
+    department: preset?.team ?? "",
+    avatarUrl: null,
+    responsibilities: preset ? [...preset.responsibilities] : [],
+    escalationRule: preset?.escalationRule ?? "",
+  };
+}
+
+function scopeFrom(preset: AgentTemplate | undefined): ScopeFormState {
+  const base = defaultScopeForm();
+  if (!preset) return { ...base, tools: SCRATCH_TOOLS };
+  return {
+    ...base,
+    contextAnswers: preset.defaultContext ? { [AGENT_CONTEXT_QUESTIONS[0]!.id]: preset.defaultContext } : {},
+    objectivesText: preset.defaultObjectives?.join("\n") ?? "",
+    triggerType: (preset.defaultTriggerType as TriggerType) ?? "manual",
+    cron: preset.defaultCron ?? base.cron,
+    tools: [...preset.workTools],
+  };
+}
 
 export function NewAgentWizard({ project }: { project: string }) {
   const router = useRouter();
   const search = useSearchParams();
   const create = useCreateAgent(project);
-  // A business hires staff; a personal space hires assistants for one person.
   const kind = useSpaceKind();
   const roles = templatesFor(kind);
   const copy = spaceCopy(kind);
+  const personal = kind === "personal";
 
-  // A showcase link (/signup?template=x) arrives here with the role chosen.
-  const preselected = search.get("template");
-  const initial = preselected ? roles.find((role) => role.id === preselected) : undefined;
-
-  const [step, setStep] = React.useState(initial ? 1 : 0);
-  const [template, setTemplate] = React.useState<string | null>(initial ? initial.id : null);
+  // A showcase link (/signup?template=x) arrives with the role already chosen.
+  const preselected = roles.find((role) => role.id === search.get("template"));
+  const [template, setTemplate] = React.useState<string | null>(preselected?.id ?? null);
+  const [step, setStep] = React.useState(preselected ? 1 : 0);
+  const [form, setForm] = React.useState<HireForm>(() => formFrom(preselected));
+  const [scope, setScope] = React.useState<ScopeFormState>(() => scopeFrom(preselected));
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
+  const [saving, setSaving] = React.useState(false);
 
-  const [form, setForm] = React.useState(() => formFromTemplate(initial));
-  const answersFromDocuments = form.allowedTools.includes(CONTEXT_TOOL);
-  const [scope, setScope] = React.useState<ScopeFormState>(() => scopeFromTemplate(initial));
-  // The scope of work is its own record; an untouched default one is not
-  // worth saving, but a template's tool set is.
-  const scopeTouched =
-    Object.values(scope.contextAnswers).some((answer) => answer.trim() !== "") ||
-    scope.objectivesText.trim() !== "" ||
-    scope.triggerType !== "manual" ||
-    scope.tools.length !== WORK_TOOL_IDS.length;
+  const preset = template && template !== SCRATCH ? templateById(template) : undefined;
+  const dutyOptions = preset ? [...preset.responsibilities, ...preset.moreResponsibilities] : [];
+  const set = <K extends keyof HireForm>(key: K, value: HireForm[K]) => setForm((current) => ({ ...current, [key]: value }));
+  const ready = Boolean(form.name.trim() && form.jobTitle.trim());
 
-  const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
-    setForm((current) => ({ ...current, [key]: value }));
-
-  function pickTemplate(id: string) {
-    const preset = id === SCRATCH ? undefined : templateById(id);
+  // Picking a role is the whole first step: it moves straight on.
+  function pick(id: string) {
+    const next = id === SCRATCH ? undefined : templateById(id);
     setTemplate(id);
-    // Name and avatar are the admin's own; a new role swaps everything else.
-    setForm((current) => ({
-      ...formFromTemplate(preset, current.name.trim() ? current.name : undefined),
-      avatarUrl: current.avatarUrl,
-    }));
-    setScope((current) => {
-      const templateScope = scopeFromTemplate(preset);
-      const typedSomething = Object.values(current.contextAnswers).some((a) => a.trim());
-      return {
-        ...templateScope,
-        contextAnswers: typedSomething ? current.contextAnswers : templateScope.contextAnswers,
-        objectivesText: current.objectivesText.trim() ? current.objectivesText : templateScope.objectivesText,
-      };
-    });
+    setForm((current) => ({ ...formFrom(next, current.name.trim() ? current.name : undefined), avatarUrl: current.avatarUrl }));
+    setScope(scopeFrom(next));
+    setStep(1);
   }
 
-  const stepValid = [
-    template !== null,
-    form.name.trim() && form.jobTitle.trim(),
-    form.personality.trim().length >= 10,
-    true,
-    true,
-  ][step];
-
-  async function submit() {
+  async function hire() {
     setError(null);
     setFieldErrors({});
+    setSaving(true);
     try {
       const agent = await create.mutateAsync({
         name: form.name.trim(),
         jobTitle: form.jobTitle.trim(),
         department: form.department.trim(),
-        ...(template && template !== SCRATCH ? { templateId: template } : {}),
+        ...(preset ? { templateId: preset.id, personality: preset.personality } : {}),
         avatarUrl: form.avatarUrl ?? "",
-        personality: form.personality.trim(),
-        responsibilities: parseLines(form.responsibilitiesText),
-        allowedTools: form.allowedTools,
+        responsibilities: form.responsibilities,
+        allowedTools: Array.from(new Set([...(preset?.allowedTools ?? ["log_issue", "log_suggestion", "escalate_to_human"]), CHAT_TOOL])) as ToolId[],
         escalationRule: form.escalationRule.trim(),
         status: "draft",
       });
-      if (scopeTouched) {
-        try {
-          await api(`/api/agents/${agent.id}/scope`, {
-            method: "PUT",
-            body: JSON.stringify({
-              contextAnswers: scope.contextAnswers,
-              objectives: parseObjectives(scope.objectivesText),
-              documentIds: [],
-              triggerType: scope.triggerType,
-              cron: scope.triggerType === "cron" ? scope.cron : null,
-              timezone: scope.timezone,
-              enabled: scope.enabled,
-              autonomy: "draft_only",
-              toolAutonomy: null,
-              tools: scope.tools,
-            }),
-          });
-        } catch (caught) {
-          // The agent exists; the editor shows the same form to fix it there.
-          if (caught instanceof ApiError) {
-            setError(`${caught.message} The agent was created - finish its scope of work in the editor.`);
-            setFieldErrors(caught.fieldErrors ?? {});
-            return;
-          }
-        }
+      try {
+        await api(`/api/agents/${agent.id}/scope`, {
+          method: "PUT",
+          body: JSON.stringify({
+            contextAnswers: scope.contextAnswers,
+            objectives: parseObjectives(scope.objectivesText),
+            documentIds: [],
+            triggerType: scope.triggerType,
+            cron: scope.triggerType === "cron" ? scope.cron : null,
+            timezone: scope.timezone,
+            enabled: scope.enabled,
+            autonomy: "draft_only",
+            toolAutonomy: null,
+            tools: scope.tools,
+          }),
+        });
+      } catch (caught) {
+        // The agent exists; its page shows the same settings to finish there.
+        setError(`${errorMessage(caught)} ${form.name} was created - finish the rest on their page.`);
+        router.push(`/p/${project}/agents/${agent.id}?onboarding=1`);
+        return;
       }
       router.push(`/p/${project}/agents/${agent.id}?onboarding=1`);
     } catch (caught) {
-      if (caught instanceof ApiError) {
-        setError(caught.message);
-        setFieldErrors(caught.fieldErrors ?? {});
-        // Send the admin back to the step that owns the bad field.
-        const fields = Object.keys(caught.fieldErrors ?? {});
-        if (fields.some((field) => ["name", "jobTitle", "avatarUrl"].includes(field))) setStep(1);
-        else if (
-          fields.some((field) =>
-            ["personality", "escalationRule"].includes(field),
-          )
-        )
-          setStep(2);
-      } else {
-        setError(errorMessage(caught));
-      }
+      setError(errorMessage(caught));
+      if (caught instanceof ApiError) setFieldErrors(caught.fieldErrors ?? {});
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -186,81 +167,30 @@ export function NewAgentWizard({ project }: { project: string }) {
         <Breadcrumbs
           items={[
             { label: "Roster", href: `/p/${project}/roster` },
-            { label: kind === "personal" ? "Add an assistant" : "Hire an AI employee" },
+            { label: personal ? "Add an assistant" : "Hire an AI employee" },
           ]}
           className="mb-4"
         />
-
-        <h1 className="text-xl font-bold tracking-tight text-ink">
-          {kind === "personal" ? "Add an assistant" : "Hire an AI employee"}
-        </h1>
+        <h1 className="text-xl font-bold tracking-tight text-ink">{personal ? "Add an assistant" : "Hire an AI employee"}</h1>
         <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
-          {kind === "personal"
-            ? "Pick what you want help with, give them a name, check how they behave. About five minutes, then you can add a document and switch them on."
-            : "Pick a role, give them a name, check how they behave. About five minutes, then you'll add a document and publish."}
+          {step === 0
+            ? personal
+              ? "Pick what you want help with. Everything after that is filled in for you - change what you like."
+              : "Pick a role. Everything after that is filled in for you - change what you like."
+            : "Filled in from the role. Tick, untick or add - then it's ready to try."}
         </p>
-
-        {/* Progress */}
-        <ol className="mt-6 flex items-center gap-2" aria-label="Progress">
-          {STEPS.map((label, index) => {
-            const done = index < step;
-            const current = index === step;
-            return (
-              <li key={label} className="flex flex-1 items-center gap-2">
-                <span
-                  aria-current={current ? "step" : undefined}
-                  className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                    done && "bg-accent text-accent-fg",
-                    current && "border-2 border-accent text-accent",
-                    !done && !current && "border border-line-strong text-ink-muted",
-                  )}
-                >
-                  {done ? <Check className="size-3" aria-hidden /> : index + 1}
-                </span>
-                <span
-                  className={cn(
-                    "hidden truncate text-xs sm:block",
-                    current ? "font-medium text-ink" : "text-ink-muted",
-                  )}
-                >
-                  {label}
-                </span>
-                {index < STEPS.length - 1 ? (
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "h-px flex-1",
-                      done ? "bg-accent" : "bg-line",
-                    )}
-                  />
-                ) : null}
-              </li>
-            );
-          })}
-        </ol>
 
         <Panel className="mt-5">
           <PanelHeader>
             <div>
-              <PanelTitle>{STEPS[step]}</PanelTitle>
+              <PanelTitle>{step === 0 ? (personal ? "What should they help with?" : "Pick a role") : "Make it yours"}</PanelTitle>
               <PanelDescription>
-                {
-                  [
-                    "Every field below is pre-filled from the role you pick. Change anything.",
-                    copy.profileStep,
-                    kind === "personal"
-                      ? "How they talk, what they look after, and when they check with you first."
-                      : "How they talk, what falls to them, and when they stop and ask you.",
-                    "What they can draw on, and what they do on their own.",
-                    "Optional. Connect the tools this role works with - now, or any time later from Integrations.",
-                  ][step]
-                }
+                {step === 0 ? `Step 1 of 2` : `Step 2 of 2${preset ? ` · ${preset.name}` : " · from scratch"}`}
               </PanelDescription>
             </div>
           </PanelHeader>
 
-          <PanelBody className="space-y-5">
+          <PanelBody className="space-y-6">
             <FormError message={error} />
 
             {step === 0 ? (
@@ -269,7 +199,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                   <TemplateCard
                     key={role.id}
                     selected={template === role.id}
-                    onSelect={() => pickTemplate(role.id)}
+                    onSelect={() => pick(role.id)}
                     icon={<TemplateIcon icon={role.icon} className="size-5" />}
                     title={role.name}
                     subtitle={role.jobTitle}
@@ -278,16 +208,14 @@ export function NewAgentWizard({ project }: { project: string }) {
                 ))}
                 <TemplateCard
                   selected={template === SCRATCH}
-                  onSelect={() => pickTemplate(SCRATCH)}
+                  onSelect={() => pick(SCRATCH)}
                   icon={<ScratchCuteIcon className="size-5" />}
                   title="Start from scratch"
-                  subtitle="Blank"
-                  body="Every field empty. Best when none of the roles is close to the job."
+                  subtitle="Your own role"
+                  body="Name the job and tick what it looks after. Best when none of the roles is close."
                 />
               </div>
-            ) : null}
-
-            {step === 1 ? (
+            ) : (
               <>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field
@@ -296,249 +224,109 @@ export function NewAgentWizard({ project }: { project: string }) {
                     required
                     error={fieldErrors.name?.[0]}
                     action={
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => set("name", randomAgentName())}
-                        className="shrink-0"
-                        title="Randomize name"
-                      >
+                      <Button type="button" variant="secondary" onClick={() => set("name", randomAgentName())} title="Pick another name">
                         <Shuffle aria-hidden />
-                        <span>Randomize</span>
+                        <span className="sr-only">Pick another name</span>
                       </Button>
                     }
                   >
-                    <Input
-                      value={form.name}
-                      autoFocus
-                      onChange={(event) => set("name", event.target.value)}
-                      placeholder="e.g. Bright"
-                    />
+                    <Input id="name" value={form.name} onChange={(event) => set("name", event.target.value)} placeholder="e.g. Bright" />
                   </Field>
-                  <Field
-                    label={copy.roleLabel}
-                    htmlFor="jobTitle"
-                    required
-                    error={fieldErrors.jobTitle?.[0]}
-                  >
+                  <Field label={copy.roleLabel} htmlFor="jobTitle" required error={fieldErrors.jobTitle?.[0]}>
                     <Input
+                      id="jobTitle"
                       value={form.jobTitle}
+                      autoFocus={!preset}
                       onChange={(event) => set("jobTitle", event.target.value)}
                       placeholder={copy.rolePlaceholder}
                     />
                   </Field>
                 </div>
 
-                {copy.showTeam ? (
-                  <Field
-                    label="Team"
-                    htmlFor="department"
-                    hint="Optional. Only used to group the roster once you have a few agents."
-                  >
-                    <Input
-                      value={form.department}
-                      onChange={(event) => set("department", event.target.value)}
-                      placeholder={copy.teamPlaceholder}
-                    />
-                  </Field>
-                ) : null}
-
-                <div className="space-y-1.5">
-                  <Label>Avatar</Label>
-                  {/* Until a face is picked, the default follows the name - so
-                      remount when it changes and the swatches stay in step
-                      with the preview. */}
-                  <AvatarPicker
-                    key={form.avatarUrl ?? `auto:${form.name}`}
-                    name={form.name}
-                    value={form.avatarUrl}
-                    onChange={(next) => set("avatarUrl", next)}
-                  />
-                </div>
-              </>
-            ) : null}
-
-            {step === 2 ? (
-              <>
-                <Field
-                  label="Personality and tone"
-                  htmlFor="personality"
-                  required
-                  error={fieldErrors.personality?.[0]}
-                  hint="How it speaks and what it is like to deal with. The agent follows this word for word."
-                >
-                  <Textarea
-                    value={form.personality}
-                    autoFocus
-                    rows={5}
-                    onChange={(event) => set("personality", event.target.value)}
-                    placeholder={copy.personalityPlaceholder}
-                  />
-                </Field>
-
-                <Field
-                  label="Responsibilities"
-                  htmlFor="responsibilities"
-                  hint="One per line. Anything not on this list is out of scope for this agent."
-                >
-                  <Textarea
-                    value={form.responsibilitiesText}
-                    rows={4}
-                    onChange={(event) =>
-                      set("responsibilitiesText", event.target.value)
-                    }
-                    placeholder={copy.responsibilitiesPlaceholder}
-                  />
-                </Field>
-
-                <Field
-                  label="Escalation rule"
-                  htmlFor="escalationRule"
-                  hint={copy.escalationHint}
-                >
-                  <Textarea
-                    value={form.escalationRule}
-                    rows={3}
-                    onChange={(event) => set("escalationRule", event.target.value)}
-                    placeholder={copy.escalationPlaceholder}
-                  />
-                </Field>
-                <EscalationRuleHelper
-                  value={form.escalationRule}
-                  onPick={(text) => set("escalationRule", text)}
-                />
-              </>
-            ) : null}
-
-            {step === 3 ? (
-              <>
-                <div
-                  className={cn(
-                    "flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors",
-                    answersFromDocuments
-                      ? "border-accent-line bg-accent-soft/40"
-                      : "border-line",
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <FileText className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
-                    <div>
-                      <Label htmlFor="answers-from-documents" className="text-sm">
-                        Answer from context documents
-                      </Label>
-                      <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
-                        {kind === "personal"
-                          ? "Upload a bank statement (CSV), your CV or notes after this step. The assistant reads them before answering instead of guessing."
-                          : "Upload policies, product sheets or FAQs after this step. The agent searches them before answering and cites what it found instead of guessing."}
-                      </p>
+                <details className="rounded-md border border-line">
+                  <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2/60">
+                    Face{copy.showTeam ? " and team" : ""} <span className="font-normal text-ink-muted">· optional</span>
+                  </summary>
+                  <div className="space-y-4 border-t border-line p-3">
+                    <div className="space-y-1.5">
+                      <Label>Face</Label>
+                      <AvatarPicker
+                        key={form.avatarUrl ?? `auto:${form.name}`}
+                        name={form.name}
+                        value={form.avatarUrl}
+                        onChange={(next) => set("avatarUrl", next)}
+                      />
                     </div>
+                    {copy.showTeam ? (
+                      <Field label="Team" htmlFor="department" hint="Only used to group the roster once you have a few.">
+                        <Input
+                          id="department"
+                          value={form.department}
+                          onChange={(event) => set("department", event.target.value)}
+                          placeholder={copy.teamPlaceholder}
+                        />
+                      </Field>
+                    ) : null}
                   </div>
-                  <Switch
-                    id="answers-from-documents"
-                    checked={answersFromDocuments}
-                    onCheckedChange={(next) =>
-                      set(
-                        "allowedTools",
-                        next
-                          ? [...form.allowedTools, CONTEXT_TOOL]
-                          : form.allowedTools.filter((tool) => tool !== CONTEXT_TOOL),
-                      )
-                    }
-                  />
-                </div>
+                </details>
 
-                {kind === "personal" ? null : (
-                  <p className="text-xs leading-relaxed text-ink-muted">
-                    Logging issues and suggestions, and escalating to a human, are on by
-                    default. Adjust those in the editor once the agent exists.
-                  </p>
-                )}
+                <ResponsibilitiesPicker
+                  value={form.responsibilities}
+                  onChange={(next) => set("responsibilities", next)}
+                  options={dutyOptions}
+                  idPrefix="hire"
+                />
 
-                <div className="border-t border-line pt-5">
-                  <h3 className="text-base font-semibold text-ink">Scope of work</h3>
-                  <p className="mb-4 mt-0.5 text-xs leading-relaxed text-ink-muted">
-                    Optional now, editable later. What this agent does on its own - on a
-                    schedule, or when an event arrives - and what it should know while doing
-                    it.
-                  </p>
-                  <ScopeOfWorkForm
-                    value={scope}
-                    onChange={setScope}
-                    idPrefix="new-scope"
-                    inherited={<InheritedProjectContext project={project} />}
-                  />
-                </div>
+                <EscalationPicker value={form.escalationRule} onChange={(next) => set("escalationRule", next)} kind={kind} idPrefix="hire" />
+
+                <ObjectivesSection
+                  value={scope}
+                  onChange={setScope}
+                  fieldErrors={fieldErrors}
+                  idPrefix="hire"
+                  project={project}
+                  role={{ jobTitle: form.jobTitle, responsibilities: form.responsibilities }}
+                />
+
+                <TriggerSection value={scope} onChange={setScope} fieldErrors={fieldErrors} idPrefix="hire" />
+
+                <ToolsSection value={scope} onChange={setScope} idPrefix="hire" roleTools={preset?.workTools} project={project} />
+
+                <details className="rounded-md border border-line">
+                  <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2/60">
+                    More about the work <span className="font-normal text-ink-muted">· optional, helps it get things right</span>
+                  </summary>
+                  <div className="border-t border-line p-3">
+                    <ContextSection
+                      value={scope}
+                      onChange={setScope}
+                      fieldErrors={fieldErrors}
+                      idPrefix="hire"
+                      heading={false}
+                      inherited={<InheritedProjectContext project={project} />}
+                    />
+                  </div>
+                </details>
               </>
-            ) : null}
-            {step === 4 ? (
-              <SuggestedConnections
-                project={project}
-                suggested={template && template !== SCRATCH ? (templateById(template)?.suggestedIntegrations ?? []) : []}
-              />
-            ) : null}
+            )}
           </PanelBody>
 
-          <PanelFooter>
-            {step > 0 ? (
-              <Button
-                variant="ghost"
-                onClick={() => setStep((current) => current - 1)}
-                className="mr-auto"
-              >
+          {step === 1 ? (
+            <PanelFooter>
+              <Button variant="ghost" onClick={() => setStep(0)} className="mr-auto">
                 <ArrowLeft aria-hidden />
-                Back
+                Other roles
               </Button>
-            ) : null}
-
-            {step < STEPS.length - 1 ? (
-              <Button
-                onClick={() => setStep((current) => current + 1)}
-                disabled={!stepValid}
-              >
-                Continue
+              <Button onClick={() => void hire()} loading={saving} disabled={!ready}>
+                {personal ? "Add" : "Hire"} {form.name.trim() || "them"}
                 <ArrowRight aria-hidden />
               </Button>
-            ) : (
-              <Button onClick={() => void submit()} loading={create.isPending}>
-                Create agent
-                <ArrowRight aria-hidden />
-              </Button>
-            )}
-          </PanelFooter>
+            </PanelFooter>
+          ) : null}
         </Panel>
       </div>
     </div>
   );
-}
-
-function formFromTemplate(preset: AgentTemplate | undefined, defaultName?: string) {
-  return {
-    name: defaultName !== undefined ? defaultName : randomAgentName(),
-    jobTitle: preset?.jobTitle ?? "",
-    department: preset?.team ?? "",
-    avatarUrl: null as string | null,
-    personality: preset?.personality ?? "",
-    responsibilitiesText: preset?.responsibilities.join("\n") ?? "",
-    escalationRule: preset?.escalationRule ?? "",
-    allowedTools: (preset ? [...preset.allowedTools] : [...TOOL_IDS]) as ToolId[],
-  };
-}
-
-function scopeFromTemplate(preset: AgentTemplate | undefined): ScopeFormState {
-  const base = defaultScopeForm();
-  if (!preset) return base;
-  return {
-    ...base,
-    // A template's context is one paragraph; it opens as the answer to the
-    // first question, which is where the owner would have put it anyway.
-    contextAnswers: preset.defaultContext
-      ? { [AGENT_CONTEXT_QUESTIONS[0]!.id]: preset.defaultContext }
-      : {},
-    objectivesText: preset.defaultObjectives ? preset.defaultObjectives.join("\n") : "",
-    triggerType: (preset.defaultTriggerType as TriggerType) ?? "manual",
-    cron: preset.defaultCron ?? base.cron,
-    tools: [...preset.workTools],
-  };
 }
 
 function TemplateCard({
@@ -563,9 +351,7 @@ function TemplateCard({
       onClick={onSelect}
       className={cn(
         "flex items-start gap-3 rounded-lg border p-3 text-left transition",
-        selected
-          ? "border-accent bg-accent-soft ring-1 ring-accent"
-          : "border-line bg-surface hover:border-line-strong hover:bg-surface-2",
+        selected ? "border-accent bg-accent-soft ring-1 ring-accent" : "border-line bg-surface hover:border-line-strong hover:bg-surface-2",
       )}
     >
       <span
@@ -582,51 +368,5 @@ function TemplateCard({
         <span className="mt-1 block text-xs leading-relaxed text-ink-muted">{body}</span>
       </span>
     </button>
-  );
-}
-
-/**
- * The role's suggested connections, as an optional last step: a useful agent
- * is never blocked on a connection the owner is not ready to make. Connect
- * opens in a new tab so this half-filled wizard survives the round trip, and
- * the list refreshes when the owner comes back.
- */
-function SuggestedConnections({ project, suggested }: { project: string; suggested: string[] }) {
-  const list = useIntegrations(project);
-  const providers = useOAuthProviders();
-  const connectors = suggested
-    .map((id) => connectorById(id))
-    .filter((connector): connector is NonNullable<typeof connector> => Boolean(connector));
-  const byType = new Map((list.data ?? []).map((row) => [row.type, row]));
-
-  if (connectors.length === 0) {
-    return (
-      <p className="text-sm text-ink-muted">
-        No particular tools for this role. Browse everything under Integrations whenever you like.
-      </p>
-    );
-  }
-  return (
-    <div className="space-y-3">
-      <ul className="grid gap-3">
-        {connectors.map((connector) => (
-          <li key={connector.id}>
-            <ConnectorCard
-              connector={connector}
-              connection={byType.get(connector.id)}
-              providers={providers.data}
-              project={project}
-              returnTo={`/p/${project}/integrations`}
-              newTab
-              permissionsOpen
-            />
-          </li>
-        ))}
-      </ul>
-      <p className="text-xs leading-relaxed text-ink-muted">
-        Skip any of these. Without a connection the agent still works: it does what it can and says in
-        its report what connecting the tool would let it finish.
-      </p>
-    </div>
   );
 }

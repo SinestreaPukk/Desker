@@ -300,6 +300,15 @@ export const PERSONAL_AGENT_CONTEXT_QUESTIONS: readonly ContextQuestion[] = [
   },
 ] as const;
 
+/**
+ * The agent questions to show. "Never" is no longer asked - the tickboxes for
+ * when it stops and asks, and the space's own limits, cover it - but an answer
+ * someone already wrote stays visible, and in the prompt, until they clear it.
+ */
+export function shownAgentQuestions(kind: SpaceKind, answers: ContextAnswers): readonly ContextQuestion[] {
+  return contextQuestionsFor(kind).agent.filter((question) => question.id !== "never" || Boolean(answers.never?.trim()));
+}
+
 /** Every question set a space of this kind uses, by where it is asked. */
 export function contextQuestionsFor(kind: SpaceKind) {
   return kind === "personal"

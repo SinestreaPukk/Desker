@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { agentInputSchema } from "@/lib/validation";
+import { defaultPersonality } from "@/lib/work/agent-choices";
+import { spaceKind } from "@/lib/space";
 import { templateById } from "@/lib/content";
 import { findProject, projectsVisibleTo } from "@/lib/projects";
 import { canPublishAgent } from "@/lib/billing/limits";
@@ -111,7 +113,10 @@ export async function POST(request: Request) {
         // Only a real template counts: a stray id would put the agent in a role it is not.
         templateId: input.templateId && templateById(input.templateId) ? input.templateId : null,
         avatarUrl: input.avatarUrl || null,
-        personality: input.personality,
+        personality:
+          input.personality ||
+          (input.templateId ? templateById(input.templateId)?.personality : undefined) ||
+          defaultPersonality(spaceKind(project.organization.kind)),
         responsibilities: input.responsibilities,
         allowedTools: input.allowedTools,
         escalationRule: input.escalationRule || null,

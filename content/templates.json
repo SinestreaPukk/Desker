@@ -16,6 +16,12 @@
         "Collect enough detail on a bug for engineering to reproduce it",
         "Record feature requests clients raise"
       ],
+      "moreResponsibilities": [
+        "Answer billing and account questions from your policies",
+        "Hand refunds, complaints and anything legal to a person",
+        "Keep replies short and in the customer's language",
+        "Summarise the week's most common questions"
+      ],
       "allowedTools": [
         "search_documents",
         "log_issue",
@@ -76,6 +82,12 @@
         "Walk new clients through setup, one step at a time",
         "Answer questions about plans, limits and configuration",
         "Flag anything that blocks a client from getting started"
+      ],
+      "moreResponsibilities": [
+        "Send a welcome message and the first steps",
+        "Check in after the first week",
+        "Collect the details setup needs, like logos or logins",
+        "Hand anything contractual to a person"
       ],
       "allowedTools": [
         "search_documents",
@@ -139,6 +151,12 @@
         "Track named competitors or markets over time",
         "Flag claims that cannot be verified"
       ],
+      "moreResponsibilities": [
+        "Write a weekly briefing on what changed",
+        "Compare prices, features and positioning",
+        "Summarise long reports into a page",
+        "Suggest what the team should act on"
+      ],
       "allowedTools": [
         "search_documents",
         "escalate_to_human"
@@ -196,6 +214,12 @@
         "Draft social posts and short announcements",
         "Keep a consistent brand voice across channels",
         "Queue everything for approval before it is published"
+      ],
+      "moreResponsibilities": [
+        "Plan a weekly content calendar",
+        "Turn research into posts and newsletters",
+        "Reply to comments on your posts, for approval",
+        "Report which posts did well and why"
       ],
       "allowedTools": [
         "search_documents",
@@ -261,6 +285,12 @@
         "Draft emails and replies for approval",
         "Schedule follow-ups so nothing is dropped",
         "Keep a clear record of what was agreed"
+      ],
+      "moreResponsibilities": [
+        "Plan the week around the calendar",
+        "Prepare a short brief before each meeting",
+        "Chase replies that are overdue",
+        "Keep a list of open promises and deadlines"
       ],
       "allowedTools": [
         "search_documents",
@@ -331,6 +361,12 @@
         "Collect a reproducible report for every bug",
         "Research unfamiliar errors before answering"
       ],
+      "moreResponsibilities": [
+        "Check CI results and failing builds",
+        "Review pull requests and suggest fixes",
+        "Write up release notes from merged work",
+        "Open issues for bugs customers report"
+      ],
       "allowedTools": [
         "search_documents",
         "log_issue",
@@ -395,6 +431,12 @@
         "Answer first-round product questions",
         "Book meetings for the sales team"
       ],
+      "moreResponsibilities": [
+        "Research a lead's company before replying",
+        "Write follow-ups that don't read like templates",
+        "Keep the pipeline notes up to date",
+        "Hand hot leads to a person the same day"
+      ],
       "allowedTools": [
         "search_documents",
         "log_suggestion",
@@ -457,6 +499,12 @@
         "Answer policy and benefits questions from the handbook",
         "Draft routine people communications for approval",
         "Route sensitive matters to a person straight away"
+      ],
+      "moreResponsibilities": [
+        "Draft onboarding checklists for new starters",
+        "Remind people about reviews and deadlines",
+        "Keep the handbook answers consistent",
+        "Summarise feedback without naming anyone"
       ],
       "allowedTools": [
         "search_documents",
@@ -521,6 +569,12 @@
         "Compare each week with the budget and savings goal",
         "Suggest the one or two changes that save the most"
       ],
+      "moreResponsibilities": [
+        "Remind you before bills are due",
+        "Spot duplicate or unusual charges",
+        "Track progress toward a savings goal",
+        "Explain where the money went in plain words"
+      ],
       "allowedTools": [
         "search_documents"
       ],
@@ -581,6 +635,12 @@
         "Draft replies and emails for your approval",
         "Remember renewals, birthdays and deadlines",
         "Research the errands: opening hours, prices, how-to"
+      ],
+      "moreResponsibilities": [
+        "Spot calendar clashes and suggest fixes",
+        "Keep a to-do list for the week",
+        "Book reminders for renewals and appointments",
+        "Draft messages to family and friends for your approval"
       ],
       "allowedTools": [
         "search_documents"
@@ -650,6 +710,12 @@
         "Suggest timely topics from your field",
         "Keep a record of what performed and why"
       ],
+      "moreResponsibilities": [
+        "Reply to comments, for your approval",
+        "Reuse your best posts in new formats",
+        "Keep each platform's length and style right",
+        "Post at the times your audience is online"
+      ],
       "allowedTools": [
         "search_documents"
       ],
@@ -714,6 +780,12 @@
         "Tailor your CV and cover letter to each role",
         "Prepare interview briefs and likely questions",
         "Track applications and follow-ups"
+      ],
+      "moreResponsibilities": [
+        "Write LinkedIn posts about your work",
+        "Draft thank-you and follow-up emails",
+        "Research companies before interviews",
+        "Suggest skills worth learning next"
       ],
       "allowedTools": [
         "search_documents"
@@ -781,6 +853,12 @@
         "Check visas, weather and opening days",
         "Watch prices and flag a good moment to book"
       ],
+      "moreResponsibilities": [
+        "Put bookings and times into your calendar",
+        "Make a packing list for the trip",
+        "Find places to eat near where you stay",
+        "Keep all confirmations in one summary"
+      ],
       "allowedTools": [
         "search_documents"
       ],
@@ -839,6 +917,12 @@
         "Write short lessons and practice questions",
         "Quiz you from your own notes and materials",
         "Adjust the plan to how you're doing"
+      ],
+      "moreResponsibilities": [
+        "Remind you to practise on the days you choose",
+        "Explain hard ideas with everyday examples",
+        "Track what you've mastered and what's next",
+        "Find good free resources on the topic"
       ],
       "allowedTools": [
         "search_documents"

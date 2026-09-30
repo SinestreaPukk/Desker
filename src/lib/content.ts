@@ -286,6 +286,8 @@ const templateSchema = z.object({
   welcomeMessage: z.string(),
   escalationRule: z.string(),
   responsibilities: z.array(z.string().min(1)).max(8),
+  /** Further duties offered as unticked suggestions when hiring and editing. */
+  moreResponsibilities: z.array(z.string().min(1).max(120)).max(8).default([]),
   allowedTools: z.array(z.enum(TOOL_IDS)),
   workTools: z.array(z.enum(WORK_TOOL_IDS)),
   /** Catalog connector ids that make this role more useful; offered, never required, when hiring. */

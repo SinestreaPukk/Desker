@@ -50,7 +50,8 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(input.jobTitle !== undefined ? { jobTitle: input.jobTitle } : {}),
         ...(input.department !== undefined ? { department: input.department || null } : {}),
         ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl || null } : {}),
-        ...(input.personality !== undefined ? { personality: input.personality } : {}),
+        // An emptied voice keeps the one it had: there is always something to speak with.
+        ...(input.personality ? { personality: input.personality } : {}),
         ...(input.responsibilities !== undefined
           ? { responsibilities: input.responsibilities }
           : {}),

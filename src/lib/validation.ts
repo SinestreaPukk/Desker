@@ -21,11 +21,13 @@ export const agentInputSchema = z.object({
   // Built-in avatars are short keys; uploaded ones are data URIs up to
   // MAX_AVATAR_DATA_URI_LENGTH, which the picker already enforces client-side.
   avatarUrl: z.string().trim().max(MAX_AVATAR_DATA_URI_LENGTH).optional().or(z.literal("")),
+  // Optional: a role brings its own voice, and anything else gets a plain default.
   personality: z
     .string()
     .trim()
-    .min(10, "Describe the personality in at least a sentence.")
-    .max(4000, "That is more personality than the agent can read. Keep it under 4,000 characters."),
+    .max(4000, "That is more personality than the agent can read. Keep it under 4,000 characters.")
+    .optional()
+    .or(z.literal("")),
   responsibilities: z
     .array(z.string().trim().min(1).max(300, "Keep each responsibility to a line."))
     .max(25, "Twenty-five responsibilities is plenty; fewer and clearer works better.")

@@ -29,7 +29,7 @@ export interface AgentSummaryDto {
   updatedAt: string;
 }
 
-export interface AgentDetailDto extends Omit<AgentSummaryDto, "conversationCount" | "documentCount" | "openIssueCount" | "runs" | "health" | "templateId"> {
+export interface AgentDetailDto extends Omit<AgentSummaryDto, "conversationCount" | "documentCount" | "openIssueCount" | "runs" | "health"> {
   personality: string;
   responsibilities: string[];
   allowedTools: string[];
@@ -60,6 +60,7 @@ type AgentRow = {
   jobTitle: string;
   department: string | null;
   avatarUrl: string | null;
+  templateId: string | null;
   personality: string;
   responsibilities: unknown;
   allowedTools: unknown;
@@ -83,6 +84,7 @@ export function toAgentDetail(agent: AgentRow): AgentDetailDto {
     jobTitle: agent.jobTitle,
     department: agent.department,
     avatarUrl: agent.avatarUrl,
+    templateId: agent.templateId,
     personality: agent.personality,
     responsibilities: toStringArray(agent.responsibilities),
     allowedTools: toStringArray(agent.allowedTools),

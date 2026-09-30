@@ -34,7 +34,7 @@ import { AgentAvatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, Input, Label, Textarea } from "@/components/ui/field";
+import { Field, Input, Label } from "@/components/ui/field";
 import {
   Panel,
   PanelBody,
@@ -74,7 +74,8 @@ import { ScopeOfWorkPanel } from "./scope-of-work-panel";
 import { BoundariesCard } from "./boundaries-card";
 import { PromptPreviewDialog } from "./prompt-preview-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { EscalationRuleHelper } from "./live-example";
+import { EscalationPicker, ResponsibilitiesPicker } from "./agent-setup";
+import { templateById } from "@/lib/content";
 import { HelpLink } from "@/components/help/help-panel";
 import { DuplicateAgentDialog } from "./duplicate-agent-dialog";
 import { DocumentsPanel } from "./documents-panel";
@@ -343,6 +344,9 @@ export function AgentBuilder({
   const [confirmUnpublish, setConfirmUnpublish] = React.useState(false);
   const kind = useSpaceKind();
   const personal = kind === "personal";
+  // The role it was hired as offers its usual duties, ticked or not.
+  const role = agent.templateId ? templateById(agent.templateId) : undefined;
+  const dutyOptions = role ? [...role.responsibilities, ...role.moreResponsibilities] : [];
   const copy = spaceCopy(kind);
   // One decision at a time: the form is grouped into sections and only the
   // current one is on screen. Edits in every section persist until saved.
@@ -592,7 +596,12 @@ export function AgentBuilder({
               <ScopeOfWorkPanel
                 agentId={agent.id}
                 project={project}
-                agent={{ name: form.name, jobTitle: form.jobTitle }}
+                agent={{
+                  name: form.name,
+                  jobTitle: form.jobTitle,
+                  responsibilities: parseLines(form.responsibilitiesText),
+                  roleTools: role?.workTools,
+                }}
               />
             ) : null}
 
@@ -684,43 +693,12 @@ export function AgentBuilder({
                   />
                 </div>
 
-                <Field
-                  label="Personality and tone"
-                  htmlFor="personality"
-                  required
-                  error={fieldErrors.personality?.[0]}
-                  hint="How it speaks and what it is like to deal with. Two or three sentences is plenty."
-                  aside={
-                    <span className="meta tabular-nums">
-                      {form.personality.length}/4000
-                    </span>
-                  }
-                >
-                  <Textarea
-                    value={form.personality}
-                    onChange={(event) => set("personality", event.target.value)}
-                    rows={4}
-                    maxLength={4000}
-                    placeholder={
-                      "Warm but efficient. Gets to the point in two sentences, never uses corporate filler, and always says plainly when something isn't possible."
-                    }
-                  />
-                </Field>
-
-                <Field
-                  label="Responsibilities"
-                  htmlFor="responsibilities"
-                  hint="One per line. Anything not on this list is out of scope for this agent."
-                >
-                  <Textarea
-                    value={form.responsibilitiesText}
-                    onChange={(event) =>
-                      set("responsibilitiesText", event.target.value)
-                    }
-                    rows={4}
-                    placeholder={copy.responsibilitiesPlaceholder}
-                  />
-                </Field>
+                <ResponsibilitiesPicker
+                  value={parseLines(form.responsibilitiesText)}
+                  onChange={(next) => set("responsibilitiesText", next.join("\n"))}
+                  options={dutyOptions}
+                  idPrefix="profile"
+                />
 
                 <fieldset className="space-y-2">
                   <legend className="text-sm font-medium text-ink">
@@ -780,24 +758,14 @@ export function AgentBuilder({
                 </fieldset>
 
                 {escalationEnabled ? (
-                  <div className="space-y-2">
-                    <Field
-                      label="When to hand over to a person"
-                      htmlFor="escalationRule"
-                      aside={<HelpLink topic="escalationRule" label="When does an agent escalate?" />}
-                      hint="Plain language. The agent judges it from the meaning of the conversation, not by keyword matching."
-                    >
-                      <Textarea
-                        value={form.escalationRule}
-                        onChange={(event) => set("escalationRule", event.target.value)}
-                        rows={3}
-                        placeholder={copy.escalationPlaceholder}
-                      />
-                    </Field>
-                    <EscalationRuleHelper
+                  <div className="space-y-1">
+                    <EscalationPicker
                       value={form.escalationRule}
-                      onPick={(text) => set("escalationRule", text)}
+                      onChange={(next) => set("escalationRule", next)}
+                      kind={personal ? "personal" : "business"}
+                      idPrefix="profile"
                     />
+                    <HelpLink topic="escalationRule" label="When does an agent escalate?" />
                   </div>
                 ) : null}
               </PanelBody>

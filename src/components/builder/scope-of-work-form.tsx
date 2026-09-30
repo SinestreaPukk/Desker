@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Clock } from "lucide-react";
-import { Field, Input, Label, Textarea } from "@/components/ui/field";
+import { Field, Input, Label } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -26,13 +26,18 @@ import {
   type ToolAutonomy,
   type TriggerType,
 } from "@/lib/work/types";
-import { ContextHelper, ObjectivesHelper } from "./live-example";
+import { ContextHelper } from "./live-example";
+import { ChoicePicker, ObjectivesEditor } from "./agent-setup";
+import { choicesFor } from "@/lib/work/agent-choices";
+import { useIntegrations } from "@/hooks/use-work-data";
+import { connectorsForTool } from "@/lib/integrations/catalog";
+import { GATED_TOOL_IDS } from "@/lib/work/types";
 import { useSpaceKind } from "@/components/space-kind";
 import { ContextQuestions } from "./context-questions";
 import { badRecipients, looksLikeCron } from "@/lib/form-errors";
 import { HelpLink } from "@/components/help/help-panel";
 import {
-  contextQuestionsFor,
+  shownAgentQuestions,
   answeredCount,
   type ContextAnswers,
 } from "@/lib/work/context";
@@ -40,6 +45,7 @@ import {
   GATED_TOOLS,
   WORK_TOOL_IDS,
   WORK_TOOL_METADATA,
+  WORK_TOOL_RISK,
   type WorkToolId,
 } from "@/lib/work/tools";
 import { cn } from "@/lib/utils";
@@ -429,7 +435,8 @@ export function ContextSection({
   heading?: boolean;
 }) {
   const set = updater({ value, onChange });
-  const agentQuestions = contextQuestionsFor(useSpaceKind()).agent;
+  const kind = useSpaceKind();
+  const agentQuestions = shownAgentQuestions(kind, value.contextAnswers);
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -450,13 +457,30 @@ export function ContextSection({
 
       {inherited}
 
-      <ContextQuestions
-        questions={agentQuestions}
-        value={value.contextAnswers}
-        onChange={(next) => set("contextAnswers", next)}
-        idPrefix={`${idPrefix}-context`}
-        fieldErrors={fieldErrors}
-      />
+      {agentQuestions.map((question) => {
+        const options = choicesFor(question.id, kind);
+        return options ? (
+          <ChoicePicker
+            key={question.id}
+            label={question.label}
+            hint={question.hint}
+            value={value.contextAnswers[question.id] ?? ""}
+            onChange={(next) => set("contextAnswers", { ...value.contextAnswers, [question.id]: next })}
+            options={options}
+            idPrefix={`${idPrefix}-context-${question.id}`}
+            otherPlaceholder={question.id === "stakeholders" ? "Names or anything else, e.g. Priya approves every post" : "Anything else that makes a good week"}
+          />
+        ) : (
+          <ContextQuestions
+            key={question.id}
+            questions={[question]}
+            value={value.contextAnswers}
+            onChange={(next) => set("contextAnswers", next)}
+            idPrefix={`${idPrefix}-context`}
+            fieldErrors={fieldErrors}
+          />
+        );
+      })}
 
       <ContextHelper
         answered={answeredCount(value.contextAnswers, agentQuestions)}
@@ -471,31 +495,23 @@ export function ObjectivesSection({
   onChange,
   fieldErrors = {},
   idPrefix = "scope",
-}: ScopeSectionProps) {
+  project,
+  role,
+}: ScopeSectionProps & {
+  /** With both, "Write them for me" drafts goals from the job and its duties. */
+  project?: string;
+  role?: { jobTitle: string; responsibilities: string[] };
+}) {
   const set = updater({ value, onChange });
   return (
-    <div className="space-y-5">
-      <Field
-        label="Objectives"
-        htmlFor={`${idPrefix}-objectives`}
-        hint="One per line. What a run should achieve, concretely."
-        error={fieldErrors.objectives?.[0]}
-      >
-        <Textarea
-          id={`${idPrefix}-objectives`}
-          value={value.objectivesText}
-          rows={4}
-          onChange={(event) => set("objectivesText", event.target.value)}
-          placeholder={
-            "Research what competitors announced this week\nDraft a LinkedIn post about the warranty\nEmail the summary to marketing@example.com"
-          }
-        />
-      </Field>
-      <ObjectivesHelper
-        objectives={parseObjectives(value.objectivesText)}
-        onPick={(text) => set("objectivesText", value.objectivesText ? `${value.objectivesText}\n${text}` : text)}
-      />
-    </div>
+    <ObjectivesEditor
+      value={parseObjectives(value.objectivesText)}
+      onChange={(next) => set("objectivesText", next.join("\n"))}
+      idPrefix={idPrefix}
+      project={project}
+      role={role}
+      error={fieldErrors.objectives?.[0]}
+    />
   );
 }
 
@@ -543,8 +559,18 @@ export function DocumentsSection({
   );
 }
 
-const RESEARCH_TOOLS = ["search_documents", "web_research", "draft_content"] as const;
-const ACTION_TOOLS = ["publish_post", "send_email", "schedule_followup", "escalate_to_human"] as const;
+const GATED = new Set<string>(GATED_TOOL_IDS);
+
+/** What a tool may do, in the owner's words. */
+function permissionOf(tool: WorkToolId): string {
+  if (GATED.has(tool)) return "Reaches outside Desker - asks you first";
+  return {
+    read: "Only reads",
+    draft: "Writes drafts inside Desker",
+    internal: "Plans its own next steps",
+    external: "Reaches outside Desker",
+  }[WORK_TOOL_RISK[tool]];
+}
 
 export function ToolsSection({
   value,
@@ -552,17 +578,31 @@ export function ToolsSection({
   idPrefix = "scope",
   /** The flow view opens this for one tool at a time. */
   only,
-}: ScopeSectionProps & { only?: WorkToolId }) {
+  roleTools,
+  project,
+}: ScopeSectionProps & {
+  only?: WorkToolId;
+  /** The role's own tools, shown first; everything else sits under More tools. */
+  roleTools?: readonly string[];
+  /** For whether what a tool needs is connected. */
+  project?: string;
+}) {
   const set = updater({ value, onChange });
+  const integrations = useIntegrations(project ?? "");
+  const connected = new Set((integrations.data ?? []).filter((row) => row.state !== "disconnected").map((row) => row.type));
 
   const toolCard = (tool: WorkToolId) => {
     const checked = value.tools.includes(tool);
+    // Publishing goes to a connected network or the webhook: any one of them will do.
+    const needs = tool === "publish_post" ? [...connectorsForTool("social_read"), ...connectorsForTool(tool)] : connectorsForTool(tool);
+    const has = needs.find((connector) => connected.has(connector.id));
+    const needsLabel = tool === "publish_post" ? "a social network or a publishing webhook" : needs.map((connector) => connector.name).join(" or ");
     return (
       <label
         key={tool}
         htmlFor={`${idPrefix}-tool-${tool}`}
         className={cn(
-          "flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2 text-sm text-ink transition-colors",
+          "flex cursor-pointer items-start gap-2.5 rounded-md border px-3 py-2.5 text-sm text-ink transition-colors",
           checked ? "border-accent-line bg-accent-soft/30" : "border-line hover:bg-surface-2",
         )}
       >
@@ -579,9 +619,25 @@ export function ToolsSection({
             )
           }
         />
-        <span className="min-w-0">
+        <span className="min-w-0 space-y-0.5">
           <span className="block font-medium">{WORK_TOOL_METADATA[tool].label}</span>
           <span className="block text-xs text-ink-muted">{WORK_TOOL_METADATA[tool].blurb}</span>
+          <span className="block text-xs text-ink-muted">{permissionOf(tool)}</span>
+          {needs.length > 0 ? (
+            has ? (
+              <span className="block text-xs text-positive">{has.name} connected</span>
+            ) : project ? (
+              <a
+                href={`/p/${project}/integrations`}
+                onClick={(event) => event.stopPropagation()}
+                className="block text-xs font-medium text-accent hover:underline"
+              >
+                Needs {needsLabel} - connect
+              </a>
+            ) : (
+              <span className="block text-xs text-ink-muted">Needs {needsLabel}</span>
+            )
+          ) : null}
         </span>
       </label>
     );
@@ -589,34 +645,32 @@ export function ToolsSection({
 
   if (only) return <div className="grid gap-1.5">{toolCard(only)}</div>;
 
+  const primary = WORK_TOOL_IDS.filter((tool) => (roleTools ? roleTools.includes(tool) : false) || value.tools.includes(tool));
+  const rest = WORK_TOOL_IDS.filter((tool) => !primary.includes(tool));
+
   return (
     <fieldset id={`${idPrefix}-tools`} className="scroll-mt-4 space-y-3">
       <div>
         <legend className="text-sm font-medium text-ink">Work tools</legend>
         <p className="mt-0.5 text-xs text-ink-muted">
-          What the agent can do during a run. Publishing and email still wait for approval
-          unless you say otherwise.
+          {roleTools ? "This role's own tools. " : ""}What it can use when it works on its own. Anything that reaches outside
+          Desker waits for your approval unless you say otherwise under Trust.
         </p>
       </div>
 
-      <div className="space-y-1.5">
-        <span className="block text-xs font-semibold uppercase tracking-wider text-ink-muted">
-          Research &amp; Drafting
-        </span>
-        <div className="grid gap-1.5 sm:grid-cols-2">{RESEARCH_TOOLS.map(toolCard)}</div>
-      </div>
+      <div className="grid gap-1.5 sm:grid-cols-2">{primary.map(toolCard)}</div>
 
-      <div className="space-y-1.5 pt-1">
-        <span className="block text-xs font-semibold uppercase tracking-wider text-ink-muted">
-          Actions &amp; Escalation (Guarded)
-        </span>
-        <div className="grid gap-1.5 sm:grid-cols-2">{ACTION_TOOLS.map(toolCard)}</div>
-      </div>
+      {rest.length > 0 ? (
+        <details className="rounded-md border border-line">
+          <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2/60">
+            More tools <span className="font-normal text-ink-muted">· {rest.length} not used by this role</span>
+          </summary>
+          <div className="grid gap-1.5 border-t border-line p-3 sm:grid-cols-2">{rest.map(toolCard)}</div>
+        </details>
+      ) : null}
 
       {value.tools.length === 0 ? (
-        <p className="text-xs text-warning">
-          With no tools the agent can only write a summary. Tick at least one.
-        </p>
+        <p className="text-xs text-warning">With no tools it can only write a summary. Tick at least one.</p>
       ) : null}
     </fieldset>
   );
@@ -724,6 +778,9 @@ export function ScopeOfWorkForm({
   showModeNote = true,
   contextDraft = null,
   inherited = null,
+  project,
+  roleTools,
+  role,
 }: {
   value: ScopeFormState;
   onChange: (next: ScopeFormState) => void;
@@ -737,16 +794,22 @@ export function ScopeOfWorkForm({
   showModeNote?: boolean;
   contextDraft?: React.ReactNode;
   inherited?: React.ReactNode;
+  /** For connection status and "Write them for me". */
+  project?: string;
+  /** The role's own tools (its template's), shown first. */
+  roleTools?: readonly string[];
+  /** The job and duties goals are written from. */
+  role?: { jobTitle: string; responsibilities: string[] };
 }) {
   const section = { value, onChange, fieldErrors, idPrefix };
   return (
     <div className="space-y-5">
       {/* When it runs comes first: it decides whether the agent works on its own at all. */}
       <TriggerSection {...section} webhookUrl={webhookUrl} />
-      <ObjectivesSection {...section} />
+      <ObjectivesSection {...section} project={project} role={role} />
       <ContextSection {...section} contextDraft={contextDraft} inherited={inherited} />
       <DocumentsSection {...section} documents={documents} />
-      <ToolsSection {...section} />
+      <ToolsSection {...section} roleTools={roleTools} project={project} />
 
       {showModeNote ? (
         <p className="rounded-lg border border-accent-line bg-accent-soft/40 px-3 py-2 text-xs leading-relaxed text-ink-muted">

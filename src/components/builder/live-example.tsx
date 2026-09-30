@@ -3,8 +3,6 @@
 import * as React from "react";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useSpaceKind } from "@/components/space-kind";
-import { spaceCopy } from "@/lib/space-copy";
 
 /**
  * Recognition over recall. Fields that take plain-language instructions show
@@ -12,18 +10,6 @@ import { spaceCopy } from "@/lib/space-copy";
  * owner has typed as the agent will understand it - so they see the effect
  * while writing, not after the first bad conversation.
  */
-
-function Chip({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-full border border-line bg-surface px-2.5 py-1 text-left text-xs text-ink-muted transition-colors hover:border-accent-line hover:bg-accent-soft/40 hover:text-ink"
-    >
-      {children}
-    </button>
-  );
-}
 
 function Reading({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
@@ -33,58 +19,6 @@ function Reading({ label, children, className }: { label: string; children: Reac
         {label}
       </span>
       <span className="text-ink-muted">{children}</span>
-    </div>
-  );
-}
-
-export function EscalationRuleHelper({
-  value,
-  onPick,
-}: {
-  value: string;
-  onPick: (text: string) => void;
-}) {
-  const copy = spaceCopy(useSpaceKind());
-  const text = value.trim();
-  const condition = text.replace(/^escalate\s+(immediately\s+)?(if|when)\s+/i, "").replace(/\.$/, "");
-  return (
-    <div className="space-y-2">
-      <Reading label="The agent reads this as">
-        {text
-          ? <>Stop and check with you when <strong className="font-medium text-ink">{condition}</strong>. It judges this from what happens, not from keywords.</>
-          : copy.noRuleYet}
-      </Reading>
-      {!text ? (
-        <div className="flex flex-wrap gap-1.5">
-          {copy.ruleExamples.map((example) => (
-            <Chip key={example} onClick={() => onPick(example)}>
-              {example}
-            </Chip>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-/** Empty-state only: once there are objectives the textarea above already shows them. */
-export function ObjectivesHelper({ objectives, onPick }: { objectives: string[]; onPick?: (text: string) => void }) {
-  const examples = spaceCopy(useSpaceKind()).objectiveExamples;
-  if (objectives.length > 0) return null;
-  return (
-    <div className="space-y-2">
-      <Reading label="Each run will try to">
-        Nothing yet. One outcome per line; the agent works down the list and reports on each. For example:
-      </Reading>
-      {onPick ? (
-        <div className="flex flex-wrap gap-1.5">
-          {examples.map((example) => (
-            <Chip key={example} onClick={() => onPick(example)}>
-              {example}
-            </Chip>
-          ))}
-        </div>
-      ) : null}
     </div>
   );
 }

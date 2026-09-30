@@ -33,7 +33,7 @@ import { ScopeFlow } from "./scope-flow";
 import { HelpLink } from "@/components/help/help-panel";
 import { markFlowViewSeen } from "@/components/help/checklist-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { contextQuestionsFor } from "@/lib/work/context";
+import { shownAgentQuestions } from "@/lib/work/context";
 import { useSpaceKind } from "@/components/space-kind";
 import {
   DigestSettings,
@@ -73,7 +73,7 @@ export function ScopeOfWorkPanel({
   agentId: string;
   project: string;
   /** Live from the editor's own fields, so the flow shows what is on screen. */
-  agent?: { name: string; jobTitle: string };
+  agent?: { name: string; jobTitle: string; responsibilities?: string[]; roleTools?: readonly string[] };
 }) {
   const scope = useScope(agentId);
   if (!scope.data) {
@@ -110,7 +110,7 @@ function ScopeEditor({
   agent,
   scope,
 }: {
-  agent: { name: string; jobTitle: string };
+  agent: { name: string; jobTitle: string; responsibilities?: string[]; roleTools?: readonly string[] };
   agentId: string;
   project: string;
   scope: ScopeDto;
@@ -273,7 +273,7 @@ function ScopeEditor({
               showModeNote={false}
               contextDraft={
                 <ContextDraftButton
-                  questions={contextQuestionsFor(kind).agent}
+                  questions={shownAgentQuestions(kind, form.contextAnswers)}
                   value={form.contextAnswers}
                   onChange={(contextAnswers) => setForm({ ...form, contextAnswers })}
                   draft={() => draftContext.mutateAsync()}
@@ -281,6 +281,9 @@ function ScopeEditor({
                 />
               }
               inherited={<InheritedProjectContext project={project} />}
+              project={project}
+              roleTools={agent.roleTools}
+              role={{ jobTitle: agent.jobTitle, responsibilities: agent.responsibilities ?? [] }}
             />
 
             <div className="border-t border-line pt-4">
