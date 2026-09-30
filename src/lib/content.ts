@@ -173,6 +173,25 @@ const landingSchema = z.object({
     ...sectionHead,
     items: z.array(z.object({ quote: z.string().min(1), name: z.string().min(1), title: z.string().min(1) })),
   }),
+  /**
+   * Stands in for testimonials while there are none: the first-run sample
+   * run itself (lib/first-run.ts), labelled as a walkthrough on example data -
+   * never presented as a customer story.
+   */
+  walkthrough: z.object({
+    ...sectionHead,
+    /** The label on the walkthrough itself: what it is, and what it is not. */
+    label: z.string().min(1).max(120),
+  }),
+  /** While pricing is off: what the beta is, its limits, and what it will cost after. */
+  beta: z.object({
+    ...sectionHead,
+    included: z.array(z.string().min(1)).min(2).max(6),
+    limits: z.array(z.string().min(1)).min(2).max(6),
+    /** Over the planned prices, read from billing/plans.ts. */
+    pricingLabel: z.string().min(1).max(80),
+    pricingNote: z.string().min(1).max(240),
+  }),
   pricing: z.object({
     /** Off while there is nothing to buy yet: the section and its links are hidden. */
     enabled: z.boolean(),

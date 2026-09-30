@@ -16,6 +16,8 @@ export interface AgentSummaryDto {
   department: string | null;
   avatarUrl: string | null;
   status: string;
+  /** The role it was hired as (content/templates.json), when it came from one. */
+  templateId: string | null;
   modelProvider: string;
   conversationCount: number;
   documentCount: number;
@@ -27,7 +29,7 @@ export interface AgentSummaryDto {
   updatedAt: string;
 }
 
-export interface AgentDetailDto extends Omit<AgentSummaryDto, "conversationCount" | "documentCount" | "openIssueCount" | "runs" | "health"> {
+export interface AgentDetailDto extends Omit<AgentSummaryDto, "conversationCount" | "documentCount" | "openIssueCount" | "runs" | "health" | "templateId"> {
   personality: string;
   responsibilities: string[];
   allowedTools: string[];

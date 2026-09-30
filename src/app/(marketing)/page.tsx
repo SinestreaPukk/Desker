@@ -40,6 +40,7 @@ import { HeroWords } from "@/components/marketing/words";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { ShowcaseBento } from "@/components/marketing/showcase-bento";
 import { Reveal } from "@/components/marketing/reveal";
+import { Walkthrough } from "@/components/marketing/walkthrough";
 import { LANDING, SITE, pageMetadata, templateById } from "@/lib/content";
 import { PLANS } from "@/lib/billing/plans";
 import { cn } from "@/lib/utils";
@@ -80,9 +81,11 @@ export default async function LandingPage({
             include: { organization: { select: { kind: true } } },
           })
         : null) ?? (await defaultProject(user.id));
-    // A brand-new space starts by describing the business (or the person), then hires.
+    // A brand-new space starts with its first run: one workflow, run once on
+    // example data, then made real. A role picked on the showcase skips it -
+    // that person already chose - and describes the business, then hires.
     if (!hasCoreContext(project, spaceKind(project.organization.kind)) && (await prisma.agent.count({ where: { projectId: project.id } })) === 0) {
-      redirect(`/p/${project.slug}/welcome${picked ? `?template=${encodeURIComponent(picked)}` : ""}`);
+      redirect(picked ? `/p/${project.slug}/welcome?template=${encodeURIComponent(picked)}` : `/p/${project.slug}/start`);
     }
     if (picked) {
       redirect(`/p/${project.slug}/agents/new?template=${encodeURIComponent(picked)}`);
@@ -90,7 +93,7 @@ export default async function LandingPage({
     redirect(`/p/${project.slug}/roster`);
   }
 
-  const { hero, trustStrip, desks, steps, features, trust, roles, comparison, testimonials, pricing, faq, cta } =
+  const { hero, trustStrip, desks, steps, features, trust, roles, comparison, testimonials, walkthrough, beta, pricing, faq, cta } =
     LANDING;
   // Placeholders are for review only: outside production an unmeasured number
   // shows as a marked TODO; in production the section waits for real values.
@@ -242,6 +245,69 @@ export default async function LandingPage({
             />
           <div className="mt-12">
             <Testimonials items={testimonials.items} />
+          </div>
+        </Section>
+      ) : null}
+
+      {/* No customer quotes yet: the first run itself, labelled as example data */}
+      {!showTestimonials ? (
+        <Section id="walkthrough" labelledBy="walkthrough-heading" className="border-t border-line">
+          <SectionHeader
+            id="walkthrough-heading"
+            eyebrow={walkthrough.eyebrow}
+            heading={walkthrough.heading}
+            intro={walkthrough.intro}
+          />
+          <div className="mt-12">
+            <Walkthrough label={walkthrough.label} cta={cta.button} />
+          </div>
+        </Section>
+      ) : null}
+
+      {/* While there is nothing to buy: what the beta is, and what comes after */}
+      {!pricing.enabled ? (
+        <Section id="beta" labelledBy="beta-heading" className="border-t border-line">
+          <SectionHeader id="beta-heading" eyebrow={beta.eyebrow} heading={beta.heading} intro={beta.intro} />
+          <div className="mx-auto mt-12 grid max-w-5xl gap-4 lg:grid-cols-3">
+            <Panel className="p-6">
+              <h3 className="text-base font-semibold text-ink">In the beta now</h3>
+              <ul className="mt-4 space-y-2.5 text-sm text-ink-muted">
+                {beta.included.map((line) => (
+                  <li key={line} className="flex items-start gap-2.5">
+                    <Check className="mt-0.5 size-3.5 shrink-0 text-positive" aria-hidden />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+            <Panel className="p-6">
+              <h3 className="text-base font-semibold text-ink">Its limits, plainly</h3>
+              <ul className="mt-4 list-disc space-y-2.5 pl-4 text-sm text-ink-muted">
+                {beta.limits.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </Panel>
+            <Panel className="p-6">
+              <h3 className="text-base font-semibold text-ink">{beta.pricingLabel}</h3>
+              <dl className="mt-4 space-y-3 text-sm">
+                {Object.values(PLANS).map((plan) => (
+                  <div key={plan.id} className="flex items-baseline justify-between gap-3 border-b border-line pb-3 last:border-0">
+                    <dt>
+                      <span className="font-medium text-ink">{plan.name}</span>
+                      <span className="block text-xs text-ink-muted">
+                        {plan.limits.publishedAgents} live agent{plan.limits.publishedAgents === 1 ? "" : "s"} ·{" "}
+                        {plan.limits.actionItemsPerMonth.toLocaleString("en-US")} runs a month
+                      </span>
+                    </dt>
+                    <dd className="shrink-0 font-semibold text-ink">
+                      {plan.priceUsd === 0 ? "Free" : `$${plan.priceUsd}/mo`}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-4 text-xs leading-relaxed text-ink-muted">{beta.pricingNote}</p>
+            </Panel>
           </div>
         </Section>
       ) : null}

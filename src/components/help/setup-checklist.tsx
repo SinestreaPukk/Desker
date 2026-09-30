@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, FileUp, GitBranch, Plus, Rocket, UserRoundPlus, X, FileText } from "lucide-react";
+import { Check, FileUp, GitBranch, Rocket, UserRoundPlus, X, FileText } from "lucide-react";
 import { useSpaceKind } from "@/components/space-kind";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
@@ -71,11 +71,11 @@ export function SetupChecklist({ project }: { project: string }) {
         {
           id: "hire",
           icon: UserRoundPlus,
-          title: "Add your first assistant",
-          body: "Pick what you want help with - money, your week, social media, your career, travel or learning - and give it a name.",
+          title: "Plan your week with your first assistant",
+          body: "See it plan a week on example data, then connect your calendar and get your own plan - changes wait for you.",
           done: roster.length > 0,
-          href: `/p/${project}/agents/new`,
-          cta: "Add an assistant",
+          href: `/p/${project}/start`,
+          cta: "Start here",
         },
         {
           id: "read",
@@ -100,11 +100,11 @@ export function SetupChecklist({ project }: { project: string }) {
         {
           id: "hire",
           icon: UserRoundPlus,
-          title: "Hire your first agent",
-          body: "Pick a role - research, marketing, sales, support, ops - then a name and a personality. Five short steps in the wizard.",
+          title: "Answer your first customer",
+          body: "See support answer from a policy on example data, then give it yours and try a real question - replies wait for you.",
           done: roster.length > 0,
-          href: `/p/${project}/agents/new`,
-          cta: "Hire an agent",
+          href: `/p/${project}/start`,
+          cta: "Start here",
         },
         {
           id: "context",
@@ -193,7 +193,6 @@ export function SetupChecklist({ project }: { project: string }) {
               {!step.done ? (
                 <Button asChild size="sm" variant={step.id === next.id ? "primary" : "ghost"}>
                   <Link href={step.href}>
-                    {step.id === "hire" ? <Plus aria-hidden /> : null}
                     {step.cta}
                   </Link>
                 </Button>

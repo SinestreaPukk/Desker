@@ -42,7 +42,7 @@ export function NewSpaceDialog({
       const space = await create.mutateAsync();
       onOpenChange(false);
       setName("");
-      router.push(`/p/${space.project.slug}/welcome`);
+      router.push(`/p/${space.project.slug}/start`);
       router.refresh();
     } catch (caught) {
       setError(errorMessage(caught));

@@ -27,6 +27,7 @@
         "suggest_opportunity",
         "delegate_to_colleague",
         "slack_post_message",
+        "send_email",
         "escalate_to_human"
       ],
       "suggestedIntegrations": [

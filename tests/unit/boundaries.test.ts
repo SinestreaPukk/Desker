@@ -8,7 +8,12 @@ describe("describeBoundaries", () => {
       autonomy: "draft_only",
       toolAutonomy: { slack_post_message: "auto" },
     });
-    expect(can).toEqual(["Research the web and cite its sources", "Write drafts for you to review", "Post to Slack without asking you"]);
+    expect(can).toEqual([
+      "Research the web and cite its sources",
+      "Write drafts for you to review",
+      "Send emails, once you approve each one",
+      "Post to Slack without asking you",
+    ]);
     expect(cannot).toContain("Send emails without your approval");
     expect(cannot).toContain("Publish posts");
     expect(cannot).toContain("Spend money, sign or agree to anything");

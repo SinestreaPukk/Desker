@@ -56,7 +56,11 @@ export function describeBoundaries(scope: {
     const action = REACHES_OUT[tool];
     if (!tools.has(tool)) cannot.push(action);
     else if (effectiveAutonomy(scope.autonomy, scope.toolAutonomy, tool) === "auto") can.push(`${action} without asking you`);
-    else cannot.push(`${action} without your approval`);
+    else {
+      // Said on both sides: what it may do once you say yes, and that it never skips the yes.
+      can.push(`${action}, once you approve each one`);
+      cannot.push(`${action} without your approval`);
+    }
   }
   return { can, cannot: [...cannot, ...NEVER] };
 }

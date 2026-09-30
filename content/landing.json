@@ -11,8 +11,8 @@
       "href": "/beta"
     },
     "secondaryCta": {
-      "label": "See it work",
-      "href": "/showcase"
+      "label": "Step through a run",
+      "href": "/#walkthrough"
     },
     "microcopy": ""
   },
@@ -31,23 +31,23 @@
   },
   "steps": {
     "eyebrow": "How it works",
-    "heading": "From what you know to work done",
-    "intro": "Setup takes about five minutes once you're in, and the app walks you through each part.",
+    "heading": "From one real result to a routine",
+    "intro": "Your first result comes before any setup: step through one run on example data, then make it yours.",
     "items": [
       {
+        "icon": "approve",
+        "title": "See one run first",
+        "body": "A customer answered from a policy, or a week planned from a calendar, on example data. You make the call."
+      },
+      {
         "icon": "upload",
-        "title": "Tell it once",
-        "body": "Your business, or yourself, in four short answers. Add documents: policies and guides, or a statement and your CV."
+        "title": "Make it yours",
+        "body": "Give it your policy or connect your calendar, answer four short questions, and try it on something real."
       },
       {
         "icon": "calendar",
-        "title": "Give it a job and a time",
-        "body": "Pick one of fourteen roles and when it works: every Monday at eight, every weekday morning, or when a client writes."
-      },
-      {
-        "icon": "approve",
-        "title": "Read it over coffee",
-        "body": "Anything that needs you waits in one queue, Needs you. Approve it, edit it, or bin it. A weekly digest sums up the rest."
+        "title": "Then it's a routine",
+        "body": "It answers as customers write, or plans every Sunday. Anything that goes out waits for you in Needs you."
       }
     ]
   },
@@ -203,6 +203,31 @@
     "heading": "What teams say",
     "items": []
   },
+  "walkthrough": {
+    "eyebrow": "Walkthrough",
+    "heading": "Step through one run yourself",
+    "intro": "No customer quotes yet - we're in beta. Instead, here is the product's own first run, on example data. Make the decision at the end: it's the same one you'd make in Needs you.",
+    "label": "Product walkthrough on example data - not a customer story. Nothing is sent."
+  },
+  "beta": {
+    "eyebrow": "The beta",
+    "heading": "What the beta is, exactly",
+    "intro": "No vague promises: here's what you get now, what's not there yet, and what we plan to charge after.",
+    "included": [
+      "Every role and workflow, business and personal, free while the beta runs",
+      "Support answered from your documents, with a hand-off to you when they don't settle it",
+      "A weekly plan from your Google Calendar, with changes waiting for your approval",
+      "Approvals, the audit log, rules from your corrections, and export or delete of everything"
+    ],
+    "limits": [
+      "Invite only: join the list and we send an invite as places open",
+      "Google (Gmail, Calendar) works for invited testers, with an \"unverified app\" screen until Google's review is done",
+      "No direct HubSpot, Intercom or Salesforce yet: a support inbox takes messages from any helpdesk or form",
+      "It's a beta: expect rough edges, and tell us - we read every note"
+    ],
+    "pricingLabel": "Planned pricing after the beta",
+    "pricingNote": "Planned, and may change before launch. Nothing is charged during the beta, and after it nothing is charged until you choose a plan yourself."
+  },
   "pricing": {
     "enabled": false,
     "eyebrow": "Pricing",
@@ -275,8 +300,8 @@
       "href": "/beta"
     },
     "secondary": {
-      "label": "See it work first",
-      "href": "/showcase"
+      "label": "Step through a run first",
+      "href": "/#walkthrough"
     },
     "microcopy": "No payment during the beta · Every post and email needs your approval"
   },
