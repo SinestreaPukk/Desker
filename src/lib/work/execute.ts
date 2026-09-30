@@ -56,6 +56,7 @@ import {
   type DeliveryResult,
 } from "./integrations";
 import { WORK_TOOL_RISK, isWorkToolId, type WorkToolId } from "./tools";
+import { localIso } from "@/lib/local-time";
 import {
   DRAFT_KINDS,
   effectiveAutonomy,
@@ -77,6 +78,8 @@ export interface RunContext {
   documentIds: string[];
   /** schedule | webhook | manual | followup - recorded on every audit row. */
   trigger: string;
+  /** The owner's time zone (the agent's schedule zone): what times are shown to the agent in. */
+  timeZone?: string;
 }
 
 interface WorkToolOutcome {
@@ -774,7 +777,7 @@ async function calendarListEvents(input: unknown, ctx: RunContext): Promise<Work
   }
   const access = await calendarAccess(ctx.organizationId);
   if (!access) return notConnected("A calendar (Google or Outlook)");
-  return { content: describeEvents(await listEvents(access, { from, to })) };
+  return { content: describeEvents(await listEvents(access, { from, to }), ctx.timeZone) };
 }
 
 /** What already sits in a slot, so a clash is caught before anything waits for approval. */
@@ -783,10 +786,10 @@ async function clashes(access: Access, start: string, end: string, except?: stri
   return conflictsWith(events, start, end, except);
 }
 
-function clashMessage(conflicts: CalendarEvent[]): WorkToolOutcome {
+function clashMessage(conflicts: CalendarEvent[], timeZone = "UTC"): WorkToolOutcome {
   return {
     content:
-      `That time clashes with ${conflicts.map((event) => `"${event.title}" (${event.start} → ${event.end})`).join(", ")}. ` +
+      `That time clashes with ${conflicts.map((event) => `"${event.title}" (${localIso(event.start, timeZone)} → ${localIso(event.end, timeZone)})`).join(", ")}. ` +
       "Nothing was queued. List the calendar and pick a free slot, or say in your report why it has to be this time.",
     isError: true,
   };
@@ -801,7 +804,7 @@ async function calendarCreateEvent(input: unknown, ctx: RunContext): Promise<Wor
   const access = await calendarAccess(ctx.organizationId);
   if (!access) return notConnected("A calendar (Google or Outlook)");
   const conflicts = await clashes(access, parsed.data.start, parsed.data.end);
-  if (conflicts.length > 0) return clashMessage(conflicts);
+  if (conflicts.length > 0) return clashMessage(conflicts, ctx.timeZone);
   const { note, attendees, ...event } = parsed.data;
   return gateOrDeliver(ctx, {
     tool: "calendar_create_event",
@@ -822,7 +825,7 @@ async function calendarReschedule(input: unknown, ctx: RunContext): Promise<Work
   if (!access) return notConnected("A calendar (Google or Outlook)");
   // Moving a whole series is checked on the occurrence being moved; the rest follow it.
   const conflicts = await clashes(access, start, end, event_id);
-  if (conflicts.length > 0) return clashMessage(conflicts);
+  if (conflicts.length > 0) return clashMessage(conflicts, ctx.timeZone);
   return gateOrDeliver(ctx, {
     tool: "calendar_reschedule",
     input: { event_id, series_id: series_id ?? null, whole_series: Boolean(whole_series), start, end },

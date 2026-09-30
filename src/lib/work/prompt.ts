@@ -6,6 +6,7 @@
 import "server-only";
 import type { SpaceKind } from "@/lib/space";
 import type { AutonomyMode } from "./types";
+import { localIso, timeNote, validTimeZone } from "@/lib/local-time";
 
 interface RunPromptInput {
   agent: {
@@ -27,6 +28,8 @@ interface RunPromptInput {
   /** Connectors this run's tools depend on that the organisation has not connected, by name. */
   missingConnections?: string[];
   colleagues?: { id: string; name: string; jobTitle: string; department?: string | null }[];
+  /** The owner's time zone; times are said in it. */
+  timeZone?: string;
 }
 
 export function buildRunPrompt(input: RunPromptInput): string {
@@ -125,6 +128,7 @@ export function buildRunPrompt(input: RunPromptInput): string {
     "When the work is done, reply with a report in Markdown, under 300 words: what you did, the key findings, what you drafted (with draft ids), and anything that needs a human. Use plain, everyday words and short sentences; the owner reads it.",
   ];
   parts.push(`Ground rules:\n${rules.map((r) => `- ${r}`).join("\n")}`);
+  parts.push(timeNote(new Date(), input.timeZone));
 
   return parts.join("\n\n");
 }
@@ -133,8 +137,9 @@ export function kickoffMessage(input: {
   trigger: string;
   payload: Record<string, unknown>;
   startedAt: Date;
+  timeZone?: string;
 }): string {
-  const when = input.startedAt.toISOString();
+  const when = localIso(input.startedAt, validTimeZone(input.timeZone));
   switch (input.trigger) {
     case "schedule":
       return `Trigger: scheduled run at ${when}.\n\nCarry out your standing objectives now.`;

@@ -12,6 +12,7 @@
  * moment the agent writes them: they can see it in Gmail or Outlook while it
  * waits in Needs you. Approval sends that draft; rejection deletes it.
  */
+import { localIso } from "@/lib/local-time";
 import "server-only";
 import type { DeliveryResult } from "@/lib/work/integrations";
 import { connectorAccess } from "./oauth";
@@ -120,14 +121,14 @@ export function conflictsWith(events: CalendarEvent[], start: string, end: strin
   );
 }
 
-/** The events as the model reads them: ids included, so it can move one. */
-export function describeEvents(events: CalendarEvent[]): string {
+/** The events as the model reads them, in the owner's time zone: ids included, so it can move one. */
+export function describeEvents(events: CalendarEvent[], timeZone = "UTC"): string {
   if (events.length === 0) return "No events in that window.";
   return events
     .slice(0, 60)
     .map(
       (event) =>
-        `- ${event.allDay ? `${event.start} (all day)` : `${event.start} → ${event.end}`}: ${event.title}` +
+        `- ${event.allDay ? `${event.start} (all day)` : `${localIso(event.start, timeZone)} → ${localIso(event.end, timeZone)}`}: ${event.title}` +
         (event.attendees.length ? ` (with ${event.attendees.slice(0, 8).join(", ")})` : "") +
         ` [id: ${event.id}${event.seriesId ? `; repeats, series id: ${event.seriesId}` : ""}]`,
     )

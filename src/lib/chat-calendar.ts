@@ -29,7 +29,11 @@ const inputSchema = z.object({ from: iso, to: iso });
 export const CALENDAR_CHAT_NOTE = `## Your calendar in this chat
 You can read the owner's calendar here with check_calendar - use it whenever they ask about their schedule, their week or a free slot; never say you have no calendar access. You cannot change the calendar from this chat: to add or move an event, say that it goes through a run (their weekly plan, or Run now on your page), where the change waits for their approval.`;
 
-export async function checkCalendar(organizationId: string, input: unknown): Promise<{ content: string; isError?: boolean }> {
+export async function checkCalendar(
+  organizationId: string,
+  input: unknown,
+  timeZone = "UTC",
+): Promise<{ content: string; isError?: boolean }> {
   const parsed = inputSchema.safeParse(input ?? {});
   if (!parsed.success) return { content: "from and to must be ISO 8601 date-times.", isError: true };
   const from = parsed.data.from ? new Date(parsed.data.from) : new Date();
@@ -45,5 +49,5 @@ export async function checkCalendar(organizationId: string, input: unknown): Pro
     };
   }
   const events = await listEvents(access, { from: from.toISOString(), to: to.toISOString() });
-  return { content: `${access.account ? `Calendar: ${access.account}. ` : ""}${describeEvents(events)}` };
+  return { content: `${access.account ? `Calendar: ${access.account}. ` : ""}${describeEvents(events, timeZone)}` };
 }

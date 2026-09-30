@@ -23,6 +23,7 @@ import { rulesFor } from "@/lib/work/rules";
 import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { RunRefused, startRun } from "@/lib/work/scope";
 import { WORK_TOOL_IDS, WORK_TOOL_METADATA, scopeTools, type WorkToolId } from "@/lib/work/tools";
+import { timeNote } from "@/lib/local-time";
 
 const MAX_RESPONDERS = 3;
 const HISTORY = 30;
@@ -223,7 +224,7 @@ export async function replyAs(input: {
           where: { id: projectId },
           select: { context: true, organization: { select: { kind: true } } },
         }),
-        prisma.scopeOfWork.findUnique({ where: { agentId: agent.id }, select: { context: true, tools: true } }),
+        prisma.scopeOfWork.findUnique({ where: { agentId: agent.id }, select: { context: true, tools: true, timezone: true } }),
         prisma.document.findMany({ where: { agentId: agent.id, status: "ready" }, select: { filename: true }, take: 30 }),
         rulesFor(agent.id),
       ]);
@@ -246,6 +247,7 @@ export async function replyAs(input: {
           documents.map((document) => document.filename),
         ),
         roomSection(agent, team, kind),
+        timeNote(new Date(), scope?.timezone),
       ].join("\n\n");
       const provider = await getProvider(agent.modelProvider);
       const turn = await provider.complete({

@@ -12,6 +12,7 @@
  * in it produces no digest at all - silence is the correct update when nothing
  * happened, and an owner who gets an empty digest stops reading the real ones.
  */
+import { localIso, validTimeZone } from "@/lib/local-time";
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
@@ -78,6 +79,8 @@ interface DigestFacts {
   cadence: Exclude<DigestCadence, "off">;
   periodStart: Date;
   periodEnd: Date;
+  /** The owner's zone: every time the digest's writer sees is in it. */
+  timeZone?: string;
   runs: {
     id: string;
     status: string;
@@ -112,6 +115,7 @@ async function gather(
   cadence: Exclude<DigestCadence, "off">,
   window: { periodStart: Date; periodEnd: Date },
   agent: { name: string; jobTitle: string },
+  timeZone: string,
 ): Promise<DigestFacts> {
   const [runs, awaiting, suggestions, drafts] = await Promise.all([
     prisma.actionItem.findMany({
@@ -155,6 +159,7 @@ async function gather(
     cadence,
     periodStart: window.periodStart,
     periodEnd: window.periodEnd,
+    timeZone,
     runs,
     awaiting: awaiting.map((item) => ({
       id: item.id,
@@ -189,9 +194,10 @@ Rules:
 - If everything simply ran as expected, say so in one bullet and stop.`;
 
 function factsToPrompt(facts: DigestFacts): string {
+  const zone = validTimeZone(facts.timeZone);
   const lines = [
     `Worker: ${facts.agentName}, ${facts.jobTitle}.`,
-    `Period: ${facts.periodStart.toISOString()} to ${facts.periodEnd.toISOString()} (${facts.cadence}).`,
+    `Period: ${localIso(facts.periodStart, zone)} to ${localIso(facts.periodEnd, zone)} (${facts.cadence}, the owner's time zone ${zone}). Say any time in that zone.`,
   ];
   lines.push(
     facts.runs.length > 0
@@ -210,7 +216,7 @@ function factsToPrompt(facts: DigestFacts): string {
         facts.awaiting
           .map(
             (item) =>
-              `- ${item.tool === "send_email" ? "an email to send" : "a post to publish"}, waiting since ${item.since.toISOString()}: ${item.headline ?? "no headline"}`,
+              `- ${item.tool === "send_email" ? "an email to send" : "a post to publish"}, waiting since ${localIso(item.since, zone)}: ${item.headline ?? "no headline"}`,
           )
           .join("\n"),
     );
@@ -377,6 +383,7 @@ export async function generateDigest(
       digestRecipients: true,
       lastDigestAt: true,
       createdAt: true,
+      timezone: true,
       agent: {
         select: {
           id: true,
@@ -403,7 +410,7 @@ export async function generateDigest(
   const agent = scope.agent;
   const organizationId = agent.project.organizationId;
 
-  const facts = await gather(agentId, cadence, window, agent);
+  const facts = await gather(agentId, cadence, window, agent, validTimeZone(scope.timezone));
   if (isEmpty(facts) && !options.force) {
     // Nothing to say. Move the window on so the next digest does not re-cover
     // this silence, and write nothing.

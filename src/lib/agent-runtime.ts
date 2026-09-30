@@ -24,6 +24,7 @@ import {
 } from "@/lib/llm/provider";
 import { toolDefinitionsFor } from "@/lib/tools/registry";
 import { CALENDAR_CHAT_NOTE, CHECK_CALENDAR, checkCalendar } from "@/lib/chat-calendar";
+import { timeNote, validTimeZone } from "@/lib/local-time";
 import { audit } from "@/lib/audit";
 import { WORK_TOOL_IDS, scopeTools } from "@/lib/work/tools";
 import { executeToolCall, type ToolOutcome } from "@/lib/tools/execute";
@@ -173,7 +174,7 @@ export async function* runAgentTurn(
       : Promise.resolve(null),
     prisma.scopeOfWork.findUnique({
       where: { agentId: agent.id },
-      select: { context: true, tools: true },
+      select: { context: true, tools: true, timezone: true },
     }),
     rulesFor(agent.id),
   ]);
@@ -226,6 +227,7 @@ export async function* runAgentTurn(
       kind,
       rules,
     });
+    systemPrompt += `\n\n${timeNote(new Date(), scope?.timezone)}`;
     if (calendarInChat) systemPrompt += `\n\n${CALENDAR_CHAT_NOTE}`;
   }
 
@@ -244,7 +246,7 @@ export async function* runAgentTurn(
 
   const executeTool = async (call: ToolCall) => {
     if (calendarInChat && call.name === CHECK_CALENDAR.name) {
-      const result = await checkCalendar(project.organizationId, call.input).catch((error: unknown) => ({
+      const result = await checkCalendar(project.organizationId, call.input, validTimeZone(scope?.timezone)).catch((error: unknown) => ({
         content: `The calendar could not be read: ${error instanceof Error ? error.message : "unknown error"}`,
         isError: true,
       }));

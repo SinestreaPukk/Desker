@@ -25,6 +25,7 @@ import { findIntegration, resolveEmail } from "./integrations";
 import { captureMessage } from "@/lib/monitoring";
 import { notifyInBackground } from "@/lib/notify";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
+import { validTimeZone } from "@/lib/local-time";
 import { answersFor, contextQuestionsFor, effectiveContext } from "./context";
 import { spaceKind } from "@/lib/space";
 import { missingGrounding } from "./preflight";
@@ -107,6 +108,8 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
   if (!item || item.status !== "queued") return null;
 
   const scope = item.agent.scopeOfWork;
+  // Its schedule's zone is the owner's: set from their browser when it was hired.
+  const timeZone = validTimeZone(scope?.timezone);
   const kind = spaceKind(item.agent.project.organization.kind);
   const questions = contextQuestionsFor(kind);
   const autonomy = (scope?.autonomy ?? "draft_only") as AutonomyMode;
@@ -173,6 +176,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       ),
       documentIds,
       trigger: item.trigger,
+      timeZone,
     },
     systemPrompt: buildRunPrompt({
       agent: item.agent,
@@ -192,6 +196,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       hasEmail: Boolean(email),
       missingConnections,
       colleagues,
+      timeZone,
     }),
     missing: missingGrounding({
       projectAnswers: answersFor(
@@ -210,6 +215,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       trigger: item.trigger,
       payload: { ...payload, ...(parentSummary ? { parentSummary } : {}) },
       startedAt: new Date(),
+      timeZone,
     }),
   };
 }
