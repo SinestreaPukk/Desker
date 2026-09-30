@@ -201,6 +201,13 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
         : failed("Tried to check the calendar");
     case "github_read":
       return ok ? { title: "Read from GitHub", detail: null, tone: "neutral", icon: "research" } : failed("Tried to read from GitHub");
+    case "social_read":
+      return ok ? { title: "Read social media", detail: null, tone: "neutral", icon: "research" } : failed("Tried to read social media");
+    case "social_manage":
+      if (!ok) return failed("Tried to change a social post");
+      return gated
+        ? { title: "Queued a social post change for your approval", detail: "It waits in Needs you. Nothing has changed yet.", tone: "warning", icon: "approval" }
+        : { title: "Changed a social post", detail: null, tone: "positive", icon: "send" };
     case "github_write":
       if (!ok) return failed("Tried to change GitHub");
       return gated
@@ -253,6 +260,7 @@ const FAILED_DELIVERY: Record<string, string> = {
   inbox_reply: "An email reply could not be sent",
   slack_post_message: "A Slack message could not be posted",
   github_write: "A GitHub change could not be made",
+  social_manage: "A social post could not be changed",
 };
 
 /** One audit row, said in the owner's language. */
@@ -351,6 +359,8 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: "Sent an approved email reply", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "slack_post_message.delivered":
       return { title: "Posted an approved message to Slack", detail: text(meta.detail), tone: "positive", icon: "send" };
+    case "social_manage.delivered":
+      return { title: "Made an approved change to a social post", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "github_write.delivered":
       return { title: "Made an approved change on GitHub", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "publish_post.failed":
@@ -360,6 +370,7 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
     case "inbox_reply.failed":
     case "slack_post_message.failed":
     case "github_write.failed":
+    case "social_manage.failed":
       return {
         title: FAILED_DELIVERY[entry.action.slice(0, -".failed".length)] ?? "Something could not be sent",
         detail: text(meta.detail) ?? "The connection returned an error. Check it under Integrations.",

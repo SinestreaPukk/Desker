@@ -12,6 +12,7 @@
 export const CONNECTOR_CATEGORIES = [
   { id: "calendar", label: "Calendar & messaging" },
   { id: "code", label: "Code & issues" },
+  { id: "social", label: "Social media" },
   { id: "publishing", label: "Publishing & email" },
   { id: "crm", label: "Customers & sales" },
   { id: "hr", label: "People & HR" },
@@ -22,7 +23,7 @@ type ConnectorCategory = (typeof CONNECTOR_CATEGORIES)[number]["id"];
 type ConnectorAuth = "oauth" | "api_key" | "webhook";
 
 /** The OAuth providers this server can talk to; each needs its client id and secret set. */
-export const OAUTH_PROVIDERS = ["google", "microsoft", "slack", "github"] as const;
+export const OAUTH_PROVIDERS = ["google", "microsoft", "slack", "github", "linkedin", "meta", "x", "threads"] as const;
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
 
 export interface Connector {
@@ -204,6 +205,83 @@ export const CONNECTORS: readonly Connector[] = [
     cannot: ["Change workflows or permissions"],
   },
 
+  // --- social media: post, edit and read where each platform allows it -------
+  // Publishing goes through publish_post: a draft for a connected platform is
+  // posted straight to it once approved, otherwise to the publishing webhook.
+  {
+    id: "linkedin",
+    name: "LinkedIn",
+    category: "social",
+    roles: ["marketer", "social-media-manager", "career-coach", "sales-development"],
+    auth: "oauth",
+    oauthProvider: "linkedin",
+    status: "available",
+    pitch: "Post to your LinkedIn profile, and edit or delete those posts - each one after you approve it.",
+    can: ["Post text to your profile once you approve it", "Edit or delete posts Desker made", "Show the posts it has made"],
+    cannot: [
+      "Read your feed, messages or connections",
+      "Post to a company page (needs LinkedIn's partner review)",
+      "Post or change anything without your approval in draft-only mode",
+    ],
+    tools: ["social_read", "social_manage"],
+  },
+  {
+    id: "meta",
+    name: "Facebook & Instagram",
+    category: "social",
+    roles: ["marketer", "social-media-manager"],
+    auth: "oauth",
+    oauthProvider: "meta",
+    status: "available",
+    pitch: "Post to the Facebook Pages and Instagram business accounts you choose, read their posts and comments, and edit Facebook posts.",
+    can: [
+      "Post to your Facebook Page, and to Instagram with an image, once you approve it",
+      "Read recent posts, likes and comments",
+      "Edit or delete Facebook posts",
+    ],
+    cannot: [
+      "Edit or delete Instagram posts (Instagram doesn't allow it)",
+      "Use personal profiles, groups or messages",
+      "Post or change anything without your approval in draft-only mode",
+    ],
+    tools: ["social_read", "social_manage"],
+  },
+  {
+    id: "x",
+    name: "X (Twitter)",
+    category: "social",
+    roles: ["marketer", "social-media-manager"],
+    auth: "oauth",
+    oauthProvider: "x",
+    scope: "tweet.read tweet.write users.read offline.access",
+    status: "available",
+    pitch: "Post to your X account, and delete posts - each one after you approve it.",
+    can: ["Post once you approve it", "Delete posts", "Read your recent posts (needs X's paid API plan)"],
+    cannot: [
+      "Edit a post (X's API doesn't allow it)",
+      "Read your timeline or messages",
+      "Post or delete anything without your approval in draft-only mode",
+    ],
+    tools: ["social_read", "social_manage"],
+  },
+  {
+    id: "threads",
+    name: "Threads",
+    category: "social",
+    roles: ["marketer", "social-media-manager"],
+    auth: "oauth",
+    oauthProvider: "threads",
+    status: "available",
+    pitch: "Post to your Threads profile and read the replies - each post after you approve it.",
+    can: ["Post text once you approve it", "Read your recent posts and their replies"],
+    cannot: [
+      "Edit or delete a post from Desker",
+      "Read your feed or messages",
+      "Post without your approval in draft-only mode",
+    ],
+    tools: ["social_read", "social_manage"],
+  },
+
   // --- publishing & email: what the Content Marketer already uses -----------
   {
     id: "webhook",
@@ -212,10 +290,10 @@ export const CONNECTORS: readonly Connector[] = [
     roles: ["marketer", "social-media-manager"],
     auth: "webhook",
     status: "available",
-    pitch: "Desker doesn't post to social networks directly. It sends each post you approve to a webhook, and a Zapier or Make zap (or your own code) posts it to LinkedIn, X, Instagram, Facebook or your CMS.",
+    pitch: "For anywhere Desker doesn't connect to directly - your CMS, a newsletter tool, another network: each post you approve goes to a webhook, and a Zapier or Make zap (or your own code) publishes it.",
     can: ["Send the posts you approve, with title, text and platform, to the address you give it", "Sign each delivery so your endpoint can check it came from Desker"],
     cannot: [
-      "Post to a social network by itself - a zap or your code does the posting",
+      "Post by itself - a zap or your code does the posting (connect LinkedIn, Facebook & Instagram, X or Threads above to post directly)",
       "Attach images or schedule for a later time",
       "See replies, likes or reach afterwards",
       "Post without your approval in draft-only mode",

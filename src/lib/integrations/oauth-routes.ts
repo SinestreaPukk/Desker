@@ -3,6 +3,8 @@ import { env } from "@/lib/env";
 
 /** The nonce cookie that binds an OAuth round trip to the browser that started it. */
 export const NONCE_COOKIE = "desker_oauth_nonce";
+/** X's PKCE verifier, kept in this browser until the callback swaps the code. */
+export const PKCE_COOKIE = "desker_oauth_pkce";
 
 /** The callback address registered with each provider: one per provider, not per connector. */
 export function callbackUrl(request: Request, provider: string): string {

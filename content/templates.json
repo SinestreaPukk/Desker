@@ -209,11 +209,15 @@
         "suggest_opportunity",
         "delegate_to_colleague",
         "schedule_followup",
+        "social_read",
+        "social_manage",
         "escalate_to_human"
       ],
       "suggestedIntegrations": [
-        "webhook",
-        "email"
+        "linkedin",
+        "meta",
+        "x",
+        "threads"
       ],
       "defaultObjectives": [
         "Research what competitors announced and key industry trends over the past week, using suggest_opportunity to flag market opportunities to the team",
@@ -656,10 +660,15 @@
         "search_documents",
         "suggest_opportunity",
         "schedule_followup",
+        "social_read",
+        "social_manage",
         "escalate_to_human"
       ],
       "suggestedIntegrations": [
-        "webhook"
+        "linkedin",
+        "meta",
+        "x",
+        "threads"
       ],
       "defaultObjectives": [
         "Every Monday, plan three posts for the week around my goals and what's happening in my field",

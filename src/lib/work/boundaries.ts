@@ -14,6 +14,7 @@ const CAN: Record<Exclude<WorkToolId, GatedToolId>, string> = {
   web_research: "Research the web and cite its sources",
   draft_content: "Write drafts for you to review",
   github_read: "Read the GitHub repositories you shared",
+  social_read: "Read your social posts, likes and comments",
   calendar_list_events: "Check your calendar",
   inbox_read: "Read your inbox",
   schedule_followup: "Queue its own follow-up tasks",
@@ -30,6 +31,7 @@ const REACHES_OUT: Record<GatedToolId, string> = {
   inbox_reply: "Reply to emails",
   slack_post_message: "Post to Slack",
   github_write: "Change GitHub: commits, pull requests and issues",
+  social_manage: "Edit or delete your social posts",
 };
 
 /** True everywhere: there is no tool for any of it. */

@@ -51,6 +51,10 @@ const WHAT_IT_DOES: Record<string, string> = {
   outlook_mail: "read and reply to email",
   slack: "post to Slack",
   github: "read and change your code",
+  linkedin: "post to LinkedIn",
+  meta: "post to Facebook and Instagram",
+  x: "post to X",
+  threads: "post to Threads",
 };
 
 function whatItDoes(type: string): string {

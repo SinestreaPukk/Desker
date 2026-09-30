@@ -42,7 +42,10 @@ const PENDING_COPY: Record<GatedToolId, { verb: string; noun: string; approve: s
   inbox_reply: { verb: "reply in an email thread", noun: "reply", approve: "Approve and send", going: "sending" },
   slack_post_message: { verb: "post to Slack", noun: "message", approve: "Approve and post", going: "posting" },
   github_write: { verb: "change GitHub", noun: "change", approve: "Approve and apply", going: "applying" },
+  social_manage: { verb: "change a social post", noun: "change", approve: "Approve and apply", going: "applying" },
 };
+
+const SOCIAL_NAMES: Record<string, string> = { linkedin: "LinkedIn", facebook: "Facebook", instagram: "Instagram", x: "X", threads: "Threads" };
 
 const GITHUB_HEADLINE: Record<string, (input: Record<string, unknown>) => string> = {
   commit_files: (i) => `Commit to ${String(i.branch)}${i.pull_request ? " and open a pull request" : ""}`,
@@ -115,6 +118,18 @@ function ActionPreview({ tool, input }: { tool: GatedToolId; input: Record<strin
         </>
       ) : tool === "github_write" ? (
         <GithubPreview input={input} />
+      ) : tool === "social_manage" ? (
+        <>
+          <p className="font-semibold text-ink">
+            {input.action === "delete" ? "Delete" : "Edit"} a post on {SOCIAL_NAMES[text("platform")] ?? text("platform")}
+          </p>
+          <p className="mt-0.5 font-mono text-xs text-ink-muted">Post {text("post_id")}</p>
+          {input.action === "edit" ? (
+            <p className="mt-2 whitespace-pre-wrap text-ink">{text("text")}</p>
+          ) : (
+            <p className="mt-2 text-ink-muted">It will be removed from the network. This can&apos;t be undone.</p>
+          )}
+        </>
       ) : (
         <>
           <p className="text-xs text-ink-muted">To {text("channel")}</p>
@@ -305,13 +320,31 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
                   To: {(pending.input.to as string[] | undefined)?.join(", ")}
                 </p>
               ) : null}
+              {pending.tool === "publish_post" && typeof pending.input.platform === "string" ? (
+                <p className="text-xs text-ink-muted">
+                  Posts to {SOCIAL_NAMES[pending.input.platform] ?? pending.input.platform}
+                  {typeof pending.input.account === "string" ? ` (${pending.input.account})` : ""} as soon as you approve
+                </p>
+              ) : null}
+              {pending.tool === "publish_post" && typeof pending.input.image_url === "string" && safeHttpUrl(pending.input.image_url) ? (
+                // eslint-disable-next-line @next/next/no-img-element -- any https image the post will carry; not ours to optimise
+                <img
+                  src={safeHttpUrl(pending.input.image_url)!}
+                  alt="The image posted with it"
+                  className="mt-2 max-h-48 rounded-lg border border-line object-contain"
+                />
+              ) : null}
               <p className="mt-0.5 text-sm font-semibold text-ink">{draft.title}</p>
               <pre className="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap rounded-lg border border-line/80 bg-surface-2/70 p-4 font-sans text-sm leading-relaxed text-ink">
                 {draft.body}
               </pre>
             </div>
           )
-        ) : pending.tool === "calendar_create_event" || pending.tool === "calendar_reschedule" || pending.tool === "slack_post_message" ? (
+        ) : pending.tool === "calendar_create_event" ||
+          pending.tool === "calendar_reschedule" ||
+          pending.tool === "slack_post_message" ||
+          pending.tool === "github_write" ||
+          pending.tool === "social_manage" ? (
           <ActionPreview tool={pending.tool} input={pending.input} />
         ) : (
           <pre className="whitespace-pre-wrap rounded-lg border border-line bg-surface-2/60 p-3.5 font-mono text-xs text-ink">

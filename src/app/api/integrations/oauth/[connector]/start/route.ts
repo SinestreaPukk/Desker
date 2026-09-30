@@ -4,8 +4,8 @@ import { findProject } from "@/lib/projects";
 import { membershipOf, roleAtLeast } from "@/lib/organizations";
 import { vaultConfigured } from "@/lib/vault";
 import { connectorById } from "@/lib/integrations/catalog";
-import { authorizeUrl, oauthConfigured, signState } from "@/lib/integrations/oauth";
-import { NONCE_COOKIE, backTo, callbackUrl } from "@/lib/integrations/oauth-routes";
+import { authorizeUrl, oauthConfigured, pkcePair, signState, usesPkce } from "@/lib/integrations/oauth";
+import { NONCE_COOKIE, PKCE_COOKIE, backTo, callbackUrl } from "@/lib/integrations/oauth-routes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,13 +46,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ conn
     connectorId: connector.id,
     returnTo,
   });
-  const response = NextResponse.redirect(authorizeUrl(provider, callbackUrl(request, provider), token, connector.scope));
-  response.cookies.set(NONCE_COOKIE, nonce, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: url.protocol === "https:",
-    path: "/api/integrations/oauth",
-    maxAge: 600,
-  });
+  const pkce = usesPkce(provider) ? pkcePair() : null;
+  const response = NextResponse.redirect(
+    authorizeUrl(provider, callbackUrl(request, provider), token, connector.scope, pkce?.challenge),
+  );
+  const cookie = { httpOnly: true, sameSite: "lax" as const, secure: url.protocol === "https:", path: "/api/integrations/oauth", maxAge: 600 };
+  response.cookies.set(NONCE_COOKIE, nonce, cookie);
+  if (pkce) response.cookies.set(PKCE_COOKIE, pkce.verifier, cookie);
   return response;
 }

@@ -5,7 +5,7 @@ import { membershipOf, roleAtLeast } from "@/lib/organizations";
 import { audit } from "@/lib/audit";
 import { OAUTH_PROVIDERS, connectorById, type OAuthProvider } from "@/lib/integrations/catalog";
 import { exchangeCode, saveConnection, verifyState } from "@/lib/integrations/oauth";
-import { NONCE_COOKIE, backTo, callbackUrl } from "@/lib/integrations/oauth-routes";
+import { NONCE_COOKIE, PKCE_COOKIE, backTo, callbackUrl } from "@/lib/integrations/oauth-routes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +16,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   const url = new URL(request.url);
   const jar = await cookies();
   const state = verifyState(url.searchParams.get("state") ?? "", jar.get(NONCE_COOKIE)?.value);
+  const verifier = jar.get(PKCE_COOKIE)?.value;
   jar.delete({ name: NONCE_COOKIE, path: "/api/integrations/oauth" });
+  jar.delete({ name: PKCE_COOKIE, path: "/api/integrations/oauth" });
 
   if (!state) {
     return NextResponse.redirect(
@@ -42,7 +44,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prov
   if (!code) return fail(`${connector.name} did not send back an approval. Try again.`);
 
   try {
-    const { tokens, account } = await exchangeCode(provider as OAuthProvider, code, callbackUrl(request, provider));
+    const { tokens, account } = await exchangeCode(provider as OAuthProvider, code, callbackUrl(request, provider), verifier);
     const row = await saveConnection({
       organizationId: state.organizationId,
       connectorId: connector.id,

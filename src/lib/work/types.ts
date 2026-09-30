@@ -51,6 +51,7 @@ export const GATED_TOOL_IDS = [
   "inbox_reply",
   "slack_post_message",
   "github_write",
+  "social_manage",
 ] as const;
 export type GatedToolId = (typeof GATED_TOOL_IDS)[number];
 
