@@ -339,7 +339,7 @@ const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinitio
   github_read: {
     name: "github_read",
     description:
-      "Read from the GitHub repositories the organisation shared with Desker. Actions: list_repos (what is shared, with default branches), list_issues (open issues and PRs), get_issue (one issue with its comments), list_pulls (open pull requests), get_pull (a pull request with its diff and reviews), list_branches, list_commits (recent commits, optionally on ref), get_checks (CI results for ref: a branch, tag or commit), read_file (a file or directory listing, optionally at ref), search_code (files mentioning something, default branch only). Read a file before you change it.",
+      "Read from the GitHub repositories the organisation shared with Desker. Actions: list_repos (what is shared, with default branches), list_issues (open issues and PRs), get_issue (one issue with its comments), list_pulls (open pull requests), get_pull (a pull request with its diff and reviews), list_branches, list_commits (recent commits, optionally on ref), get_checks (CI results for ref: a branch, tag or commit), read_file (a file or directory listing, optionally at ref), search_code (files mentioning something, default branch only). Read a file before you change it. Start with list_repos: use only the exact owner/name it gives - never guess a repository name.",
     inputSchema: {
       type: "object",
       properties: {

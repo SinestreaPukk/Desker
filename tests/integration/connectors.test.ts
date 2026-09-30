@@ -38,6 +38,11 @@ function fakeProviders() {
         return json({ items: [{ summary: "Board call", start: { dateTime: "2026-10-01T09:00:00Z" }, end: { dateTime: "2026-10-01T10:00:00Z" } }] });
       }
       if (url === "https://slack.com/api/chat.postMessage") return json({ ok: true, ts: "1" });
+      if (url === "https://api.github.com/user/installations?per_page=100") return json({ installations: [{ id: 7 }] });
+      if (url === "https://api.github.com/user/installations/7/repositories?per_page=100") {
+        return json({ repositories: [{ full_name: "sam/shop", default_branch: "main", private: true, description: "The shop" }] });
+      }
+      if (url.startsWith("https://api.github.com/repos/sam/guess/")) return json({ message: "Not Found" }, 404);
       if (url.includes("api.github.com/repos/acme/app/contents/README.md")) {
         return json({ content: Buffer.from("# Acme app\nRun npm start.").toString("base64") });
       }
@@ -234,5 +239,17 @@ describe("connector tools", () => {
     expect(main.isError).toBe(true);
     expect(main.content).toMatch(/never push straight to main/);
     expect(calls.some((c) => c.body)).toBe(false);
+  });
+
+  it("lists the repositories the GitHub App can reach, and says not to guess when one isn't there", async () => {
+    await saveConnection({ organizationId, connectorId: "github", tokens: { accessToken: "gh-test" }, account: "@sam" });
+    fakeProviders();
+    const ctx = await run();
+    const repos = await tool(ctx, "github_read", { action: "list_repos" });
+    expect(repos.isError).toBeFalsy();
+    expect(repos.content).toContain("sam/shop (private), default branch main");
+    const guess = await tool(ctx, "github_read", { action: "list_issues", repo: "sam/guess" });
+    expect(guess.isError).toBe(true);
+    expect(guess.content).toContain("Call list_repos");
   });
 });

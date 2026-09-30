@@ -117,6 +117,10 @@ export async function readGithub(
   };
   const ok = async (request: Promise<{ ok: boolean; status: number; data: Record<string, unknown> }>) => {
     const result = await request;
+    // GitHub answers 404 for a repository the app can't see as well as one that doesn't exist: never guess names.
+    if (result.status === 404 && repo) {
+      throw new Error(`GitHub can't find ${repo}, or it isn't shared with Desker. Call list_repos for the exact names - don't guess.`);
+    }
     if (!result.ok) throw new Error(failure("GitHub", result.status, result.data));
     return result.data;
   };
@@ -124,13 +128,24 @@ export async function readGithub(
 
   switch (input.action) {
     case "list_repos": {
-      const data = (await ok(api("/installation/repositories?per_page=100").catch(() => api("/user/repos?per_page=50&sort=updated")))) as
-        | { repositories?: Array<{ full_name: string; description: string | null; default_branch: string }> }
-        | Array<{ full_name: string; description: string | null; default_branch: string }>;
-      const repos = Array.isArray(data) ? data : (data.repositories ?? []);
+      // The connection holds a user token from the Desker GitHub App: the
+      // repositories it reaches are those of each installation the owner can see.
+      // (/installation/repositories takes an installation token and refuses this one.)
+      const installs = await ok(api("/user/installations?per_page=100"));
+      const installations = (installs.installations as Array<{ id: number }> | undefined) ?? [];
+      if (installations.length === 0) {
+        return "The Desker GitHub App isn't installed on any account yet. Tell the owner to open Integrations → GitHub → Connect and pick the repositories to share.";
+      }
+      type Repo = { full_name: string; description: string | null; default_branch: string; private: boolean };
+      const pages = await Promise.all(
+        installations.map((installation) => ok(api(`/user/installations/${installation.id}/repositories?per_page=100`))),
+      );
+      const repos = pages.flatMap((page) => (page.repositories as Repo[] | undefined) ?? []);
       return repos.length
-        ? repos.map((r) => `- ${r.full_name} (default branch: ${r.default_branch})${r.description ? `: ${r.description}` : ""}`).join("\n")
-        : "No repositories are shared with Desker.";
+        ? repos
+            .map((r) => `- ${r.full_name}${r.private ? " (private)" : ""}, default branch ${r.default_branch}${r.description ? `: ${r.description}` : ""}`)
+            .join("\n")
+        : "The Desker GitHub App is installed, but no repositories are shared with it. Tell the owner to add some in the app's installation settings on GitHub.";
     }
     case "list_issues": {
       const issues = (await ok(api(`/repos/${repo}/issues?state=open&per_page=30`))) as unknown as Array<{ number: number; title: string; pull_request?: unknown; labels: { name: string }[] }>;
