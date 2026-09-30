@@ -154,3 +154,37 @@ describe("changing posts afterwards", () => {
     expect(calls[0]!.headers.get("authorization")).toBe("Bearer xt");
   });
 });
+
+describe("in a personal space", () => {
+  it("posts to X from someone's own space the same way, once they approve", async () => {
+    const personal = await prisma.organization.create({
+      data: { name: `Me ${stamp}`, slug: `me-${stamp}`, kind: "personal", projects: { create: { name: "Me", slug: `me-${stamp}` } } },
+      include: { projects: true },
+    });
+    try {
+      const me = await prisma.agent.create({
+        data: { projectId: personal.projects[0]!.id, name: "Juno", jobTitle: "Social media manager", personality: "Plain.", responsibilities: [], allowedTools: [], status: "published" },
+      });
+      await saveConnection({ organizationId: personal.id, connectorId: "x", tokens: { accessToken: "mine", extra: { userId: "u2" } }, account: "@me" });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (input: string | URL, init?: RequestInit) => {
+          calls.push({ method: init?.method ?? "GET", url: String(input), body: String(init?.body ?? ""), headers: new Headers(init?.headers) });
+          return json({ data: { id: "1600", text: "ok" } }, 201);
+        }),
+      );
+      const item = await prisma.actionItem.create({ data: { organizationId: personal.id, agentId: me.id, type: "scope_run", trigger: "manual", payload: {} } });
+      const ctx: RunContext = { ...(await run()), actionItemId: item.id, organizationId: personal.id, agent: { id: me.id, name: "Juno", modelProvider: "anthropic", model: null } };
+      const id = draftId((await tool(ctx, "draft_content", { kind: "social_caption", title: "Weekend", body: "Finished my first 10k today.", platform: "X" })).content);
+      expect((await tool(ctx, "publish_post", { draft_id: id })).gate?.tool).toBe("publish_post");
+      expect(calls).toHaveLength(0);
+      const pending = await prisma.actionItem.findUniqueOrThrow({ where: { id: item.id } });
+      const delivery = await executePendingAction(item.id, personal.id, pending.pendingAction as unknown as PendingAction);
+      expect(delivery.ok).toBe(true);
+      expect(calls[0]!.url).toBe("https://api.x.com/2/tweets");
+      expect(calls[0]!.headers.get("authorization")).toBe("Bearer mine");
+    } finally {
+      await prisma.organization.delete({ where: { id: personal.id } }).catch(() => {});
+    }
+  });
+});

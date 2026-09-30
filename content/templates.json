@@ -726,9 +726,13 @@
         "schedule_followup",
         "suggest_opportunity",
         "calendar_create_event",
+        "publish_post",
+        "social_read",
+        "social_manage",
         "escalate_to_human"
       ],
       "suggestedIntegrations": [
+        "linkedin",
         "email",
         "google_calendar"
       ],

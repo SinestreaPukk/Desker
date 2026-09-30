@@ -216,7 +216,7 @@ export const CONNECTORS: readonly Connector[] = [
     auth: "oauth",
     oauthProvider: "linkedin",
     status: "available",
-    pitch: "Post to your LinkedIn profile, and edit or delete those posts - each one after you approve it.",
+    pitch: "Post to your own LinkedIn profile - for your business or your career - and edit or delete those posts, each one after you approve it.",
     can: ["Post text to your profile once you approve it", "Edit or delete posts Desker made", "Show the posts it has made"],
     cannot: [
       "Read your feed, messages or connections",
@@ -233,7 +233,7 @@ export const CONNECTORS: readonly Connector[] = [
     auth: "oauth",
     oauthProvider: "meta",
     status: "available",
-    pitch: "Post to the Facebook Pages and Instagram business accounts you choose, read their posts and comments, and edit Facebook posts.",
+    pitch: "Post to the Facebook Pages and Instagram accounts you choose, read their posts and comments, and edit Facebook posts. For yourself or your business.",
     can: [
       "Post to your Facebook Page, and to Instagram with an image, once you approve it",
       "Read recent posts, likes and comments",
@@ -241,7 +241,8 @@ export const CONNECTORS: readonly Connector[] = [
     ],
     cannot: [
       "Edit or delete Instagram posts (Instagram doesn't allow it)",
-      "Use personal profiles, groups or messages",
+      "Post to a personal Facebook profile, groups or messages (Facebook allows Pages only)",
+      "Use a personal Instagram account - switch it to a free Creator or Business account in Instagram's settings first",
       "Post or change anything without your approval in draft-only mode",
     ],
     tools: ["social_read", "social_manage"],

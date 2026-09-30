@@ -26,6 +26,14 @@ import { captureMessage } from "@/lib/monitoring";
 import { notifyInBackground } from "@/lib/notify";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
 import { validTimeZone } from "@/lib/local-time";
+
+/** Which networks each social connection reaches, in the words an agent sets on a draft. */
+const SOCIAL_CONNECTORS: [string, string[]][] = [
+  ["linkedin", ["LinkedIn"]],
+  ["meta", ["Facebook", "Instagram"]],
+  ["x", ["X"]],
+  ["threads", ["Threads"]],
+];
 import { answersFor, contextQuestionsFor, effectiveContext } from "./context";
 import { spaceKind } from "@/lib/space";
 import { missingGrounding } from "./preflight";
@@ -193,6 +201,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       autonomy,
       documentNames: documents.map((d) => d.filename),
       hasPublishing: Boolean(publishing),
+      socialNetworks: SOCIAL_CONNECTORS.flatMap(([type, names]) => (connected.has(type) ? names : [])),
       hasEmail: Boolean(email),
       missingConnections,
       colleagues,
