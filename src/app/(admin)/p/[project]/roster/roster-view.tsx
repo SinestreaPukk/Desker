@@ -173,16 +173,23 @@ export function RosterView({ project }: { project: string }) {
             title={personal ? "No assistants yet" : "Nobody on the roster yet"}
             description={
               personal
-                ? "An assistant takes one part of your life off your plate - your money, your week, your job hunt - and asks before it acts. The first one takes about five minutes."
-                : "An AI employee takes a job off your hands - research, marketing, support, sales, ops - does it on its own, and asks before anything goes out. Hiring the first one takes about five minutes."
+                ? "Start with your week: see one planned on example data, then connect your calendar and get your own plan - any change waits for your yes."
+                : "Start with support: see a customer answered from a policy on example data, then give it yours and try a real question - replies wait for you."
             }
             action={
-              <Button asChild>
-                <Link href={`/p/${project}/agents/new`}>
-                  <UserRoundPlus aria-hidden />
-                  {personal ? "Add your first assistant" : "Hire your first agent"}
-                </Link>
-              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button asChild>
+                  <Link href={`/p/${project}/start`}>
+                    {personal ? "Plan your week" : "Answer your first customer"}
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost">
+                  <Link href={`/p/${project}/agents/new`}>
+                    <UserRoundPlus aria-hidden />
+                    {personal ? "Or pick another assistant" : "Or pick another role"}
+                  </Link>
+                </Button>
+              </div>
             }
           />
         ) : (
