@@ -47,7 +47,10 @@ export const GATED_TOOL_IDS = [
   "publish_post",
   "send_email",
   "calendar_create_event",
+  "calendar_reschedule",
+  "inbox_reply",
   "slack_post_message",
+  "github_write",
 ] as const;
 export type GatedToolId = (typeof GATED_TOOL_IDS)[number];
 

@@ -5,6 +5,7 @@ import { audit } from "@/lib/audit";
 import { track } from "@/lib/product-events";
 import { transition, InvalidTransition } from "@/lib/work/runner";
 import { rejectSchema } from "@/lib/work/validation";
+import { discardReplyDraft, mailAccess } from "@/lib/integrations/mail-calendar";
 import { toActionItemDto, actionItemInclude } from "../../serialize";
 
 export const runtime = "nodejs";
@@ -37,6 +38,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
       targetId: actionItemId,
       metadata: { reason, tool: (item.pendingAction as { tool?: string } | null)?.tool ?? null },
     });
+
+    // A rejected reply leaves no draft behind in the owner's mailbox.
+    const pending = item.pendingAction as { tool?: string; input?: { mailbox_draft_id?: string } } | null;
+    if (pending?.tool === "inbox_reply" && pending.input?.mailbox_draft_id) {
+      const access = await mailAccess(item.organizationId);
+      if (access) await discardReplyDraft(access, pending.input.mailbox_draft_id);
+    }
 
     await track({ name: "approval.rejected", organizationId: item.organizationId, userId, metadata: { tool: (item.pendingAction as { tool?: string } | null)?.tool ?? "" } });
 

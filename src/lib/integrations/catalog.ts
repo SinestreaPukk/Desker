@@ -22,7 +22,7 @@ type ConnectorCategory = (typeof CONNECTOR_CATEGORIES)[number]["id"];
 type ConnectorAuth = "oauth" | "api_key" | "webhook";
 
 /** The OAuth providers this server can talk to; each needs its client id and secret set. */
-export const OAUTH_PROVIDERS = ["google", "slack", "github"] as const;
+export const OAUTH_PROVIDERS = ["google", "microsoft", "slack", "github"] as const;
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
 
 export interface Connector {
@@ -34,6 +34,8 @@ export interface Connector {
   roles: string[];
   auth: ConnectorAuth;
   oauthProvider?: OAuthProvider;
+  /** The OAuth scopes this connector asks for; the provider's default when absent. */
+  scope?: string;
   status: "available" | "planned";
   /** One line: what connecting it lets an agent do. */
   pitch: string;
@@ -52,11 +54,52 @@ export const CONNECTORS: readonly Connector[] = [
     roles: ["secretary", "client-onboarding", "sales-development", "personal-assistant", "money-manager", "career-coach", "travel-planner", "learning-coach"],
     auth: "oauth",
     oauthProvider: "google",
+    scope: "openid email https://www.googleapis.com/auth/calendar.events",
     status: "available",
-    pitch: "See what is on your calendar and propose meetings.",
-    can: ["See events on your calendars", "Create events - each one waits for your approval first"],
-    cannot: ["Read your email or files", "Change your account settings", "Delete calendars"],
-    tools: ["calendar_list_events", "calendar_create_event"],
+    pitch: "See what is on your calendar, propose meetings and move them - checking for clashes first.",
+    can: [
+      "See events on your calendar",
+      "Create events and move them - each change waits for your approval first",
+      "Warn when a time clashes with something already booked",
+    ],
+    cannot: ["Read your email or files", "Delete events or calendars", "Change your account settings"],
+    tools: ["calendar_list_events", "calendar_create_event", "calendar_reschedule"],
+  },
+  {
+    id: "gmail",
+    name: "Gmail",
+    category: "calendar",
+    roles: ["secretary", "personal-assistant", "customer-support", "career-coach"],
+    auth: "oauth",
+    oauthProvider: "google",
+    scope: "openid email https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose",
+    status: "available",
+    pitch: "Read your inbox and draft replies in the real thread - you see the draft in Gmail, and it sends only when you approve.",
+    can: [
+      "Read your inbox and whole threads",
+      "Write a reply as a draft in the thread, in your own Gmail",
+      "Send that reply after you approve it",
+    ],
+    cannot: ["Delete, archive or label email", "Send anything without your approval in draft-only mode", "Change your Gmail settings"],
+    tools: ["inbox_read", "inbox_reply"],
+  },
+  {
+    id: "outlook_mail",
+    name: "Outlook mail",
+    category: "calendar",
+    roles: ["secretary", "personal-assistant", "customer-support", "career-coach"],
+    auth: "oauth",
+    oauthProvider: "microsoft",
+    scope: "offline_access openid email User.Read Mail.ReadWrite Mail.Send",
+    status: "available",
+    pitch: "The same as Gmail, for Microsoft 365 and Outlook.com: read your inbox, draft replies in the thread, send when you approve.",
+    can: [
+      "Read your inbox and messages",
+      "Write a reply as a draft in the thread, in your own Outlook",
+      "Send that reply after you approve it",
+    ],
+    cannot: ["Delete or move email", "Send anything without your approval in draft-only mode", "Change your mailbox settings"],
+    tools: ["inbox_read", "inbox_reply"],
   },
   {
     id: "slack",
@@ -78,12 +121,19 @@ export const CONNECTORS: readonly Connector[] = [
     id: "outlook_calendar",
     name: "Outlook Calendar",
     category: "calendar",
-    roles: ["secretary", "personal-assistant"],
+    roles: ["secretary", "personal-assistant", "money-manager", "career-coach", "travel-planner", "learning-coach"],
     auth: "oauth",
-    status: "planned",
-    pitch: "The same calendar access as Google Calendar, for Microsoft 365.",
-    can: ["See events", "Create events with your approval"],
-    cannot: ["Read your mailbox or files"],
+    oauthProvider: "microsoft",
+    scope: "offline_access openid email User.Read Calendars.ReadWrite",
+    status: "available",
+    pitch: "The same calendar access as Google Calendar, for Microsoft 365 and Outlook.com.",
+    can: [
+      "See events on your calendar",
+      "Create events and move them - each change waits for your approval first",
+      "Warn when a time clashes with something already booked",
+    ],
+    cannot: ["Read your mailbox or files", "Delete events or calendars"],
+    tools: ["calendar_list_events", "calendar_create_event", "calendar_reschedule"],
   },
   {
     id: "teams",
@@ -106,14 +156,19 @@ export const CONNECTORS: readonly Connector[] = [
     auth: "oauth",
     oauthProvider: "github",
     status: "available",
-    pitch: "Read code and issues in the repositories you pick.",
-    can: ["Read code in the repositories you choose", "Read issues and pull requests in them"],
-    cannot: [
-      "Push code, open or merge pull requests",
-      "See repositories you did not choose",
-      "Change settings or members",
+    pitch: "Read, fix and ship code in the repositories you pick - every change waits for your approval.",
+    can: [
+      "Read code, branches, commits, checks, issues and pull requests",
+      "Commit to a working branch and open a pull request",
+      "Review and merge pull requests, open and close issues",
     ],
-    tools: ["github_read"],
+    cannot: [
+      "Push straight to your default branch",
+      "Touch workflow files (.github/workflows)",
+      "See repositories you did not choose",
+      "Change settings, secrets or members",
+    ],
+    tools: ["github_read", "github_write"],
   },
   {
     id: "gitlab",
@@ -271,6 +326,12 @@ export function connectorById(id: string): Connector | undefined {
 }
 
 /** The connector a work tool depends on, for "connect X to let it do this" copy. */
-export function connectorForTool(tool: string): Connector | undefined {
-  return CONNECTORS.find((connector) => connector.tools?.includes(tool));
+/** Every available connector that can serve a tool: mail and calendar each have a Google and a Microsoft one. */
+export function connectorsForTool(tool: string): Connector[] {
+  return CONNECTORS.filter((connector) => connector.status === "available" && connector.tools?.includes(tool));
+}
+
+/** The name of the choice a tool needs, e.g. "Gmail or Outlook mail". */
+export function connectorChoice(connectors: Connector[]): string {
+  return connectors.map((connector) => connector.name).join(" or ");
 }

@@ -28,7 +28,7 @@ import { buildRunPrompt, kickoffMessage } from "./prompt";
 import { answersFor, contextQuestionsFor, effectiveContext } from "./context";
 import { spaceKind } from "@/lib/space";
 import { missingGrounding } from "./preflight";
-import { connectorForTool } from "@/lib/integrations/catalog";
+import { connectorChoice, connectorsForTool } from "@/lib/integrations/catalog";
 import { summarizeRun } from "./summary";
 import { postTaskResult } from "@/lib/team";
 import { WORK_TOOL_IDS, scopeTools, workToolDefinitions } from "./tools";
@@ -137,12 +137,13 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
   // The connectors this run's own tools need but nobody has connected yet, so the
   // agent hears it once up front instead of discovering it one refused call at a time.
   const connected = new Set(connectedTypes.map((row) => row.type));
+  // A tool is covered when any connector that serves it is connected (Gmail or Outlook, say).
   const missingConnections = [
     ...new Set(
       (tools ?? [...WORK_TOOL_IDS])
-        .map((tool) => connectorForTool(tool))
-        .filter((connector) => connector && connector.oauthProvider && !connected.has(connector.id))
-        .map((connector) => connector!.name),
+        .map((tool) => connectorsForTool(tool).filter((connector) => connector.oauthProvider))
+        .filter((choices) => choices.length > 0 && !choices.some((connector) => connected.has(connector.id)))
+        .map(connectorChoice),
     ),
   ];
 

@@ -38,8 +38,54 @@ const PENDING_COPY: Record<GatedToolId, { verb: string; noun: string; approve: s
     approve: "Approve and add to calendar",
     going: "adding",
   },
+  calendar_reschedule: { verb: "move a calendar event", noun: "change", approve: "Approve and move it", going: "moving" },
+  inbox_reply: { verb: "reply in an email thread", noun: "reply", approve: "Approve and send", going: "sending" },
   slack_post_message: { verb: "post to Slack", noun: "message", approve: "Approve and post", going: "posting" },
+  github_write: { verb: "change GitHub", noun: "change", approve: "Approve and apply", going: "applying" },
 };
+
+const GITHUB_HEADLINE: Record<string, (input: Record<string, unknown>) => string> = {
+  commit_files: (i) => `Commit to ${String(i.branch)}${i.pull_request ? " and open a pull request" : ""}`,
+  open_pull_request: (i) => `Open a pull request: ${String(i.head)} → ${String(i.base ?? "default branch")}`,
+  review_pull_request: (i) => `${i.event === "APPROVE" ? "Approve" : i.event === "REQUEST_CHANGES" ? "Request changes on" : "Review"} pull request #${String(i.number)}`,
+  merge_pull_request: (i) => `Merge pull request #${String(i.number)} (${String(i.method ?? "squash")})`,
+  create_issue: () => "Open an issue",
+  comment: (i) => `Comment on #${String(i.number)}`,
+  update_issue: (i) => `${i.state === "closed" ? "Close" : i.state === "open" ? "Reopen" : "Edit"} #${String(i.number)}`,
+};
+
+/** A GitHub change as it would land: every file in full, so nothing is approved unseen. */
+function GithubPreview({ input }: { input: Record<string, unknown> }) {
+  const files = Array.isArray(input.files) ? (input.files as { path: string; content?: string; delete?: boolean }[]) : [];
+  const pull = input.pull_request as { title?: string; body?: string } | undefined;
+  const body = typeof input.body === "string" ? input.body : "";
+  return (
+    <>
+      <p className="font-semibold text-ink">{GITHUB_HEADLINE[String(input.action)]?.(input) ?? String(input.action)}</p>
+      <p className="mt-0.5 font-mono text-xs text-ink-muted">{String(input.repo)}</p>
+      {typeof input.title === "string" ? <p className="mt-2 font-medium text-ink">{input.title}</p> : null}
+      {typeof input.message === "string" ? <p className="mt-2 text-ink">Commit: {input.message}</p> : null}
+      {files.length > 0 ? (
+        <ul className="mt-2 space-y-1">
+          {files.map((file) => (
+            <li key={file.path}>
+              {file.delete ? (
+                <p className="font-mono text-xs text-danger">Delete {file.path}</p>
+              ) : (
+                <details>
+                  <summary className="cursor-pointer font-mono text-xs text-ink">{file.path}</summary>
+                  <pre className="mt-1 max-h-72 overflow-auto rounded-md border border-line bg-surface p-2 text-xs">{file.content}</pre>
+                </details>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {pull?.title ? <p className="mt-2 text-ink">Pull request: {pull.title}</p> : null}
+      {body || pull?.body ? <p className="mt-2 whitespace-pre-wrap text-ink">{body || pull?.body}</p> : null}
+    </>
+  );
+}
 
 /** The event or message exactly as it would go out: there is no draft to show for these. */
 function ActionPreview({ tool, input }: { tool: GatedToolId; input: Record<string, unknown> }) {
@@ -47,7 +93,16 @@ function ActionPreview({ tool, input }: { tool: GatedToolId; input: Record<strin
   const when = (key: string) => (text(key) ? formatDateTime(text(key)) : "");
   return (
     <div className="rounded-lg border border-line bg-surface-2/60 p-3.5 text-sm">
-      {tool === "calendar_create_event" ? (
+      {tool === "calendar_reschedule" ? (
+        <>
+          <p className="font-semibold text-ink">
+            Move to {when("start")} – {when("end")}
+          </p>
+          <p className="mt-0.5 text-xs text-ink-muted">
+            {input.whole_series === true ? "Every occurrence moves by the same amount." : "Only this occurrence moves."}
+          </p>
+        </>
+      ) : tool === "calendar_create_event" ? (
         <>
           <p className="font-semibold text-ink">{text("summary")}</p>
           <p className="mt-0.5 text-xs text-ink-muted">
@@ -58,6 +113,8 @@ function ActionPreview({ tool, input }: { tool: GatedToolId; input: Record<strin
           ) : null}
           {text("description") ? <p className="mt-2 whitespace-pre-wrap text-ink">{text("description")}</p> : null}
         </>
+      ) : tool === "github_write" ? (
+        <GithubPreview input={input} />
       ) : (
         <>
           <p className="text-xs text-ink-muted">To {text("channel")}</p>
@@ -254,7 +311,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
               </pre>
             </div>
           )
-        ) : pending.tool === "calendar_create_event" || pending.tool === "slack_post_message" ? (
+        ) : pending.tool === "calendar_create_event" || pending.tool === "calendar_reschedule" || pending.tool === "slack_post_message" ? (
           <ActionPreview tool={pending.tool} input={pending.input} />
         ) : (
           <pre className="whitespace-pre-wrap rounded-lg border border-line bg-surface-2/60 p-3.5 font-mono text-xs text-ink">

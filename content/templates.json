@@ -272,12 +272,16 @@
         "calendar_list_events",
         "calendar_create_event",
         "slack_post_message",
+        "inbox_read",
+        "inbox_reply",
+        "calendar_reschedule",
         "escalate_to_human"
       ],
       "suggestedIntegrations": [
+        "gmail",
         "google_calendar",
-        "slack",
-        "email"
+        "outlook_mail",
+        "slack"
       ],
       "defaultObjectives": [
         "Review action items, meeting notes, and incoming requests",
@@ -335,6 +339,7 @@
         "suggest_opportunity",
         "delegate_to_colleague",
         "github_read",
+        "github_write",
         "slack_post_message",
         "escalate_to_human"
       ],
@@ -584,11 +589,16 @@
         "search_documents",
         "schedule_followup",
         "suggest_opportunity",
+        "inbox_read",
+        "inbox_reply",
+        "calendar_reschedule",
         "escalate_to_human"
       ],
       "suggestedIntegrations": [
+        "gmail",
         "google_calendar",
-        "email"
+        "outlook_mail",
+        "outlook_calendar"
       ],
       "defaultObjectives": [
         "Every Sunday evening, read next week's calendar and write me a short plan with clashes and free time",

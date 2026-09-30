@@ -162,6 +162,19 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
           }
         : { title: "Added a calendar event", detail: summary ? clip(summary, 120) : null, tone: "positive", icon: "schedule" };
     }
+    case "calendar_reschedule":
+      if (!ok) return failed("Tried to move a calendar event");
+      return gated
+        ? { title: "Queued moving a calendar event for your approval", detail: "It waits in Needs you. Nothing has moved yet.", tone: "warning", icon: "approval" }
+        : { title: "Moved a calendar event", detail: null, tone: "positive", icon: "schedule" };
+    case "inbox_read":
+      if (!ok) return failed("Tried to read the inbox");
+      return { title: text(input.thread_id) ? "Read an email thread" : "Checked the inbox", detail: null, tone: "neutral", icon: "documents" };
+    case "inbox_reply":
+      if (!ok) return failed("Tried to reply to an email");
+      return gated
+        ? { title: "Drafted a reply for your approval", detail: "It sits as a draft in the thread, in your own mailbox. It waits in Needs you; nothing has been sent.", tone: "warning", icon: "approval" }
+        : { title: "Replied to an email", detail: null, tone: "positive", icon: "send" };
     case "slack_post_message":
       if (!ok) return failed("Tried to post to Slack");
       return gated
@@ -188,6 +201,11 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
         : failed("Tried to check the calendar");
     case "github_read":
       return ok ? { title: "Read from GitHub", detail: null, tone: "neutral", icon: "research" } : failed("Tried to read from GitHub");
+    case "github_write":
+      if (!ok) return failed("Tried to change GitHub");
+      return gated
+        ? { title: "Queued a GitHub change for your approval", detail: "It waits in Needs you. Nothing has changed on GitHub yet.", tone: "warning", icon: "approval" }
+        : { title: "Changed GitHub", detail: text(input.repo) ? `In ${text(input.repo)}.` : null, tone: "positive", icon: "send" };
     case "schedule_followup": {
       const objective = text(input.objective);
       return {
@@ -231,7 +249,10 @@ const FAILED_DELIVERY: Record<string, string> = {
   publish_post: "A post could not be published",
   send_email: "An email could not be sent",
   calendar_create_event: "A calendar event could not be added",
+  calendar_reschedule: "A calendar event could not be moved",
+  inbox_reply: "An email reply could not be sent",
   slack_post_message: "A Slack message could not be posted",
+  github_write: "A GitHub change could not be made",
 };
 
 /** One audit row, said in the owner's language. */
@@ -324,12 +345,21 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: "Sent an approved email", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "calendar_create_event.delivered":
       return { title: "Added an approved calendar event", detail: text(meta.detail), tone: "positive", icon: "schedule" };
+    case "calendar_reschedule.delivered":
+      return { title: "Moved an approved calendar event", detail: text(meta.detail), tone: "positive", icon: "schedule" };
+    case "inbox_reply.delivered":
+      return { title: "Sent an approved email reply", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "slack_post_message.delivered":
       return { title: "Posted an approved message to Slack", detail: text(meta.detail), tone: "positive", icon: "send" };
+    case "github_write.delivered":
+      return { title: "Made an approved change on GitHub", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "publish_post.failed":
     case "send_email.failed":
     case "calendar_create_event.failed":
+    case "calendar_reschedule.failed":
+    case "inbox_reply.failed":
     case "slack_post_message.failed":
+    case "github_write.failed":
       return {
         title: FAILED_DELIVERY[entry.action.slice(0, -".failed".length)] ?? "Something could not be sent",
         detail: text(meta.detail) ?? "The connection returned an error. Check it under Integrations.",

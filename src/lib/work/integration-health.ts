@@ -11,7 +11,7 @@
  */
 import "server-only";
 import { prisma } from "@/lib/db";
-import { connectorById, connectorForTool } from "@/lib/integrations/catalog";
+import { connectorById, connectorsForTool } from "@/lib/integrations/catalog";
 import { GATED_TOOL_IDS } from "./types";
 
 
@@ -46,8 +46,11 @@ const WHAT_IT_DOES: Record<string, string> = {
   webhook: "publish posts",
   email: "send email",
   google_calendar: "use the calendar",
+  outlook_calendar: "use the calendar",
+  gmail: "read and reply to email",
+  outlook_mail: "read and reply to email",
   slack: "post to Slack",
-  github: "read your code",
+  github: "read and change your code",
 };
 
 function whatItDoes(type: string): string {
@@ -85,7 +88,9 @@ export async function healthForIntegrations(
   const latest = new Map<string, { ok: boolean; at: Date; detail: string | null }>();
   for (const row of deliveries) {
     const [tool, outcome] = row.action.split(".");
-    const type = connectorForTool(tool ?? "")?.id ?? "webhook";
+    // A tool served by two connectors (Gmail or Outlook) belongs to whichever one is connected.
+    const choices = connectorsForTool(tool ?? "");
+    const type = (choices.find((connector) => rows.some((r) => r.type === connector.id && r.enabled)) ?? choices[0])?.id ?? "webhook";
     if (latest.has(type)) continue;
     const metadata = (row.metadata as Record<string, unknown> | null) ?? {};
     latest.set(type, {

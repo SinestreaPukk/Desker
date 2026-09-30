@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   AUTONOMY_MODES,
   DIGEST_CADENCES,
+  GATED_TOOL_IDS,
   INTEGRATION_TYPES,
   SUGGESTION_STATUSES,
   TRIGGER_TYPES,
@@ -39,12 +40,7 @@ export const scopeInputSchema = z.object({
   enabled: z.boolean().default(true),
   autonomy: z.enum(AUTONOMY_MODES).default("draft_only"),
   toolAutonomy: z
-    .object({
-      publish_post: z.enum(AUTONOMY_MODES).optional(),
-      send_email: z.enum(AUTONOMY_MODES).optional(),
-      calendar_create_event: z.enum(AUTONOMY_MODES).optional(),
-      slack_post_message: z.enum(AUTONOMY_MODES).optional(),
-    })
+    .partialRecord(z.enum(GATED_TOOL_IDS), z.enum(AUTONOMY_MODES))
     .nullable()
     .default(null),
   /** Null means every tool; an array is the allowlist, empty included. */

@@ -41,6 +41,17 @@ function fakeProviders() {
       if (url.includes("api.github.com/repos/acme/app/contents/README.md")) {
         return json({ content: Buffer.from("# Acme app\nRun npm start.").toString("base64") });
       }
+      const method = init?.method ?? "GET";
+      const gh = "https://api.github.com/repos/acme/app";
+      if (url === gh) return json({ default_branch: "main" });
+      if (url === `${gh}/git/ref/heads/desker/fix-readme`) return json({ message: "Not Found" }, 404);
+      if (url === `${gh}/git/ref/heads/main`) return json({ object: { sha: "base-sha" } });
+      if (url === `${gh}/git/refs` && method === "POST") return json({ object: { sha: "base-sha" } }, 201);
+      if (url === `${gh}/git/commits/base-sha`) return json({ tree: { sha: "base-tree" } });
+      if (url === `${gh}/git/trees` && method === "POST") return json({ sha: "new-tree" }, 201);
+      if (url === `${gh}/git/commits` && method === "POST") return json({ sha: "abc1234def" }, 201);
+      if (url === `${gh}/git/refs/heads/desker/fix-readme` && method === "PATCH") return json({ object: { sha: "abc1234def" } });
+      if (url === `${gh}/pulls` && method === "POST") return json({ number: 7, html_url: "https://github.com/acme/app/pull/7" }, 201);
       throw new Error(`Unexpected request in test: ${url}`);
     }),
   );
@@ -88,7 +99,7 @@ async function run(autonomy: "draft_only" | "auto" = "draft_only"): Promise<RunC
     agent: { id: agentId, name: "Sam", modelProvider: "anthropic", model: null },
     autonomy,
     toolAutonomy: null,
-    tools: ["calendar_list_events", "calendar_create_event", "slack_post_message", "github_read"],
+    tools: ["calendar_list_events", "calendar_create_event", "slack_post_message", "github_read", "github_write"],
     documentIds: [],
     trigger: "manual",
   };
@@ -145,7 +156,8 @@ describe("connector tools", () => {
       attendees: "priya@acme.example",
     });
     expect(outcome.gate?.tool).toBe("calendar_create_event");
-    expect(calls.filter((c) => c.url.includes("calendar"))).toHaveLength(0);
+    // It read the calendar to check for a clash, and created nothing.
+    expect(calls.filter((c) => c.url.includes("calendar") && c.body)).toHaveLength(0);
 
     const item = await prisma.actionItem.findUniqueOrThrow({ where: { id: ctx.actionItemId } });
     const delivery = await executePendingAction(ctx.actionItemId, organizationId, item.pendingAction as unknown as PendingAction);
@@ -171,5 +183,56 @@ describe("connector tools", () => {
     expect(file.content).toContain("Run npm start.");
     const bad = await tool(ctx, "github_read", { action: "read_file", repo: "../../etc", path: "passwd" });
     expect(bad.isError).toBe(true);
+  });
+
+  it("hold a GitHub commit for approval, then branch, commit and open the pull request", async () => {
+    await saveConnection({ organizationId, connectorId: "github", tokens: { accessToken: "gh-test" }, account: "@sam" });
+    fakeProviders();
+    const ctx = await run("draft_only");
+    const outcome = await tool(ctx, "github_write", {
+      action: "commit_files",
+      repo: "acme/app",
+      branch: "desker/fix-readme",
+      message: "Fix the start command",
+      files: [{ path: "README.md", content: "# Acme app\nRun npm run dev." }],
+      pull_request: { title: "Fix the start command" },
+      note: "README said npm start",
+    });
+    expect(outcome.gate?.tool).toBe("github_write");
+    expect(calls).toHaveLength(0);
+
+    const item = await prisma.actionItem.findUniqueOrThrow({ where: { id: ctx.actionItemId } });
+    const delivery = await executePendingAction(ctx.actionItemId, organizationId, item.pendingAction as unknown as PendingAction);
+    expect(delivery.ok).toBe(true);
+    expect(delivery.detail).toContain("pull request #7");
+    const branch = calls.find((c) => c.url.endsWith("/git/refs") && c.body);
+    expect(JSON.parse(branch!.body!)).toEqual({ ref: "refs/heads/desker/fix-readme", sha: "base-sha" });
+    const tree = calls.find((c) => c.url.endsWith("/git/trees"));
+    expect(tree?.body).toContain("npm run dev");
+    expect(calls.every((c) => c.auth === "Bearer gh-test")).toBe(true);
+  });
+
+  it("refuse workflow files and the default branch before anything reaches GitHub", async () => {
+    fakeProviders();
+    const workflow = await tool(await run("auto"), "github_write", {
+      action: "commit_files",
+      repo: "acme/app",
+      branch: "desker/ci",
+      message: "ci",
+      files: [{ path: ".github/workflows/ci.yml", content: "on: push" }],
+    });
+    expect(workflow.isError).toBe(true);
+    expect(calls).toHaveLength(0);
+
+    const main = await tool(await run("auto"), "github_write", {
+      action: "commit_files",
+      repo: "acme/app",
+      branch: "main",
+      message: "direct",
+      files: [{ path: "README.md", content: "x" }],
+    });
+    expect(main.isError).toBe(true);
+    expect(main.content).toMatch(/never push straight to main/);
+    expect(calls.some((c) => c.body)).toBe(false);
   });
 });

@@ -46,7 +46,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ conn
     connectorId: connector.id,
     returnTo,
   });
-  const response = NextResponse.redirect(authorizeUrl(provider, callbackUrl(request, provider), token));
+  const response = NextResponse.redirect(authorizeUrl(provider, callbackUrl(request, provider), token, connector.scope));
   response.cookies.set(NONCE_COOKIE, nonce, {
     httpOnly: true,
     sameSite: "lax",

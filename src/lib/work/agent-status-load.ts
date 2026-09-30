@@ -5,7 +5,7 @@
  */
 import "server-only";
 import { prisma } from "@/lib/db";
-import { CONNECTORS, connectorForTool } from "@/lib/integrations/catalog";
+import { CONNECTORS, connectorChoice, connectorsForTool } from "@/lib/integrations/catalog";
 import { healthForIntegrations } from "./integration-health";
 import { resolveEmail } from "./integrations";
 import { runModeOf } from "./cadence";
@@ -64,28 +64,32 @@ export async function agentStatusFacts(projectId: string, organizationId: string
   function connectionProblems(tools: string[] | null): ConnectionProblem[] {
     // No explicit list means "every tool": it was never told it needs a connection.
     if (!tools) return [];
-    const needed = new Map<string, (typeof CONNECTORS)[number]>();
+    // Each tool needs one of the connectors that serve it (Gmail or Outlook mail, say).
+    const needed = new Map<string, (typeof CONNECTORS)[number][]>();
     for (const tool of tools) {
-      const connector = connectorForTool(tool);
-      if (connector && connector.status === "available") needed.set(connector.id, connector);
+      const choices = connectorsForTool(tool);
+      if (choices.length > 0) needed.set(choices.map((c) => c.id).join("|"), choices);
     }
     const problems: ConnectionProblem[] = [];
-    for (const connector of needed.values()) {
-      if (connector.id === "email" && email) continue;
-      const rows = integrations.filter((row) => row.type === connector.id);
-      const states = rows.map((row) => health.get(row.id)).filter(Boolean);
-      const active = states.find((state) => state!.active);
-      if (active?.state === "connected") continue;
+    for (const choices of needed.values()) {
+      if (choices.some((connector) => connector.id === "email") && email) continue;
+      const states = choices.flatMap((connector) =>
+        integrations.filter((row) => row.type === connector.id).map((row) => ({ connector, health: health.get(row.id) })),
+      );
+      if (states.some((state) => state.health?.active && state.health.state === "connected")) continue;
+      const active = states.find((state) => state.health?.active);
+      const first = choices[0]!;
       if (active) {
-        problems.push({ connectorId: connector.id, name: connector.name, state: "attention", consequence: active.consequence });
+        problems.push({ connectorId: active.connector.id, name: active.connector.name, state: "attention", consequence: active.health!.consequence });
       } else if (states.length > 0) {
-        problems.push({ connectorId: connector.id, name: connector.name, state: "off", consequence: states[0]!.consequence });
+        problems.push({ connectorId: states[0]!.connector.id, name: states[0]!.connector.name, state: "off", consequence: states[0]!.health!.consequence });
       } else {
+        const name = connectorChoice(choices);
         problems.push({
-          connectorId: connector.id,
-          name: connector.name,
+          connectorId: first.id,
+          name,
           state: "missing",
-          consequence: `Its work needs ${connector.name}, which isn't connected, so that part stays a draft.`,
+          consequence: `Its work needs ${name}, which isn't connected, so that part stays a draft.`,
         });
       }
     }

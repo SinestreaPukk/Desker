@@ -34,6 +34,10 @@ interface ProviderSpec {
  *   can only post where it has been invited, and cannot read messages.
  * - GitHub: a GitHub App the owner installs on the repositories they pick,
  *   with read-only contents, issues and pull requests (set on the app itself).
+ * - Microsoft: Outlook mail and calendar through Graph, per connector.
+ *
+ * Google and Microsoft each back two connectors (mail, calendar); each
+ * connector asks only for its own scopes (Connector.scope in the catalog).
  */
 const PROVIDERS: Record<OAuthProvider, ProviderSpec> = {
   google: {
@@ -45,6 +49,16 @@ const PROVIDERS: Record<OAuthProvider, ProviderSpec> = {
     scopeParam: "scope",
     // offline + consent: a refresh token, so the connection outlives the hour.
     extraParams: { access_type: "offline", prompt: "consent", include_granted_scopes: "false" },
+  },
+  microsoft: {
+    clientIdEnv: "MICROSOFT_CLIENT_ID",
+    clientSecretEnv: "MICROSOFT_CLIENT_SECRET",
+    // "common": work and school accounts and personal Outlook.com alike.
+    authorizeUrl: () => "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+    tokenUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+    scope: "offline_access openid email User.Read",
+    scopeParam: "scope",
+    extraParams: { prompt: "select_account" },
   },
   slack: {
     clientIdEnv: "SLACK_CLIENT_ID",
@@ -124,14 +138,15 @@ export function verifyState(token: string, cookieNonce: string | undefined): OAu
 
 // --- the round trip -----------------------------------------------------------
 
-export function authorizeUrl(provider: OAuthProvider, redirectUri: string, stateToken: string): string {
+export function authorizeUrl(provider: OAuthProvider, redirectUri: string, stateToken: string, scope?: string): string {
   const spec = PROVIDERS[provider];
   const url = new URL(spec.authorizeUrl(process.env[spec.clientIdEnv]!.trim()));
   url.searchParams.set("client_id", process.env[spec.clientIdEnv]!.trim());
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", stateToken);
   url.searchParams.set("response_type", "code");
-  if (spec.scope) url.searchParams.set(spec.scopeParam, spec.scope);
+  const scopes = scope ?? spec.scope;
+  if (scopes) url.searchParams.set(spec.scopeParam, scopes);
   for (const [key, value] of Object.entries(spec.extraParams ?? {})) url.searchParams.set(key, value);
   return url.toString();
 }
@@ -198,12 +213,16 @@ async function accountLabel(
       return `${(data.team as { name?: string } | undefined)?.name ?? "Slack"} workspace`;
     }
     const url =
-      provider === "google" ? "https://openidconnect.googleapis.com/v1/userinfo" : "https://api.github.com/user";
+      provider === "google"
+        ? "https://openidconnect.googleapis.com/v1/userinfo"
+        : provider === "microsoft"
+          ? "https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName"
+          : "https://api.github.com/user";
     const response = await fetch(url, {
       headers: { authorization: `Bearer ${accessToken}`, accept: "application/json", "user-agent": "Desker" },
     });
-    const me = (await response.json()) as { email?: string; login?: string };
-    return me.email ?? (me.login ? `@${me.login}` : provider);
+    const me = (await response.json()) as { email?: string; login?: string; mail?: string; userPrincipalName?: string };
+    return me.email ?? me.mail ?? me.userPrincipalName ?? (me.login ? `@${me.login}` : provider);
   } catch {
     return provider;
   }
