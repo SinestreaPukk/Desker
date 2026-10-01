@@ -10,12 +10,11 @@ import { defaultProject, projectsVisibleTo } from "@/lib/projects";
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import {
-  ComparisonTable,
   Desks,
   Faq,
+  Integrations,
   ProductShotImage,
   RoleGrid,
-  Steps,
   Testimonials,
   TrustGrid,
   TrustShots,
@@ -42,6 +41,8 @@ import { ShowcaseBento } from "@/components/marketing/showcase-bento";
 import { LANDING, SITE, pageMetadata, templateById } from "@/lib/content";
 import { PLANS } from "@/lib/billing/plans";
 import { cn } from "@/lib/utils";
+import { CHANNEL_KINDS } from "@/lib/messaging/prefs";
+import { channelAvailable } from "@/lib/messaging/send";
 
 export const metadata: Metadata = pageMetadata({
   title: `${SITE.company.name} — ${LANDING.meta.title}`,
@@ -53,7 +54,8 @@ export const metadata: Metadata = pageMetadata({
 /**
  * The front door, in the order a visitor's questions arrive: what is it
  * (hero), can I believe it (built on), who is it for (two desks: a business,
- * your own life, or both), how (three steps), what exactly (showcase), is it safe (trust), which one (roles),
+ * your own life, or both), what it does (features), what it works with
+ * (integrations), is it safe (trust), which one (roles),
  * does it work (quotes), what does it cost (pricing), but what
  * about (FAQ), and go (CTA).
  *
@@ -86,8 +88,9 @@ export default async function LandingPage({
     redirect(`/p/${project.slug}/agents/new?template=${encodeURIComponent(role.id)}`);
   }
 
-  const { hero, trustStrip, desks, steps, features, trust, roles, comparison, testimonials, beta, pricing, faq, cta } =
-    LANDING;
+  const { hero, trustStrip, desks, features, integrations, trust, roles, testimonials, beta, pricing, faq, cta } = LANDING;
+  // Only the alert apps this deployment really has keys for are shown as working.
+  const liveChannels = CHANNEL_KINDS.filter((kind) => channelAvailable(kind));
   // Placeholders are for review only: outside production an unmeasured number
   // shows as a marked TODO; in production the section waits for real values.
   const showTestimonials = testimonials.enabled && testimonials.items.length > 0;
@@ -154,24 +157,19 @@ export default async function LandingPage({
         </div>
       </Section>
 
-      {/* How it works ----------------------------------------------------- */}
-      <Section id="how-it-works" labelledBy="steps-heading" containerClassName="pt-2 sm:pt-4">
-        <SectionHeader id="steps-heading" heading={steps.heading} intro={steps.intro} />
-        <div className="mt-14">
-          <Steps items={steps.items} />
+      {/* What it does ------------------------------------------------------ */}
+      <Section id="product" labelledBy="product-heading" className="sky-wash border-t border-line">
+        <SectionHeader id="product-heading" heading={features.heading} intro={features.intro} />
+        <div className="mt-12">
+          <ShowcaseBento items={features.items} />
         </div>
       </Section>
 
-      {/* Showcase ---------------------------------------------------------- */}
-      <Section id="product" labelledBy="product-heading" className="sky-wash border-t border-line">
-          <SectionHeader
-            id="product-heading"
-           
-            heading={features.heading}
-            intro={features.intro}
-          />
+      {/* What it connects to: from the catalog, never a hand-kept list ------ */}
+      <Section id="integrations" labelledBy="integrations-heading">
+        <SectionHeader id="integrations-heading" heading={integrations.heading} intro={integrations.intro} />
         <div className="mt-12">
-          <ShowcaseBento items={features.items} />
+          <Integrations liveChannels={liveChannels} />
         </div>
       </Section>
 
@@ -207,25 +205,6 @@ export default async function LandingPage({
           <RoleGrid cta={roles.cta} groups={roles.groups} />
         </div>
       </Section>
-
-      {/* Comparison: Desker vs Generic AI ---------------------------------- */}
-      {comparison ? (
-        <Section id="comparison" labelledBy="comparison-heading" className="border-t border-line bg-surface">
-          <SectionHeader
-            id="comparison-heading"
-           
-            heading={comparison.heading}
-            intro={comparison.intro}
-          />
-          <div className="mt-12">
-            <ComparisonTable
-              competitorLabel={comparison.competitorLabel}
-              deskerLabel={comparison.deskerLabel}
-              items={comparison.items}
-            />
-          </div>
-        </Section>
-      ) : null}
 
       {/* Testimonials: real quotes only, off until content enables them --- */}
       {showTestimonials ? (

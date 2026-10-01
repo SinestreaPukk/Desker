@@ -5,7 +5,7 @@
   },
   "hero": {
     "headline": "Team of AI agents who do the work. On call 24/7",
-    "subhead": "Staff that run research, marketing and support for your company. Assistants that handle your money, your week and your job hunt. They work on their own and ask before anything goes out.",
+    "subhead": "Staff for your company's research, marketing and support. Assistants for your money and your week. They work on their own, message you on LINE or Slack, and ask before anything goes out.",
     "primaryCta": {
       "label": "Join the beta",
       "href": "/beta"
@@ -29,68 +29,40 @@
       }
     ]
   },
-  "steps": {
-    "eyebrow": "How it works",
-    "heading": "From one real result to a routine",
-    "intro": "Your first result comes before any setup: step through one run on example data, then make it yours.",
-    "items": [
-      {
-        "icon": "approve",
-        "title": "See one run first",
-        "body": "A customer answered from a policy, or a week planned from a calendar, on example data. You make the call."
-      },
-      {
-        "icon": "upload",
-        "title": "Make it yours",
-        "body": "Give it your policy or connect your calendar, answer four short questions, and try it on something real."
-      },
-      {
-        "icon": "calendar",
-        "title": "Then it's a routine",
-        "body": "It answers as customers write, or plans every Sunday. Anything that goes out waits for you in Needs you."
-      }
-    ]
-  },
   "features": {
-    "eyebrow": "The work, done",
-    "heading": "One morning's work, at the office and at home",
-    "intro": "What's done, and what's waiting on you: three from a business, two from a personal space.",
+    "eyebrow": "Features",
+    "heading": "What it does while you get on with your day",
+    "intro": "Not a chat window you have to remember to open. Your agents work on a schedule and come to you.",
     "items": [
       {
-        "label": "Needs you",
-        "title": "Nothing goes out until you say so",
-        "body": "Every post, email and ticket waits here with its full text. Approve, edit or reject in one click. Every decision is logged.",
-        "demo": "approval"
+        "label": "Alerts",
+        "title": "It messages you where you already are",
+        "body": "LINE, Telegram, Slack, Discord, Teams or email. When something needs your OK, when a task fails, and a brief each morning. Reply \"pause\" to stop.",
+        "demo": "alerts"
       },
       {
-        "label": "Nova · Marketer",
-        "title": "Monday's post, written on Sunday night",
-        "body": "Nova reads what changed this week and drafts the post in your voice. You approve it before anyone sees it.",
-        "demo": "marketer"
+        "label": "Team chat",
+        "title": "One chat with your whole team",
+        "body": "Ask once. The agent with the right tools answers, and brings in a colleague when it needs one. Every hand-off is on the page.",
+        "demo": "team"
       },
       {
-        "label": "Mia · Support",
-        "title": "The warranty question, answered at 2am",
-        "body": "Mia answers from the returns policy you uploaded and names the file. When it isn't in there, she hands it to you.",
-        "demo": "support"
+        "label": "Vera · Competitor watch",
+        "title": "Your competitors, checked by 6am",
+        "body": "Each competitor's Instagram followers, new posts and best post, compared with yesterday and with your own numbers.",
+        "demo": "competitor"
       },
       {
-        "label": "Sol · Researcher",
-        "title": "What three competitors did this week",
-        "body": "Sol runs your standing question every Friday and writes it up with numbered sources you can open and check.",
-        "demo": "researcher"
+        "label": "Juno · Personal assistant",
+        "title": "Your week, planned from your calendar",
+        "body": "Juno reads your Google or Outlook calendar and plans focus time around what's booked. Nothing is added until you approve.",
+        "demo": "week"
       },
       {
-        "label": "Penny · Money manager",
-        "title": "Where last month's money went",
-        "body": "Penny adds up the statement you uploaded, to the cent, and finds the subscription you forgot. Your card number is masked before any AI reads it.",
+        "label": "Penny · Money",
+        "title": "Your spending, added up exactly",
+        "body": "Upload a statement. Penny adds it up in code rather than guessing, hides account numbers, and finds the subscription you forgot.",
         "demo": "money"
-      },
-      {
-        "label": "Juno · Life admin",
-        "title": "The birthday that didn't slip",
-        "body": "Juno reads your week on Sunday night, spots Sam's birthday on Thursday, and blocks an hour to sort a gift. You say yes first.",
-        "demo": "life"
       }
     ]
   },
@@ -150,52 +122,13 @@
   },
   "roles": {
     "eyebrow": "Roles",
-    "heading": "Fourteen roles, ready to hire",
-    "intro": "Eight for your business, six for your own life. Pick one and change anything: its job, its voice, its documents, when it asks you.",
+    "heading": "Fifteen roles, ready to hire",
+    "intro": "Nine for your business, six for your own life. Pick one and change anything: its job, its voice, its documents, when it asks you.",
     "cta": "Explore role",
     "groups": {
       "business": "For your business",
       "personal": "For your life"
     }
-  },
-  "comparison": {
-    "eyebrow": "The difference",
-    "heading": "Why a chat window isn't a team",
-    "intro": "A chat assistant answers when you ask. Desker gives you staff and assistants that work on a schedule, know your business or you, and ask before anything goes out.",
-    "competitorLabel": "A chat assistant",
-    "deskerLabel": "Desker",
-    "items": [
-      {
-        "dimension": "When it works",
-        "generic": "Only when you open it and ask",
-        "desker": "On a schedule, or the moment someone writes in"
-      },
-      {
-        "dimension": "What it knows",
-        "generic": "Starts over, or half-remembers",
-        "desker": "Your business, or you, from answers you gave once, plus your documents"
-      },
-      {
-        "dimension": "Real work",
-        "generic": "Gives you text to copy and paste",
-        "desker": "Researches, drafts emails and posts, plans your week, logs issues"
-      },
-      {
-        "dimension": "Money",
-        "generic": "Does the maths in its head",
-        "desker": "Adds up your statements exactly, then explains them"
-      },
-      {
-        "dimension": "Approvals",
-        "generic": "Nothing to review before it goes out",
-        "desker": "Every post and email waits for your yes"
-      },
-      {
-        "dimension": "Work and life",
-        "generic": "One chat history for everything",
-        "desker": "A business space and a private personal space, walled apart"
-      }
-    ]
   },
   "testimonials": {
     "enabled": false,
@@ -209,6 +142,7 @@
     "intro": "No vague promises: here's what you get now, what's not there yet, and what we plan to charge after.",
     "included": [
       "Every role and workflow, business and personal, free while the beta runs",
+      "Alerts and a morning brief on LINE, Telegram, Slack, Discord, Teams or email",
       "Support answered from your documents, with a hand-off to you when they don't settle it",
       "A weekly plan from your Google Calendar, with changes waiting for your approval",
       "Approvals, the audit log, rules from your corrections, and export or delete of everything"
@@ -247,6 +181,10 @@
       {
         "q": "Is it for businesses or for individuals?",
         "a": "Both. When you sign up you choose a business, a personal space, or both. A business gets AI staff that work with clients and your team. A personal space gets assistants for your own life: money, your week, social media, your career, travel and learning."
+      },
+      {
+        "q": "Can it message me on LINE?",
+        "a": "Yes. Under Alerts, add LINE, Telegram, Slack, Discord, Microsoft Teams or email, then choose what you hear about: approvals, failures, digests, and a morning brief at the time you pick. You can reply \"brief\", \"news\" or \"pause\" from the chat. WhatsApp is coming."
       },
       {
         "q": "Can I have a business and a personal space?",
@@ -324,5 +262,10 @@
       ]
     },
     "wall": "Nothing in your personal space is visible to your business, its team or its clients."
+  },
+  "integrations": {
+    "eyebrow": "Integrations",
+    "heading": "Works with what you already use",
+    "intro": "Connect an app once, then choose which agents may use it and whether they ask first. Anything else reaches Desker through a webhook or the support inbox."
   }
 }

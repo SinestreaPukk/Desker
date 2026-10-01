@@ -68,6 +68,9 @@ const sectionHead = {
   intro: z.string().max(200).optional(),
 };
 
+/** The product pieces the landing page's feature tiles can show. */
+export const FEATURE_DEMOS = ["alerts", "team", "competitor", "week", "money"] as const;
+
 const landingSchema = z.object({
   meta,
   hero: z.object({
@@ -104,12 +107,6 @@ const landingSchema = z.object({
     /** The one line between them: what never crosses. */
     wall: z.string().min(1).max(120),
   }),
-  steps: z.object({
-    ...sectionHead,
-    items: z
-      .array(z.object({ icon: z.enum(LANDING_ICONS), title: z.string().min(1).max(40), body: z.string().min(1).max(120) }))
-      .length(3),
-  }),
   features: z.object({
     ...sectionHead,
     items: z
@@ -120,7 +117,7 @@ const landingSchema = z.object({
           title: z.string().min(1).max(64),
           body: z.string().min(1).max(200),
           /** Which piece of the product the tile shows. */
-          demo: z.enum(["support", "marketer", "researcher", "sales", "assistant", "approval", "money", "life"]),
+          demo: z.enum(FEATURE_DEMOS),
         }),
       )
       .min(2)
@@ -150,23 +147,8 @@ const landingSchema = z.object({
     /** Headings over each audience's roles. */
     groups: z.object({ business: z.string().min(1).max(32), personal: z.string().min(1).max(32) }),
   }),
-  comparison: z
-    .object({
-      ...sectionHead,
-      competitorLabel: z.string().min(1).max(48),
-      deskerLabel: z.string().min(1).max(48),
-      items: z
-        .array(
-          z.object({
-            dimension: z.string().min(1).max(48),
-            generic: z.string().min(1).max(140),
-            desker: z.string().min(1).max(140),
-          }),
-        )
-        .min(3)
-        .max(8),
-    })
-    .optional(),
+  /** What it connects to: the lists themselves come from the connector catalog and the alert channels. */
+  integrations: z.object({ ...sectionHead }),
   /** Real quotes only. Hidden until enabled with at least one item. */
   testimonials: z.object({
     enabled: z.boolean(),

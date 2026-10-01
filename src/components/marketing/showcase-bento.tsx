@@ -1,44 +1,31 @@
-import { CalendarClock, FileSearch, Globe } from "lucide-react";
+import { ArrowRight, CalendarClock, Instagram } from "lucide-react";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/badge";
-import { LiveApproval } from "@/components/marketing/live-product";
+import type { FEATURE_DEMOS } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 /**
- * The product, as a bento. The hero's reel already plays each agent's whole
- * scene, so the tiles here never replay one: the approvals inbox - the one
- * scene the reel does not have - gets the big tile, and each agent gets a
- * single finished artifact of its work. Pictures, not controls: every visual
- * is inert.
+ * What it does, as a bento: each tile a small, inert picture of the real
+ * product - the alert in a chat app, the team room, the 6am report, the
+ * planned week, the statement added up. Pictures, not controls.
  */
 
-type Demo = "support" | "marketer" | "researcher" | "sales" | "assistant" | "approval" | "money" | "life";
+type Demo = (typeof FEATURE_DEMOS)[number];
 type Item = { label: string; title: string; body: string; demo: Demo };
 
 const AGENT: Partial<Record<Demo, { name: string; seed: string }>> = {
-  marketer: { name: "Nova", seed: "nova" },
-  support: { name: "Mia", seed: "mia" },
-  researcher: { name: "Sol", seed: "sol" },
-  sales: { name: "Leo", seed: "leo-leads" },
-  assistant: { name: "Kai", seed: "kai" },
+  competitor: { name: "Vera", seed: "vera" },
+  week: { name: "Juno", seed: "juno" },
   money: { name: "Penny", seed: "penny" },
-  life: { name: "Juno", seed: "juno" },
 };
 
-/**
- * Where each tile sits. On lg: approvals is 2x2 with two tiles stacked beside
- * it, then a row of three. On sm: approvals full width, then pairs, the last
- * tile full width so the grid never ends on a hole.
- */
+/** On lg the alerts tile runs two rows tall beside two pairs; on sm it spans the width above them. */
 const PLACE: Record<Demo, string> = {
-  approval: "sm:col-span-2 lg:row-span-2",
-  marketer: "",
-  support: "",
-  researcher: "",
-  sales: "",
-  assistant: "sm:col-span-2 lg:col-span-1",
+  alerts: "sm:col-span-2 lg:col-span-1 lg:row-span-2",
+  team: "",
+  competitor: "",
+  week: "",
   money: "",
-  life: "sm:col-span-2 lg:col-span-1",
 };
 
 export function ShowcaseBento({ items }: { items: readonly Item[] }) {
@@ -55,18 +42,9 @@ export function ShowcaseBento({ items }: { items: readonly Item[] }) {
             </p>
             <h3 className="mt-3 text-xl font-semibold tracking-tight text-balance text-ink">{item.title}</h3>
             <p className="mt-2 text-base leading-relaxed text-ink-muted">{item.body}</p>
-            {/* The approvals window fills its tall tile; the minis sit at the foot of theirs. */}
-            {/* The approvals window is live - approve, edit, reject all
-                work; the small pieces of work in the other tiles are pictures. */}
-            {item.demo === "approval" ? (
-              <div className="mt-5 flex flex-1 flex-col">
-                <Artifact demo={item.demo} />
-              </div>
-            ) : (
-              <div className="mt-5 flex flex-1 flex-col justify-end" inert>
-                <Artifact demo={item.demo} />
-              </div>
-            )}
+            <div className="mt-5 flex flex-1 flex-col justify-end" inert>
+              <Artifact demo={item.demo} />
+            </div>
           </article>
         </li>
       ))}
@@ -76,35 +54,16 @@ export function ShowcaseBento({ items }: { items: readonly Item[] }) {
 
 function Artifact({ demo }: { demo: Demo }) {
   switch (demo) {
-    case "approval":
-      return (
-        <div className="mat flex flex-1 flex-col justify-center rounded-lg sm:p-5">
-          <LiveApproval
-            agent="Nova"
-            seed="nova"
-            action="publish a post"
-            where="Website news"
-            done="Published to"
-            heading="Monday's post"
-            initialText="A drill that quits in month 23 is still ours to fix. Every power tool we sell carries a 24-month warranty, and a claim takes one email."
-            why="Sol's Friday brief showed two competitors moved on warranty. I wrote this week's post from it."
-          />
-        </div>
-      );
-    case "marketer":
-      return <MiniDraft />;
-    case "support":
-      return <MiniAnswer />;
-    case "researcher":
-      return <MiniSources />;
-    case "sales":
-      return <MiniLeads />;
-    case "assistant":
-      return <MiniInvite />;
+    case "alerts":
+      return <MiniChatApp />;
+    case "team":
+      return <MiniTeam />;
+    case "competitor":
+      return <MiniReport />;
+    case "week":
+      return <MiniWeek />;
     case "money":
       return <MiniMoney />;
-    case "life":
-      return <MiniBirthday />;
   }
 }
 
@@ -117,110 +76,119 @@ function Mini({ children, className }: { children: React.ReactNode; className?: 
   );
 }
 
-/** Nova's draft, queued. No buttons: the approvals tile owns that moment. */
-function MiniDraft() {
+/** A chat app on a phone: the morning brief, an alert, and a reply. */
+function MiniChatApp() {
   return (
-    <Mini>
-      <span className="flex items-center justify-between gap-2">
-        <span className="meta whitespace-nowrap">Draft · Monday 09:00</span>
-        <StatusBadge status="needs_approval" />
+    <div className="flex flex-1 flex-col gap-3" aria-hidden>
+      <div className="mx-auto flex w-full max-w-xs flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-line-strong bg-paper shadow-sm">
+        <span className="flex items-center gap-2 border-b border-line bg-surface px-4 py-2.5">
+          <span className="flex size-7 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-fg">D</span>
+          <span className="text-sm font-semibold text-ink">Desker</span>
+        </span>
+        <span className="flex flex-1 flex-col justify-end gap-2.5 p-3 text-xs leading-relaxed">
+          <Bubble time="07:30">
+            <span className="block font-semibold">Good morning, Nok. Wednesday 1 October</span>
+            <span className="mt-1.5 block">Today: 09:00 standup, 14:00 supplier call</span>
+            <span className="block">Waiting on you: 2</span>
+            <span className="block">Vera: Roastery Co&apos;s reel got 4x its usual likes</span>
+          </Bubble>
+          <Bubble time="10:12">
+            <span className="block font-semibold">Needs your OK · Nok&apos;s Coffee</span>
+            <span className="mt-1 block">Mia drafted a reply to a refund request.</span>
+            <span className="mt-1 block text-accent">desker.dev/p/nok/work</span>
+          </Bubble>
+          <span className="ml-auto block w-fit rounded-panel rounded-br-md bg-accent px-3 py-1.5 text-accent-fg">news</span>
+        </span>
+      </div>
+      <span className="flex flex-wrap justify-center gap-1.5">
+        {["LINE", "Telegram", "Slack", "Discord", "Teams", "Email"].map((name) => (
+          <span key={name} className="rounded-full border border-line bg-paper px-2.5 py-0.5 text-xs text-ink-muted">
+            {name}
+          </span>
+        ))}
       </span>
-      <span className="mt-2 block leading-relaxed text-ink">
-        A drill that quits in month 23 is still ours to fix. 24 months, one email to claim.
-      </span>
-    </Mini>
+    </div>
   );
 }
 
-/** Mia's answer with the document it came from. */
-function MiniAnswer() {
+function Bubble({ time, children }: { time: string; children: React.ReactNode }) {
+  return (
+    <span className="flex items-end gap-1.5">
+      <span className="block max-w-[85%] rounded-panel rounded-bl-md border border-line bg-surface px-3 py-2 text-ink">{children}</span>
+      <span className="meta shrink-0">{time}</span>
+    </span>
+  );
+}
+
+/** The team room: one question, the right agent answers, a colleague brought in. */
+function MiniTeam() {
   return (
     <Mini className="space-y-2">
       <span className="ml-auto block w-fit max-w-[85%] rounded-panel rounded-br-md bg-accent px-3 py-1.5 text-accent-fg">
-        Is the drill still under warranty?
+        Plan next week around the launch?
       </span>
-      <span className="block rounded-panel rounded-tl-md border border-line bg-surface px-3 py-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-soft-fg">
-          <FileSearch className="size-3" aria-hidden />
-          returns-policy.pdf
-        </span>
-        <span className="mt-1.5 block leading-relaxed text-ink">
-          Power tools carry 24 months, so this is a warranty claim, not a return.
+      <span className="flex items-start gap-2">
+        <AgentAvatar name="Kai" seed="kai" size="sm" />
+        <span className="min-w-0">
+          <span className="flex items-center gap-1 text-xs text-ink-muted">
+            Kai <ArrowRight className="size-3" aria-hidden /> asked Nova for the post dates
+          </span>
+          <span className="mt-0.5 block leading-relaxed text-ink">Three focus blocks, launch review Thu 14:00. Waiting for your OK.</span>
         </span>
       </span>
     </Mini>
   );
 }
 
-/** Sol's brief, as its sources. */
-function MiniSources() {
-  const sources = [
-    "Fabrikam moves to a 36-month warranty",
-    "Tailspin Tools launches the Pro line",
-    "Contoso Hardware Q3 update",
-  ];
-  return (
-    <Mini>
-      <span className="flex items-center gap-1.5 text-xs text-ink-muted">
-        <Globe className="size-3.5" aria-hidden />
-        Friday brief · 3 sources
-      </span>
-      <ol className="mt-2 space-y-1.5">
-        {sources.map((title, index) => (
-          <li key={title} className="flex items-center gap-2">
-            <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-accent-soft text-xs font-semibold text-accent-soft-fg">
-              {index + 1}
-            </span>
-            <span className="truncate text-ink">{title}</span>
-          </li>
-        ))}
-      </ol>
-    </Mini>
-  );
-}
-
-/** Leo's leads, each with its reason, and the intros waiting for you. */
-function MiniLeads() {
-  const leads = [
-    ["Hale & Sons", "Two new sites this year"],
-    ["Crane Joinery", "Buys drills each spring"],
+/** Vera's 6am report, numbers first. */
+function MiniReport() {
+  const rows = [
+    ["@roasteryco", "+312 followers · 2 new posts"],
+    ["Best post", "Latte-art reel, 4x usual likes"],
+    ["#specialtycoffee", "Short how-to reels lead"],
+    ["You", "Reach 2,140, up 18%"],
   ] as const;
   return (
     <Mini>
-      <ul className="space-y-1.5">
-        {leads.map(([name, why]) => (
-          <li key={name} className="flex items-center gap-2">
-            <span className="flex gap-0.5" aria-hidden>
-              {[1, 2, 3].map((dot) => (
-                <span key={dot} className="size-1.5 rounded-full bg-positive" />
-              ))}
-            </span>
-            <span className="font-medium text-ink">{name}</span>
-            <span className="truncate text-xs text-ink-muted">{why}</span>
-          </li>
-        ))}
-      </ul>
-      <span className="mt-2 flex items-center justify-between gap-2 border-t border-line pt-2">
-        <span className="text-xs text-ink-muted">5 intro emails drafted</span>
-        <StatusBadge status="needs_approval" />
+      <span className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5 text-xs text-ink-muted">
+          <Instagram className="size-3.5" aria-hidden />
+          Morning report · 06:04
+        </span>
+        <StatusBadge status="done" />
       </span>
+      <dl className="mt-2 space-y-1">
+        {rows.map(([label, value]) => (
+          <span key={label} className="grid grid-cols-[7rem_1fr] gap-2 text-xs">
+            <dt className="truncate font-medium text-ink">{label}</dt>
+            <dd className="truncate text-ink-muted">{value}</dd>
+          </span>
+        ))}
+      </dl>
     </Mini>
   );
 }
 
-/** Kai's proposed meeting, not yet sent. */
-function MiniInvite() {
+/** Juno's proposed week: what goes where, waiting for a yes. */
+function MiniWeek() {
+  const blocks = [
+    ["Mon", "09:00", "Deep work: tax return"],
+    ["Wed", "18:00", "Gym, moved from Tuesday"],
+    ["Thu", "12:00", "Gift shopping for Sam"],
+  ] as const;
   return (
-    <Mini className="flex items-center gap-3">
-      <span className="flex size-10 shrink-0 flex-col items-center justify-center rounded-md border border-line bg-surface leading-none">
-        <span className="meta">Thu</span>
-        <span className="mt-0.5 text-base font-semibold text-ink">10</span>
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block font-medium text-ink">Follow-up with Dana</span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
+    <Mini className="space-y-1.5">
+      {blocks.map(([day, time, what]) => (
+        <span key={what} className="flex items-center gap-2.5">
+          <span className="w-8 shrink-0 text-xs font-semibold text-ink">{day}</span>
+          <span className="meta w-10 shrink-0">{time}</span>
+          <span className="truncate text-ink">{what}</span>
+        </span>
+      ))}
+      <span className="flex items-center justify-between gap-2 border-t border-line pt-2">
+        <span className="flex items-center gap-1.5 text-xs text-ink-muted">
           <CalendarClock className="size-3.5" aria-hidden />
-          Proposed · sends when you approve
+          Added to your calendar when you approve
         </span>
       </span>
     </Mini>
@@ -253,21 +221,3 @@ function MiniMoney() {
   );
 }
 
-/** Juno's proposal: an hour for the gift, before the day. */
-function MiniBirthday() {
-  return (
-    <Mini className="flex items-center gap-3">
-      <span className="flex size-10 shrink-0 flex-col items-center justify-center rounded-md border border-line bg-surface leading-none">
-        <span className="meta">Wed</span>
-        <span className="mt-0.5 text-base font-semibold text-ink">18</span>
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block font-medium text-ink">Gift shopping for Sam</span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
-          <CalendarClock className="size-3.5" aria-hidden />
-          Birthday Thursday · added when you approve
-        </span>
-      </span>
-    </Mini>
-  );
-}

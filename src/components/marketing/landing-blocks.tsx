@@ -18,7 +18,6 @@ import {
   Building,
   Lock,
   UserRound,
-  X,
 } from "lucide-react";
 import { LANDING_ICONS, type PRODUCT_SHOTS } from "@/lib/content";
 
@@ -28,6 +27,8 @@ import { AgentAvatar } from "@/components/ui/avatar";
 import { LiveApproval, LiveHandoff, LiveLimits } from "@/components/marketing/live-product";
 import { PromiseDoodle, type PromiseDoodleId } from "@/components/marketing/promise-doodles";
 import { BrandLogo, type BrandLogoId } from "@/components/marketing/brand-logos";
+import { CONNECTORS, CONNECTOR_CATEGORIES } from "@/lib/integrations/catalog";
+import { CHANNEL_KINDS, CHANNELS, type ChannelKind } from "@/lib/messaging/prefs";
 import { cn } from "@/lib/utils";
 
 /**
@@ -106,27 +107,6 @@ export function TrustStrip({
         ))}
       </ul>
     </div>
-  );
-}
-
-/* --- How it works ------------------------------------------------------------ */
-
-export function Steps({
-  items,
-}: {
-  items: readonly { title: string; body: string }[];
-}) {
-  // Numbered prose, read left to right - not a row of icons in circles.
-  return (
-    <ol className="mx-auto grid max-w-5xl gap-10 md:grid-cols-3 md:gap-12">
-      {items.map((step, index) => (
-        <li key={step.title} className="border-t border-line-strong pt-5">
-          <p className="text-sm font-semibold text-accent tabular-nums">Step {index + 1}</p>
-          <h3 className="mt-2 text-lg font-semibold tracking-tight text-ink">{step.title}</h3>
-          <p className="mt-2 text-base leading-relaxed text-ink-muted">{step.body}</p>
-        </li>
-      ))}
-    </ol>
   );
 }
 
@@ -306,62 +286,6 @@ export function Desks({ business, personal, wall }: { business: Desk; personal: 
   );
 }
 
-/* --- Comparison: Desker vs Generic AI -------------------------------------- */
-
-interface ComparisonItem {
-  dimension: string;
-  generic: string;
-  desker: string;
-}
-
-/**
- * The difference, as two pieces of paper side by side: a plain grey scrap
- * for the chat assistant, and a lemon note for your staff, each answering the
- * same five questions. On a phone they stack, chat first.
- */
-export function ComparisonTable({
-  competitorLabel,
-  deskerLabel,
-  items,
-}: {
-  competitorLabel: string;
-  deskerLabel: string;
-  items: readonly ComparisonItem[];
-}) {
-  return (
-    <div className="mx-auto grid max-w-5xl items-start gap-8 md:grid-cols-2 md:gap-10">
-      <div className="note note-plain relative rotate-[-0.8deg] rounded-sm bg-surface-2 p-6 text-ink-muted sm:p-7">
-        <p className="font-hand text-hand-cta font-bold text-ink-muted">{competitorLabel}</p>
-        <dl className="mt-4 space-y-4">
-          {items.map((item) => (
-            <div key={item.dimension}>
-              <dt className="text-xs font-semibold text-ink-muted">{item.dimension}</dt>
-              <dd className="mt-1 flex gap-2.5 text-base leading-relaxed">
-                <X className="mt-1 size-4 shrink-0 text-ink-subtle" aria-hidden />
-                {item.generic}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-      <StickyNote tone="lemon" tilt={1} settle={false} className="relative p-6 sm:p-7">
-        <p className="font-hand text-hand-cta font-bold">{deskerLabel}</p>
-        <dl className="mt-4 space-y-4">
-          {items.map((item) => (
-            <div key={item.dimension}>
-              <dt className="text-xs font-semibold">{item.dimension}</dt>
-              <dd className="mt-1 flex gap-2.5 text-base font-medium leading-relaxed">
-                <Check className="mt-1 size-4 shrink-0 text-positive" aria-hidden />
-                {item.desker}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </StickyNote>
-    </div>
-  );
-}
-
 /* --- Testimonials -------------------------------------------------------------- */
 
 /** Real quotes only. The page renders this only when content enables it. */
@@ -406,5 +330,53 @@ export function Faq({ items }: { items: readonly { q: string; a: string }[] }) {
         ))}
       </div>
     </StickyNote>
+  );
+}
+
+/* --- Integrations ----------------------------------------------------------- */
+
+/**
+ * What it connects to, read from the connector catalog and the alert
+ * channels themselves, so the page can't promise an app that isn't there.
+ * Planned ones are named once, as coming.
+ */
+export function Integrations({ liveChannels }: { liveChannels: readonly ChannelKind[] }) {
+  const columns = [
+    {
+      label: "Alerts to you",
+      names: CHANNEL_KINDS.filter((kind) => liveChannels.includes(kind)).map((kind) => CHANNELS[kind].name),
+    },
+    ...CONNECTOR_CATEGORIES.map((category) => ({
+      label: category.label,
+      names: CONNECTORS.filter((c) => c.category === category.id && c.status === "available").map((c) => c.name),
+    })),
+  ].filter((column) => column.names.length > 0);
+  const shown = new Set(columns.flatMap((column) => column.names));
+  const coming = [
+    ...CHANNEL_KINDS.filter((kind) => !liveChannels.includes(kind)).map((kind) => CHANNELS[kind].name),
+    ...CONNECTORS.filter((c) => c.status === "planned").map((c) => c.name),
+  ].filter((name) => !shown.has(name));
+  return (
+    <div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {columns.map((column) => (
+          <section key={column.label} className="rounded-panel border border-line bg-surface p-5 shadow-xs">
+            <h3 className="text-sm font-semibold text-ink">{column.label}</h3>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {column.names.map((name) => (
+                <li key={name} className="rounded-lg border border-line bg-paper px-3 py-1.5 text-sm text-ink">
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+      {coming.length ? (
+        <p className="mt-6 text-center text-sm text-ink-muted">
+          <span className="font-medium text-ink">On the way:</span> {coming.join(", ")}.
+        </p>
+      ) : null}
+    </div>
   );
 }
