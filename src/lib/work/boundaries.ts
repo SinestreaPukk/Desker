@@ -8,7 +8,8 @@
 import { WORK_TOOL_IDS, type WorkToolId } from "./tools";
 import { effectiveAutonomy, GATED_TOOL_IDS, type AutonomyMode, type GatedToolId, type ToolAutonomy } from "./types";
 
-const CAN: Record<Exclude<WorkToolId, GatedToolId>, string> = {
+/** null: housekeeping every agent has, not worth a line on its card. */
+const CAN: Record<Exclude<WorkToolId, GatedToolId>, string | null> = {
   search_documents: "Look things up in the documents you gave it",
   review_spending: "Add up the statements you uploaded, exactly",
   web_research: "Research the web and cite its sources",
@@ -17,10 +18,10 @@ const CAN: Record<Exclude<WorkToolId, GatedToolId>, string> = {
   social_read: "Read your social posts, likes and comments",
   calendar_list_events: "Check your calendar",
   inbox_read: "Read your inbox",
-  schedule_followup: "Queue its own follow-up tasks",
+  schedule_followup: null,
   delegate_to_colleague: "Hand work to a colleague on your roster",
-  suggest_opportunity: "Raise ideas and alerts in Needs you",
-  escalate_to_human: "Stop and ask you when it should",
+  suggest_opportunity: null,
+  escalate_to_human: null, // the card shows its escalation rule instead
 };
 
 const REACHES_OUT: Record<GatedToolId, string> = {
@@ -34,12 +35,8 @@ const REACHES_OUT: Record<GatedToolId, string> = {
   social_manage: "Edit or delete your social posts",
 };
 
-/** True everywhere: there is no tool for any of it. */
-const NEVER = [
-  "Spend money, sign or agree to anything",
-  "Change its own instructions or settings",
-  "Run code or reach systems you haven't connected",
-];
+/** True everywhere: there is no tool for it. */
+const NEVER = "Spend money, sign or agree to anything";
 
 export function describeBoundaries(scope: {
   tools: readonly WorkToolId[] | null;
@@ -52,17 +49,15 @@ export function describeBoundaries(scope: {
 
   for (const tool of WORK_TOOL_IDS) {
     if (tool in REACHES_OUT) continue;
-    if (tools.has(tool)) can.push(CAN[tool as keyof typeof CAN]);
+    const line = CAN[tool as keyof typeof CAN];
+    if (line && tools.has(tool)) can.push(line);
   }
+  // Only what this agent has: a tool it was never given isn't worth listing.
   for (const tool of GATED_TOOL_IDS) {
+    if (!tools.has(tool)) continue;
     const action = REACHES_OUT[tool];
-    if (!tools.has(tool)) cannot.push(action);
-    else if (effectiveAutonomy(scope.autonomy, scope.toolAutonomy, tool) === "auto") can.push(`${action} without asking you`);
-    else {
-      // Said on both sides: what it may do once you say yes, and that it never skips the yes.
-      can.push(`${action}, once you approve each one`);
-      cannot.push(`${action} without your approval`);
-    }
+    if (effectiveAutonomy(scope.autonomy, scope.toolAutonomy, tool) === "auto") can.push(`${action} without asking you`);
+    else cannot.push(`${action} without your approval`);
   }
-  return { can, cannot: [...cannot, ...NEVER] };
+  return { can, cannot: [...cannot, NEVER] };
 }
