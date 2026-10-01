@@ -23,6 +23,7 @@ import {
   type ToolCall,
 } from "@/lib/llm/provider";
 import { toolDefinitionsFor } from "@/lib/tools/registry";
+import { WEB_CHAT_NOTE, WEB_SEARCH, webSearch } from "@/lib/chat-web";
 import { CALENDAR_CHAT_NOTE, CHECK_CALENDAR, checkCalendar } from "@/lib/chat-calendar";
 import { timeNote, validTimeZone } from "@/lib/local-time";
 import { audit } from "@/lib/audit";
@@ -229,6 +230,7 @@ export async function* runAgentTurn(
     });
     systemPrompt += `\n\n${timeNote(new Date(), scope?.timezone)}`;
     if (calendarInChat) systemPrompt += `\n\n${CALENDAR_CHAT_NOTE}`;
+    systemPrompt += `\n\n${WEB_CHAT_NOTE}`;
   }
 
   const history = messagesFromRows(historyRows);
@@ -245,6 +247,25 @@ export async function* runAgentTurn(
   const effects = new Map<string, ToolOutcome["effect"]>();
 
   const executeTool = async (call: ToolCall) => {
+    if (!isCompanyContext && call.name === WEB_SEARCH.name) {
+      const result = await webSearch(
+        { organizationId: project.organizationId, agentId: agent.id, modelProvider: agent.modelProvider, model: agent.model },
+        call.input,
+      ).catch((error: unknown) => ({
+        content: `The search failed: ${error instanceof Error ? error.message : "unknown error"}`,
+        isError: true,
+      }));
+      await audit({
+        organizationId: project.organizationId,
+        actorType: "agent",
+        actorId: agent.id,
+        action: "tool.called",
+        targetType: "conversation",
+        targetId: conversationId,
+        metadata: { tool: WEB_SEARCH.name, ok: !result.isError, trigger: "conversation", result: result.content.slice(0, 600) },
+      });
+      return result;
+    }
     if (calendarInChat && call.name === CHECK_CALENDAR.name) {
       const result = await checkCalendar(project.organizationId, call.input, validTimeZone(scope?.timezone)).catch((error: unknown) => ({
         content: `The calendar could not be read: ${error instanceof Error ? error.message : "unknown error"}`,
@@ -286,7 +307,7 @@ export async function* runAgentTurn(
       billing: { organizationId: project.organizationId, agentId: agent.id },
       systemPrompt,
       messages,
-      tools: [...toolDefinitionsFor(offeredTools), ...(calendarInChat ? [CHECK_CALENDAR] : [])],
+      tools: [...toolDefinitionsFor(offeredTools), ...(calendarInChat ? [CHECK_CALENDAR] : []), ...(isCompanyContext ? [] : [WEB_SEARCH])],
       executeTool,
       model: agent.model,
       signal,
