@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Clock } from "lucide-react";
 import { Field, Input, Label } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -30,7 +31,7 @@ import { ContextHelper } from "./live-example";
 import { ChoicePicker, ObjectivesEditor } from "./agent-setup";
 import { choicesFor } from "@/lib/work/agent-choices";
 import { useIntegrations } from "@/hooks/use-work-data";
-import { connectorsForTool } from "@/lib/integrations/catalog";
+import { CONNECTORS, connectorsForTool } from "@/lib/integrations/catalog";
 import { GATED_TOOL_IDS } from "@/lib/work/types";
 import { useSpaceKind } from "@/components/space-kind";
 import { ContextQuestions } from "./context-questions";
@@ -593,6 +594,7 @@ export function ToolsSection({
 
   const toolCard = (tool: WorkToolId) => {
     const checked = value.tools.includes(tool);
+  const linked = CONNECTORS.filter((connector) => connector.status === "available" && connector.tools?.length && connected.has(connector.id));
     // Publishing goes to a connected network or the webhook: any one of them will do.
     const needs = tool === "publish_post" ? [...connectorsForTool("social_read"), ...connectorsForTool(tool)] : connectorsForTool(tool);
     const has = needs.find((connector) => connected.has(connector.id));
@@ -606,6 +608,32 @@ export function ToolsSection({
           checked ? "border-accent-line bg-accent-soft/30" : "border-line hover:bg-surface-2",
         )}
       >
+      {linked.length > 0 ? (
+        <div className="space-y-1.5 rounded-md border border-line p-3">
+          <p className="text-sm font-medium text-ink">Connected tools this agent may use</p>
+          {linked.map((connector) => {
+            const tools = (connector.tools ?? []).filter((tool): tool is WorkToolId => (WORK_TOOL_IDS as readonly string[]).includes(tool));
+            const on = tools.every((tool) => value.tools.includes(tool));
+            return (
+              <label key={connector.id} className="flex items-center justify-between gap-3 text-sm text-ink">
+                <span>{connector.name}</span>
+                {/* ponytail: tools shared by two connectors (Gmail and Outlook) switch together; a per-connector choice needs its own column. */}
+                <Switch
+                  checked={on}
+                  aria-label={`Let this agent use ${connector.name}`}
+                  onCheckedChange={(next) =>
+                    set(
+                      "tools",
+                      WORK_TOOL_IDS.filter((id) => (tools.includes(id) ? next : value.tools.includes(id))),
+                    )
+                  }
+                />
+              </label>
+            );
+          })}
+        </div>
+      ) : null}
+
         <Checkbox
           id={`${idPrefix}-tool-${tool}`}
           checked={checked}

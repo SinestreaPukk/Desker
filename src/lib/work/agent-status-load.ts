@@ -5,7 +5,7 @@
  */
 import "server-only";
 import { prisma } from "@/lib/db";
-import { CONNECTORS, connectorChoice, connectorsForTool } from "@/lib/integrations/catalog";
+import { CONNECTORS, connectorsForTool } from "@/lib/integrations/catalog";
 import { healthForIntegrations } from "./integration-health";
 import { resolveEmail } from "./integrations";
 import { runModeOf } from "./cadence";
@@ -78,20 +78,10 @@ export async function agentStatusFacts(projectId: string, organizationId: string
       );
       if (states.some((state) => state.health?.active && state.health.state === "connected")) continue;
       const active = states.find((state) => state.health?.active);
-      const first = choices[0]!;
       if (active) {
         problems.push({ connectorId: active.connector.id, name: active.connector.name, state: "attention", consequence: active.health!.consequence });
-      } else if (states.length > 0) {
-        problems.push({ connectorId: states[0]!.connector.id, name: states[0]!.connector.name, state: "off", consequence: states[0]!.health!.consequence });
-      } else {
-        const name = connectorChoice(choices);
-        problems.push({
-          connectorId: first.id,
-          name,
-          state: "missing",
-          consequence: `Its work needs ${name}, which isn't connected, so that part stays a draft.`,
-        });
       }
+      // Never connected, or switched off on purpose: the owner's choice, not a problem to flag.
     }
     return problems;
   }
