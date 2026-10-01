@@ -8,7 +8,7 @@
  * runDueDigests.
  */
 import { inngest } from "./client";
-import { runDueDigests, generateDigest } from "@/lib/work/digest";
+import { runDueCheckIns, generateCheckInForAgent } from "@/lib/work/check-in";
 import { captureError } from "@/lib/monitoring";
 
 const DIGEST_CRON = "*/15 * * * *";
@@ -16,11 +16,11 @@ const DIGEST_CRON = "*/15 * * * *";
 export const digestScheduler = inngest.createFunction(
   {
     id: "digest-scheduler",
-    name: "Send due agent digests",
+    name: "Send due project check-ins",
     triggers: { cron: DIGEST_CRON },
   },
   async ({ step }) => {
-    const generated = await step.run("run-due-digests", () => runDueDigests());
+    const generated = await step.run("run-due-check-ins", () => runDueCheckIns());
     return { generated };
   },
 );
@@ -33,7 +33,7 @@ export const digestScheduler = inngest.createFunction(
 export const digestNowFn = inngest.createFunction(
   {
     id: "digest-generate",
-    name: "Generate one agent's digest",
+    name: "Generate one project check-in",
     triggers: { event: "work/digest.generate" },
     retries: 1,
     concurrency: [{ limit: 1, key: "event.data.agentId" }],
@@ -46,7 +46,7 @@ export const digestNowFn = inngest.createFunction(
   },
   async ({ event, step }) => {
     const agentId = String(event.data.agentId);
-    const digest = await step.run("generate", () => generateDigest(agentId, { force: true }));
-    return { agentId, digestId: digest?.id ?? null };
+    const checkIn = await step.run("generate", () => generateCheckInForAgent(agentId));
+    return { agentId, checkInId: checkIn?.id ?? null };
   },
 );

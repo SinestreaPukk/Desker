@@ -84,6 +84,8 @@ export function SuggestionRow({
       <Badge tone="positive">Accepted</Badge>
     ) : suggestion.status === "dismissed" ? (
       <Badge tone="neutral">Dismissed</Badge>
+    ) : suggestion.status === "delegated" ? (
+      <Badge tone="accent">Delegated</Badge>
     ) : suggestion.status === "snoozed" && !suggestion.pending ? (
       <Badge tone="neutral">
         <Clock aria-hidden />

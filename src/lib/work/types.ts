@@ -141,7 +141,56 @@ export interface DigestStats {
   suggestions: number;
 }
 
-export const SUGGESTION_STATUSES = ["open", "accepted", "dismissed", "snoozed"] as const;
+export interface CheckInAgentHealth {
+  agentId: string;
+  agentName: string;
+  avatarUrl: string | null;
+  tone: "positive" | "accent" | "warning" | "danger" | "neutral";
+  headline: string;
+  detail: string;
+  changed: boolean;
+  previousHeadline: string | null;
+}
+
+export interface ProjectCheckInStats {
+  runs: number;
+  completed: number;
+  failed: number;
+  awaitingApproval: number;
+  drafts: number;
+  suggestions: number;
+  healthChanges: number;
+}
+
+export interface ProjectCheckInDto {
+  id: string;
+  project: { id: string; name: string };
+  cadence: Exclude<DigestCadence, "off">;
+  periodStart: string;
+  periodEnd: string;
+  headline: string;
+  bullets: DigestBullet[];
+  stats: ProjectCheckInStats;
+  agentHealth: CheckInAgentHealth[];
+  actionItemIds: string[];
+  suggestions: Array<{
+    id: string;
+    agentId: string;
+    agentName: string;
+    summary: string;
+    rationale: string;
+    proposal: string;
+    actionItemId: string | null;
+    status: SuggestionStatus;
+    pending: boolean;
+  }>;
+  readAt: string | null;
+  emailedAt: string | null;
+  emailError: string | null;
+  createdAt: string;
+}
+
+export const SUGGESTION_STATUSES = ["open", "accepted", "dismissed", "snoozed", "delegated"] as const;
 export type SuggestionStatus = (typeof SUGGESTION_STATUSES)[number];
 
 export function isSuggestionStatus(value: string): value is SuggestionStatus {

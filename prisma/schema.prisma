@@ -185,6 +185,7 @@ model Organization {
   drafts        Draft[]
   integrations  Integration[]
   digests       Digest[]
+  projectCheckIns ProjectCheckIn[]
   suggestions   Suggestion[]
   emailSuppressions EmailSuppression[]
   supportInboxes    SupportInbox[]
@@ -257,6 +258,12 @@ model Project {
   /// derived from the answers on every save - see lib/work/context.ts.
   context        String       @default("")
   contextAnswers Json?
+  /// Project-wide owner check-in preferences. Null inherits the former per-agent defaults.
+  checkInCadence    String?
+  checkInTimezone   String?
+  checkInEmail      Boolean?
+  checkInRecipients String?
+  lastCheckInAt     DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
@@ -264,6 +271,7 @@ model Project {
   teamThreads  TeamThread[]
   teamMessages TeamMessage[]
   supportInbox SupportInbox?
+  checkIns     ProjectCheckIn[]
 
   @@index([organizationId])
 }
@@ -686,6 +694,32 @@ model Digest {
   @@unique([agentId, periodStart])
   @@index([organizationId, createdAt])
   @@index([agentId, createdAt])
+}
+
+/// One daily or weekly check-in for the whole project, with links back to its work.
+model ProjectCheckIn {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  cadence        String
+  periodStart    DateTime
+  periodEnd      DateTime
+  headline       String
+  bullets        Json
+  stats          Json
+  /// Current health for each agent, saved to report changes next period.
+  agentHealth    Json
+  actionItemIds  Json
+  suggestionIds  Json
+  readAt         DateTime?
+  emailedAt      DateTime?
+  emailError     String?
+  createdAt      DateTime     @default(now())
+
+  @@index([projectId, periodStart])
+  @@index([organizationId, createdAt])
 }
 
 /// An agent-initiated recommendation, kept distinct from a task result: what

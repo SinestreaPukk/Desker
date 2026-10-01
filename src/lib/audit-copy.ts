@@ -405,6 +405,8 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: `${who} dismissed a suggestion`, detail: null, tone: "neutral", icon: "note" };
     case "suggestion.snoozed":
       return { title: `${who} snoozed a suggestion`, detail: "It comes back later.", tone: "neutral", icon: "note" };
+    case "suggestion.delegated":
+      return { title: `${who} delegated a suggestion follow-up`, detail: "A teammate has a new task to follow up.", tone: "accent", icon: "note" };
 
     case "draft.edited":
       return { title: `${who} edited a draft before approving it`, detail: null, tone: "neutral", icon: "draft" };

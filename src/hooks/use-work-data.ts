@@ -12,7 +12,7 @@ import type {
   IntegrationDto,
   SuggestionDto,
 } from "@/lib/work/serialize";
-import type { SuggestionStatus } from "@/lib/work/types";
+import type { ProjectCheckInDto, SuggestionStatus } from "@/lib/work/types";
 import type { ContextAnswers } from "@/lib/work/context";
 import type { ProjectContextDto } from "@/lib/work/project-context";
 import type { AgentRuleDto } from "@/lib/work/rules";
@@ -296,6 +296,24 @@ export function useDigests(filters: Record<string, string>) {
   });
 }
 
+export function useCheckIns(filters: Record<string, string>) {
+  return useQuery({
+    queryKey: ["check-ins", filters],
+    queryFn: () => api<ProjectCheckInDto[]>(`/api/check-ins${queryString(filters)}`),
+    enabled: Boolean(filters.project),
+    refetchInterval: 60_000,
+  });
+}
+
+export function useSetCheckInRead() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ checkInId, read }: { checkInId: string; read: boolean }) =>
+      api<ProjectCheckInDto>(`/api/check-ins/${checkInId}`, { method: "PATCH", body: JSON.stringify({ read }) }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ["check-ins"] }),
+  });
+}
+
 export function useSetDigestRead() {
   const client = useQueryClient();
   return useMutation({
@@ -316,7 +334,10 @@ export function useGenerateDigest(agentId: string) {
     onSuccess: () => {
       // The digest is written by a background job, so the list is refreshed a
       // moment later rather than immediately.
-      setTimeout(() => void client.invalidateQueries({ queryKey: ["digests"] }), 4_000);
+      setTimeout(() => {
+        void client.invalidateQueries({ queryKey: ["digests"] });
+        void client.invalidateQueries({ queryKey: ["check-ins"] });
+      }, 4_000);
     },
   });
 }
@@ -372,6 +393,7 @@ export function useDecideSuggestion() {
     },
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ["suggestions"] });
+      void client.invalidateQueries({ queryKey: ["check-ins"] });
       // Accepting writes an objective onto the scope of work.
       void client.invalidateQueries({ queryKey: ["scope"] });
     },

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
 import { ProjectContextPanel } from "@/components/builder/project-context-panel";
+import { CheckInSettingsPanel } from "@/components/work/check-in-settings-panel";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
@@ -82,6 +83,7 @@ export function OrganizationView({
         <PageBody className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <div className="space-y-5">
             <ProjectContextPanel project={project} />
+            <CheckInSettingsPanel project={project} />
             <PrivacyPanel />
           </div>
           <div className="space-y-5">
@@ -104,6 +106,7 @@ export function OrganizationView({
         <div className="space-y-5">
           {/* The same shared context as the roster's, edited from either place. */}
           <ProjectContextPanel project={project} />
+          <CheckInSettingsPanel project={project} />
           <MembersPanel organizationId={organizationId} currentUserId={currentUserId} isOwner={isOwner} />
           {isAdmin ? <InvitesPanel organizationId={organizationId} isOwner={isOwner} /> : null}
         </div>

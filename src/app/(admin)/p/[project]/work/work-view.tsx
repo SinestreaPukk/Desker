@@ -30,7 +30,7 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { TabCount, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CollabTag, isFlagged, RunBadge, RunDetail, runTitle } from "@/components/work/run-detail";
 import { CancelRunButton, RemoveButton } from "@/components/work/row-actions";
-import { DigestList } from "@/components/work/digest-card";
+import { CheckInList } from "@/components/work/check-in-card";
 import { useAgents } from "@/hooks/use-admin-data";
 import { FINISHED, useActionItem, useActionItems, useRunScope, useScope, useSuggestions } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
@@ -139,8 +139,17 @@ export function WorkView({
     setSelectedId(id);
     setParam("run", id);
   }, []);
-  // Nothing chosen yet: open the newest run that has something to read.
-  const shown = selectedId ?? all.find((item) => item.status !== "queued")?.id ?? all[0]?.id ?? null;
+  // Keep the reading pane tied to the current result set. A selected run that
+  // leaves the list through search or filtering is cleared from the URL too.
+  React.useEffect(() => {
+    if (!selectedId || items.isLoading || all.some((item) => item.id === selectedId)) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("run");
+    window.history.replaceState(null, "", url);
+  }, [all, items.isLoading, selectedId]);
+  // Nothing chosen yet: open the newest visible run that has something to read.
+  const stillListed = !!selectedId && (items.isLoading || all.some((item) => item.id === selectedId));
+  const shown = (stillListed ? selectedId : null) ?? all.find((item) => item.status !== "queued")?.id ?? all[0]?.id ?? null;
 
   // One fetch for the project; each row counts the suggestions its run raised.
   const suggestions = useSuggestions({ project });
@@ -169,7 +178,9 @@ export function WorkView({
 
   const list = (
     <div className="space-y-6">
-      {view === "all" && !search ? <TodayStrip items={items.data ?? []} /> : null}
+      {view === "all" && !search ? (
+        <TodayStrip items={items.data ?? []} project={project} onSelect={split ? select : undefined} />
+      ) : null}
 
       {groupActive(active).map((group) => (
         <RunGroup key={group.label} label={group.label} count={group.items.length}>
@@ -220,11 +231,11 @@ export function WorkView({
               <TabCount value={counts.active} tone="accent" label="active" />
             </TabsTrigger>
             <TabsTrigger value="finished">Finished</TabsTrigger>
-            <TabsTrigger value="digests">Digests</TabsTrigger>
+            <TabsTrigger value="digests">Check-ins</TabsTrigger>
           </TabsList>
         </Tabs>
 
-        <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:items-center">
+        {view !== "digests" ? <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:items-center">
           <div className="relative w-full sm:w-64">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-subtle"
@@ -258,12 +269,17 @@ export function WorkView({
                 ))}
               </SelectContent>
           </Select>
-        </div>
+        </div> : null}
       </PageToolbar>
 
       <PageBody>
         {view === "digests" ? (
-          <DigestList project={project} agentId={agentId} status="all" />
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <Link href={`/p/${project}/organization#check-in-settings`} className="text-sm text-accent hover:underline">Check-in settings</Link>
+            </div>
+            <CheckInList project={project} status="all" />
+          </div>
         ) : items.isLoading ? (
           <LoadingRows count={4} />
         ) : items.error ? (
@@ -384,8 +400,29 @@ function useMinute(): number | null {
  * for now. Running agents pulse at the line; what is scheduled later waits,
  * faint, to its right. The one live marker on the page.
  */
-function TodayStrip({ items }: { items: ActionItemDto[] }) {
+function TodayStrip({
+  items,
+  project,
+  onSelect,
+}: {
+  items: ActionItemDto[];
+  project: string;
+  onSelect?: (id: string) => void;
+}) {
   const now = useMinute();
+  const [trackWidth, setTrackWidth] = React.useState(360);
+  const trackRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const measure = () => setTrackWidth(track.clientWidth || 360);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, []);
+
   if (now === null) return null;
 
   const start = new Date(now);
@@ -414,27 +451,58 @@ function TodayStrip({ items }: { items: ActionItemDto[] }) {
     );
   }
 
+  // Give nearby marks separate lanes so concurrent runs stay visible at every
+  // column width. A lane has room for each marker's 44px pointer target.
+  const laneEnds: number[] = [];
+  const placed = [...marks]
+    .sort((a, b) => a.at - b.at)
+    .map(({ item, at }) => {
+      const x = ((at - dayStart) / 86_400_000) * trackWidth;
+      let lane = laneEnds.findIndex((end) => x - end >= 48);
+      if (lane < 0) lane = laneEnds.length;
+      laneEnds[lane] = x;
+      return { item, at, lane };
+    });
+  const trackHeight = Math.max(44, laneEnds.length * 44);
+
   return (
     <Panel className="px-5 pb-4 pt-3.5">
       <div className="flex items-baseline justify-between">
         <h2 className="text-sm font-semibold text-ink">Today</h2>
         <p className="text-xs text-ink-muted">{`${marks.length} run${marks.length === 1 ? "" : "s"} today`}</p>
       </div>
-      <div className="relative mt-3 h-9">
-        <div className="absolute inset-x-0 top-1/2 h-px bg-line" aria-hidden />
-        {marks.map(({ item, at }) => (
-          <span
+      <div
+        ref={trackRef}
+        role="group"
+        className="relative mt-3"
+        style={{ height: trackHeight }}
+        aria-label="Today’s runs by time"
+      >
+        <div className="absolute inset-x-0 top-[22px] h-px bg-line" aria-hidden />
+        {placed.map(({ item, at, lane }) => (
+          <Link
             key={item.id}
+            href={`/p/${project}/work/${item.id}`}
+            onClick={(event) => {
+              if (!onSelect) return;
+              event.preventDefault();
+              onSelect(item.id);
+            }}
             title={`${item.agent.name}: ${runTitle(item)} (${statusLabel(item.status)}, ${formatTime(at)})`}
-            className={cn(
-              "absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-surface",
-              item.status === "queued" && "opacity-45",
-              item.status === "in_progress" && "outline-2 outline-offset-1 outline-accent motion-safe:animate-pulse",
-            )}
-            style={{ left: position(at) }}
+            aria-label={`${item.agent.name}: ${runTitle(item)}, ${statusLabel(item.status)} at ${formatTime(at)}`}
+            className="absolute z-10 flex size-11 -translate-x-1/2 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            style={{ left: position(at), top: lane * 44 }}
           >
-            <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" className="size-6" />
-          </span>
+            <span
+              className={cn(
+                "rounded-full ring-2 ring-surface",
+                item.status === "queued" && "opacity-45",
+                item.status === "in_progress" && "outline-2 outline-offset-1 outline-accent motion-safe:animate-pulse",
+              )}
+            >
+              <AgentAvatar name={item.agent.name} src={item.agent.avatarUrl} seed={item.agent.id} size="sm" className="size-6" />
+            </span>
+          </Link>
         ))}
         <span className="absolute inset-y-0 w-px -translate-x-1/2 bg-accent" style={{ left: position(now) }} aria-hidden>
           <span className="absolute -top-1 left-1/2 size-2 -translate-x-1/2 rounded-full bg-accent" />

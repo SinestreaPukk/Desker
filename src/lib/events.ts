@@ -16,7 +16,8 @@ export type AdminEvent =
   | { type: "conversation.escalated"; conversationId: string; agentId: string }
   | { type: "suggestion.created"; agentId: string; suggestionId: string }
   | { type: "suggestion.updated"; suggestionId: string }
-  | { type: "digest.created"; agentId: string; digestId: string };
+  | { type: "digest.created"; agentId: string; digestId: string }
+  | { type: "checkin.created"; projectId: string; checkInId: string };
 
 const globalForEvents = globalThis as unknown as { deskerBus?: EventEmitter };
 

@@ -57,6 +57,13 @@ export const scopeInputSchema = z.object({
 });
 export type ScopeInputPayload = z.infer<typeof scopeInputSchema>;
 
+export const projectCheckInSettingsSchema = z.object({
+  cadence: z.enum(DIGEST_CADENCES),
+  email: z.boolean(),
+  recipients: z.string().trim().max(500, "Use fewer or shorter email addresses."),
+  timezone: z.string().trim().min(1).max(64),
+});
+
 export const draftPatchSchema = z.object({
   title: z.string().trim().min(1, "A draft needs a title.").max(200, "Keep the title under 200 characters.").optional(),
   body: z

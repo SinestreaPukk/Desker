@@ -179,9 +179,9 @@ function ScopeEditor({
   async function onDigestNow() {
     try {
       await digestNow.mutateAsync();
-      toast.success("Writing your update now", {
+      toast.success("Writing the team check-in", {
         description:
-          "It covers everything since the last one and lands under Work → Digests in a moment.",
+          "It covers the agents in this project since the last check-in and appears under Work → Check-ins shortly.",
       });
     } catch (caught) {
       toast.error(errorMessage(caught));
@@ -304,7 +304,7 @@ function ScopeEditor({
               <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Newspaper className="size-4 text-accent" aria-hidden />
-                  <h3 className="text-sm font-medium text-ink">Keeping you posted</h3>
+                  <h3 className="text-sm font-medium text-ink">Team check-in</h3>
                 </div>
                 <Button
                   type="button"
@@ -313,7 +313,7 @@ function ScopeEditor({
                   loading={digestNow.isPending}
                   onClick={() => void onDigestNow()}
                 >
-                  Send one now
+                  Send a check-in now
                 </Button>
               </div>
               <DigestSettings
@@ -324,11 +324,6 @@ function ScopeEditor({
                 }}
                 onChange={(next) => setForm({ ...form, ...next })}
               />
-              {scope.lastDigestAt ? (
-                <p className="mt-2 text-xs text-ink-muted">
-                  Last update {formatDateTime(scope.lastDigestAt)}.
-                </p>
-              ) : null}
             </div>
           </>
         )}

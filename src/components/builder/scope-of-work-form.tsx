@@ -20,8 +20,6 @@ import {
   type Cadence,
 } from "@/lib/work/cadence";
 import {
-  DIGEST_CADENCES,
-  DIGEST_CADENCE_LABELS,
   type AutonomyMode,
   type DigestCadence,
   type ToolAutonomy,
@@ -35,7 +33,7 @@ import { CONNECTORS, connectorsForTool } from "@/lib/integrations/catalog";
 import { GATED_TOOL_IDS } from "@/lib/work/types";
 import { useSpaceKind } from "@/components/space-kind";
 import { ContextQuestions } from "./context-questions";
-import { badRecipients, looksLikeCron } from "@/lib/form-errors";
+import { looksLikeCron } from "@/lib/form-errors";
 import { HelpLink } from "@/components/help/help-panel";
 import {
   shownAgentQuestions,
@@ -164,10 +162,7 @@ export function TrustSettings({
   );
 }
 
-/**
- * How the agent keeps its owner posted. Editor-only, like Trust: a new agent
- * gets the weekly default and nobody has to decide this while hiring.
- */
+/** Include this agent in the project's shared check-in. */
 export function DigestSettings({
   value,
   onChange,
@@ -178,65 +173,18 @@ export function DigestSettings({
   idPrefix?: string;
 }) {
   return (
-    <div className="space-y-3">
-      <div>
-        <Label htmlFor={`${idPrefix}-cadence`}>Send me an update</Label>
-        <Select
-          value={value.digestCadence}
-          onValueChange={(next) => onChange({ ...value, digestCadence: next as DigestCadence })}
-        >
-          <SelectTrigger id={`${idPrefix}-cadence`} className="mt-1.5">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {DIGEST_CADENCES.map((cadence) => (
-              <SelectItem key={cadence} value={cadence}>
-                {DIGEST_CADENCE_LABELS[cadence]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="mt-1.5 text-xs text-ink-muted">
-          A few lines under Work → Digests: what got done, what is waiting on you, and
-          anything this agent thinks you should know. A period with nothing in it sends nothing.
-        </p>
-      </div>
-
-      {value.digestCadence === "off" ? null : (
-        <>
-          <label
-            htmlFor={`${idPrefix}-email`}
-            className="flex cursor-pointer items-center gap-2 text-sm text-ink"
-          >
-            <Checkbox
-              id={`${idPrefix}-email`}
-              checked={value.digestEmail}
-              onCheckedChange={(next) => onChange({ ...value, digestEmail: Boolean(next) })}
-            />
-            Email it as well
-          </label>
-
-          {value.digestEmail ? (
-            <Field
-              label="Send to"
-              htmlFor={`${idPrefix}-recipients`}
-              hint="Comma-separated. Leave it empty to send to this organisation's owners and admins."
-              error={
-                badRecipients(value.digestRecipients).length > 0
-                  ? `${badRecipients(value.digestRecipients)[0]} is not an email address. Separate addresses with a comma.`
-                  : undefined
-              }
-            >
-              <Input
-                id={`${idPrefix}-recipients`}
-                value={value.digestRecipients}
-                onChange={(event) => onChange({ ...value, digestRecipients: event.target.value })}
-                placeholder="you@example.com, ops@example.com"
-              />
-            </Field>
-          ) : null}
-        </>
-      )}
+    <div className="space-y-2">
+      <label htmlFor={`${idPrefix}-included`} className="flex cursor-pointer items-center gap-2 text-sm font-medium text-ink">
+        <Checkbox
+          id={`${idPrefix}-included`}
+          checked={value.digestCadence !== "off"}
+          onCheckedChange={(included) => onChange({ ...value, digestCadence: included ? "weekly" : "off" })}
+        />
+        Include this agent in the team check-in
+      </label>
+      <p className="pl-6 text-xs leading-relaxed text-ink-muted">
+        One project-wide summary covers the agents you include. Choose its timing and email delivery under Organization.
+      </p>
     </div>
   );
 }
@@ -594,7 +542,6 @@ export function ToolsSection({
 
   const toolCard = (tool: WorkToolId) => {
     const checked = value.tools.includes(tool);
-  const linked = CONNECTORS.filter((connector) => connector.status === "available" && connector.tools?.length && connected.has(connector.id));
     // Publishing goes to a connected network or the webhook: any one of them will do.
     const needs = tool === "publish_post" ? [...connectorsForTool("social_read"), ...connectorsForTool(tool)] : connectorsForTool(tool);
     const has = needs.find((connector) => connected.has(connector.id));
@@ -608,32 +555,6 @@ export function ToolsSection({
           checked ? "border-accent-line bg-accent-soft/30" : "border-line hover:bg-surface-2",
         )}
       >
-      {linked.length > 0 ? (
-        <div className="space-y-1.5 rounded-md border border-line p-3">
-          <p className="text-sm font-medium text-ink">Connected tools this agent may use</p>
-          {linked.map((connector) => {
-            const tools = (connector.tools ?? []).filter((tool): tool is WorkToolId => (WORK_TOOL_IDS as readonly string[]).includes(tool));
-            const on = tools.every((tool) => value.tools.includes(tool));
-            return (
-              <label key={connector.id} className="flex items-center justify-between gap-3 text-sm text-ink">
-                <span>{connector.name}</span>
-                {/* ponytail: tools shared by two connectors (Gmail and Outlook) switch together; a per-connector choice needs its own column. */}
-                <Switch
-                  checked={on}
-                  aria-label={`Let this agent use ${connector.name}`}
-                  onCheckedChange={(next) =>
-                    set(
-                      "tools",
-                      WORK_TOOL_IDS.filter((id) => (tools.includes(id) ? next : value.tools.includes(id))),
-                    )
-                  }
-                />
-              </label>
-            );
-          })}
-        </div>
-      ) : null}
-
         <Checkbox
           id={`${idPrefix}-tool-${tool}`}
           checked={checked}
@@ -673,6 +594,7 @@ export function ToolsSection({
 
   if (only) return <div className="grid gap-1.5">{toolCard(only)}</div>;
 
+  const linked = CONNECTORS.filter((connector) => connector.status === "available" && connector.tools?.length && connected.has(connector.id));
   const primary = WORK_TOOL_IDS.filter((tool) => (roleTools ? roleTools.includes(tool) : false) || value.tools.includes(tool));
   const rest = WORK_TOOL_IDS.filter((tool) => !primary.includes(tool));
 
@@ -685,6 +607,32 @@ export function ToolsSection({
           Desker waits for your approval unless you say otherwise under Trust.
         </p>
       </div>
+
+      {linked.length > 0 ? (
+        <div className="space-y-1.5 rounded-md border border-line p-3">
+          <p className="text-sm font-medium text-ink">Connected tools this agent may use</p>
+          {linked.map((connector) => {
+            const tools = (connector.tools ?? []).filter((tool): tool is WorkToolId => (WORK_TOOL_IDS as readonly string[]).includes(tool));
+            const on = tools.every((tool) => value.tools.includes(tool));
+            return (
+              <label key={connector.id} className="flex items-center justify-between gap-3 text-sm text-ink">
+                <span>{connector.name}</span>
+                {/* ponytail: tools shared by two connectors (Gmail and Outlook) switch together; a per-connector choice needs its own column. */}
+                <Switch
+                  checked={on}
+                  aria-label={`Let this agent use ${connector.name}`}
+                  onCheckedChange={(next) =>
+                    set(
+                      "tools",
+                      WORK_TOOL_IDS.filter((id) => (tools.includes(id) ? next : value.tools.includes(id))),
+                    )
+                  }
+                />
+              </label>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div className="grid gap-1.5 sm:grid-cols-2">{primary.map(toolCard)}</div>
 

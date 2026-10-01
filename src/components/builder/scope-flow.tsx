@@ -244,7 +244,7 @@ function NodeEditor({
             : "What the agent may do during a run."
           : node.section === "trust"
             ? "What the agent may send without asking. Research and drafts never wait."
-            : "Where a finished run shows up, and how often the agent reports back.";
+            : "Whether this agent is included in the project check-in.";
 
   return (
     <Dialog open onOpenChange={(next) => (next ? undefined : onClose())}>
