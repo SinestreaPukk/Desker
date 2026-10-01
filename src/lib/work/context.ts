@@ -106,8 +106,8 @@ export const PROJECT_CONTEXT_EXTRA_QUESTIONS: readonly ContextQuestion[] = [
   {
     id: "competitors",
     label: "Who do you compete with?",
-    hint: "Names, and what makes you different from each.",
-    placeholder: "Forge & Co (cheaper, no warranty), Tradeline (bigger range, slow delivery), Sitewise (online only).",
+    hint: "Names, their Instagram @handles, and what makes you different from each.",
+    placeholder: "Forge & Co @forgeandco (cheaper, no warranty), Tradeline @tradeline (bigger range, slow delivery), Sitewise (online only).",
     promptLabel: "Competitors",
     rows: 2,
   },

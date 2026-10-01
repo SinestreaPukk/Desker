@@ -77,6 +77,14 @@ export async function composeNews(userId: string): Promise<OutboundMessage> {
   return { title: "Your news", body: sections.length ? sections.join("\n\n") : "No new stories on your topics in the last day." };
 }
 
+/** The start of what a finished task reported: a morning report reads in the brief itself. */
+export function reportOf(result: unknown): string {
+  const summary = (result as { summary?: unknown } | null)?.summary;
+  if (typeof summary !== "string" || !summary.trim()) return "";
+  const text = summary.replace(/[#*_`>]/g, "").replace(/\s*\n+\s*/g, " ").trim();
+  return `\n  ${text.length > 400 ? `${text.slice(0, 399)}…` : text}`;
+}
+
 const hm = (iso: string, timeZone: string) => localIso(iso, timeZone).slice(11, 16);
 
 /** `previousBrief`: where the recap starts. The scheduler passes the one from before it claimed this brief. */
@@ -146,7 +154,7 @@ export async function composeBrief(userId: string, now = new Date(), previousBri
     const done = await prisma.actionItem.findMany({
       where: { organizationId: { in: orgIds }, status: { in: ["done", "failed"] }, completedAt: { gt: since } },
       orderBy: { completedAt: "desc" },
-      select: { status: true, headline: true, agent: { select: { name: true } } },
+      select: { status: true, headline: true, result: true, agent: { select: { name: true } } },
     });
     const finished = done.filter((d) => d.status === "done");
     const failed = done.length - finished.length;
@@ -154,7 +162,7 @@ export async function composeBrief(userId: string, now = new Date(), previousBri
       sections.push(
         `✅ Since your last brief: ${finished.length} done${failed ? `, ${failed} failed` : ""}\n${finished
           .slice(0, LIST)
-          .map((d) => `• ${d.agent.name}: ${d.headline ?? "Finished a task"}`)
+          .map((d) => `• ${d.agent.name}: ${d.headline ?? "Finished a task"}${reportOf(d.result)}`)
           .join("\n")}`.trim(),
       );
     }

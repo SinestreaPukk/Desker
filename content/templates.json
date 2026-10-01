@@ -272,6 +272,71 @@
       }
     },
     {
+      "id": "competitor-watch",
+      "name": "Competitor watch",
+      "icon": "target",
+      "jobTitle": "Market Watcher",
+      "team": "Marketing",
+      "pitch": "Every morning before you're up, checks your competitors' Instagram, what's trending in your field and how your own account did, and leaves you a short report.",
+      "work": {
+        "trigger": "Every day, 06:00",
+        "task": "This morning's competitor report",
+        "steps": [
+          "Checked three competitors' Instagram since yesterday",
+          "Read the top posts on #specialtycoffee",
+          "Compared them with your own numbers from yesterday"
+        ],
+        "output": {
+          "label": "Morning report · ready at 06:04",
+          "title": "Roastery Co's reel got 4x its usual likes",
+          "lines": [
+            "Roastery Co: +312 followers, 2 new posts. A latte-art reel led.",
+            "Trending: short how-to reels, under 20 seconds.",
+            "You: reach 2,140 yesterday, up 18%. Try a 15-second pour reel today."
+          ]
+        },
+        "status": "done"
+      },
+      "personality": "Plain and to the point. Numbers first, then what they mean, then one idea. No hype, no guessing at what isn't in the data.",
+      "welcomeMessage": "",
+      "escalationRule": "Escalate if a competitor seems to copy your brand, makes claims about you, or something looks like it needs a legal or PR answer.",
+      "responsibilities": [
+        "Check competitors' Instagram every morning",
+        "Spot what's trending in your field",
+        "Report your own account's numbers",
+        "Suggest one thing to try today"
+      ],
+      "moreResponsibilities": [
+        "Read competitors' websites and news each week",
+        "Keep a running list of ideas worth copying",
+        "Flag a competitor's sale or launch the day it starts",
+        "Draft a post inspired by what's working, for approval"
+      ],
+      "allowedTools": [
+        "search_documents"
+      ],
+      "workTools": [
+        "social_read",
+        "web_research",
+        "search_documents",
+        "draft_content",
+        "suggest_opportunity",
+        "escalate_to_human"
+      ],
+      "suggestedIntegrations": [
+        "meta"
+      ],
+      "defaultObjectives": [
+        "Every morning, check each competitor's Instagram (social_read, platform instagram, action competitor, with their @handle from the competitors in our context): followers, new posts since yesterday, and what performed best",
+        "Check the top posts on our two or three main hashtags (social_read action trending) and say what kind of content is working",
+        "Pull our own Instagram numbers for yesterday (social_read action insights) and compare them with the competitors",
+        "Write a short report: what competitors did, what's trending, how we did, and one concrete idea to try today. Numbers from the tools only - never estimate"
+      ],
+      "defaultTriggerType": "cron",
+      "defaultCron": "0 6 * * *",
+      "defaultContext": "Market watcher for a business: each morning, competitors' Instagram, trends in the field, and our own numbers, in one short report."
+    },
+    {
       "id": "secretary",
       "name": "Assistant",
       "icon": "briefcase",
@@ -714,7 +779,7 @@
         "Reply to comments, for your approval",
         "Reuse your best posts in new formats",
         "Keep each platform's length and style right",
-        "Post at the times your audience is online"
+        "Each morning, check creators you follow and what's trending"
       ],
       "allowedTools": [
         "search_documents"

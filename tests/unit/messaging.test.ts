@@ -77,3 +77,12 @@ describe("the brief's news", () => {
     expect(text.endsWith("…")).toBe(true);
   });
 });
+
+describe("overnight reports in the brief", () => {
+  it("shows the start of a finished task's report, flattened and short", async () => {
+    const { reportOf } = await import("@/lib/messaging/brief");
+    expect(reportOf({ summary: "## Report\n**Roastery Co**: +312 followers\n\n- Trending: reels" })).toBe("\n  Report Roastery Co: +312 followers - Trending: reels");
+    expect(reportOf({ summary: "x".repeat(600) })).toHaveLength(3 + 400);
+    expect(reportOf(null)).toBe("");
+  });
+});

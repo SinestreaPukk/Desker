@@ -490,3 +490,162 @@ export async function readSocial(
     }
   }
 }
+
+// --- Watching Instagram: competitors, trends, your own numbers ------------------
+
+export const WATCH_ACTIONS = ["competitor", "trending", "insights"] as const;
+export type WatchAction = (typeof WATCH_ACTIONS)[number];
+
+export interface WatchedPost {
+  caption: string;
+  likes: number;
+  comments: number;
+  at: string;
+  url: string;
+  type: string;
+}
+
+export interface WatchedAccount {
+  username: string;
+  name: string;
+  followers: number;
+  posts: number;
+  recent: WatchedPost[];
+}
+
+const postOf = (m: Record<string, unknown>): WatchedPost => ({
+  caption: clip(m.caption, 160),
+  likes: Number(m.like_count ?? 0),
+  comments: Number(m.comments_count ?? 0),
+  at: String(m.timestamp ?? ""),
+  url: String(m.permalink ?? ""),
+  type: String(m.media_type ?? "").toLowerCase().replace("carousel_album", "carousel"),
+});
+
+const line = (p: WatchedPost) => `- ${p.at.slice(0, 10)} ${p.type}: ${p.caption || "(no caption)"} (${p.likes} likes, ${p.comments} comments) ${p.url}`;
+
+/** What changed since the last look: followers, and posts that weren't there then. Pure, so a test holds it. */
+export function describeWatch(current: WatchedAccount, previous: WatchedAccount | null, previousAt: Date | null): string {
+  const best = [...current.recent].sort((a, b) => b.likes + b.comments - (a.likes + a.comments))[0];
+  const average = current.recent.length
+    ? Math.round(current.recent.reduce((sum, p) => sum + p.likes + p.comments, 0) / current.recent.length)
+    : 0;
+  const parts = [`@${current.username}${current.name ? ` (${current.name})` : ""}: ${current.followers.toLocaleString("en")} followers, ${current.posts} posts.`];
+  if (previous && previousAt) {
+    const seen = new Set(previous.recent.map((p) => p.url));
+    const fresh = current.recent.filter((p) => !seen.has(p.url));
+    const change = current.followers - previous.followers;
+    parts.push(
+      `Since ${previousAt.toISOString().slice(0, 16).replace("T", " ")} UTC: ${change >= 0 ? "+" : ""}${change.toLocaleString("en")} followers, ${fresh.length} new post${fresh.length === 1 ? "" : "s"}.`,
+    );
+    if (fresh.length) parts.push(`New posts:\n${fresh.map(line).join("\n")}`);
+  } else {
+    parts.push("First look at this account: next time this will say what changed.");
+  }
+  if (best) parts.push(`Best of the last ${current.recent.length}: ${line(best).slice(2)}\nAverage likes + comments per post: ${average}.`);
+  parts.push(`Recent posts:\n${current.recent.slice(0, 6).map(line).join("\n")}`);
+  return parts.join("\n");
+}
+
+/**
+ * Instagram's own business-discovery, hashtag and insights APIs, through the
+ * connected Instagram business account. Public business and creator accounts
+ * only: Instagram doesn't let any app read personal accounts.
+ */
+export async function watchInstagram(
+  organizationId: string,
+  input: { action: WatchAction; handle?: string; tag?: string; account?: string },
+): Promise<string> {
+  const conn = await access(organizationId, "instagram");
+  if (!conn) throw new Error("Instagram is not connected. The owner can connect Facebook & Instagram under Integrations.");
+  const page = metaPage(conn.extra, "instagram", input.account);
+  if (!page?.instagram) throw new Error("No Instagram business account is linked to your connected Pages.");
+  const me = page.instagram.id;
+  const token = page.token;
+
+  if (input.action === "competitor") {
+    const handle = input.handle?.trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/.*$/, "");
+    if (!handle || !/^[A-Za-z0-9._]{1,30}$/.test(handle)) throw new Error("Give the competitor's Instagram username, like @brand.");
+    const r = await request(
+      `${META_GRAPH}/${me}?${new URLSearchParams({
+        fields: `business_discovery.username(${handle}){username,name,followers_count,media_count,media.limit(12){caption,like_count,comments_count,timestamp,permalink,media_type}}`,
+        access_token: token,
+      })}`,
+    );
+    if (!r.ok) {
+      const detail = problem("Instagram", r);
+      if (/cannot be found|does not exist|invalid user/i.test(detail)) {
+        throw new Error(`Couldn't read @${handle}: it may be a personal account (Instagram only shares business and creator accounts) or the username is wrong.`);
+      }
+      throw new Error(detail);
+    }
+    const found = r.data.business_discovery as Record<string, unknown>;
+    const current: WatchedAccount = {
+      username: String(found.username ?? handle),
+      name: String(found.name ?? ""),
+      followers: Number(found.followers_count ?? 0),
+      posts: Number(found.media_count ?? 0),
+      recent: (((found.media as { data?: Array<Record<string, unknown>> } | undefined)?.data) ?? []).map(postOf),
+    };
+    const key = `instagram:@${current.username.toLowerCase()}`;
+    // "Since yesterday", not "since an hour ago": compare with the last look at least 12 hours old.
+    const previous = await prisma.socialSnapshot.findFirst({
+      where: { organizationId, key, takenAt: { lt: new Date(Date.now() - 12 * 60 * 60_000) } },
+      orderBy: { takenAt: "desc" },
+    });
+    const latest = await prisma.socialSnapshot.findFirst({ where: { organizationId, key }, orderBy: { takenAt: "desc" }, select: { takenAt: true } });
+    if (!latest || Date.now() - latest.takenAt.getTime() > 60 * 60_000) {
+      await prisma.socialSnapshot.create({ data: { organizationId, key, data: current as unknown as object } });
+      await prisma.socialSnapshot.deleteMany({ where: { organizationId, key, takenAt: { lt: new Date(Date.now() - 60 * 86_400_000) } } });
+    }
+    const ads = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&search_type=keyword_unordered&q=${encodeURIComponent(current.name || current.username)}`;
+    return `${describeWatch(current, previous ? (previous.data as unknown as WatchedAccount) : null, previous?.takenAt ?? null)}\nTheir running ads (Meta Ad Library, open it to look): ${ads}`;
+  }
+
+  if (input.action === "trending") {
+    const tag = input.tag?.trim().replace(/^#/, "");
+    if (!tag || !/^[\p{L}\p{N}_]{1,100}$/u.test(tag)) throw new Error("Give one hashtag, like #coffee.");
+    const search = await request(`${META_GRAPH}/ig_hashtag_search?${new URLSearchParams({ user_id: me, q: tag, access_token: token })}`);
+    if (!search.ok) throw new Error(problem("Instagram", search));
+    const id = (search.data.data as Array<{ id?: string }> | undefined)?.[0]?.id;
+    if (!id) return `Nobody uses #${tag} on Instagram yet.`;
+    const top = await request(
+      `${META_GRAPH}/${id}/top_media?${new URLSearchParams({
+        user_id: me,
+        fields: "caption,like_count,comments_count,timestamp,permalink,media_type",
+        limit: "10",
+        access_token: token,
+      })}`,
+    );
+    if (!top.ok) throw new Error(problem("Instagram", top));
+    const posts = ((top.data.data as Array<Record<string, unknown>> | undefined) ?? []).map(postOf);
+    return posts.length ? `Top posts on #${tag} right now:\n${posts.map(line).join("\n")}` : `No top posts on #${tag} right now.`;
+  }
+
+  // Your own account, yesterday: a day's reach, views and interactions, and followers today.
+  const end = new Date();
+  end.setUTCHours(0, 0, 0, 0);
+  const start = new Date(end.getTime() - 86_400_000);
+  const [account, stats] = await Promise.all([
+    request(`${META_GRAPH}/${me}?${new URLSearchParams({ fields: "username,followers_count,media_count", access_token: token })}`),
+    request(
+      `${META_GRAPH}/${me}/insights?${new URLSearchParams({
+        metric: "reach,views,accounts_engaged,total_interactions,likes,comments,shares,saves,profile_views",
+        period: "day",
+        metric_type: "total_value",
+        since: String(start.getTime() / 1000),
+        until: String(end.getTime() / 1000),
+        access_token: token,
+      })}`,
+    ),
+  ]);
+  if (!account.ok) throw new Error(problem("Instagram", account));
+  const head = `@${String(account.data.username ?? page.instagram.username)}: ${Number(account.data.followers_count ?? 0).toLocaleString("en")} followers, ${Number(account.data.media_count ?? 0)} posts.`;
+  if (!stats.ok) {
+    return `${head}\nInstagram didn't share the daily numbers: ${problem("Instagram", stats)} The owner may need to reconnect Facebook & Instagram to allow insights.`;
+  }
+  const numbers = ((stats.data.data as Array<{ name?: string; total_value?: { value?: number } }> | undefined) ?? [])
+    .map((m) => `${String(m.name).replace(/_/g, " ")} ${Number(m.total_value?.value ?? 0).toLocaleString("en")}`)
+    .join(", ");
+  return `${head}\nYesterday (${start.toISOString().slice(0, 10)}, UTC day): ${numbers || "no activity"}.`;
+}

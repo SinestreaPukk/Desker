@@ -55,6 +55,20 @@ model User {
   passwordResets PasswordReset[]
 }
 
+/// What a watched social account looked like when an agent last checked -
+/// followers, recent posts - so the next check can say what changed.
+model SocialSnapshot {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// "instagram:@handle"
+  key            String
+  data           Json
+  takenAt        DateTime     @default(now())
+
+  @@index([organizationId, key, takenAt])
+}
+
 /// Somewhere Desker messages a person: a chat app they linked (LINE,
 /// Telegram, WhatsApp), a webhook they pasted (Slack, Discord, Teams), or
 /// their account email.
@@ -174,6 +188,7 @@ model Organization {
   suggestions   Suggestion[]
   emailSuppressions EmailSuppression[]
   supportInboxes    SupportInbox[]
+  socialSnapshots   SocialSnapshot[]
 }
 
 /// Someone who asked not to receive email from this organisation, through the

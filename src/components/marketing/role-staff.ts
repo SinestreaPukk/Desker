@@ -9,6 +9,7 @@ export const ROLE_STAFF: Record<string, readonly [string, string]> = {
   "client-onboarding": ["Ivy", "ivy"],
   researcher: ["Sol", "sol"],
   marketer: ["Nova", "nova"],
+  "competitor-watch": ["Vera", "vera"],
   secretary: ["Kai", "kai"],
   "dev-support": ["Ada", "ada"],
   "sales-development": ["Leo", "leo-leads"],
