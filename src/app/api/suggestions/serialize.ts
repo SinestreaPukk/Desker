@@ -18,6 +18,7 @@ export function toSuggestionDto(row: Row, now = new Date()): SuggestionDto {
     summary: row.summary,
     rationale: row.rationale,
     proposal: row.proposal,
+    ownerAction: row.ownerAction === "connect_integration" || row.ownerAction === "change_permission" ? row.ownerAction : null,
     status: isSuggestionStatus(row.status) ? row.status : "open",
     pending: isPending(row, now),
     snoozedUntil: row.snoozedUntil?.toISOString() ?? null,

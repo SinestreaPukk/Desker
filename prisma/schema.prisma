@@ -744,6 +744,8 @@ model Suggestion {
   proposal       String
   /// open | accepted | dismissed | snoozed
   status         String       @default("open")
+  /// Set when the next step is the owner's to take (connect_integration | change_permission), not a goal for the agent.
+  ownerAction    String?
   /// Set while snoozed; the list treats a lapsed snooze as open again.
   snoozedUntil   DateTime?
   acceptedAt     DateTime?

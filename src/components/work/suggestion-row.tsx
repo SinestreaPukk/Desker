@@ -38,7 +38,9 @@ export function SuggestionRow({
   async function run(status: SuggestionStatus, snoozeDays?: number) {
     try {
       const result = await decide.mutateAsync({ suggestionId: suggestion.id, status, snoozeDays });
-      if (status === "accepted") {
+      if (status === "accepted" && suggestion.ownerAction) {
+        toast.success("Marked as done", { description: "Nothing was added to this agent's goals." });
+      } else if (status === "accepted") {
         toast.success("Added to this agent's objectives", {
           description: result.addedObjective
             ? `"${result.addedObjective}" runs from now on. Edit it any time in the agent's scope of work.`
@@ -104,9 +106,16 @@ export function SuggestionRow({
 
   const actions = suggestion.pending ? (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Button size="sm" loading={pending} onClick={() => void run("accepted")}>
+      {suggestion.ownerAction ? (
+        <Button size="sm" asChild>
+          <Link href={suggestion.ownerAction === "connect_integration" ? `/p/${project}/integrations` : `/p/${project}/agents/${suggestion.agent.id}`}>
+            {suggestion.ownerAction === "connect_integration" ? "Open Integrations" : "Open permissions"}
+          </Link>
+        </Button>
+      ) : null}
+      <Button size="sm" variant={suggestion.ownerAction ? "secondary" : "primary"} loading={pending} onClick={() => void run("accepted")}>
         <Check aria-hidden />
-        Accept
+        {suggestion.ownerAction ? "Done" : "Accept"}
       </Button>
       <Button size="sm" variant="secondary" disabled={pending} onClick={() => void run("snoozed", 7)}>
         <Clock aria-hidden />

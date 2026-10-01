@@ -73,6 +73,7 @@ export async function decideSuggestion(input: DecideInput): Promise<DecideResult
       proposal: true,
       summary: true,
       status: true,
+      ownerAction: true,
     },
   });
   if (!suggestion) return null;
@@ -86,7 +87,8 @@ export async function decideSuggestion(input: DecideInput): Promise<DecideResult
       : null;
 
   let addedObjective: string | null = null;
-  if (input.status === "accepted") {
+  // An owner's step (reconnect, change a permission) is done by them, never added to the agent's goals.
+  if (input.status === "accepted" && !suggestion.ownerAction) {
     addedObjective = await addObjective(suggestion.agentId, suggestion.proposal);
   }
 

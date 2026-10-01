@@ -526,6 +526,12 @@ const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinitio
           enum: ["low", "medium", "high", "critical"],
           description: "Urgency level, especially for bugs or critical market alerts.",
         },
+        owner_action: {
+          type: "string",
+          enum: ["connect_integration", "change_permission"],
+          description:
+            "Set this when the recommended step is for the OWNER to do rather than a standing job for you: connect or reconnect an account (connect_integration), or change what you are allowed to do (change_permission). Never put such a step in a suggestion without it - it would otherwise be added to your goals.",
+        },
       },
       required: ["title", "type", "what_happened", "why_it_matters", "recommended_action"],
       additionalProperties: false,

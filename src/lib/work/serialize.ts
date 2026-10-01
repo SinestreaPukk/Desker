@@ -107,6 +107,8 @@ export interface SuggestionDto {
   summary: string;
   rationale: string;
   proposal: string;
+  /** The owner's own step, not a goal for the agent: where to go to do it. */
+  ownerAction: "connect_integration" | "change_permission" | null;
   status: SuggestionStatus;
   /** True when it is waiting on a decision - open, or snoozed past its date. */
   pending: boolean;

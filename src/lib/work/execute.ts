@@ -175,6 +175,7 @@ const suggestSchema = z.object({
   why_it_matters: z.string().trim().min(1).max(5000),
   recommended_action: z.string().trim().min(1).max(2000),
   severity: z.enum(["low", "medium", "high", "critical"]).optional(),
+  owner_action: z.enum(["connect_integration", "change_permission"]).optional(),
 });
 
 const isoTime = z.string().trim().refine((v) => !Number.isNaN(Date.parse(v)), "an ISO 8601 date-time");
@@ -765,7 +766,7 @@ async function suggestOpportunity(input: unknown, ctx: RunContext): Promise<Work
   const parsed = suggestSchema.safeParse(input);
   if (!parsed.success) return invalid("suggest_opportunity", parsed.error);
 
-  const { title, type, what_happened, why_it_matters, recommended_action, severity } = parsed.data;
+  const { title, type, what_happened, why_it_matters, recommended_action, severity, owner_action } = parsed.data;
 
   const prefix =
     type === "opportunity"
@@ -787,6 +788,7 @@ async function suggestOpportunity(input: unknown, ctx: RunContext): Promise<Work
         summary: formattedSummary,
         rationale,
         proposal: recommended_action,
+        ownerAction: owner_action ?? null,
         status: "open",
       },
       select: { id: true },
