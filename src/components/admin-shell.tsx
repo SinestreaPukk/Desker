@@ -240,6 +240,17 @@ export function AdminShell({
         <div id="mobile-nav" className="space-y-3 border-b border-line bg-rail p-3 lg:hidden">
           {projectSwitcher}
           {navLinks}
+          <div className="border-t border-line pt-3">
+            <p className="truncate px-3 pb-1 text-meta text-ink-muted">{email}</p>
+            <button
+              type="button"
+              onClick={() => void signOut({ callbackUrl: "/login" })}
+              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-ink hover:bg-ink/[0.05]"
+            >
+              <LogOut className="size-4" aria-hidden />
+              Sign out
+            </button>
+          </div>
         </div>
       ) : null}
 
