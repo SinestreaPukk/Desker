@@ -16,11 +16,12 @@ export const CONNECTOR_CATEGORIES = [
   { id: "publishing", label: "Publishing & email" },
   { id: "crm", label: "Customers & sales" },
   { id: "hr", label: "People & HR" },
+  { id: "money", label: "Money" },
 ] as const;
 type ConnectorCategory = (typeof CONNECTOR_CATEGORIES)[number]["id"];
 
 /** How an owner connects it. OAuth wherever the provider offers it. */
-type ConnectorAuth = "oauth" | "api_key" | "webhook";
+type ConnectorAuth = "oauth" | "api_key" | "webhook" | "link";
 
 /** The OAuth providers this server can talk to; each needs its client id and secret set. */
 export const OAUTH_PROVIDERS = ["google", "microsoft", "slack", "github", "linkedin", "meta", "x", "threads"] as const;
@@ -146,6 +147,20 @@ export const CONNECTORS: readonly Connector[] = [
     pitch: "Post updates to Teams channels.",
     can: ["Post to channels you choose, with your approval"],
     cannot: ["Read chats or meetings"],
+  },
+
+  // --- money: the Money Manager's live numbers -----------------------------
+  {
+    id: "bank",
+    name: "Bank accounts",
+    category: "money",
+    roles: ["money-manager"],
+    auth: "link",
+    status: "available",
+    pitch: "Sandbox test version - connects Plaid's fake test banks only, not real accounts yet. Reads balances, transactions and interest rates, no CSV uploads.",
+    can: ["Read balances, recent transactions and card or loan interest rates", "Add up spending, subscriptions and bills exactly"],
+    cannot: ["Move money or make payments", "See full account numbers (only the last four digits)"],
+    tools: ["review_spending"],
   },
 
   // --- code & issues: the Developer Support Engineer's biggest gap ----------

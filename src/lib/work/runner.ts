@@ -180,7 +180,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       tools: (tools ?? [...WORK_TOOL_IDS]).filter(
         (tool) =>
           (documents.length > 0 || tool !== "search_documents") &&
-          (tool !== "review_spending" || documents.some((d) => d.filename.toLowerCase().endsWith(".csv"))),
+          (tool !== "review_spending" || connected.has("bank") || documents.some((d) => d.filename.toLowerCase().endsWith(".csv"))),
       ),
       documentIds,
       trigger: item.trigger,

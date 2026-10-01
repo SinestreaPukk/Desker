@@ -21,6 +21,7 @@ import { afterResponse } from "@/lib/after-response";
 import { notifyInBackground } from "@/lib/notify";
 import { canStartRun } from "@/lib/billing/limits";
 import { connectorAccess } from "@/lib/integrations/oauth";
+import { readBanks } from "@/lib/integrations/plaid";
 import { optOutFor, splitOptedOut } from "@/lib/email-optout";
 import {
   calendarAccess,
@@ -354,16 +355,26 @@ async function reviewSpending(input: unknown, ctx: RunContext): Promise<WorkTool
       orderBy: { createdAt: "asc" },
     })
   ).filter((document) => document.filename.toLowerCase().endsWith(".csv"));
-  if (documents.length === 0) {
+  const { since, until } = parsed.data;
+  const bank = await readBanks(
+    ctx.organizationId,
+    since ?? new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10),
+    until ?? new Date().toISOString().slice(0, 10),
+  );
+  if (documents.length === 0 && !bank) {
     return {
       content:
-        "No statements to read: nothing uploaded to this agent is a CSV file. Say in your report that the owner should download a CSV statement from their bank or card app and upload it under Knowledge.",
+        "No statements to read: no bank is connected and nothing uploaded to this agent is a CSV file. Say in your report that the owner should connect their bank under Integrations, or download a CSV statement from their bank or card app and upload it under Knowledge.",
       isError: true,
     };
   }
   const seen = new Set<string>();
   const transactions: Transaction[] = [];
   let skipped = 0;
+  for (const row of bank?.transactions ?? []) {
+    seen.add(`${row.date}|${row.amount}|${row.description}`);
+    transactions.push(row);
+  }
   for (const document of documents) {
     const statement = parseStatement((await storage.get(document.storageKey)).toString("utf8"));
     skipped += statement.skipped;
@@ -375,7 +386,6 @@ async function reviewSpending(input: unknown, ctx: RunContext): Promise<WorkTool
       transactions.push(row);
     }
   }
-  const { since, until } = parsed.data;
   const inRange = transactions.filter((row) => (!since || row.date >= since) && (!until || row.date <= until));
   const summary = summarizeSpending(inRange);
   if (!summary) {
@@ -387,7 +397,9 @@ async function reviewSpending(input: unknown, ctx: RunContext): Promise<WorkTool
       isError: true,
     };
   }
-  return { content: describeSpending(summary, documents.map((document) => document.filename), skipped) };
+  const sources = [...(bank?.banks ?? []), ...documents.map((document) => document.filename)];
+  const overview = bank?.overview.length ? `\nLive from the bank (balances and interest rates as of now):\n${bank.overview.map((l) => `- ${l}`).join("\n")}\n` : "";
+  return { content: describeSpending(summary, sources, skipped) + overview };
 }
 
 async function webResearch(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
