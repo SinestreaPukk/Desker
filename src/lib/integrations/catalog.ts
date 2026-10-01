@@ -252,12 +252,14 @@ export const CONNECTORS: readonly Connector[] = [
     can: [
       "Post to your Facebook Page, and to Instagram with an image, once you approve it",
       "Read recent posts, likes and comments",
+      "Read your Instagram direct messages (read-only; reconnect once to allow it)",
       "Watch competitors' public Instagram accounts, trending hashtags and your own daily numbers",
       "Edit or delete Facebook posts",
     ],
     cannot: [
       "Edit or delete Instagram posts (Instagram doesn't allow it)",
-      "Post to a personal Facebook profile, groups or messages (Facebook allows Pages only)",
+      "Post to a personal Facebook profile or groups (Facebook allows Pages only)",
+      "Reply to or send direct messages",
       "Use a personal Instagram account - switch it to a free Creator or Business account in Instagram's settings first",
       "Read competitors' personal Instagram accounts or Facebook Pages (Meta doesn't allow it)",
       "Post or change anything without your approval in draft-only mode",

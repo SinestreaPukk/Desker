@@ -130,7 +130,7 @@ const publishSchema = z.object({
 const socialPlatform = z.enum(SOCIAL_PLATFORMS);
 const socialReadSchema = z.object({
   platform: socialPlatform,
-  action: z.enum(["accounts", "posts", "post", ...WATCH_ACTIONS]),
+  action: z.enum(["accounts", "posts", "post", "messages", ...WATCH_ACTIONS]),
   post_id: z.string().trim().max(300).optional(),
   limit: z.number().int().min(1).max(25).optional(),
   account: z.string().trim().max(200).optional(),

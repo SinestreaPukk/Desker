@@ -350,7 +350,7 @@ const clip = (text: unknown, max = 280) => String(text ?? "").replace(/\s+/g, " 
 
 export async function readSocial(
   organizationId: string,
-  input: { platform: SocialPlatform; action: "accounts" | "posts" | "post"; postId?: string; limit?: number; account?: string },
+  input: { platform: SocialPlatform; action: "accounts" | "posts" | "post" | "messages"; postId?: string; limit?: number; account?: string },
 ): Promise<string> {
   const { platform } = input;
   const name = PLATFORM_NAMES[platform];
@@ -366,6 +366,36 @@ export async function readSocial(
         .join("\n");
     }
     return `- ${name}: ${conn.account}`;
+  }
+
+  if (input.action === "messages") {
+    if (platform !== "instagram") throw new Error(`Reading messages works on Instagram only, not ${name}.`);
+    const page = metaPage(conn.extra, platform, input.account);
+    if (!page?.instagram) throw new Error("No Instagram business account is linked to your connected Pages.");
+    const r = await request(
+      `${META_GRAPH}/${page.id}/conversations?${new URLSearchParams({
+        platform: "instagram",
+        fields: "updated_time,participants,messages.limit(5){message,from,created_time}",
+        limit: String(limit),
+        access_token: page.token,
+      })}`,
+    );
+    if (!r.ok) {
+      throw new Error(
+        `${problem(name, r)} The owner may need to reconnect Facebook & Instagram to allow messages, and turn on "Allow access to messages" in Instagram's settings under Privacy > Messages.`,
+      );
+    }
+    const threads = (r.data.data as Array<Record<string, unknown>> | undefined) ?? [];
+    if (!threads.length) return `No recent Instagram messages on @${page.instagram.username}.`;
+    return threads
+      .map((thread) => {
+        const messages = ((thread.messages as { data?: Array<Record<string, unknown>> } | undefined)?.data ?? [])
+          .reverse()
+          .map((m) => `    ${String(m.created_time ?? "").slice(0, 16)} @${String((m.from as { username?: string } | undefined)?.username ?? "someone")}: ${clip(m.message, 300)}`)
+          .join("\n");
+        return `- Conversation, last active ${String(thread.updated_time ?? "").slice(0, 16)}\n${messages}`;
+      })
+      .join("\n");
   }
 
   if (input.action === "post" && !input.postId) throw new Error("Give the post_id.");

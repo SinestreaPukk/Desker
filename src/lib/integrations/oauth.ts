@@ -137,7 +137,7 @@ const PROVIDERS: Record<OAuthProvider, ProviderSpec> = {
     tokenUrl: `${META_GRAPH}/oauth/access_token`,
     tokenMethod: "GET",
     scope:
-      "pages_show_list,pages_read_engagement,pages_read_user_content,pages_manage_posts,instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,business_management",
+      "pages_show_list,pages_read_engagement,pages_read_user_content,pages_manage_posts,instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_messages,instagram_manage_insights,business_management",
     scopeParam: "scope",
     finish: async (tokens) => {
       const spec = PROVIDERS.meta;
