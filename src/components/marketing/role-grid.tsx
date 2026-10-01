@@ -8,25 +8,9 @@ import { StickyNote } from "@/components/marketing/desk-notes";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { TemplateIcon } from "@/components/marketing/template-icon";
 import { cn } from "@/lib/utils";
+import { ROLE_STAFF } from "./role-staff";
 
 /** Who fills each role at ABC Inc., as the demo cast them. */
-export const ROLE_STAFF: Record<string, readonly [string, string]> = {
-  "customer-support": ["Mia", "mia"],
-  "client-onboarding": ["Ivy", "ivy"],
-  researcher: ["Sol", "sol"],
-  marketer: ["Nova", "nova"],
-  secretary: ["Kai", "kai"],
-  "dev-support": ["Ada", "ada"],
-  "sales-development": ["Leo", "leo-leads"],
-  "people-ops": ["Rae", "rae"],
-  "money-manager": ["Penny", "penny"],
-  "personal-assistant": ["Juno", "juno"],
-  "social-media-manager": ["Remy", "remy"],
-  "career-coach": ["Theo", "theo"],
-  "travel-planner": ["Isla", "isla"],
-  "learning-coach": ["Ollie", "ollie"],
-};
-
 export const ROLE_TONES = ["lemon", "sky", "mint", "coral", "lilac", "mint", "lemon", "sky"] as const;
 export const ROLE_TILTS = [-1.2, 0.9, -0.5, 1.3, -1, 0.6, 1.1, -0.7];
 
@@ -62,7 +46,7 @@ function RoleCard({ role, index, cta }: RoleCardProps) {
   const tilt = ROLE_TILTS[index % ROLE_TILTS.length]!;
 
   return (
-    <li className="sd-rise">
+    <li>
       <Link
         href={`/showcase#${role.id}`}
         className="group block h-full rounded-sm focus-visible:outline-offset-4"

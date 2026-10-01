@@ -31,10 +31,9 @@ export function Section({
   );
 }
 
-/** Eyebrow, heading, intro - the pattern every section opens with. */
+/** Heading and intro - the pattern every section opens with. A plain heading, no badge above it. */
 export function SectionHeader({
   id,
-  eyebrow,
   heading,
   intro,
   align = "center",
@@ -43,7 +42,6 @@ export function SectionHeader({
 }: {
   /** Put on the heading, for the section's aria-labelledby. */
   id?: string;
-  eyebrow: string;
   heading: string;
   intro?: string;
   align?: "center" | "left";
@@ -54,22 +52,13 @@ export function SectionHeader({
   const inverse = tone === "inverse";
   return (
     <div className={cn(align === "center" ? "mx-auto max-w-3xl text-center" : "max-w-2xl", className)}>
-      {/* The module's tab: a small sticky-note label, as on a divider. */}
-      <p
-        className={cn(
-          "sd-rise inline-block rounded-sm px-2.5 py-0.5 font-hand text-xl leading-snug font-bold",
-          inverse ? "bg-accent-fg/15 text-accent-fg" : "bg-note-lemon text-note-ink",
-        )}
-      >
-        {eyebrow}
-      </p>
-      <h2 id={id} className={cn("sd-rise mt-4 text-title font-bold text-balance", inverse ? "text-accent-fg" : "text-ink")}>
+      <h2 id={id} className={cn("text-title font-bold text-balance", inverse ? "text-accent-fg" : "text-ink")}>
         <Words text={heading} />
       </h2>
       {intro ? (
         <p
           className={cn(
-            "sd-rise mt-4 text-lg leading-relaxed text-pretty",
+            "mt-4 text-lg leading-relaxed text-pretty",
             align === "center" && "mx-auto max-w-2xl",
             inverse ? "text-accent-fg/85" : "text-ink-muted",
           )}

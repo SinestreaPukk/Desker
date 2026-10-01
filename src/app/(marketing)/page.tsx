@@ -39,7 +39,6 @@ import { LinkButton } from "@/components/marketing/link-button";
 import { HeroWords } from "@/components/marketing/words";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { ShowcaseBento } from "@/components/marketing/showcase-bento";
-import { Reveal } from "@/components/marketing/reveal";
 import { LANDING, SITE, pageMetadata, templateById } from "@/lib/content";
 import { PLANS } from "@/lib/billing/plans";
 import { cn } from "@/lib/utils";
@@ -154,7 +153,7 @@ export default async function LandingPage({
       {/* Two desks ------------------------------------------------------- */}
       {/* The answer to "who is it for": both, side by side, walled apart. */}
       <Section id="desks" labelledBy="desks-heading" containerClassName="pt-2 sm:pt-4">
-        <SectionHeader id="desks-heading" eyebrow={desks.eyebrow} heading={desks.heading} intro={desks.intro} />
+        <SectionHeader id="desks-heading" heading={desks.heading} intro={desks.intro} />
         <div className="mt-12">
           <Desks business={desks.business} personal={desks.personal} wall={desks.wall} />
         </div>
@@ -162,7 +161,7 @@ export default async function LandingPage({
 
       {/* How it works ----------------------------------------------------- */}
       <Section id="how-it-works" labelledBy="steps-heading" containerClassName="pt-2 sm:pt-4">
-        <SectionHeader id="steps-heading" eyebrow={steps.eyebrow} heading={steps.heading} intro={steps.intro} />
+        <SectionHeader id="steps-heading" heading={steps.heading} intro={steps.intro} />
         <div className="mt-14">
           <Steps items={steps.items} />
         </div>
@@ -172,7 +171,7 @@ export default async function LandingPage({
       <Section id="product" labelledBy="product-heading" className="sky-wash border-t border-line">
           <SectionHeader
             id="product-heading"
-            eyebrow={features.eyebrow}
+           
             heading={features.heading}
             intro={features.intro}
           />
@@ -194,7 +193,7 @@ export default async function LandingPage({
         <SectionHeader
           id="trust-heading"
           align="left"
-          eyebrow={trust.eyebrow}
+         
           heading={trust.heading}
           intro={trust.intro}
         />
@@ -208,7 +207,7 @@ export default async function LandingPage({
 
       {/* Roles ------------------------------------------------------------- */}
       <Section id="roles" labelledBy="roles-heading">
-        <SectionHeader id="roles-heading" eyebrow={roles.eyebrow} heading={roles.heading} intro={roles.intro} />
+        <SectionHeader id="roles-heading" heading={roles.heading} intro={roles.intro} />
         <div className="mt-12">
           <RoleGrid cta={roles.cta} groups={roles.groups} />
         </div>
@@ -219,7 +218,7 @@ export default async function LandingPage({
         <Section id="comparison" labelledBy="comparison-heading" className="border-t border-line bg-surface">
           <SectionHeader
             id="comparison-heading"
-            eyebrow={comparison.eyebrow}
+           
             heading={comparison.heading}
             intro={comparison.intro}
           />
@@ -238,7 +237,7 @@ export default async function LandingPage({
         <Section labelledBy="testimonials-heading" className="border-t border-line">
             <SectionHeader
               id="testimonials-heading"
-              eyebrow={testimonials.eyebrow}
+             
               heading={testimonials.heading}
               intro={testimonials.intro}
             />
@@ -251,7 +250,7 @@ export default async function LandingPage({
       {/* While there is nothing to buy: what the beta is, and what comes after */}
       {!pricing.enabled ? (
         <Section id="beta" labelledBy="beta-heading" className="border-t border-line">
-          <SectionHeader id="beta-heading" eyebrow={beta.eyebrow} heading={beta.heading} intro={beta.intro} />
+          <SectionHeader id="beta-heading" heading={beta.heading} intro={beta.intro} />
           <div className="mx-auto mt-12 grid max-w-5xl gap-4 lg:grid-cols-3">
             <Panel className="p-6">
               <h3 className="text-base font-semibold text-ink">In the beta now</h3>
@@ -299,16 +298,15 @@ export default async function LandingPage({
       {/* Pricing: off until there is something to buy (landing.json) ------ */}
       {pricing.enabled ? (
       <Section id="pricing" labelledBy="pricing-heading" className="border-t border-line">
-          <SectionHeader id="pricing-heading" eyebrow={pricing.eyebrow} heading={pricing.heading} intro={pricing.intro} />
+          <SectionHeader id="pricing-heading" heading={pricing.heading} intro={pricing.intro} />
         {/* Three columns only from lg. At 768 they were 230px wide and every
             feature line wrapped twice; below that it is one readable column. */}
         <div className="mx-auto mt-12 grid max-w-md items-stretch gap-4 lg:max-w-5xl lg:grid-cols-3">
-          {Object.values(PLANS).map((plan, index) => {
+          {Object.values(PLANS).map((plan) => {
             const popular = plan.id === pricing.popularPlan;
             return (
-              <Reveal
+              <div
                 key={plan.id}
-                delay={index * 0.08}
                 // Proud of its neighbours at the top only, so its call still
                 // lands on the same line as the other two.
                 className={cn("h-full", popular && "lg:-mt-4 lg:h-[calc(100%+1rem)]")}
@@ -355,7 +353,7 @@ export default async function LandingPage({
                     {plan.priceUsd === 0 ? "Start free" : `Start with ${plan.name}`}
                   </LinkButton>
                 </Panel>
-              </Reveal>
+              </div>
             );
           })}
         </div>
@@ -373,7 +371,7 @@ export default async function LandingPage({
       {/* FAQ ---------------------------------------------------------------- */}
       <Section id="faq" labelledBy="faq-heading" className="border-t border-line">
         <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr] lg:gap-16">
-            <SectionHeader id="faq-heading" align="left" eyebrow={faq.eyebrow} heading={faq.heading} intro={faq.intro} />
+            <SectionHeader id="faq-heading" align="left" heading={faq.heading} intro={faq.intro} />
           <Faq items={faq.items} />
         </div>
       </Section>
@@ -384,7 +382,7 @@ export default async function LandingPage({
       <section className="relative overflow-clip border-t border-line">
         <SoftNotes preset="cta" />
         <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32">
-          <Reveal>
+          <div>
             <StickyNote tone="lemon" tilt={-1.5} className="relative mx-auto max-w-2xl px-6 py-12 text-center sm:px-12 sm:py-16">
               <h2 className="mx-auto max-w-xl font-hand text-hand-title text-balance">{cta.heading}</h2>
               <p className="mt-4 text-lg">{cta.body}</p>
@@ -402,7 +400,7 @@ export default async function LandingPage({
               <p className="mt-4 text-sm">{cta.microcopy}</p>
               <BrandMark className="absolute bottom-4 right-5 size-6 -rotate-12 opacity-40" />
             </StickyNote>
-          </Reveal>
+          </div>
         </div>
       </section>
     </>

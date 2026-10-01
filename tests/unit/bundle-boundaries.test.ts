@@ -44,14 +44,8 @@ function isMarketing(file: string): boolean {
 }
 
 describe("the animation library stays on the public site", () => {
-  it("is imported in exactly one place, and that place is lazy", () => {
-    const motionImporters = importers(/from\s+["']motion(\/|["'])/);
-    expect(motionImporters).toEqual(["components/marketing/motion-lazy.tsx"]);
-
-    // And the only way in is a dynamic import, so it is its own chunk.
-    const reveal = FILES.find((file) => file.path === "components/marketing/reveal.tsx")!;
-    expect(reveal.source).toContain('import("./motion-lazy")');
-    expect(reveal.source).not.toMatch(/^import .*motion-lazy/m);
+  it("isn't imported at all: sections don't animate in as you scroll", () => {
+    expect(importers(/from\s+["']motion(\/|["'])|import\(["']motion/)).toEqual([]);
   });
 
   it("is never pulled in by an app screen", () => {

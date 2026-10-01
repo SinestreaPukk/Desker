@@ -86,7 +86,7 @@ export function TrustStrip({
       <p
         className={cn(
           "text-xs font-semibold",
-          isSky ? "text-[var(--sky-ink)]/75" : "eyebrow sd-rise",
+          isSky ? "text-[var(--sky-ink)]/75" : "eyebrow",
         )}
       >
         {label}
@@ -114,22 +114,16 @@ export function TrustStrip({
 export function Steps({
   items,
 }: {
-  items: readonly { icon: (typeof LANDING_ICONS)[number]; title: string; body: string }[];
+  items: readonly { title: string; body: string }[];
 }) {
+  // Numbered prose, read left to right - not a row of icons in circles.
   return (
-    <ol className="sd-stagger relative grid gap-10 md:grid-cols-3 md:gap-8">
-      {/* The rail joining the three numbers, behind them, from md up. */}
-      <span aria-hidden className="sd-draw absolute left-[16.7%] right-[16.7%] top-6 hidden h-px bg-accent-line md:block" />
+    <ol className="mx-auto grid max-w-5xl gap-10 md:grid-cols-3 md:gap-12">
       {items.map((step, index) => (
-        <li key={step.title} className="relative flex flex-col items-center text-center">
-          <span className="relative flex size-12 items-center justify-center rounded-full border border-accent-line bg-surface text-accent shadow-xs">
-            <LandingIcon icon={step.icon} className="size-5" />
-            <span className="sd-pop absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-accent text-xs text-accent-fg">
-              {index + 1}
-            </span>
-          </span>
-          <h3 className="mt-5 text-lg font-semibold tracking-tight text-ink">{step.title}</h3>
-          <p className="mt-2 max-w-xs text-base leading-relaxed text-ink-muted">{step.body}</p>
+        <li key={step.title} className="border-t border-line-strong pt-5">
+          <p className="text-sm font-semibold text-accent tabular-nums">Step {index + 1}</p>
+          <h3 className="mt-2 text-lg font-semibold tracking-tight text-ink">{step.title}</h3>
+          <p className="mt-2 text-base leading-relaxed text-ink-muted">{step.body}</p>
         </li>
       ))}
     </ol>
@@ -174,7 +168,7 @@ export function TrustGrid({
         const note = PROMISE_NOTES[index % PROMISE_NOTES.length]!;
         const doodle = DOODLE_FOR[item.icon];
         return (
-          <li key={item.title} className="sd-rise">
+          <li key={item.title}>
             <StickyNote tone={note.tone} tilt={note.tilt} settle={false} soft className="note-plain note-fold relative h-full px-6 pb-7 pt-6">
               {doodle ? (
                 <PromiseDoodle id={doodle} className="size-16" />
@@ -224,7 +218,7 @@ export function TrustShots({ shots }: { shots: { image: ProductShot; title: stri
           <figure className="grid items-center gap-6 lg:grid-cols-12 lg:gap-12">
             {/* The product itself, live: every button in it works. A
                 screenshot stands in only where no live piece exists. */}
-            <div className={cn("sd-rise min-w-0 lg:col-span-7", index % 2 === 1 && "lg:order-last")}>
+            <div className={cn("min-w-0 lg:col-span-7", index % 2 === 1 && "lg:order-last")}>
               {shot.image === "approval" ? (
                 <LiveApproval />
               ) : shot.image === "boundaries" ? (
@@ -248,7 +242,8 @@ export function TrustShots({ shots }: { shots: { image: ProductShot; title: stri
 
 /* --- Roles ------------------------------------------------------------------- */
 
-import { ROLE_STAFF, RoleGrid } from "@/components/marketing/role-grid";
+import { RoleGrid } from "@/components/marketing/role-grid";
+import { ROLE_STAFF } from "@/components/marketing/role-staff";
 export { ROLE_STAFF, RoleGrid };
 
 /* --- Two desks: business and personal ------------------------------------- */
@@ -274,7 +269,7 @@ export function Desks({ business, personal, wall }: { business: Desk; personal: 
     <div>
       <div className="grid gap-6 md:grid-cols-2 md:gap-8">
         {desks.map(({ desk, tone, tilt, Icon, roles }) => (
-          <StickyNote key={desk.label} tone={tone} tilt={tilt} settle={false} className="sd-rise flex flex-col px-6 pb-6 pt-7 sm:px-8">
+          <StickyNote key={desk.label} tone={tone} tilt={tilt} settle={false} className="flex flex-col px-6 pb-6 pt-7 sm:px-8">
             <p className="flex items-center gap-2 text-sm font-semibold">
               <Icon className="size-4" aria-hidden />
               {desk.label}
@@ -335,7 +330,7 @@ export function ComparisonTable({
 }) {
   return (
     <div className="mx-auto grid max-w-5xl items-start gap-8 md:grid-cols-2 md:gap-10">
-      <div className="sd-rise note note-plain relative rotate-[-0.8deg] rounded-sm bg-surface-2 p-6 text-ink-muted sm:p-7">
+      <div className="note note-plain relative rotate-[-0.8deg] rounded-sm bg-surface-2 p-6 text-ink-muted sm:p-7">
         <p className="font-hand text-hand-cta font-bold text-ink-muted">{competitorLabel}</p>
         <dl className="mt-4 space-y-4">
           {items.map((item) => (
@@ -349,7 +344,7 @@ export function ComparisonTable({
           ))}
         </dl>
       </div>
-      <StickyNote tone="lemon" tilt={1} settle={false} className="sd-rise relative p-6 sm:p-7">
+      <StickyNote tone="lemon" tilt={1} settle={false} className="relative p-6 sm:p-7">
         <p className="font-hand text-hand-cta font-bold">{deskerLabel}</p>
         <dl className="mt-4 space-y-4">
           {items.map((item) => (
@@ -372,7 +367,7 @@ export function ComparisonTable({
 /** Real quotes only. The page renders this only when content enables it. */
 export function Testimonials({ items }: { items: readonly { quote: string; name: string; title: string }[] }) {
   return (
-    <ul className="sd-stagger grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
         <li key={item.name}>
           <figure className="flex h-full flex-col rounded-panel border border-line bg-surface p-6 shadow-xs">
@@ -398,7 +393,7 @@ export function Testimonials({ items }: { items: readonly { quote: string; name:
  */
 export function Faq({ items }: { items: readonly { q: string; a: string }[] }) {
   return (
-    <StickyNote tone="sky" tilt={0.4} settle={false} soft className="note-plain sd-rise relative px-5 py-3 sm:px-8">
+    <StickyNote tone="sky" tilt={0.4} settle={false} soft className="note-plain relative px-5 py-3 sm:px-8">
       <div className="divide-y divide-note-ink/10">
         {items.map((item, index) => (
           <details key={item.q} className="group" open={index === 0}>

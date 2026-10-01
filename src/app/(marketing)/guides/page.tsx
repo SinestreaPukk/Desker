@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
-import { Reveal } from "@/components/marketing/reveal";
 import { Panel } from "@/components/ui/panel";
 import { GUIDES, guidesFor } from "@/lib/guides";
 import { pageMetadata } from "@/lib/content";
@@ -42,9 +41,8 @@ export default function GuidesPage() {
           {group.heading}
         </h2>
         <ul className="grid gap-3 sm:grid-cols-2">
-          {group.guides.map((guide, index) => (
+          {group.guides.map((guide) => (
             <li key={guide.slug}>
-              <Reveal delay={index * 0.04}>
                 <Panel className="group relative h-full p-5 transition-colors hover:border-accent-line">
                   <div className="flex items-center gap-2 text-ink-muted">
                     <BookOpen className="size-4" aria-hidden />
@@ -64,7 +62,6 @@ export default function GuidesPage() {
                     />
                   </p>
                 </Panel>
-              </Reveal>
             </li>
           ))}
         </ul>

@@ -5,10 +5,9 @@ import { CTA_PRIMARY } from "@/components/marketing/cta";
 import { SoftNotes, StickyNote } from "@/components/marketing/desk-notes";
 import { PageHeader } from "@/components/marketing/page-header";
 import { TemplateIcon } from "@/components/marketing/template-icon";
-import { Reveal } from "@/components/marketing/reveal";
 import { RoleRun } from "@/components/marketing/role-run";
 
-import { ROLE_STAFF as STAFF } from "@/components/marketing/landing-blocks";
+import { ROLE_STAFF as STAFF } from "@/components/marketing/role-staff";
 import { LANDING, SHOWCASE, TEMPLATES, pageMetadata } from "@/lib/content";
 
 /** Business roles first, then your own life's: the two groups the landing page shows. */
@@ -73,7 +72,7 @@ export default function ShowcasePage() {
                 const where = role.audience === "personal" ? "Maya · Personal" : "ABC Inc.";
                 return (
                   <li key={role.id} id={role.id} className="scroll-mt-32">
-                    <Reveal>
+                    <div>
                       <div className="grid gap-6 rounded-panel border border-line bg-surface p-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:p-8">
                         <div className="flex flex-col">
                           <span className="flex size-12 items-center justify-center rounded-panel bg-accent-soft text-accent-soft-fg shadow-xs">
@@ -111,7 +110,7 @@ export default function ShowcasePage() {
                           />
                         </div>
                       </div>
-                    </Reveal>
+                    </div>
                   </li>
                 );
               })}

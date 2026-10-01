@@ -921,29 +921,6 @@
   }
 }
 
-/* --- Scroll reveals ------------------------------------------------------------
-   Driven by each element's own passage into view: no JavaScript, and in a
-   browser without scroll timelines, or with reduced motion, everything is
-   simply there.
-     .sd-rise      fades and rises in
-   Kept to one light effect: per-word, cascading and twinkling animations
-   made scrolling janky and were removed. */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .sd-rise {
-      animation: sd-rise linear both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 28%;
-    }
-  }
-}
-
-@keyframes sd-rise {
-  from {
-    opacity: 0;
-    transform: translateY(28px);
-  }
-}
 /* Horizontal strips that scroll without a scrollbar (the showcase's role index). */
 .no-scrollbar {
   scrollbar-width: none;

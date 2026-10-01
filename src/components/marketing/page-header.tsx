@@ -28,7 +28,7 @@ export function PageHeader({
       <SoftNotes preset="header" />
       <div className="relative mx-auto max-w-6xl px-4 pb-36 pt-14 sm:px-6 sm:pb-40 sm:pt-20">
         {eyebrow ? (
-          <p className="mb-4 inline-block rounded-sm bg-note-sky px-2.5 py-1 text-xs font-semibold tracking-wide text-note-ink">
+          <p className="mb-3 text-sm text-ink-muted">
             {eyebrow}
           </p>
         ) : null}
