@@ -70,25 +70,20 @@ export default async function LandingPage({
     // the space it belongs to, when the account has both kinds.
     const { template } = await searchParams;
     const role = template ? templateById(template) : undefined;
-    const picked = role ? role.id : null;
+    // Otherwise: "Where to?" - which asks only when there is both a business
+    // and a personal space, and goes straight in when there is one kind.
+    if (!role) redirect("/choose-space");
     const project =
-      (role
-        ? await prisma.project.findFirst({
-            where: { ...projectsVisibleTo(user.id), organization: { kind: role.audience } },
-            orderBy: { createdAt: "asc" },
-            include: { organization: { select: { kind: true } } },
-          })
-        : null) ?? (await defaultProject(user.id));
-    // A brand-new space starts with its first run: one workflow, run once on
-    // example data, then made real. A role picked on the showcase skips it -
-    // that person already chose - and describes the business, then hires.
+      (await prisma.project.findFirst({
+        where: { ...projectsVisibleTo(user.id), organization: { kind: role.audience } },
+        orderBy: { createdAt: "asc" },
+        include: { organization: { select: { kind: true } } },
+      })) ?? (await defaultProject(user.id));
+    // A brand-new space describes the business (or the person) first, then hires.
     if (!hasCoreContext(project, spaceKind(project.organization.kind)) && (await prisma.agent.count({ where: { projectId: project.id } })) === 0) {
-      redirect(picked ? `/p/${project.slug}/welcome?template=${encodeURIComponent(picked)}` : `/p/${project.slug}/start`);
+      redirect(`/p/${project.slug}/welcome?template=${encodeURIComponent(role.id)}`);
     }
-    if (picked) {
-      redirect(`/p/${project.slug}/agents/new?template=${encodeURIComponent(picked)}`);
-    }
-    redirect(`/p/${project.slug}/roster`);
+    redirect(`/p/${project.slug}/agents/new?template=${encodeURIComponent(role.id)}`);
   }
 
   const { hero, trustStrip, desks, steps, features, trust, roles, comparison, testimonials, beta, pricing, faq, cta } =
