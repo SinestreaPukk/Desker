@@ -36,8 +36,8 @@
     }
   ],
   "navCta": {
-    "label": "Join the beta",
-    "href": "/beta"
+    "label": "Start now",
+    "href": "/signup"
   },
   "footer": {
     "blurb": "Desker gives you an AI team you can actually trust, at work and at home: every agent has a job, your context, and your sign-off before it publishes or sends. Personal spaces stay private to you.",

@@ -7,8 +7,8 @@
     "headline": "Team of AI agents who do the work. On call 24/7",
     "subhead": "Staff for your company's research, marketing and support. Assistants for your money and your week. They work on their own, message you on LINE or Slack, and ask before anything goes out.",
     "primaryCta": {
-      "label": "Join the beta",
-      "href": "/beta"
+      "label": "Start now",
+      "href": "/signup"
     },
     "secondaryCta": {
       "label": "See it work",
@@ -148,8 +148,8 @@
       "Approvals, the audit log, rules from your corrections, and export or delete of everything"
     ],
     "limits": [
-      "Invite only: join the list and we send an invite as places open",
-      "Google (Gmail, Calendar) works for invited testers, with an \"unverified app\" screen until Google's review is done",
+      "Still in testing: open to everyone, free while we learn what to fix",
+      "Google (Gmail, Calendar) works, with an \"unverified app\" screen until Google's review is done",
       "No direct HubSpot, Intercom or Salesforce yet: a support inbox takes messages from any helpdesk or form",
       "It's a beta: expect rough edges, and tell us - we read every note"
     ],
@@ -176,7 +176,7 @@
     "items": [
       {
         "q": "When can I use Desker?",
-        "a": "Beta opens soon. Join the list for an invite. Until then, sign-in is limited to the people testing it."
+        "a": "Right now. Create an account and go straight in. Desker is still in testing and needs your feedback."
       },
       {
         "q": "Is it for businesses or for individuals?",
@@ -225,11 +225,11 @@
     ]
   },
   "cta": {
-    "heading": "Be in the next beta group",
-    "body": "Beta opens soon. Join the list for an invite, for your business, your life, or both.",
+    "heading": "Try Desker while it is in testing",
+    "body": "Open to everyone and still in testing. Sign up and tell us what works and what doesn't.",
     "button": {
-      "label": "Join the beta",
-      "href": "/beta"
+      "label": "Start now",
+      "href": "/signup"
     },
     "secondary": {
       "label": "See it work first",
