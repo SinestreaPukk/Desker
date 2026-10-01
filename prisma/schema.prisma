@@ -43,11 +43,42 @@ model User {
   /// accepted at sign-up. The acceptance record the legal documents need.
   termsAcceptedAt DateTime?
   termsVersion    String?
+  /// What Desker messages this person about, and when: see lib/messaging/prefs.ts.
+  alertPrefs   Json?
+  /// When their last morning brief went out, so one goes out per day.
+  lastBriefAt  DateTime?
   createdAt    DateTime @default(now())
 
   memberships Membership[]
+  messageChannels MessageChannel[]
   feedback    Feedback[]
   passwordResets PasswordReset[]
+}
+
+/// Somewhere Desker messages a person: a chat app they linked (LINE,
+/// Telegram, WhatsApp), a webhook they pasted (Slack, Discord, Teams), or
+/// their account email.
+model MessageChannel {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// line | telegram | whatsapp | email | slack | discord | teams
+  kind      String
+  /// Vault ciphertext of where to send: a chat id, a phone number, a webhook
+  /// URL. Null until a chat app is linked.
+  target    String?
+  /// A hash of kind + chat id, to recognise who an incoming message is from.
+  senderKey String?  @unique
+  /// What the person sees in their list.
+  label     String
+  /// The code they send from the app to link it. Cleared once linked.
+  linkCode  String?  @unique
+  enabled   Boolean  @default(true)
+  /// Why the last message didn't arrive, until one does.
+  lastError String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 /// A "forgot password" link. Only a hash of the token is stored, so a copy of

@@ -122,10 +122,12 @@ async function logIssue(input: unknown, context: ToolContext): Promise<ToolOutco
   if (parsed.data.severity === "critical" || parsed.data.severity === "high") {
     const agent = await prisma.agent.findUnique({
       where: { id: context.agentId },
-      select: { name: true },
+      select: { name: true, project: { select: { slug: true, organizationId: true } } },
     });
     notifyInBackground({
       kind: "critical_issue",
+      organizationId: agent?.project?.organizationId,
+      path: agent?.project ? `/p/${agent.project.slug}/conversations/${context.conversationId}` : undefined,
       title:
         parsed.data.severity === "critical"
           ? "Critical issue logged"
@@ -248,10 +250,12 @@ async function escalateToHuman(
 
   const escalatingAgent = await prisma.agent.findUnique({
     where: { id: context.agentId },
-    select: { name: true },
+    select: { name: true, project: { select: { slug: true, organizationId: true } } },
   });
   notifyInBackground({
     kind: "escalation",
+    organizationId: escalatingAgent?.project?.organizationId,
+    path: escalatingAgent?.project ? `/p/${escalatingAgent.project.slug}/conversations/${context.conversationId}` : undefined,
     title: "Conversation escalated",
     body: parsed.data.reason,
     agentName: escalatingAgent?.name ?? "An agent",

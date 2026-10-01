@@ -19,6 +19,7 @@ import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import { audit } from "@/lib/audit";
 import { publishAdminEvent } from "@/lib/events";
+import { notifyInBackground } from "@/lib/notify";
 import { getProvider, type ChatMessage } from "@/lib/llm/provider";
 import { clamp, parseModelJson, stringField } from "./model-json";
 import { previousFire } from "./scope";
@@ -460,6 +461,15 @@ export async function generateDigest(
     });
   }
 
+  notifyInBackground({
+    kind: "digest",
+    title: `${agent.name}'s ${cadence} digest: ${written.headline}`,
+    body: written.bullets.map((bullet) => `• ${bullet.text}`).join("\n"),
+    agentName: agent.name,
+    path: `/p/${agent.project.slug}/needs-you`,
+    organizationId,
+    peopleOnly: true,
+  });
   publishAdminEvent({ type: "digest.created", agentId, digestId: digest.id });
   await audit({
     organizationId,

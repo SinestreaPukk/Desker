@@ -235,7 +235,15 @@ async function finishRun(
 ) {
   const item = await prisma.actionItem.findUniqueOrThrow({
     where: { id: actionItemId },
-    select: { status: true, result: true, pendingAction: true, organizationId: true, agentId: true },
+    select: {
+      status: true,
+      result: true,
+      pendingAction: true,
+      organizationId: true,
+      agentId: true,
+      headline: true,
+      agent: { select: { name: true, project: { select: { slug: true } } } },
+    },
   });
   if (item.status !== "in_progress") return; // finished by a retry that already got here
   const result = { ...((item.result as Record<string, unknown> | null) ?? {}), summary: outcome.summary };
@@ -248,11 +256,9 @@ async function finishRun(
   });
   // A failed run is something the agent is telling its owner about itself -
   // in the inbox, in the notification channel, and in error monitoring.
+  const agent = item.agent;
+  const path = `/p/${agent.project.slug}/work/${actionItemId}`;
   if (outcome.error) {
-    const agent = await prisma.agent.findUnique({
-      where: { id: item.agentId },
-      select: { name: true, project: { select: { slug: true } } },
-    });
     captureMessage(`Action item failed: ${outcome.error}`, {
       organizationId: item.organizationId,
       agentId: item.agentId,
@@ -262,9 +268,10 @@ async function finishRun(
       kind: "run_failed",
       title: "A scheduled task failed",
       body: outcome.error,
-      agentName: agent?.name ?? "Agent",
-      path: agent ? `/p/${agent.project.slug}/work/${actionItemId}` : undefined,
+      agentName: agent.name,
+      path,
       severity: "medium",
+      organizationId: item.organizationId,
     });
     await prisma.issue
       .create({
@@ -279,6 +286,18 @@ async function finishRun(
         },
       })
       .catch((error: unknown) => console.error("[work] failure issue not recorded", error));
+  } else {
+    // To the people who chose to hear about it (Alerts): never the operators' webhook.
+    const summary = outcome.summary.trim().slice(0, 600);
+    notifyInBackground({
+      kind: to === "needs_approval" ? "approval_waiting" : "work_done",
+      title: to === "needs_approval" ? "Needs your OK" : "Task done",
+      body: item.headline ? `${item.headline}\n${summary}` : summary,
+      agentName: agent.name,
+      path,
+      organizationId: item.organizationId,
+      peopleOnly: true,
+    });
   }
   await audit({
     organizationId: item.organizationId,

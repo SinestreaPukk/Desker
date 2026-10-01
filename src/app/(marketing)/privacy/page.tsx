@@ -188,6 +188,10 @@ export default function PrivacyPage() {
         <li><strong>A web search provider</strong> (Brave or Tavily) receives the search queries an agent makes - never your documents.</li>
         <li><strong>Hosting, database and background jobs</strong> (Vercel, Neon, Inngest) store and process data to run the service.</li>
         <li><strong>Email delivery</strong> (Resend) sends account emails such as password resets, and the digests you ask for.</li>
+        <li>
+          <strong>Messaging apps you choose</strong> (LINE, WhatsApp, Telegram, Slack, Discord, Microsoft Teams) carry the
+          alerts and morning brief you set up under Alerts. Only the apps you add get messages, and you can remove them at any time.
+        </li>
         <li><strong>Payments</strong> (Stripe) handles subscriptions and card details.</li>
         <li><strong>Error monitoring</strong> (Sentry) receives technical error reports, without message content or request bodies.</li>
         <li>

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   Activity,
+  Bell,
   BellDot,
   Blocks,
   BotMessageSquare,
@@ -95,6 +96,7 @@ const NAV_GROUPS: { title: string; items: readonly NavItem[] }[] = [
   {
     title: "Configuration",
     items: [
+      { segment: "alerts", label: "Alerts", icon: Bell },
       { segment: "integrations", label: "Integrations", icon: Blocks },
       { segment: "organization", label: "Organisation", icon: Building },
       { segment: "audit", label: "Audit log", icon: History },

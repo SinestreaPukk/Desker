@@ -14,6 +14,8 @@
 import "server-only";
 import { afterResponse } from "@/lib/after-response";
 import { env } from "@/lib/env";
+import { messageOrganization } from "@/lib/messaging/send";
+import type { EventKind } from "@/lib/messaging/prefs";
 
 type NotificationKind =
   | "escalation"
@@ -21,7 +23,21 @@ type NotificationKind =
   | "handoff_reply"
   | "run_failed"
   | "approval_waiting"
-  | "feedback";
+  | "feedback"
+  | "work_done"
+  | "digest";
+
+/** Which of a person's alert settings each kind falls under. */
+const EVENT_OF: Record<NotificationKind, EventKind> = {
+  escalation: "escalation",
+  handoff_reply: "escalation",
+  critical_issue: "issue",
+  feedback: "issue",
+  run_failed: "failure",
+  approval_waiting: "approval",
+  work_done: "done",
+  digest: "digest",
+};
 
 interface Notification {
   kind: NotificationKind;
@@ -33,6 +49,10 @@ interface Notification {
   conversationId?: string;
   path?: string;
   severity?: string | null;
+  /** Whose space it happened in: its people get it in the apps they chose under Alerts. */
+  organizationId?: string;
+  /** Routine news for the space's people only, not the operators' webhooks. */
+  peopleOnly?: boolean;
 }
 
 function linkFor(notification: Notification): string | null {
@@ -72,6 +92,20 @@ function toPayload(notification: Notification) {
 }
 
 export async function notify(notification: Notification): Promise<void> {
+  await Promise.all([
+    notification.peopleOnly ? null : notifyOperators(notification),
+    notification.organizationId
+      ? messageOrganization(notification.organizationId, EVENT_OF[notification.kind], {
+          title: notification.title,
+          body: `${notification.body}\n\n${notification.agentName}`,
+          url: linkFor(notification),
+        }).catch((error: unknown) => console.error("[notify] messaging failed:", error))
+      : null,
+  ]);
+}
+
+/** The deployment's own webhooks (NOTIFY_WEBHOOK_URLS), for whoever runs it. */
+async function notifyOperators(notification: Notification): Promise<void> {
   const targets = env.notifyWebhooks;
   if (targets.length === 0) return;
 

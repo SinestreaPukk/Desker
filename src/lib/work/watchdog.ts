@@ -118,7 +118,7 @@ export async function checkAutonomousWork(now = new Date()): Promise<WatchdogRep
           },
         })
         .catch(() => {});
-      notifyInBackground({ kind: "run_failed", title: "A task stopped responding", body: error, agentName: run.agent.name, path, severity: "medium" });
+      notifyInBackground({ kind: "run_failed", title: "A task stopped responding", body: error, agentName: run.agent.name, path, severity: "medium", organizationId: run.organizationId });
       stuckFailed++;
       continue;
     }
@@ -137,6 +137,7 @@ export async function checkAutonomousWork(now = new Date()): Promise<WatchdogRep
       agentName: run.agent.name,
       path,
       severity: "low",
+      organizationId: run.organizationId,
     });
   }
   if (overBudget + stuckFailed >= 5) {
@@ -157,6 +158,7 @@ export async function checkAutonomousWork(now = new Date()): Promise<WatchdogRep
       headline: true,
       awaitingSince: true,
       result: true,
+      organizationId: true,
       agent: { select: { name: true, project: { select: { slug: true } } } },
     },
     take: 200,
@@ -178,6 +180,7 @@ export async function checkAutonomousWork(now = new Date()): Promise<WatchdogRep
       agentName: item.agent.name,
       path: `/p/${item.agent.project.slug}/work/${item.id}`,
       severity: "low",
+      organizationId: item.organizationId,
     });
     approvalsNudged++;
   }
