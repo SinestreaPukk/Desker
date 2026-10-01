@@ -338,6 +338,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
               <pre className="mt-2 max-h-[28rem] overflow-auto whitespace-pre-wrap rounded-lg border border-line/80 bg-surface-2/70 p-4 font-sans text-sm leading-relaxed text-ink">
                 {draft.body}
               </pre>
+              <p className="mt-1.5 text-xs text-ink-muted">Written by AI, which can make mistakes. Check it before you approve.</p>
             </div>
           )
         ) : pending.tool === "calendar_create_event" ||

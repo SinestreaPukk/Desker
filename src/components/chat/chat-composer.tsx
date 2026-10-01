@@ -105,8 +105,10 @@ export function ChatComposer({
           </Button>
         )}
       </div>
-      <p className="mt-1.5 px-1 text-xs text-ink-muted">
-        Enter to send · Shift + Enter for a new line
+      {/* Said wherever someone talks to an agent: its answers are generated and can be wrong. */}
+      <p className="mt-1.5 flex flex-wrap justify-between gap-x-3 px-1 text-xs text-ink-muted">
+        <span>AI can make mistakes. Check important information.</span>
+        <span className="hidden sm:inline">Enter to send · Shift + Enter for a new line</span>
       </p>
     </form>
   );
