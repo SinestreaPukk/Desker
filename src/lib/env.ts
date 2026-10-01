@@ -78,6 +78,8 @@ export const env = {
       .filter((url) => /^https?:\/\//.test(url));
   },
 
+  /** Blanket API requests per client address per minute (proxy.ts). */
+  apiRateLimit: int("API_RATE_LIMIT", 600),
   chatRateLimit: int("CHAT_RATE_LIMIT", 20),
   /** Sign-ups per client address per ten minutes. */
   signupRateLimit: int("SIGNUP_RATE_LIMIT", 20),
