@@ -159,7 +159,8 @@ function ActiveChat({
             {
               id: "greeting",
               role: "assistant" as const,
-              content: `Hi, I'm ${agent.name}${agent.jobTitle ? `, ${agent.jobTitle}` : ""}. How can I help?`,
+              // Said up front: the person is talking to an AI, and the chat is kept.
+              content: `Hi, I'm ${agent.name}, an AI assistant${agent.jobTitle ? ` (${agent.jobTitle})` : ""}. This chat is saved so the team can follow up. How can I help?`,
             },
           ]
         : []),
@@ -212,7 +213,7 @@ function ActiveChat({
             {agent.name}
           </h1>
           <p className="truncate text-xs text-ink-muted">
-            {agent.jobTitle}
+            AI assistant{agent.jobTitle ? ` · ${agent.jobTitle}` : ""}
             {agent.department ? ` · ${agent.department}` : ""}
           </p>
         </div>
@@ -312,7 +313,7 @@ function PasscodeGate({
         />
         <div>
           <h1 className="text-base font-semibold text-ink">{agent.name}</h1>
-          <p className="text-sm text-ink-muted">{agent.jobTitle}</p>
+          <p className="text-sm text-ink-muted">AI assistant{agent.jobTitle ? ` · ${agent.jobTitle}` : ""}</p>
         </div>
 
         <div className="text-left">

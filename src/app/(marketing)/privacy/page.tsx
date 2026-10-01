@@ -200,6 +200,15 @@ export default function PrivacyPage() {
         data leaves your country we rely on the provider&rsquo;s contractual commitments to protect it.
       </p>
 
+      <h2>If you chat with an agent for a business</h2>
+      <p>
+        When you use a business&rsquo;s chat on a website or a shared link, you are talking to an AI assistant set
+        up by that business, not a person. What you write is saved, so the business&rsquo;s team can read it and
+        follow up, and it is processed by the AI model providers listed above to write each reply. The business
+        decides what happens to your conversation; ask it if you want a copy or want it deleted. Please don&rsquo;t
+        share passwords, card numbers or ID numbers in a chat.
+      </p>
+
       <h2>Cookies and tracking</h2>
       <p>
         We set one cookie, to keep you signed in. Your browser also remembers display preferences (like the
@@ -236,6 +245,16 @@ export default function PrivacyPage() {
         restrict or stop a particular use of your data, or ask any question about it, at {LEGAL.contactEmail};
         we answer within 30 days. If you are unhappy with our answer you can complain to your data protection
         authority (in Thailand, the Personal Data Protection Committee; in the EU or UK, your national regulator).
+      </p>
+
+      <h2>If you live in California</h2>
+      <p>
+        We do not sell or share your personal information, as the California Consumer Privacy Act defines those
+        words, and we have not done so in the past 12 months. We don&rsquo;t use sensitive personal information for
+        anything beyond providing the service you asked for. You have the right to know what we hold about you, to
+        get a copy, to correct it and to delete it - the buttons above do this - and to do so without being treated
+        any differently. You can also ask through someone you authorise, by writing to {LEGAL.contactEmail}; we
+        will verify the request before acting on it.
       </p>
 
       <h2>Security</h2>

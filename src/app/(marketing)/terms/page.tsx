@@ -31,10 +31,24 @@ export default function TermsPage() {
 
       <h2>2. Your account and your spaces</h2>
       <ul>
+        <li>
+          You must be at least 18 years old (or the age of majority where you live, if that is higher) to create an
+          account. The Service is not directed at children, and a business must not use its agents to collect
+          personal information from children under 13 (or the higher age its country sets).
+        </li>
         <li>You must give accurate information and keep your credentials confidential.</li>
         <li>An account can own a business space, a personal space, or both. A personal space is for your own use and cannot be shared.</li>
         <li>A business owner is responsible for the people they invite and the roles they assign.</li>
         <li>You must not use the Service to break the law, to send unsolicited messages, or to interfere with the Service or other customers.</li>
+        <li>
+          If your agents talk to people for you, you must not present them as human. {LEGAL.companyName}&rsquo;s chat
+          says it is an AI assistant and that conversations are saved; you must not remove or hide that, and you
+          must tell people how their messages are used where the law requires it.
+        </li>
+        <li>
+          You must not publish reviews, testimonials or results your agents wrote as if they came from real
+          customers.
+        </li>
       </ul>
 
       <h2>3. AI output</h2>

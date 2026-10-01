@@ -5,6 +5,7 @@
  * text can be shown to admins in the builder ("what this agent is actually
  * told"). Everything an agent knows about itself comes from here.
  */
+import { safetyRules } from "@/lib/safety-rules";
 import { BRAND } from "@/lib/brand";
 import { TOOL_IDS, type ToolId } from "@/lib/tools/registry";
 import type { SpaceKind } from "@/lib/space";
@@ -279,6 +280,7 @@ export function buildSystemPrompt(input: AgentPromptInput): string {
       personal && isColleague ? personalRules(input) : isColleague ? colleagueBoundaries(input) : boundaries(input),
     ),
   );
+  parts.push(safetyRules(isColleague ? "owner" : "client"));
 
   return parts.join("\n\n");
 }
@@ -371,6 +373,7 @@ export function buildCompanyContextPrompt(input: CompanyContextPromptInput): str
     ),
   );
 
+  parts.push(safetyRules("owner"));
   return parts.join("\n\n");
 }
 

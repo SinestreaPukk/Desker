@@ -31,7 +31,7 @@ export const metadata: Metadata = pageMetadata({
  * Fourteen roles is a long page and most arrivals are deep links - every card in
  * the landing page's bento points at an anchor here - so the sky band carries
  * an index, and each role is a block of its own with the worked example in a
- * frame beside it: a real run, not a chat.
+ * frame beside it: an example run, labelled as one, not a chat.
  */
 export default function ShowcasePage() {
   return (
@@ -99,8 +99,9 @@ export default function ShowcasePage() {
                           </Link>
                         </div>
 
-                        {/* A real run, played like the landing page's demo. */}
+                        {/* A worked example, played like the landing page's demo - and labelled as one. */}
                         <div className="mat min-w-0 rounded-panel p-3 sm:p-4">
+                          <p className="mb-2 text-xs font-medium text-ink-muted">{SHOWCASE.exampleLabel}</p>
                           <RoleRun
                             roleId={role.id}
                             agent={agent}

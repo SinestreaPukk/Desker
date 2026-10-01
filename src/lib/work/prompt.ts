@@ -7,6 +7,7 @@ import "server-only";
 import type { SpaceKind } from "@/lib/space";
 import type { AutonomyMode } from "./types";
 import { localIso, timeNote, validTimeZone } from "@/lib/local-time";
+import { safetyRules } from "@/lib/safety-rules";
 
 interface RunPromptInput {
   agent: {
@@ -129,6 +130,7 @@ export function buildRunPrompt(input: RunPromptInput): string {
   ];
   parts.push(`Ground rules:\n${rules.map((r) => `- ${r}`).join("\n")}`);
   parts.push(timeNote(new Date(), input.timeZone));
+  parts.push(safetyRules("owner"));
 
   return parts.join("\n\n");
 }

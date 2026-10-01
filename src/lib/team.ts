@@ -24,6 +24,7 @@ import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { RunRefused, startRun } from "@/lib/work/scope";
 import { WORK_TOOL_IDS, WORK_TOOL_METADATA, scopeTools, type WorkToolId } from "@/lib/work/tools";
 import { timeNote } from "@/lib/local-time";
+import { safetyRules } from "@/lib/safety-rules";
 
 const MAX_RESPONDERS = 3;
 const HISTORY = 30;
@@ -248,6 +249,7 @@ export async function replyAs(input: {
         ),
         roomSection(agent, team, kind),
         timeNote(new Date(), scope?.timezone),
+        safetyRules("owner"),
       ].join("\n\n");
       const provider = await getProvider(agent.modelProvider);
       const turn = await provider.complete({
