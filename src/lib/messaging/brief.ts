@@ -104,6 +104,8 @@ export async function composeBrief(userId: string, now = new Date(), previousBri
   const orgIds = orgs.map((m) => m.organizationId);
   const named = orgs.length > 1;
   const sections: string[] = [];
+  /** Straight to the oldest thing waiting, so the brief opens the work instead of a space picker. */
+  let waitingPath: string | null = null;
 
   if (prefs.brief.calendar) {
     // Only calendars the person owns: a colleague's connected calendar isn't theirs to read.
@@ -131,12 +133,12 @@ export async function composeBrief(userId: string, now = new Date(), previousBri
       prisma.actionItem.findMany({
         where: { organizationId: { in: orgIds }, status: "needs_approval" },
         orderBy: { awaitingSince: "asc" },
-        select: { headline: true, agent: { select: { name: true } }, organization: { select: { name: true } } },
+        select: { headline: true, agent: { select: { name: true, project: { select: { slug: true } } } }, organization: { select: { name: true } } },
       }),
       prisma.issue.findMany({
         where: { status: "open", agent: { project: { organizationId: { in: orgIds } } } },
         orderBy: { createdAt: "asc" },
-        select: { summary: true, agent: { select: { name: true, project: { select: { organization: { select: { name: true } } } } } } },
+        select: { summary: true, agent: { select: { name: true, project: { select: { slug: true, organization: { select: { name: true } } } } } } },
       }),
     ]);
     const lines = [
@@ -144,6 +146,8 @@ export async function composeBrief(userId: string, now = new Date(), previousBri
       ...issues.map((i) => `• ${i.summary} (${i.agent.name}${named ? `, ${i.agent.project.organization.name}` : ""})`),
     ];
     if (lines.length) {
+      const slug = approvals[0]?.agent.project.slug ?? issues[0]?.agent.project.slug;
+      if (slug) waitingPath = `/p/${slug}/needs-you`;
       sections.push(`✋ Waiting on you (${lines.length})\n${lines.slice(0, LIST).join("\n")}${lines.length > LIST ? `\n• and ${lines.length - LIST} more` : ""}`);
     }
   }
@@ -174,7 +178,7 @@ export async function composeBrief(userId: string, now = new Date(), previousBri
   return {
     title: `Good morning${user.firstName ? `, ${user.firstName}` : ""}. ${date}`,
     body: sections.length ? sections.join("\n\n") : "Nothing waiting on you. Have a good day.",
-    url: env.appUrl ? `${env.appUrl}/choose-space` : null,
+    url: env.appUrl ? `${env.appUrl}${waitingPath ?? "/choose-space"}` : null,
   };
 }
 
