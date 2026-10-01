@@ -2,57 +2,37 @@ import { cn } from "@/lib/utils";
 import { BRAND } from "@/lib/brand";
 
 /**
- * The Desker logo.
- *
- * The artwork is a single-colour mask rather than exported images, and the
- * colour comes from a design token. Source
- * assets are generated from the original artwork by
- * scripts/make-brand-assets.mjs.
+ * The Desker mascot logo: friendly light-blue circular character with dark navy features.
+ * Rendered with a transparent background.
  */
-const MASK = {
-  mark: "/brand/desker-mark.png",
-  lockup: "/brand/desker-lockup.png",
-} as const;
-
-function maskStyle(url: string): React.CSSProperties {
-  return {
-    // Both spellings: Safari still needs the prefixed property.
-    WebkitMaskImage: `url(${url})`,
-    maskImage: `url(${url})`,
-    WebkitMaskRepeat: "no-repeat",
-    maskRepeat: "no-repeat",
-    WebkitMaskPosition: "center",
-    maskPosition: "center",
-    WebkitMaskSize: "contain",
-    maskSize: "contain",
-  };
-}
-
-/** The `d` mark on its own - sidebars, avatars, tight spaces. */
 export function BrandMark({ className }: { className?: string }) {
   return (
-    <span
-      role="img"
-      aria-label={BRAND.name}
-      style={maskStyle(MASK.mark)}
-      className={cn("inline-block size-6 shrink-0 bg-brand", className)}
+    <img
+      src="/brand/desker-mark.png"
+      alt={BRAND.name}
+      width={40}
+      height={40}
+      draggable={false}
+      className={cn("inline-block size-6 shrink-0 select-none object-contain", className)}
     />
   );
 }
 
 /**
- * The full lockup: wordmark plus "Agentic AI Platform".
- *
- * The tagline is only ~18% of the artwork's height, so it needs around 64px to
- * stay legible - hence the h-16 default. Below that, use the mark alone.
+ * The full lockup: mascot mark alongside "Desker" and "Agentic AI Platform".
  */
 export function BrandLockup({ className }: { className?: string }) {
   return (
-    <span
-      role="img"
-      aria-label={`${BRAND.name} — ${BRAND.tagline}`}
-      style={maskStyle(MASK.lockup)}
-      className={cn("inline-block aspect-[1734/722] h-16 bg-brand", className)}
-    />
+    <div className={cn("inline-flex items-center gap-3 select-none", className)}>
+      <BrandMark className="size-11" />
+      <div className="flex flex-col">
+        <span className="text-xl font-bold tracking-tight text-ink leading-tight">
+          {BRAND.name}
+        </span>
+        <span className="text-xs font-medium tracking-wide text-ink-muted leading-tight">
+          {BRAND.tagline}
+        </span>
+      </div>
+    </div>
   );
 }

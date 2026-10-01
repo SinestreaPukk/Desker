@@ -1,14 +1,9 @@
 #!/usr/bin/env node
 /**
- * The favicon set, from the brand mark: the `d` in white on the brand
- * ink blue, with
- * a corner radius that reads as an app icon at 16px and 180px alike.
- *
+ * Generates the favicon set from the transparent mascot brand mark:
  *   node scripts/make-app-icons.mjs
  *
- * Writes src/app/icon.png (512, what browsers and Google use),
- * src/app/apple-icon.png (180) and src/app/favicon.ico (16/32/48) - Next
- * picks all three up by convention and emits the <link> tags.
+ * Writes src/app/icon.png (512), src/app/apple-icon.png (180), and src/app/favicon.ico (16/32/48)
  */
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -21,29 +16,26 @@ import sys
 from PIL import Image, ImageDraw
 
 mark = Image.open(sys.argv[1]).convert("RGBA")
-# The source mask tops out below full opacity; stretch it so the ink is white.
-alpha_src = mark.getchannel("A")
-peak = max(alpha_src.getextrema()[1], 1)
-alpha_src = alpha_src.point(lambda a: min(255, round(a * 255 / peak)))
-accent = (53, 88, 230)  # #3558E6, the brand ink blue
-
-def icon(size):
-    radius = round(size * 0.22)
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    ImageDraw.Draw(img).rounded_rectangle((0, 0, size - 1, size - 1), radius=radius, fill=accent + (255,))
-    # The mark's alpha becomes white ink, sized to leave a clear margin.
-    glyph = round(size * 0.62)
-    alpha = alpha_src.resize((glyph, glyph), Image.LANCZOS)
-    ink = Image.new("RGBA", (glyph, glyph), (255, 255, 255, 255))
-    ink.putalpha(alpha)
-    offset = ((size - glyph) // 2, (size - glyph) // 2)
-    img.alpha_composite(ink, offset)
-    return img
-
 out = sys.argv[2]
-icon(512).save(f"{out}/icon.png")
-icon(180).save(f"{out}/apple-icon.png")
-icon(48).save(f"{out}/favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
+
+# 1. Favicon PNG (512x512)
+icon_512 = mark.resize((512, 512), Image.LANCZOS)
+icon_512.save(f"{out}/icon.png", optimize=True)
+
+# 2. Apple touch icon (180x180) with rounded paper background
+apple_size = 180
+apple_img = Image.new("RGBA", (apple_size, apple_size), (0, 0, 0, 0))
+draw = ImageDraw.Draw(apple_img)
+draw.rounded_rectangle((0, 0, apple_size - 1, apple_size - 1), radius=round(apple_size * 0.22), fill=(248, 250, 253, 255))
+glyph_size = round(apple_size * 0.82)
+glyph = mark.resize((glyph_size, glyph_size), Image.LANCZOS)
+offset = ((apple_size - glyph_size) // 2, (apple_size - glyph_size) // 2)
+apple_img.alpha_composite(glyph, offset)
+apple_img.save(f"{out}/apple-icon.png", optimize=True)
+
+# 3. Favicon ICO (16, 32, 48)
+icon_48 = mark.resize((48, 48), Image.LANCZOS)
+icon_48.save(f"{out}/favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
 print("  icon.png 512  apple-icon.png 180  favicon.ico 16/32/48")
 `;
 

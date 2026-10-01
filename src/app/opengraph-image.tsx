@@ -1,10 +1,23 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { LANDING, SITE } from "@/lib/content";
-import { BRAND, TOKEN_HEX } from "@/lib/brand";
+import { TOKEN_HEX } from "@/lib/brand";
 
 export const alt = `${SITE.company.name} — ${LANDING.meta.title}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
+function getLogoDataUrl() {
+  try {
+    const file = readFileSync(join(process.cwd(), "public/brand/desker-mark.png"));
+    return `data:image/png;base64,${file.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+const logoDataUrl = getLogoDataUrl();
 
 /** The preview card a shared link renders. Built from the same content file as the page. */
 export default function OpenGraphImage() {
@@ -24,9 +37,18 @@ export default function OpenGraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 14, background: BRAND.color, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 36, fontWeight: 700 }}>
-            d
-          </div>
+          {logoDataUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoDataUrl}
+              alt=""
+              width="56"
+              height="56"
+              style={{ width: 56, height: 56, objectFit: "contain" }}
+            />
+          ) : (
+            <div style={{ width: 56, height: 56, borderRadius: 28, background: "#B4D0ED" }} />
+          )}
           <div style={{ fontSize: 34, fontWeight: 700 }}>{SITE.company.name}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
