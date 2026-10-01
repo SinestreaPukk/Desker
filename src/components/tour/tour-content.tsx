@@ -22,8 +22,8 @@ export interface TourFeature {
   action: { label: string; href: (project: string) => string };
 }
 
-const BUSINESS_NAV = ["Needs you", "Roster", "Team", "Work", "Workflows", "Conversations", "Insights", "Integrations", "Organisation", "Audit log"];
-const PERSONAL_NAV = ["Needs you", "Roster", "Chat", "Work", "Workflows", "Insights", "Integrations", "Your space", "Audit log"];
+const BUSINESS_NAV = ["Needs you", "Roster", "Team", "Work", "Workflows", "Conversations", "Insights", "Alerts", "Integrations", "Organisation", "Audit log"];
+const PERSONAL_NAV = ["Needs you", "Roster", "Chat", "Work", "Workflows", "Insights", "Alerts", "Integrations", "Your space", "Audit log"];
 
 function Approval({ label, title, marks = [1, 2, 3] }: { label: string; title: string; marks?: [number, number, number] | number[] }) {
   return (
@@ -199,6 +199,54 @@ const BUSINESS_SETUP: TourStep[] = [
 ];
 
 const BUSINESS_FEATURES: TourFeature[] = [
+  {
+    title: "Updates where you already are",
+    body: "Alerts sends what needs you - and a morning brief - to LINE, Telegram, WhatsApp, Slack, Discord, Teams or email, so you don't have to keep the app open.",
+    drawing: (
+      <MiniScreen nav={BUSINESS_NAV} active="Alerts" marks={{ Alerts: 1 }}>
+        <MiniCard title="Alerts">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-ink">Send to LINE</span>
+            <MiniButton label="Connect" mark={2} />
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-ink">Morning brief</span>
+            <Mark n={3} />
+          </div>
+        </MiniCard>
+      </MiniScreen>
+    ),
+    tryThis: "Connect the chat app you use most and turn on the morning brief.",
+    action: { label: "Open Alerts", href: (project) => `/p/${project}/alerts` },
+  },
+  {
+    title: "A check-in on everything",
+    body: "A daily or weekly check-in sums up the whole space: what finished, what is waiting for you, what failed, and any agent that's struggling - with links to each.",
+    drawing: (
+      <Flow
+        steps={[
+          { label: "All your agents", detail: "Finished, failed, waiting" },
+          { label: "One check-in", detail: "Daily or weekly, by email too", you: true },
+          { label: "Links to act", detail: "Straight to each item" },
+        ]}
+      />
+    ),
+    tryThis: "Choose how often you want your check-in, and whether it is emailed.",
+    action: { label: "Open settings", href: (project) => `/p/${project}/organization` },
+  },
+  {
+    title: "They can look things up online",
+    body: "Ask any agent in chat about the weather, news, prices or a fact. It searches the web and gives the answer with the source link.",
+    drawing: (
+      <MiniCard title="Chat">
+        <p className="text-xs text-ink-muted">You: What&apos;s the weather in Bangkok tomorrow?</p>
+        <p className="text-xs text-ink">Hot and humid, 34°. Rain likely after 4pm.</p>
+        <p className="text-xs text-accent">Source: weather.com</p>
+      </MiniCard>
+    ),
+    tryThis: "Ask an agent a question that needs today's information.",
+    action: { label: "Open chat", href: (project) => `/p/${project}/team` },
+  },
   {
     title: "Nothing leaves without you",
     body: "Agents research and draft on their own, but every email, post, calendar event or message stops in Needs you. You see the full text, not a summary.",
@@ -395,6 +443,54 @@ const PERSONAL_SETUP: TourStep[] = [
 ];
 
 const PERSONAL_FEATURES: TourFeature[] = [
+  {
+    title: "Updates where you already are",
+    body: "Alerts sends what needs you - and a morning brief - to LINE, Telegram, WhatsApp, Slack, Discord, Teams or email, so you don't have to keep the app open.",
+    drawing: (
+      <MiniScreen nav={PERSONAL_NAV} active="Alerts" marks={{ Alerts: 1 }}>
+        <MiniCard title="Alerts">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-ink">Send to LINE</span>
+            <MiniButton label="Connect" mark={2} />
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-ink">Morning brief</span>
+            <Mark n={3} />
+          </div>
+        </MiniCard>
+      </MiniScreen>
+    ),
+    tryThis: "Connect the chat app you use most and turn on the morning brief.",
+    action: { label: "Open Alerts", href: (project) => `/p/${project}/alerts` },
+  },
+  {
+    title: "A check-in on everything",
+    body: "A daily or weekly check-in sums up the whole space: what finished, what is waiting for you, what failed, and any agent that's struggling - with links to each.",
+    drawing: (
+      <Flow
+        steps={[
+          { label: "All your agents", detail: "Finished, failed, waiting" },
+          { label: "One check-in", detail: "Daily or weekly, by email too", you: true },
+          { label: "Links to act", detail: "Straight to each item" },
+        ]}
+      />
+    ),
+    tryThis: "Choose how often you want your check-in, and whether it is emailed.",
+    action: { label: "Open settings", href: (project) => `/p/${project}/organization` },
+  },
+  {
+    title: "They can look things up online",
+    body: "Ask any agent in chat about the weather, news, prices or a fact. It searches the web and gives the answer with the source link.",
+    drawing: (
+      <MiniCard title="Chat">
+        <p className="text-xs text-ink-muted">You: What&apos;s the weather in Bangkok tomorrow?</p>
+        <p className="text-xs text-ink">Hot and humid, 34°. Rain likely after 4pm.</p>
+        <p className="text-xs text-accent">Source: weather.com</p>
+      </MiniCard>
+    ),
+    tryThis: "Ask an agent a question that needs today's information.",
+    action: { label: "Open chat", href: (project) => `/p/${project}/team` },
+  },
   {
     title: "Nothing changes without you",
     body: "Assistants read and plan on their own, but a calendar change, an email or a reply always stops in Needs you with its full text first.",
