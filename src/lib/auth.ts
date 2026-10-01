@@ -16,6 +16,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { mayUsePlatform, PRIVATE_BETA_CODE } from "@/lib/private-beta";
+import { clientIp, noteDevice, signInBlocked, signInFailed, signInSucceeded } from "@/lib/login-guard";
 
 declare module "next-auth" {
   interface Session {
@@ -35,6 +36,12 @@ const BCRYPT_ROUNDS = 12;
 /** Tells the sign-in form this address is not in the private beta (see private-beta.ts). */
 class PrivateBetaSignin extends CredentialsSignin {
   code = PRIVATE_BETA_CODE;
+}
+
+/** Too many attempts from this address, or too many wrong passwords for this account (login-guard.ts). */
+export const TOO_MANY_ATTEMPTS = "too_many_attempts";
+class TooManyAttempts extends CredentialsSignin {
+  code = TOO_MANY_ATTEMPTS;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -75,15 +82,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(raw) {
+      async authorize(raw, request) {
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
         // Before the account lookup, so the answer is the same whether or
         // not an account exists for the address.
         if (!mayUsePlatform(parsed.data.email)) throw new PrivateBetaSignin();
+        // Also before it: a locked account and an unknown one look the same.
+        if (await signInBlocked(parsed.data.email, clientIp(request))) throw new TooManyAttempts();
 
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email },
+          select: { id: true, email: true, name: true, firstName: true, passwordHash: true, knownDevices: true },
         });
 
         // Compare against a dummy hash when the user is absent so that a missing
@@ -93,7 +103,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           "$2a$12$00000000000000000000000000000000000000000000000000000";
         const ok = await bcrypt.compare(parsed.data.password, hash);
 
-        if (!user || !ok) return null;
+        if (!user || !ok) {
+          await signInFailed(parsed.data.email, user ? { email: user.email, firstName: user.firstName } : null);
+          return null;
+        }
+        await signInSucceeded(parsed.data.email);
+        // A new browser or system gets an email to the owner; never blocks signing in.
+        await noteDevice(user, request).catch((error) => console.error("[auth] device note failed", error));
         return { id: user.id, email: user.email, name: user.name };
       },
     }),

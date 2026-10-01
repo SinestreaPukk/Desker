@@ -37,7 +37,9 @@ export function LoginForm() {
       setError(
         result.code === PRIVATE_BETA_CODE
           ? PRIVATE_BETA_MESSAGE
-          : "That email and password combination doesn't match an account.",
+          : result.code === "too_many_attempts"
+            ? "Too many sign-in attempts. Wait 15 minutes and try again, or reset your password."
+            : "That email and password combination doesn't match an account.",
       );
       setPending(false);
       return;

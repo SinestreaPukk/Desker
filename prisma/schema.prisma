@@ -36,6 +36,9 @@ model User {
   useType      String?
   /// When the password last changed. Sessions signed in before it are ended.
   passwordChangedAt DateTime?
+  /// Devices this person has signed in from (a hash of browser and system,
+  /// never an IP), so a sign-in from a new one can be emailed to them.
+  knownDevices Json?
   /// When and which version of the Terms and Privacy Policy this person
   /// accepted at sign-up. The acceptance record the legal documents need.
   termsAcceptedAt DateTime?

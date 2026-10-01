@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { handle, parseJson, HttpError } from "@/lib/api";
 import { hashPassword } from "@/lib/auth";
+import { passwordProblem } from "@/lib/password-check";
 import { signupSchema } from "@/lib/validation";
 import { createSpaceFor } from "@/lib/projects";
 import { personalSpaceName, spacesFor } from "@/lib/space";
@@ -27,6 +28,9 @@ export async function POST(request: Request) {
     }
     const input = await parseJson(request, signupSchema);
     if (!mayUsePlatform(input.email)) throw new HttpError(403, PRIVATE_BETA_MESSAGE);
+
+    const weak = await passwordProblem(input.password, input.email);
+    if (weak) throw new HttpError(422, weak, { fieldErrors: { password: [weak] } });
 
     const existing = await prisma.user.findUnique({ where: { email: input.email } });
     if (existing) {
