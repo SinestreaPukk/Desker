@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { handle, parseJson, HttpError } from "@/lib/api";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { requestLooksAutomated } from "@/lib/bot-check";
 import { notifyInBackground } from "@/lib/notify";
 import { SITE } from "@/lib/content";
 import { emailOwner } from "@/lib/app-email";
@@ -32,8 +33,9 @@ export async function POST(request: Request) {
     const limit = await checkRateLimit(`contact:${ip}`, 5, 10 * 60_000);
     if (!limit.allowed) throw new HttpError(429, `Too many messages from this address. Try again in ${limit.retryAfterSeconds}s.`);
 
+    // A bot is thanked like anyone else, so it learns nothing.
+    if (await requestLooksAutomated(request)) return { ok: true };
     const input = await parseJson(request, schema);
-    if (input.website) return { ok: true };
 
     const body = [
       `From: ${input.name} <${input.email}>`,

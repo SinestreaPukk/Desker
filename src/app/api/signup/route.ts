@@ -9,6 +9,7 @@ import { audit } from "@/lib/audit";
 import { findOpenInvitation } from "@/lib/invites";
 import { TERMS_VERSION } from "@/lib/legal";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { requestLooksAutomated } from "@/lib/bot-check";
 import { env } from "@/lib/env";
 import { mayUsePlatform, PRIVATE_BETA_MESSAGE } from "@/lib/private-beta";
 
@@ -25,6 +26,9 @@ export async function POST(request: Request) {
     const limit = await checkRateLimit(`signup:${ip}`, env.signupRateLimit, 10 * 60_000);
     if (!limit.allowed) {
       throw new HttpError(429, `Too many sign-ups from this address. Try again in ${limit.retryAfterSeconds}s.`);
+    }
+    if (await requestLooksAutomated(request)) {
+      throw new HttpError(400, "We couldn't create your account. Please try again.");
     }
     const input = await parseJson(request, signupSchema);
     if (!mayUsePlatform(input.email)) throw new HttpError(403, PRIVATE_BETA_MESSAGE);

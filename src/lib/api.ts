@@ -4,6 +4,7 @@
  * Every admin endpoint funnels through `requireAdmin`, so authorisation is one
  * reviewable line per route rather than a pattern each route reimplements.
  */
+import { headers } from "next/headers";
 import "server-only";
 import { HttpError } from "@/lib/http-error";
 import { OrganizationRateLimited } from "@/lib/rate-limit";
@@ -22,11 +23,33 @@ interface AdminSession {
 
 /** Throws 401 unless a valid admin session is present. */
 export async function requireAdmin(): Promise<AdminSession> {
+  await refuseCrossSite();
   const user = await currentUser();
   if (!user) {
     throw new HttpError(401, "You need to be signed in to do that.");
   }
   return { userId: user.id, email: user.email };
+}
+
+/**
+ * Defence in depth against cross-site request forgery. The session cookie is
+ * SameSite=Lax, so another site's forms and fetches already arrive signed
+ * out; this also refuses any signed-in API call a browser marks as coming
+ * from another site, while still letting a link from an email open a page.
+ */
+async function refuseCrossSite() {
+  let site: string | null = null;
+  let dest: string | null = null;
+  try {
+    const all = await headers();
+    site = all.get("sec-fetch-site");
+    dest = all.get("sec-fetch-dest");
+  } catch {
+    return; // outside a request (scripts, tests): nothing to check
+  }
+  if (site === "cross-site" && dest !== "document") {
+    throw new HttpError(403, "That request came from another website, so it was refused.");
+  }
 }
 
 export function jsonError(status: number, error: string, details?: unknown) {

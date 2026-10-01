@@ -97,6 +97,9 @@ export const signupSchema = z
     acceptTerms: z.literal(true, {
       message: "Accept the Terms of Service and Privacy Policy to create an account.",
     }),
+    /** The bot checks (lib/bot-check.ts), read by the route before this schema. */
+    website: z.string().max(200).optional(),
+    startedAt: z.number().optional(),
   })
   .strict()
   .refine((input) => Boolean(input.invite) || input.useType === "personal" || Boolean(input.organization), {

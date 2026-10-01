@@ -1,5 +1,6 @@
 "use client";
 
+import { useBotTrap } from "@/components/bot-trap";
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -35,6 +36,8 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
   const [useType, setUseType] = React.useState<UseType | null>(invite ? "business" : null);
   const asksBusinessName = !invite && (useType === "business" || useType === "mixed");
 
+  const trap = useBotTrap();
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
@@ -57,6 +60,7 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
           email,
           password,
           acceptTerms: accepted,
+          ...trap.values(form),
           ...(inviteToken ? { invite: inviteToken } : {}),
         }),
       });
@@ -96,7 +100,8 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
 
       <Panel className="window shadow-md">
         <PanelBody className="p-6 sm:p-7">
-          <form onSubmit={onSubmit} className="space-y-5" noValidate>
+          <form onSubmit={onSubmit} className="relative space-y-5" noValidate>
+            {trap.field}
             <FormError message={error} />
 
             {invite ? null : (

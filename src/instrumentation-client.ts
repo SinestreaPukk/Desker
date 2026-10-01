@@ -6,6 +6,8 @@
  * are rare and the server side captures its own, so the trade is deliberate:
  * the SDK arrives on the `load` event, and anything before it is uncaught.
  */
+import { scrubDeep } from "@/lib/scrub";
+
 type SentryModule = typeof import("@sentry/nextjs");
 
 let sentry: SentryModule | null = null;
@@ -19,6 +21,10 @@ if (dsn && typeof window !== "undefined") {
         environment: process.env.NEXT_PUBLIC_ENVIRONMENT || "production",
         tracesSampleRate: 0.05,
         sendDefaultPii: false,
+        // Reset-link tokens, OAuth codes and keys never leave in a report.
+        beforeSend: (event) => scrubDeep(event),
+        beforeSendTransaction: (event) => scrubDeep(event),
+        beforeBreadcrumb: (crumb) => scrubDeep(crumb),
       });
       sentry = mod;
     });

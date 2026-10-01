@@ -30,7 +30,7 @@ const post = (payload: unknown) =>
     new Request("http://localhost/api/signup", {
       method: "POST",
       headers: { "content-type": "application/json", "x-forwarded-for": `10.0.${stamp.length}.1` },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ startedAt: Date.now() - 5000, ...(payload as object) }),
     }),
   );
 
@@ -100,5 +100,17 @@ describe("sign-up", () => {
     expect(response.status).toBe(409);
     const { details } = (await response.json()) as { details: { fieldErrors: Record<string, string[]> } };
     expect(details.fieldErrors.username?.[0]).toMatch(/taken/);
+  });
+
+  it("refuses a sign-up sent faster than a person could fill the form in", async () => {
+    const response = await signup(
+      new Request("http://localhost/api/signup", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": `10.9.${stamp.length}.1` },
+        body: JSON.stringify({ ...(body({ email: `bot-${stamp}@example.com`, username: `bot${stamp}` }) as object), startedAt: Date.now() - 100 }),
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(await prisma.user.findUnique({ where: { email: `bot-${stamp}@example.com` } })).toBeNull();
   });
 });

@@ -16,7 +16,8 @@ import { POST } from "@/app/api/beta/route";
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);
 const post = (body: object, ip: string) =>
-  POST(new Request("http://desker.test/api/beta", { method: "POST", headers: { "x-forwarded-for": ip }, body: JSON.stringify(body) }));
+  // As the form sends it: opened a few seconds before it was sent.
+  POST(new Request("http://desker.test/api/beta", { method: "POST", headers: { "x-forwarded-for": ip }, body: JSON.stringify({ startedAt: Date.now() - 5000, ...body }) }));
 
 afterAll(async () => {
   await prisma.feedback.deleteMany({ where: { kind: "beta", message: { contains: stamp } } });

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { handle, parseJson, HttpError } from "@/lib/api";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { requestLooksAutomated } from "@/lib/bot-check";
 import { emailOwner } from "@/lib/app-email";
 import { FIRST_HIRES } from "@/lib/beta";
 
@@ -28,8 +29,9 @@ export async function POST(request: Request) {
     const limit = await checkRateLimit(`beta:${ip}`, 5, 10 * 60_000);
     if (!limit.allowed) throw new HttpError(429, `Too many requests from this address. Try again in ${limit.retryAfterSeconds}s.`);
 
+    // A bot is thanked like anyone else, so it learns nothing.
+    if (await requestLooksAutomated(request)) return { ok: true };
     const input = await parseJson(request, schema);
-    if (input.website) return { ok: true };
 
     const body = [`Email: ${input.email}`, `Would hire first: ${input.firstHire || "not sure yet"}`].join("\n");
     await prisma.feedback.create({

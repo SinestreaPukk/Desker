@@ -1,5 +1,6 @@
 "use client";
 
+import { useBotTrap } from "@/components/bot-trap";
 import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ export function BetaForm() {
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
+
+  const trap = useBotTrap();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,8 +35,8 @@ export function BetaForm() {
         body: JSON.stringify({
           email,
           firstHire: String(data.get("firstHire") ?? ""),
-          // A field people never see; bots fill it in.
-          website: String(data.get("website") ?? ""),
+          // A field people never see, and how long the form was open: bots give both away.
+          ...trap.values(data),
         }),
       });
       setState("sent");
