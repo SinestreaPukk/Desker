@@ -248,23 +248,33 @@ function ChannelRow({
             <X aria-hidden />
           </Button>
         </div>
-        <p className="text-sm text-ink-muted">
-          Open {CHANNELS[channel.kind].name} with the button and press send. On a computer, the page that opens shows a QR
-          code to scan with your phone. Or send this code yourself:
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <code className="rounded-md bg-surface-2 px-3 py-1.5 font-mono text-lg tracking-widest text-ink">{channel.linkCode}</code>
-          {channel.linkUrl ? (
-            <a
-              href={channel.linkUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-fg hover:bg-primary-hover"
-            >
-              <Send className="size-3.5" aria-hidden />
-              Open {CHANNELS[channel.kind].name}
-            </a>
+        <div className="flex flex-wrap items-center gap-4">
+          {channel.linkQr ? (
+            // A computer can't open the app with the code typed (LINE's link only works on a phone): scan instead.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={channel.linkQr} alt={`QR code to connect ${CHANNELS[channel.kind].name}`} className="hidden size-36 rounded-lg border border-line pointer-fine:block" />
           ) : null}
+          <div className="space-y-2 text-sm text-ink-muted">
+            <p className="hidden pointer-fine:block">
+              Scan this with your phone&apos;s camera. {CHANNELS[channel.kind].name} opens with the code typed in: press send.
+            </p>
+            {channel.linkUrl ? (
+              <a
+                href={channel.linkUrl}
+                target="_blank"
+                rel="noreferrer"
+                className={`inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-fg hover:bg-primary-hover ${channel.kind === "line" ? "pointer-fine:hidden" : ""}`}
+              >
+                <Send className="size-3.5" aria-hidden />
+                Open {CHANNELS[channel.kind].name}
+              </a>
+            ) : null}
+            <p>
+              Or {channel.handle ? <>add <strong className="text-ink">{channel.handle}</strong> in {CHANNELS[channel.kind].name} and</> : null}{" "}
+              send this code:{" "}
+              <code className="rounded-md bg-surface-2 px-2 py-0.5 font-mono text-base tracking-widest text-ink">{channel.linkCode}</code>
+            </p>
+          </div>
         </div>
         <p className="text-xs text-ink-muted">Waiting for your code… The code works for an hour.</p>
       </li>

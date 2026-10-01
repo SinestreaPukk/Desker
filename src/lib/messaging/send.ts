@@ -44,6 +44,14 @@ export function linkUrl(kind: ChannelKind, code: string): string | null {
   return null;
 }
 
+/** How people find our account in the app by hand: "@056qtobu", "@DeskerBot", "+66 …". */
+export function appHandle(kind: ChannelKind): string | null {
+  if (kind === "line") return env("LINE_BOT_ID") || null;
+  if (kind === "telegram") return env("TELEGRAM_BOT_USERNAME") ? `@${env("TELEGRAM_BOT_USERNAME")}` : null;
+  if (kind === "whatsapp") return env("WHATSAPP_NUMBER") || null;
+  return null;
+}
+
 /** Recognises who a chat message is from without storing their chat id in the clear. */
 export function senderKey(kind: ChannelKind, chatId: string): string {
   return createHash("sha256").update(`${kind}:${chatId}`).digest("hex");

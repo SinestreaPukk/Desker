@@ -3,7 +3,8 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { spaceKind } from "@/lib/space";
 import { CHANNEL_KINDS, readPrefs, type AlertPrefs, type ChannelKind } from "./prefs";
-import { channelAvailable, linkUrl } from "./send";
+import QRCode from "qrcode";
+import { appHandle, channelAvailable, linkUrl } from "./send";
 
 export interface ChannelDto {
   id: string;
@@ -14,6 +15,10 @@ export interface ChannelDto {
   lastError: string | null;
   linkCode: string | null;
   linkUrl: string | null;
+  /** The same link as a QR code, for linking from a computer: a phone scans it. */
+  linkQr: string | null;
+  /** Our account's name in the app, for adding it by hand. */
+  handle: string | null;
 }
 
 export interface AlertSettingsDto {
@@ -37,16 +42,24 @@ export async function alertSettings(userId: string): Promise<AlertSettingsDto> {
   return {
     prefs: readPrefs(user.alertPrefs),
     saved: user.alertPrefs != null,
-    channels: user.messageChannels.map((channel) => ({
-      id: channel.id,
-      kind: channel.kind as ChannelKind,
-      label: channel.label,
-      enabled: channel.enabled,
-      linked: channel.target != null,
-      lastError: channel.lastError,
-      linkCode: channel.linkCode,
-      linkUrl: channel.linkCode ? linkUrl(channel.kind as ChannelKind, channel.linkCode) : null,
-    })),
+    channels: await Promise.all(
+      user.messageChannels.map(async (channel) => {
+        const kind = channel.kind as ChannelKind;
+        const url = channel.linkCode ? linkUrl(kind, channel.linkCode) : null;
+        return {
+          id: channel.id,
+          kind,
+          label: channel.label,
+          enabled: channel.enabled,
+          linked: channel.target != null,
+          lastError: channel.lastError,
+          linkCode: channel.linkCode,
+          linkUrl: url,
+          linkQr: url ? await QRCode.toDataURL(url, { margin: 1, width: 200 }) : null,
+          handle: appHandle(kind),
+        };
+      }),
+    ),
     available: Object.fromEntries(CHANNEL_KINDS.map((kind) => [kind, channelAvailable(kind)])) as Record<ChannelKind, boolean>,
     spaces: user.memberships.map(({ organization }) => ({
       id: organization.id,
