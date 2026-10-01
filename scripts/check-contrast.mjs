@@ -112,16 +112,9 @@ const TEXT_PAIRS = [
   ["danger", "paper", 4.5, "inline error message"],
   ["accent", "paper", 4.5, "accent link on the page"],
   ["accent", "surface", 4.5, "accent link on a card"],
-  ["sky-cta-fg", "sky-ink", 4.5, "deep terracotta label on a white panel over the sky"],
-  ["primary-fg", "primary", 4.5, "amber call to action on the sky: charcoal label"],
+  ["primary-fg", "primary", 4.5, "primary button label"],
   ["danger-fg", "danger", 4.5, "danger button label"],
   ["positive-fg", "positive", 4.5, "label on a solid positive fill"],
-  // The landing page's sky, the same in both themes. White copy sits only
-  // over the deep band of the gradient.
-  ["sky-ink", "sky-top", 4.5, "header and headline at the top of the sky"],
-  ["sky-ink", "sky-deep", 4.5, "hero headline, sub-line and note on the deep band"],
-  ["sky-glass-fg", "sky-glass", 4.5, "glass button label, top of the gradient"],
-  ["sky-glass-fg", "sky-glass-deep", 4.5, "glass button label, foot of the gradient"],
 ];
 
 // Avatars: a navy face on a sticky-note colour field. The face is what

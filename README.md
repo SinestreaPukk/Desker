@@ -775,10 +775,10 @@ apart. Regenerate from the source artwork after changing it:
 node scripts/make-brand-assets.mjs   # logo masks
 ```
 
-The brand indigo is `#1800AD`, taken from the artwork. It scores 12.8:1 on
-white, but is far too dark to read on a dark ground, so the dark theme lifts it
-to a periwinkle at the same hue (`oklch(0.72 0.17 268.5)`). Both are checked by
-`npm run check:contrast`.
+The brand colour is the sticky-note studio's ink blue, `#3558E6`
+(`--brand`, `oklch(0.527 0.218 267.4)`), mirrored in `src/lib/brand.ts` for the
+widget launcher and the app icon. It scores 5.4:1 on the paper; every pair is
+checked by `npm run check:contrast`.
 
 ### Agent faces
 

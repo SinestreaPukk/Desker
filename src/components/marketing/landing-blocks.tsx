@@ -68,15 +68,12 @@ function LandingIcon({ icon, className }: { icon: (typeof LANDING_ICONS)[number]
 export function TrustStrip({
   label,
   items,
-  tone = "default",
   className,
 }: {
   label: string;
   items: readonly { name: string; logo?: BrandLogoId }[];
-  tone?: "default" | "sky";
   className?: string;
 }) {
-  const isSky = tone === "sky";
   return (
     <div
       className={cn(
@@ -84,22 +81,14 @@ export function TrustStrip({
         className,
       )}
     >
-      <p
-        className={cn(
-          "text-xs font-semibold",
-          isSky ? "text-[var(--sky-ink)]/75" : "eyebrow",
-        )}
-      >
+      <p className="eyebrow text-xs font-semibold">
         {label}
       </p>
       <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
         {items.map((item) => (
           <li
             key={item.name}
-            className={cn(
-              "flex items-center gap-2",
-              isSky ? "text-[var(--sky-ink)]" : "text-ink-muted",
-            )}
+            className="flex items-center gap-2 text-ink-muted"
           >
             {item.logo ? <BrandLogo id={item.logo} className="size-5 shrink-0" /> : null}
             <span className="text-base font-semibold tracking-tight">{item.name}</span>

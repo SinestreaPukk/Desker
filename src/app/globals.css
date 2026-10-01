@@ -38,7 +38,7 @@
   --line-strong: oklch(0.632 0.036 264.3); /* slate-9 */
 
   /* The ink blue: the logo, the app icon, every button and link. */
-  --brand: oklch(0.527 0.218 267.4); /* #D96B43 */
+  --brand: oklch(0.527 0.218 267.4); /* #3558E6 */
   --primary: oklch(0.527 0.218 267.4);
   --primary-hover: oklch(0.442 0.187 267.4);
   --primary-fg: oklch(0.995 0.003 258);
@@ -87,39 +87,10 @@
   --av-6-bg: oklch(0.960 0.028 200);
   --av-6-fg: oklch(0.860 0.070 200);
 
-  /* The public site's sky: dusk over the desert. Warm charcoal at the zenith,
-     deep umber where the white type sits, a terracotta glow at the horizon
-     behind amber-lit dunes. Identical in both themes - a picture. */
-  --sky-top: oklch(0.200 0.020 50);
-  --sky-deep: oklch(0.250 0.035 45);
-  --sky: oklch(0.380 0.080 42);
+  /* The pale blue the landing's sections wash down from. */
   --sky-pale: oklch(0.955 0.025 242);
-  /* A label set on a white panel over the sky: the deep terracotta. */
-  --sky-cta-fg: oklch(0.502 0.127 39.9);
-  --sky-ink: oklch(0.985 0.008 85);
-  --sky-glass: oklch(0.762 0.119 64.4);
-  /* The foot of the button. --sky-glass alone is the same lightness as
-     --sky-deep, so a glass button on the deep sky used to disappear into it;
-     running the gradient down into a deeper amber makes it the highest
-     contrast thing on the page, which is what the one primary call needs. */
-  --sky-glass-deep: oklch(0.720 0.125 58);
-  --sky-glass-fg: oklch(0.274 0.013 62.1);
-  --sky-shadow: oklch(0.120 0.030 40 / 0.55);
-  /* The night: stars, the Milky Way's glow, a faint violet airglow. */
-  --night-star: oklch(0.975 0.020 85);
-  --night-milky: oklch(0.620 0.090 55);
-  --night-airglow: oklch(0.480 0.110 35);
-  /* Moonlit dunes, lit from the upper left: crest to deep shadow, and the
-     two edges of a wind ripple. */
-  --dune-crest: oklch(0.720 0.110 55);
-  --dune-lit: oklch(0.560 0.120 45);
-  --dune-mid: oklch(0.440 0.110 40);
-  --dune-shadow: oklch(0.330 0.080 38);
-  --dune-deep: oklch(0.240 0.050 40);
-  --dune-ripple-light: oklch(0.800 0.080 65);
-  --dune-ripple-dark: oklch(0.180 0.040 40);
   /* The pale washes behind product frames and some sections: the pastel
-     blue, kept apart from the night sky. */
+     blue. */
   --wash: oklch(0.800 0.080 245);
 
   /* The sticky notes: soft fills from a stationery drawer, always under navy
@@ -497,45 +468,6 @@
   vertical-align: text-bottom;
   background: var(--accent);
   animation: caret-blink 1.05s steps(1) infinite;
-}
-
-/* --- Landing page ----------------------------------------------------------
-   The sky, the sun and the glass button. All CSS: the page reads and moves
-   without JavaScript, and every motion here stops under
-   prefers-reduced-motion (the global rule above zeroes the durations). */
-
-/* The horizon sits below the words, not through them. Every stop here was
-   moved down until white text cleared 4.5:1 over the whole text block at
-   390, 768 and 1440 - the fade now happens behind the product window, which
-   is where a horizon belongs anyway. */
-.sky {
-  background:
-    radial-gradient(80% 30% at 45% 72%, oklch(0.420 0.110 42 / 0.55) 0%, oklch(0.420 0.110 42 / 0) 100%),
-    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-deep) 50%, var(--sky) 72%, var(--sky) 88%, var(--paper) 100%);
-  color: var(--sky-ink);
-}
-
-/* Cluely-style glass button: a blue gradient, a light rim and a soft blue drop. */
-.glass {
-  background:
-    radial-gradient(110% 110% at 10% 15%, oklch(1 0 0 / 0.30) 0%, oklch(1 0 0 / 0) 62%),
-    linear-gradient(180deg, var(--sky-glass) 0%, var(--sky-glass-deep) 100%);
-  color: var(--sky-glass-fg);
-  box-shadow:
-    0 0 0 1px oklch(1 0 0 / 0.16),
-    0 12px 28px -8px var(--sky-shadow),
-    inset 0 1px 0 oklch(1 0 0 / 0.45),
-    inset 0 -1px 0 oklch(0 0 0 / 0.12);
-  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms, filter 220ms;
-}
-.glass:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.08);
-  box-shadow:
-    0 0 0 1px oklch(1 0 0 / 0.24),
-    0 18px 36px -10px var(--sky-shadow),
-    inset 0 1px 0 oklch(1 0 0 / 0.5),
-    inset 0 -1px 0 oklch(0 0 0 / 0.12);
 }
 
 /* The header's call: the ink blue, the same as every primary button. */
@@ -942,5 +874,5 @@
 .lift:hover { transform: translateY(-2px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .lift:hover, .glass:hover, .cta-sky:hover { transform: none; }
+  .lift:hover { transform: none; }
 }

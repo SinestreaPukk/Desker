@@ -57,9 +57,8 @@ describe("the animation library stays on the public site", () => {
 
   it("keeps the whole marketing folder out of the signed-in app", () => {
     const allowed = new Set([
-      // Static SVG scenery and an icon map: no dependencies of their own, so
+      // An icon map and the CTA classes: no dependencies of their own, so
       // reusing them costs the app nothing.
-      "marketing/night-sky.tsx",
       "marketing/template-icon.tsx",
       "marketing/cta.tsx",
     ]);

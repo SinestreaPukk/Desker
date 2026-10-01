@@ -59,3 +59,6 @@ skills-lock.json
 
 # cloud-sync conflict copies ("file 2.ts") must never be committed
 * [0-9].*
+
+# graphify knowledge-graph output (local, regenerated)
+graphify-out/

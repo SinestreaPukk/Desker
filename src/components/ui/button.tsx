@@ -80,5 +80,3 @@ export function Button({
     </Comp>
   );
 }
-
-export { button as buttonVariants };
