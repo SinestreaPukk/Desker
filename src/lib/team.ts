@@ -23,6 +23,7 @@ import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { RunRefused, startRun } from "@/lib/work/scope";
 import { WORK_TOOL_IDS, WORK_TOOL_METADATA, scopeTools, type WorkToolId } from "@/lib/work/tools";
 import { timeNote } from "@/lib/local-time";
+import { lifeText } from "@/lib/life/read";
 import { safetyRules } from "@/lib/safety-rules";
 
 const MAX_RESPONDERS = 3;
@@ -31,6 +32,7 @@ const HISTORY = 30;
 export interface TeamAgent {
   id: string;
   name: string;
+  templateId: string | null;
   jobTitle: string;
   department: string | null;
   personality: string;
@@ -44,6 +46,7 @@ export interface TeamAgent {
 const agentSelect = {
   id: true,
   name: true,
+  templateId: true,
   jobTitle: true,
   department: true,
   personality: true,
@@ -244,6 +247,7 @@ export async function replyAs(input: {
           documents.map((document) => document.filename),
         ),
         roomSection(agent, team),
+        `## Their life right now (shared by the whole team; figures are computed, never recompute them)\n${await lifeText(projectId, scope?.timezone ?? undefined)}`,
         timeNote(new Date(), scope?.timezone),
         safetyRules(),
       ].join("\n\n");

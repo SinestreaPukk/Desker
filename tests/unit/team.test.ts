@@ -4,6 +4,7 @@ import { mentioned, specialAbilities, type TeamAgent } from "@/lib/team";
 const agent = (name: string): TeamAgent => ({
   id: name.toLowerCase(),
   name,
+  templateId: null,
   jobTitle: "",
   department: null,
   personality: "",

@@ -103,6 +103,7 @@ export const TEMPLATE_ICONS = [
   "at-sign",
   "rocket",
   "plane",
+  "dumbbell",
   "graduation-cap",
 ] as const;
 

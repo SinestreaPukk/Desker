@@ -10,6 +10,7 @@ import { seal } from "@/lib/vault";
 import { composeBrief, composeNews } from "./brief";
 import { LINK_CODE, parseCommand, readPrefs, CHANNELS, type ChannelKind } from "./prefs";
 import { plainText, senderKey } from "./send";
+import { chatOnce } from "@/lib/life/chat";
 
 const HELP = `Send:
 • brief - your morning brief now
@@ -70,6 +71,7 @@ export async function handleInbound(kind: ChannelKind, chatId: string, text: str
       });
       return command === "pause" ? "Paused. Send \"resume\" to start again." : "Back on. You'll get your alerts and brief again.";
     default:
-      return HELP;
+      // Anything that isn't a command is the chat: same router, context and agents as the web.
+      return text.trim() ? plainText({ title: "", body: await chatOnce(channel.userId, text.trim(), CHANNELS[kind].name) }) : HELP;
   }
 }

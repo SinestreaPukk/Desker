@@ -44,6 +44,8 @@ model User {
   alertPrefs   Json?
   /// When their last morning brief went out, so one goes out per day.
   lastBriefAt  DateTime?
+  /// When their weekly cross-domain digest last went out (lib/life/digest.ts).
+  lastLifeDigestAt DateTime?
   createdAt    DateTime @default(now())
 
   memberships Membership[]

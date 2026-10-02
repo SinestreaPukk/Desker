@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AtSign, CalendarHeart, GraduationCap, Plane, Rocket, Wallet } from "lucide-react";
+import { AtSign, CalendarHeart, GraduationCap, Dumbbell, Plane, Rocket, Wallet } from "lucide-react";
 import type { TEMPLATE_ICONS } from "@/lib/content";
 import {
   CustomerSupportIcon,
@@ -72,6 +72,7 @@ const ICONS: Record<
   "at-sign": AtSign,
   rocket: Rocket,
   plane: Plane,
+  dumbbell: Dumbbell,
   "graduation-cap": GraduationCap,
 };
 

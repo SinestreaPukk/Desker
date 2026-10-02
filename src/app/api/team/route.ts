@@ -4,7 +4,9 @@ import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { afterResponse } from "@/lib/after-response";
 import { findProject } from "@/lib/projects";
 import { limitOrganization } from "@/lib/rate-limit";
-import { addTeamMessage, chooseResponders, mentioned, runMeetingTurn, teamOf } from "@/lib/team";
+import { addTeamMessage, teamOf } from "@/lib/team";
+import { planChat } from "@/lib/life/router";
+import { runChat } from "@/lib/life/chat";
 import { clamp } from "@/lib/work/model-json";
 import type { TeamThreadDto } from "@/lib/team-dto";
 import { messageSelect, toMessageDto } from "./serialize";
@@ -73,19 +75,12 @@ export async function POST(request: Request) {
     });
     const message = await prisma.teamMessage.findUniqueOrThrow({ where: { id }, select: messageSelect });
 
-    const responders =
-      mentioned(input.content, team) ??
-      (await chooseResponders(thread.id, project.organizationId, team, input.content));
-    if (responders.length > 0) {
+    // One front door: the router decides direct answer, one specialist, or the cross-domain engine.
+    const plan = team.length > 0 ? await planChat({ text: input.content, team, threadId: thread.id, organizationId: project.organizationId }) : null;
+    const responders = plan?.responders ?? [];
+    if (plan) {
       afterResponse(() =>
-        runMeetingTurn({
-          responders,
-          team,
-          projectId: project.id,
-          threadId: thread.id,
-          organizationId: project.organizationId,
-          userId,
-        }),
+        runChat(plan, input.content, team, { projectId: project.id, threadId: thread.id, organizationId: project.organizationId, userId }),
       );
     }
 

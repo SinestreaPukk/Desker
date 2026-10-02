@@ -23,9 +23,9 @@ const REPLY_TIMEOUT_MS = 90_000;
 
 /** Openers for an empty chat: one tap sends them. */
 const STARTERS = [
+  "Can I afford a 4-day trip next week?",
+  "Remind me to renew my passport",
   "What should I focus on this week?",
-  "@everyone What's coming up that I might forget?",
-  "Where did my money go last month?",
 ];
 
 type Waiting = { threadId: string; agents: { id: string; name: string }[]; since: string };
