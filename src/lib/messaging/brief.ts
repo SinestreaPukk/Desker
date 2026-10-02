@@ -13,7 +13,7 @@ import { previousFire } from "@/lib/work/scope";
 import { briefCron, NEWS_EDITIONS, readPrefs, type AlertPrefs } from "./prefs";
 import { messageUser, type OutboundMessage } from "./send";
 
-const LIST = 4;
+const LIST = 3;
 /** A brief more than three hours late is stale: skip to tomorrow's. */
 const LATE_MS = 3 * 60 * 60_000;
 
@@ -50,7 +50,7 @@ export async function newsFor(topic: string, edition: string): Promise<Headline[
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(`${topic} when:1d`)}&hl=${language}&gl=${country}&ceid=${country}:${language}`;
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(8000), headers: { "user-agent": "Desker brief" } });
-    return response.ok ? parseNewsRss(await response.text()).slice(0, 3) : [];
+    return response.ok ? parseNewsRss(await response.text()).slice(0, 2) : [];
   } catch {
     return [];
   }
@@ -61,7 +61,7 @@ async function newsSection(prefs: AlertPrefs): Promise<string[]> {
     prefs.news.topics.map(async (topic) => {
       const headlines = await newsFor(topic, prefs.news.edition);
       if (headlines.length === 0) return null;
-      return `📰 ${topic}\n${headlines.map((h) => `• ${h.title}${h.source ? ` (${h.source})` : ""}\n  ${h.url}`).join("\n")}`;
+      return `📰 ${topic}\n${headlines.map((h) => `• ${h.title}${h.source ? ` (${h.source})` : ""}`).join("\n")}`;
     }),
   );
   return sections.filter((section): section is string => Boolean(section));
@@ -82,7 +82,7 @@ export function reportOf(result: unknown): string {
   const summary = (result as { summary?: unknown } | null)?.summary;
   if (typeof summary !== "string" || !summary.trim()) return "";
   const text = summary.replace(/[#*_`>]/g, "").replace(/\s*\n+\s*/g, " ").trim();
-  return `\n  ${text.length > 400 ? `${text.slice(0, 399)}…` : text}`;
+  return `\n  ${text.length > 100 ? `${text.slice(0, 99)}…` : text}`;
 }
 
 const hm = (iso: string, timeZone: string) => localIso(iso, timeZone).slice(11, 16);
