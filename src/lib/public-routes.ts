@@ -16,10 +16,9 @@ const PUBLIC_PATHS = new Set([
 
 /**
  * The sign-up and sign-in pages are the last step of the same walk, reached
- * from every call to action on the landing page. /invite is here for the same reason:
- * it is a stranger's front door.
+ * from every call to action on the landing page.
  */
-const PUBLIC_PREFIXES = ["/invite/", "/guides/", "/blog/"];
+const PUBLIC_PREFIXES = ["/guides/", "/blog/"];
 
 export function isPublicPath(pathname: string | null | undefined): boolean {
   if (!pathname) return false;

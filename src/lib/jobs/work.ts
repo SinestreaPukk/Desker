@@ -55,7 +55,7 @@ export const fireScopeFn = inngest.createFunction(
     retries: 3,
     // Starting a run is a handful of queries; this only protects the database
     // from a few hundred of them landing in the same second.
-    concurrency: [{ limit: 25 }],
+    concurrency: [{ limit: Math.min(25, env.workMaxConcurrentRuns) }],
   },
   async ({ event, step }) => {
     const id = await step.run("start-run", () => fireScope(event.data as DueScope));

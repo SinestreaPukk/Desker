@@ -6,7 +6,6 @@ import { signupSchema } from "@/lib/validation";
 import { createSpaceFor } from "@/lib/projects";
 import { personalSpaceName } from "@/lib/space";
 import { audit } from "@/lib/audit";
-import { findOpenInvitation } from "@/lib/invites";
 import { TERMS_VERSION } from "@/lib/legal";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { requestLooksAutomated } from "@/lib/bot-check";
@@ -49,48 +48,6 @@ export async function POST(request: Request) {
       lastName: input.lastName,
       username: input.username,
     };
-
-    // Signing up from an invitation joins that organisation instead of
-    // founding a new one. The address must match: a forwarded link is not
-    // an invitation.
-    if (input.invite) {
-      const invitation = await findOpenInvitation(input.invite);
-      if (!invitation) throw new HttpError(404, "This invitation is no longer valid.");
-      if (invitation.email !== input.email) {
-        throw new HttpError(403, `This invitation was sent to ${invitation.email}. Sign up with that address to accept it.`);
-      }
-      const passwordHash = await hashPassword(input.password);
-      const user = await prisma.$transaction(async (tx) => {
-        const created = await tx.user.create({
-          data: {
-            email: input.email,
-            ...profile,
-            passwordHash,
-            termsAcceptedAt: new Date(),
-            termsVersion: TERMS_VERSION,
-          },
-          select: { id: true, email: true, name: true },
-        });
-        await tx.membership.create({
-          data: { userId: created.id, organizationId: invitation.organizationId, role: invitation.role },
-        });
-        await tx.invitation.update({
-          where: { id: invitation.id },
-          data: { acceptedAt: new Date(), acceptedById: created.id },
-        });
-        return created;
-      });
-      await audit({
-        organizationId: invitation.organizationId,
-        actorType: "user",
-        actorId: user.id,
-        action: "invitation.accepted",
-        targetType: "invitation",
-        targetId: invitation.id,
-        metadata: { role: invitation.role, via: "signup" },
-      });
-      return user;
-    }
 
     // A new account founds its own personal space, with a first project so
     // there is somewhere to put an agent. All or none - a user with no space can reach nothing.

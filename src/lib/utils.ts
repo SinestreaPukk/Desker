@@ -96,3 +96,15 @@ export function safeHttpUrl(value: unknown): string | null {
     return null;
   }
 }
+
+/** "under a minute" / "about 3 hours" - never "1.4 h". */
+export function humanDuration(ms: number | null): string {
+  if (ms === null) return "—";
+  const minutes = ms / 60_000;
+  if (minutes < 1) return "under a minute";
+  if (minutes < 60) return `about ${Math.round(minutes)} minute${Math.round(minutes) === 1 ? "" : "s"}`;
+  const hours = minutes / 60;
+  if (hours < 36) return `about ${Math.round(hours)} hour${Math.round(hours) === 1 ? "" : "s"}`;
+  const dayCount = Math.round(hours / 24);
+  return `about ${dayCount} day${dayCount === 1 ? "" : "s"}`;
+}

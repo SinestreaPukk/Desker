@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { RunFindings } from "@/components/work/run-findings";
 import { TeamChat } from "@/components/work/team-chat";
 import { useScope } from "@/hooks/use-work-data";
-import { humanDuration } from "@/lib/insight-copy";
+import { humanDuration } from "@/lib/utils";
 import type { ActionItemDto, SuggestionDto } from "@/lib/work/serialize";
 import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
 

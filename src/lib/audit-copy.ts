@@ -539,12 +539,6 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
         tone: "neutral",
         icon: "person",
       };
-    case "invitation.created":
-      return { title: `${who} invited a teammate`, detail: text(meta.email), tone: "neutral", icon: "person" };
-    case "invitation.accepted":
-      return { title: "A teammate accepted their invitation", detail: text(meta.email), tone: "positive", icon: "person" };
-    case "invitation.revoked":
-      return { title: `${who} revoked an invitation`, detail: text(meta.email), tone: "neutral", icon: "person" };
 
     case "billing.checkout_started":
       return { title: `${who} started a plan change`, detail: text(meta.plan), tone: "neutral", icon: "billing" };

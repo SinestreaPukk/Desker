@@ -76,8 +76,6 @@ export const signupSchema = z
       .regex(USERNAME_PATTERN, "Use 3-30 letters, numbers, dots, dashes or underscores, starting with a letter or number."),
     email: z.string().trim().toLowerCase().email("Enter a valid email address."),
     password: passwordRule,
-    /** An invitation token; joins that organisation instead of creating one. */
-    invite: z.string().trim().max(200).optional(),
     /** The consent step. Recorded with the terms version on the user. */
     acceptTerms: z.literal(true, {
       message: "Accept the Terms of Service and Privacy Policy to create an account.",

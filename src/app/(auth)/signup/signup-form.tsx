@@ -13,10 +13,9 @@ import { FormError } from "@/components/ui/states";
 import { api, ApiError } from "@/lib/api-client";
 import { BrandLockup } from "@/components/brand-logo";
 
-export function SignupForm({ invite }: { invite?: { token: string; email: string; organization: string } | null }) {
+export function SignupForm() {
   const router = useRouter();
   const search = useSearchParams();
-  const inviteToken = invite?.token ?? search.get("invite") ?? undefined;
   // From the showcase: the chosen role rides along into the hire wizard.
   const template = search.get("template");
   const next = template ? `/?template=${encodeURIComponent(template)}` : "/";
@@ -48,7 +47,6 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
           password,
           acceptTerms: accepted,
           ...trap.values(form),
-          ...(inviteToken ? { invite: inviteToken } : {}),
         }),
       });
     } catch (caught) {
@@ -127,7 +125,6 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
             >
               <Input
                 name="email"
-                defaultValue={invite?.email ?? ""}
                 type="email"
                 autoComplete="email"
                 required
@@ -187,13 +184,7 @@ export function SignupForm({ invite }: { invite?: { token: string; email: string
       <p className="text-center text-sm text-ink-muted">
         Already have an account?{" "}
         <Link
-          href={
-            inviteToken
-              ? `/login?invite=${encodeURIComponent(inviteToken)}`
-              : template
-                ? `/login?template=${encodeURIComponent(template)}`
-                : "/login"
-          }
+          href={template ? `/login?template=${encodeURIComponent(template)}` : "/login"}
           className="font-medium text-accent hover:underline"
         >
           Sign in

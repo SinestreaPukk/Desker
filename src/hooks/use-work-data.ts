@@ -456,13 +456,8 @@ export function useUpdateDraft() {
 
 // --- organisation -----------------------------------------------------------
 
-import type { MemberDto } from "@/app/api/organizations/[orgId]/members/route";
-import type { InviteDto } from "@/app/api/organizations/[orgId]/invites/route";
-
 const orgKeys = {
   org: (orgId: string) => ["organization", orgId] as const,
-  members: (orgId: string) => ["organization", orgId, "members"] as const,
-  invites: (orgId: string) => ["organization", orgId, "invites"] as const,
   billing: (project: string) => ["billing", project] as const,
 };
 
@@ -474,61 +469,6 @@ export function useOrganization(orgId: string) {
         `/api/organizations/${orgId}`,
       ),
     enabled: Boolean(orgId),
-  });
-}
-
-export function useMembers(orgId: string) {
-  return useQuery({
-    queryKey: orgKeys.members(orgId),
-    queryFn: () => api<MemberDto[]>(`/api/organizations/${orgId}/members`),
-    enabled: Boolean(orgId),
-  });
-}
-
-export function useInvites(orgId: string, enabled = true) {
-  return useQuery({
-    queryKey: orgKeys.invites(orgId),
-    queryFn: () => api<InviteDto[]>(`/api/organizations/${orgId}/invites`),
-    enabled: Boolean(orgId) && enabled,
-  });
-}
-
-export function useCreateInvite(orgId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (input: { email: string; role: string }) =>
-      api<InviteDto>(`/api/organizations/${orgId}/invites`, { method: "POST", body: JSON.stringify(input) }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: orgKeys.invites(orgId) }),
-  });
-}
-
-export function useRevokeInvite(orgId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (inviteId: string) =>
-      api<{ ok: true }>(`/api/organizations/${orgId}/invites/${inviteId}`, { method: "DELETE" }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: orgKeys.invites(orgId) }),
-  });
-}
-
-export function useSetMemberRole(orgId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: ({ userId, role }: { userId: string; role: string }) =>
-      api<{ userId: string; role: string }>(`/api/organizations/${orgId}/members/${userId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ role }),
-      }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: orgKeys.members(orgId) }),
-  });
-}
-
-export function useRemoveMember(orgId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (userId: string) =>
-      api<{ ok: true }>(`/api/organizations/${orgId}/members/${userId}`, { method: "DELETE" }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: orgKeys.members(orgId) }),
   });
 }
 

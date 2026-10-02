@@ -16,7 +16,6 @@ export const keys = {
   agent: (id: string) => ["agents", id] as const,
   documents: (agentId: string) => ["agents", agentId, "documents"] as const,
   issues: (filters: Record<string, string>) => ["issues", filters] as const,
-  analytics: (project: string, days: number) => ["analytics", project, days] as const,
 };
 
 // --- agents -----------------------------------------------------------------
@@ -136,71 +135,6 @@ export function useSetIssueStatus() {
       // A run's flag is an issue too: Work's Needs you reads off it.
       void client.invalidateQueries({ queryKey: ["action-items"] });
     },
-  });
-}
-
-export interface AnalyticsResponse {
-  days: number;
-  /** The same counts over the window before this one, for the captions. */
-  previous: { conversations: number; runs: number };
-  totals: {
-    conversations: number;
-    escalated: number;
-    issues: number;
-    suggestions: number;
-    searches: number;
-    searchMisses: number;
-    ratedUp: number;
-    ratedDown: number;
-  };
-  agents: {
-    id: string;
-    name: string;
-    jobTitle: string;
-    avatarUrl: string | null;
-    status: string;
-    conversations: number;
-    escalations: number;
-    escalationRate: number | null;
-    issues: number;
-    suggestions: number;
-    searches: number;
-    retrievalHitRate: number | null;
-    documents: number;
-    ratedUp: number;
-    ratedDown: number;
-    satisfaction: number | null;
-  }[];
-  dislikedReplies: {
-    messageId: string;
-    conversationId: string;
-    agentName: string;
-    question: string | null;
-    reply: string;
-    ratedAt: string;
-  }[];
-  contentGaps: {
-    query: string;
-    misses: number;
-    agentName: string;
-    lastAskedAt: string;
-  }[];
-  work: {
-    totals: import("@/app/api/analytics/route").WorkTotals;
-    agents: import("@/app/api/analytics/route").AgentWorkStats[];
-  };
-  collab: import("@/app/api/analytics/route").CollabStats;
-  outcomes: ReturnType<typeof import("@/lib/work/outcomes").summarizeOutcomes> & { corrections: number };
-}
-
-export function useAnalytics(project: string, days = 30) {
-  return useQuery({
-    queryKey: keys.analytics(project, days),
-    queryFn: () =>
-      api<AnalyticsResponse>(
-        `/api/analytics?days=${days}&project=${encodeURIComponent(project)}`,
-      ),
-    enabled: Boolean(project),
   });
 }
 

@@ -24,7 +24,6 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/forgot-password")).toBe(true);
     expect(isPublicPath("/reset-password")).toBe(true);
     expect(isPublicPath("/unsubscribe")).toBe(true);
-    expect(isPublicPath("/invite/some-token")).toBe(true);
   });
 
   it("does not treat app internal routes as public", () => {

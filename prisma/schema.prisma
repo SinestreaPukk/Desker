@@ -172,7 +172,6 @@ model Organization {
   updatedAt DateTime @updatedAt
 
   memberships   Membership[]
-  invitations   Invitation[]
   projects      Project[]
   actionItems   ActionItem[]
   auditLogs     AuditLog[]
@@ -197,25 +196,6 @@ model EmailSuppression {
   createdAt      DateTime     @default(now())
 
   @@unique([organizationId, email])
-}
-
-/// An email invited into an organisation with a role. The token in the link
-/// is the credential; accepting it creates the Membership and closes the
-/// invitation. Expired or revoked invitations 404 like unknown ones.
-model Invitation {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  email          String
-  role           String       @default("member")
-  token          String       @unique
-  invitedById    String?
-  createdAt      DateTime     @default(now())
-  expiresAt      DateTime
-  acceptedAt     DateTime?
-  acceptedById   String?
-
-  @@index([organizationId, email])
 }
 
 /// user <-> organisation, with a role. A user may belong to several.

@@ -14,7 +14,6 @@ import { PRIVATE_BETA_CODE, PRIVATE_BETA_MESSAGE } from "@/lib/private-beta";
 export function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
-  const inviteToken = search.get("invite");
   const template = search.get("template");
   const justReset = search.get("reset") === "1";
   const [pending, setPending] = React.useState(false);
@@ -45,13 +44,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push(
-      inviteToken
-        ? `/invite/${inviteToken}`
-        : template
-          ? `/?template=${encodeURIComponent(template)}`
-          : "/",
-    );
+    router.push(template ? `/?template=${encodeURIComponent(template)}` : "/");
     router.refresh();
   }
 
@@ -109,7 +102,7 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-ink-muted">
         No account yet?{" "}
-        <Link href={inviteToken ? `/signup?invite=${encodeURIComponent(inviteToken)}` : "/signup"} className="font-medium text-accent hover:underline">
+        <Link href="/signup" className="font-medium text-accent hover:underline">
           Create one
         </Link>
       </p>

@@ -5,11 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  Activity,
   Bell,
   BellDot,
   Blocks,
-  Check,
   ChevronsUpDown,
   History,
   LogOut,
@@ -17,7 +15,6 @@ import {
   MessagesSquare,
   Newspaper,
   Wallet,
-  Plus,
   Route,
   UserRound,
   UsersRound,
@@ -35,7 +32,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { NewProjectDialog } from "@/components/new-project-dialog";
 import { FeedbackButton } from "@/components/feedback-dialog";
 import { HelpButton, HelpProvider } from "@/components/help/help-panel";
 import { Tour } from "@/components/tour/tour";
@@ -50,12 +46,6 @@ interface ProjectRef {
   name: string;
   slug: string;
   organizationId: string;
-}
-
-interface OrganizationRef {
-  id: string;
-  name: string;
-  role: string;
 }
 
 interface NavItem {
@@ -74,7 +64,6 @@ const NAV_GROUPS: { title: string; items: readonly NavItem[] }[] = [
       { segment: "money", label: "Money", icon: Wallet },
       { segment: "work", label: "Work", icon: Workflow },
       { segment: "workflows", label: "Workflows", icon: Route },
-      { segment: "insights", label: "Insights", icon: Activity },
     ],
   },
   {
@@ -92,15 +81,11 @@ export function AdminShell({
   email,
   name,
   project,
-  projects,
-  organizations,
   children,
 }: {
   email: string;
   name: string | null;
   project: ProjectRef;
-  projects: ProjectRef[];
-  organizations: OrganizationRef[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -170,14 +155,7 @@ export function AdminShell({
     </nav>
   );
 
-  const projectSwitcher = (
-    <ProjectSwitcher
-      project={project}
-      projects={projects}
-      organizations={organizations}
-      pathname={pathname}
-    />
-  );
+  const projectSwitcher = <SpaceTag project={project} />;
 
   return (
     <HelpProvider project={project.slug}>
@@ -324,102 +302,14 @@ export function AdminShell({
   );
 }
 
-function ProjectSwitcher({
-  project,
-  projects,
-  organizations,
-  pathname,
-}: {
-  project: ProjectRef;
-  projects: ProjectRef[];
-  organizations: OrganizationRef[];
-  pathname: string;
-}) {
-  const [creating, setCreating] = React.useState(false);
-  const organization = organizations.find((org) => org.id === project.organizationId);
-  // Only this organisation's projects belong in the project list; the other
-  // organisations sit in their own section and switching lands on their
-  // first project.
-  const ownProjects = projects.filter((entry) => entry.organizationId === project.organizationId);
-  const others = organizations
-    .filter((org) => org.id !== project.organizationId)
-    .map((org) => ({ org, first: projects.find((entry) => entry.organizationId === org.id) }))
-    .filter((entry) => entry.first);
-
-  /**
-   * Switching keeps you on the same tab rather than dumping you on the roster -
-   * comparing two projects' inboxes is the obvious reason to switch at all.
-   */
-  const tab = React.useMemo(() => {
-    const match = pathname.match(/^\/p\/[^/]+\/(roster|needs-you|money|work|insights|agents)/);
-    const segment = match?.[1];
-    // Detail routes (a specific conversation or agent) do not exist in the
-    // other project, so fall back to that section's index.
-    return segment === "agents" ? "roster" : (segment ?? "roster");
-  }, [pathname]);
-
+/** Whose space this is. One person, one space: nothing to switch. */
+function SpaceTag({ project }: { project: ProjectRef }) {
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            aria-label={`Switch project or space (${organization?.name ?? ""}: ${project.name})`}
-            className="group flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-ink/[0.05]"
-          >
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-fg">
-              <UserRound className="size-4" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-ink leading-tight">{project.name}</span>
-              <span className="mt-0.5 block truncate text-xs leading-tight text-ink-muted">{organization?.name ?? ""}</span>
-            </span>
-            <ChevronsUpDown className="size-3.5 shrink-0 text-ink-subtle transition-colors group-hover:text-ink" aria-hidden />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuLabel>Projects</DropdownMenuLabel>
-          {ownProjects.map((entry) => (
-            <DropdownMenuItem key={entry.id} asChild>
-              <Link href={`/p/${entry.slug}/${tab}`}>
-                <Check
-                  className={cn(
-                    "size-3.5",
-                    entry.id === project.id ? "opacity-100" : "opacity-0",
-                  )}
-                  aria-hidden
-                />
-                <span className="truncate">{entry.name}</span>
-              </Link>
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={(event) => {
-            event.preventDefault();
-            setCreating(true);
-          }}>
-            <Plus aria-hidden />
-            New project
-          </DropdownMenuItem>
-          {others.length > 0 ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Switch space</DropdownMenuLabel>
-              {others.map(({ org, first }) => {
-                return (
-                  <DropdownMenuItem key={org.id} asChild>
-                    <Link href={`/p/${first!.slug}/${tab}`}>
-                      <UserRound className="size-3.5 text-ink-subtle" aria-hidden />
-                      <span className="truncate">{org.name}</span>
-                                          </Link>
-                  </DropdownMenuItem>
-                );
-              })}
-            </>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <NewProjectDialog open={creating} onOpenChange={setCreating} project={project.slug} />
-    </>
+    <div className="flex items-center gap-2.5 rounded-lg p-2">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-fg">
+        <UserRound className="size-4" aria-hidden />
+      </span>
+      <span className="block min-w-0 truncate text-sm font-semibold leading-tight text-ink">{project.name}</span>
+    </div>
   );
 }

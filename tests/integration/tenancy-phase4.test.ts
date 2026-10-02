@@ -1,5 +1,5 @@
 /**
- * Database-backed checks for invitations, roles and plan limits. Needs
+ * Database-backed checks for roles and plan limits. Needs
  * DATABASE_URL and a VAULT_KEY; no model key.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -37,45 +37,6 @@ afterAll(async () => {
   await prisma.organization.delete({ where: { id: organizationId } }).catch(() => {});
   await prisma.user.deleteMany({ where: { email: { endsWith: `-${stamp}@example.com` } } });
   await prisma.$disconnect();
-});
-
-describe("invitations", () => {
-  it("creates, accepts for the invited address only, and closes", async () => {
-    const { createInvitation, acceptInvitation, findOpenInvitation, InviteMismatch } = await import("@/lib/invites");
-    const invitation = await createInvitation({
-      organizationId,
-      email: `Teammate-${stamp}@Example.com`,
-      role: "admin",
-      invitedById: ownerId,
-    });
-    expect(invitation.email).toBe(`teammate-${stamp}@example.com`);
-    expect(await findOpenInvitation(invitation.token)).not.toBeNull();
-
-    const stranger = await prisma.user.create({
-      data: { email: `stranger-${stamp}@example.com`, passwordHash: "x" },
-    });
-    await expect(acceptInvitation(invitation.token, stranger)).rejects.toBeInstanceOf(InviteMismatch);
-
-    const teammate = await prisma.user.create({
-      data: { email: `teammate-${stamp}@example.com`, passwordHash: "x" },
-    });
-    const accepted = await acceptInvitation(invitation.token, teammate);
-    expect(accepted?.id).toBe(invitation.id);
-    const membership = await prisma.membership.findUnique({
-      where: { userId_organizationId: { userId: teammate.id, organizationId } },
-    });
-    expect(membership?.role).toBe("admin");
-    // Single use.
-    expect(await findOpenInvitation(invitation.token)).toBeNull();
-  });
-
-  it("re-inviting an address replaces the pending invitation", async () => {
-    const { createInvitation, findOpenInvitation } = await import("@/lib/invites");
-    const first = await createInvitation({ organizationId, email: `again-${stamp}@example.com`, role: "member", invitedById: ownerId });
-    const second = await createInvitation({ organizationId, email: `again-${stamp}@example.com`, role: "member", invitedById: ownerId });
-    expect(await findOpenInvitation(first.token)).toBeNull();
-    expect(await findOpenInvitation(second.token)).not.toBeNull();
-  });
 });
 
 describe("roles", () => {
