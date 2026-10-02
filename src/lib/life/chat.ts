@@ -9,6 +9,8 @@ import { addTeamMessage, runMeetingTurn, teamOf, type TeamAgent } from "@/lib/te
 import { clamp } from "@/lib/work/model-json";
 import { readLife } from "./read";
 import { negotiate } from "./negotiate";
+import { answerGeneral } from "./research";
+import { renderLife } from "./context";
 import { planChat, type Plan } from "./router";
 
 export const EVERYDAY_THREAD = "Everyday chat";
@@ -22,6 +24,17 @@ interface ChatCtx {
 
 /** Carries out a plan. Writes the replies into the thread; never throws. */
 export async function runChat(plan: Plan, text: string, team: TeamAgent[], ctx: ChatCtx): Promise<void> {
+  if (plan.route === "research") {
+    const speaker = plan.responders[0]!;
+    try {
+      const answer = await answerGeneral({ question: text, life: renderLife(await readLife(ctx.projectId)), organizationId: ctx.organizationId, agent: speaker });
+      await addTeamMessage({ projectId: ctx.projectId, threadId: ctx.threadId, agentId: speaker.id, content: answer.reply });
+    } catch (error) {
+      console.error("[life] research answer failed", error);
+      await addTeamMessage({ projectId: ctx.projectId, threadId: ctx.threadId, agentId: speaker.id, content: "Sorry, I couldn't look that up just now. Please try again." });
+    }
+    return;
+  }
   if (plan.route !== "engine") return runMeetingTurn({ responders: plan.responders, team, ...ctx });
   const speaker = plan.responders[0]!;
   try {
