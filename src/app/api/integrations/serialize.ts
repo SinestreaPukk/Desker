@@ -22,6 +22,8 @@ export function toIntegrationDto(
     if (config.signed === "true" || config.secret) summary += " · signed";
   } else if (row.type === "email") {
     summary = `from ${config.from ?? "?"} · Resend`;
+  } else if (row.type === "phone") {
+    summary = `${config.from ?? "?"} · Twilio ${config.account ?? ""}`;
   } else {
     summary = config.account ?? "";
   }

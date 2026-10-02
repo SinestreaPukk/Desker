@@ -172,6 +172,22 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
           }
         : { title: "Added a calendar event", detail: summary ? clip(summary, 120) : null, tone: "positive", icon: "schedule" };
     }
+    case "tasks_read":
+      return ok ? { title: "Read your to-do list", detail: null, tone: "neutral", icon: "documents" } : failed("Tried to read your to-do list");
+    case "tasks_write":
+      if (!ok) return failed("Tried to change your to-do list");
+      return gated
+        ? { title: "Queued a to-do reminder for your approval", detail: `${text(input.title) ? `${clip(String(input.title), 80)}. ` : ""}It waits in Needs you.`, tone: "warning", icon: "approval" }
+        : { title: "Updated your to-do list", detail: text(input.title) ? clip(String(input.title), 120) : null, tone: "positive", icon: "schedule" };
+    case "phone_read":
+      return ok ? { title: "Read your texts", detail: null, tone: "neutral", icon: "documents" } : failed("Tried to read your texts");
+    case "phone_send":
+      if (!ok) return failed(`Tried to ${input.kind === "call" ? "place a call" : "send a text"}`);
+      return gated
+        ? { title: `Queued ${input.kind === "call" ? "a call" : "a text"} for your approval`, detail: "It waits in Needs you. Nothing has been sent yet.", tone: "warning", icon: "approval" }
+        : { title: input.kind === "call" ? "Placed a call" : "Sent a text", detail: null, tone: "positive", icon: "send" };
+    case "slack_read":
+      return ok ? { title: "Read a Slack channel", detail: null, tone: "neutral", icon: "documents" } : failed("Tried to read Slack");
     case "calendar_cancel_event":
       if (!ok) return failed("Tried to cancel a calendar event");
       return gated
@@ -273,6 +289,8 @@ const FAILED_DELIVERY: Record<string, string> = {
   calendar_create_event: "A calendar event could not be added",
   calendar_reschedule: "A calendar event could not be moved",
   calendar_cancel_event: "A calendar event could not be cancelled",
+  tasks_write: "Your to-do list could not be updated",
+  phone_send: "A text or call could not be sent",
   inbox_reply: "An email reply could not be sent",
   slack_post_message: "A Slack message could not be posted",
   github_write: "A GitHub change could not be made",
@@ -369,6 +387,10 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: "Sent an approved email", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "calendar_create_event.delivered":
       return { title: "Added an approved calendar event", detail: text(meta.detail), tone: "positive", icon: "schedule" };
+    case "tasks_write.delivered":
+      return { title: "Updated your to-do list", detail: text(meta.detail), tone: "positive", icon: "schedule" };
+    case "phone_send.delivered":
+      return { title: "Sent an approved text or call", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "calendar_cancel_event.delivered":
       return { title: "Cancelled an approved calendar event", detail: text(meta.detail), tone: "positive", icon: "schedule" };
     case "calendar_reschedule.delivered":
@@ -384,6 +406,8 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
     case "publish_post.failed":
     case "send_email.failed":
     case "calendar_create_event.failed":
+    case "tasks_write.failed":
+    case "phone_send.failed":
     case "calendar_cancel_event.failed":
     case "calendar_reschedule.failed":
     case "inbox_reply.failed":

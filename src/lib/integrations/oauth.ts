@@ -92,7 +92,7 @@ const PROVIDERS: Record<OAuthProvider, ProviderSpec> = {
     clientSecretEnv: "SLACK_CLIENT_SECRET",
     authorizeUrl: () => "https://slack.com/oauth/v2/authorize",
     tokenUrl: "https://slack.com/api/oauth.v2.access",
-    scope: "chat:write,channels:read",
+    scope: "chat:write,channels:read,channels:history,im:history",
     scopeParam: "scope",
   },
   github: {

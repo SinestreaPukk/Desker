@@ -12,6 +12,9 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import * as life from "@/lib/life/store";
 import { syncCalendar } from "@/lib/life/calendar-sync";
+import { syncTasks } from "@/lib/life/task-sync";
+import { completeTask, createTask, listTasks, tasksAccess } from "@/lib/integrations/tasks";
+import { isE164, phoneAccess, placeCall, recentTexts, sendSms } from "@/lib/integrations/phone";
 import { audit } from "@/lib/audit";
 import { searchDocuments } from "@/lib/rag/search-documents";
 import { searchDocumentsInput } from "@/lib/rag/search-documents-tool";
@@ -60,6 +63,7 @@ import {
 import {
   forbiddenPath,
   postSlackMessage,
+  readSlackChannel,
   readGithub,
   repoName,
   writeGithub,
@@ -206,6 +210,20 @@ const cancelSchema = z.object({
   title: z.string().trim().min(1).max(300),
   note: z.string().trim().max(500).optional(),
 });
+const tasksWriteSchema = z.object({
+  action: z.enum(["create", "complete"]),
+  title: z.string().trim().min(1).max(300).optional(),
+  due: isoTime.optional(),
+  task_id: z.string().trim().max(1024).optional(),
+  note: z.string().trim().max(500).optional(),
+});
+const phoneSendSchema = z.object({
+  kind: z.enum(["sms", "call"]),
+  to: z.string().trim().refine(isE164, "Give the number in international format, like +66812345678."),
+  message: z.string().trim().min(1).max(600),
+  note: z.string().trim().max(500).optional(),
+});
+const slackReadSchema = z.object({ channel: z.string().trim().min(1).max(100), limit: z.number().int().min(1).max(30).optional() });
 const inboxReadSchema = z.object({
   query: z.string().trim().max(300).optional(),
   thread_id: z.string().trim().max(1024).optional(),
@@ -922,6 +940,58 @@ async function calendarCancel(input: unknown, ctx: RunContext): Promise<WorkTool
   });
 }
 
+async function tasksRead(_input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const access = await tasksAccess(ctx.organizationId);
+  if (!access) return notConnected("A to-do list (Google Tasks or Microsoft To Do)");
+  try {
+    const tasks = await listTasks(access);
+    return { content: tasks.length ? tasks.map((t) => `- ${t.title}${t.due ? ` (due ${t.due.slice(0, 10)})` : ""} [id: ${t.id}]`).join("\n") : "No open tasks." };
+  } catch (error) {
+    return { content: error instanceof Error ? error.message : "Couldn't read the to-do list.", isError: true };
+  }
+}
+
+async function tasksWrite(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = tasksWriteSchema.safeParse(input);
+  if (!parsed.success) return invalid("tasks_write", parsed.error);
+  const { action, title, due, task_id, note } = parsed.data;
+  if (action === "create" && !title) return { content: "A new reminder needs a title.", isError: true };
+  if (action === "complete" && !task_id) return { content: "To mark a task done, pass its id from tasks_read.", isError: true };
+  if (!(await tasksAccess(ctx.organizationId))) return notConnected("A to-do list (Google Tasks or Microsoft To Do)");
+  return gateOrDeliver(ctx, { tool: "tasks_write", input: { action, title, due, task_id }, note });
+}
+
+async function phoneRead(_input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const access = await phoneAccess(ctx.organizationId);
+  if (!access) return notConnected("A phone number (Twilio)");
+  try {
+    const texts = await recentTexts(access);
+    return { content: texts.length ? texts.map((t) => `${t.at} from ${t.from}: ${t.body}`).join("\n") : "No texts yet." };
+  } catch (error) {
+    return { content: error instanceof Error ? error.message : "Couldn't read the texts.", isError: true };
+  }
+}
+
+async function phoneSend(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = phoneSendSchema.safeParse(input);
+  if (!parsed.success) return invalid("phone_send", parsed.error);
+  const { kind, to, message, note } = parsed.data;
+  if (!(await phoneAccess(ctx.organizationId))) return notConnected("A phone number (Twilio)");
+  return gateOrDeliver(ctx, { tool: "phone_send", input: { kind, to, message }, note });
+}
+
+async function slackRead(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = slackReadSchema.safeParse(input);
+  if (!parsed.success) return invalid("slack_read", parsed.error);
+  const access = await connectorAccess(ctx.organizationId, "slack");
+  if (!access) return notConnected("Slack");
+  try {
+    return { content: await readSlackChannel(access.accessToken, parsed.data.channel, parsed.data.limit ?? 15) };
+  } catch (error) {
+    return { content: error instanceof Error ? error.message : "Couldn't read Slack.", isError: true };
+  }
+}
+
 async function inboxRead(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
   const parsed = inboxReadSchema.safeParse(input);
   if (!parsed.success) return invalid("inbox_read", parsed.error);
@@ -1135,6 +1205,21 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
         case "calendar_cancel_event":
           outcome = await calendarCancel(call.input, ctx);
           break;
+        case "tasks_read":
+          outcome = await tasksRead(call.input, ctx);
+          break;
+        case "tasks_write":
+          outcome = await tasksWrite(call.input, ctx);
+          break;
+        case "phone_read":
+          outcome = await phoneRead(call.input, ctx);
+          break;
+        case "phone_send":
+          outcome = await phoneSend(call.input, ctx);
+          break;
+        case "slack_read":
+          outcome = await slackRead(call.input, ctx);
+          break;
         case "inbox_read":
           outcome = await inboxRead(call.input, ctx);
           break;
@@ -1289,6 +1374,20 @@ export async function executePendingAction(
             });
     // Two-way: what was just approved is read back into the life context.
     if (delivery.ok) await syncCalendar(organizationId, true).catch((error) => console.error("[life] calendar sync failed", error));
+  } else if (action.tool === "tasks_write") {
+    const access = await tasksAccess(organizationId);
+    if (!access) return { ok: false, status: 0, detail: "No to-do list is connected." };
+    delivery =
+      action.input.action === "complete"
+        ? await completeTask(access, String(action.input.task_id ?? ""))
+        : await createTask(access, { title: String(action.input.title ?? ""), due: action.input.due ? String(action.input.due) : undefined });
+    if (delivery.ok) await syncTasks(organizationId, true).catch((error) => console.error("[life] task sync failed", error));
+  } else if (action.tool === "phone_send") {
+    const access = await phoneAccess(organizationId);
+    if (!access) return { ok: false, status: 0, detail: "No phone number is connected." };
+    const to = String(action.input.to ?? "");
+    const message = String(action.input.message ?? "");
+    delivery = action.input.kind === "call" ? await placeCall(access, to, message) : await sendSms(access, to, message);
   } else if (action.tool === "inbox_reply") {
     const access = await mailAccess(organizationId);
     if (!access) return { ok: false, status: 0, detail: "No mailbox is connected." };

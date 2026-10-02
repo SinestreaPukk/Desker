@@ -40,6 +40,8 @@ const PENDING_COPY: Record<GatedToolId, { verb: string; noun: string; approve: s
   },
   calendar_reschedule: { verb: "move a calendar event", noun: "change", approve: "Approve and move it", going: "moving" },
   calendar_cancel_event: { verb: "cancel a calendar event", noun: "cancellation", approve: "Approve and cancel it", going: "cancelling" },
+  tasks_write: { verb: "change your to-do list", noun: "reminder", approve: "Approve and add it", going: "adding" },
+  phone_send: { verb: "text or call someone", noun: "message", approve: "Approve and send", going: "sending" },
   inbox_reply: { verb: "reply in an email thread", noun: "reply", approve: "Approve and send", going: "sending" },
   slack_post_message: { verb: "post to Slack", noun: "message", approve: "Approve and post", going: "posting" },
   github_write: { verb: "change GitHub", noun: "change", approve: "Approve and apply", going: "applying" },
@@ -97,7 +99,20 @@ function ActionPreview({ tool, input }: { tool: GatedToolId; input: Record<strin
   const when = (key: string) => (text(key) ? formatDateTime(text(key)) : "");
   return (
     <div className="rounded-lg border border-line bg-surface-2/60 p-3.5 text-sm">
-      {tool === "calendar_cancel_event" ? (
+      {tool === "phone_send" ? (
+        <>
+          <p className="font-semibold text-ink">
+            {input.kind === "call" ? "Call" : "Text"} {text("to")}
+          </p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-ink">{text("message")}</p>
+          <p className="mt-1 text-xs text-ink-muted">{input.kind === "call" ? "The call reads this aloud once, then hangs up." : "Sent as an SMS from your Desker number."}</p>
+        </>
+      ) : tool === "tasks_write" ? (
+        <>
+          <p className="font-semibold text-ink">{input.action === "complete" ? "Mark a task done" : text("title")}</p>
+          {text("due") ? <p className="mt-0.5 text-xs text-ink-muted">Due {when("due")}</p> : null}
+        </>
+      ) : tool === "calendar_cancel_event" ? (
         <>
           <p className="font-semibold text-ink">Cancel: {text("title")}</p>
           <p className="mt-0.5 text-xs text-ink-muted">
@@ -352,6 +367,8 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
         ) : pending.tool === "calendar_create_event" ||
           pending.tool === "calendar_reschedule" ||
           pending.tool === "calendar_cancel_event" ||
+          pending.tool === "tasks_write" ||
+          pending.tool === "phone_send" ||
           pending.tool === "slack_post_message" ||
           pending.tool === "github_write" ||
           pending.tool === "social_manage" ? (

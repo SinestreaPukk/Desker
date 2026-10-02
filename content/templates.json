@@ -34,7 +34,9 @@
         "suggest_opportunity",
         "schedule_followup",
         "calendar_create_event",
-        "escalate_to_human"
+        "escalate_to_human",
+        "tasks_read",
+        "tasks_write"
       ],
       "suggestedIntegrations": [
         "google_calendar"
@@ -106,7 +108,12 @@
         "inbox_reply",
         "calendar_reschedule",
         "calendar_cancel_event",
-        "escalate_to_human"
+        "escalate_to_human",
+        "tasks_read",
+        "tasks_write",
+        "phone_read",
+        "phone_send",
+        "slack_read"
       ],
       "suggestedIntegrations": [
         "gmail",
@@ -248,7 +255,9 @@
         "publish_post",
         "social_read",
         "social_manage",
-        "escalate_to_human"
+        "escalate_to_human",
+        "tasks_read",
+        "tasks_write"
       ],
       "suggestedIntegrations": [
         "linkedin",
@@ -316,7 +325,8 @@
         "schedule_followup",
         "suggest_opportunity",
         "search_documents",
-        "escalate_to_human"
+        "escalate_to_human",
+        "phone_send"
       ],
       "suggestedIntegrations": [
         "google_calendar"
@@ -380,7 +390,9 @@
         "schedule_followup",
         "calendar_create_event",
         "suggest_opportunity",
-        "escalate_to_human"
+        "escalate_to_human",
+        "tasks_read",
+        "tasks_write"
       ],
       "suggestedIntegrations": [
         "google_calendar"
@@ -446,7 +458,9 @@
         "suggest_opportunity",
         "escalate_to_human",
         "calendar_reschedule",
-        "calendar_cancel_event"
+        "calendar_cancel_event",
+        "tasks_read",
+        "tasks_write"
       ],
       "suggestedIntegrations": [
         "google_calendar"

@@ -205,6 +205,11 @@ export function IntegrationsView({ project }: { project: string }) {
                       <WebhookForm project={project} onDone={() => setOpenForm(null)} />
                     </div>
                   ) : null}
+                  {formHere?.id === "phone" ? (
+                    <div className="mt-3 max-w-2xl">
+                      <PhoneForm project={project} onDone={() => setOpenForm(null)} />
+                    </div>
+                  ) : null}
                   {formHere?.id === "email" ? (
                     <div className="mt-3 max-w-2xl">
                       <EmailForm project={project} onDone={() => setOpenForm(null)} />
@@ -527,6 +532,96 @@ function EmailForm({ project, onDone }: { project: string; onDone: () => void })
               onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
               placeholder="re_…"
             />
+          </Field>
+        </PanelBody>
+        <PanelFooter className="flex justify-end">
+          <Button type="submit" size="sm" loading={create.isPending} disabled={create.isPending}>
+            Connect it
+          </Button>
+        </PanelFooter>
+      </form>
+    </Panel>
+  );
+}
+
+function PhoneForm({ project, onDone }: { project: string; onDone: () => void }) {
+  const create = useCreateIntegration(project);
+  const blank = { name: "Phone", accountSid: "", authToken: "", from: "", language: "en-US" as "en-US" | "th-TH" };
+  const [form, setForm] = React.useState(blank);
+  const [error, setError] = React.useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
+  const [created, setCreated] = React.useState<string | null>(null);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setFieldErrors({});
+    const checked = validate(integrationInputSchema, { type: "phone", ...form });
+    if (!checked.ok) {
+      setFieldErrors(checked.fieldErrors);
+      return;
+    }
+    try {
+      const row = await create.mutateAsync({ type: "phone", ...form });
+      setForm(blank);
+      setCreated(row.id);
+      toast.success("Phone connected", { description: "Texting and calling wait for your approval. Now point Twilio at the two addresses below." });
+    } catch (caught) {
+      if (caught instanceof ApiError) {
+        setError(caught.message);
+        setFieldErrors(caught.fieldErrors ?? {});
+      } else setError(errorMessage(caught));
+    }
+  }
+
+  if (created) {
+    const address = `${window.location.origin}/api/hooks/phone/${created}`;
+    return (
+      <Panel>
+        <PanelHeader>
+          <PanelTitle>One last step in Twilio</PanelTitle>
+          <PanelDescription>
+            In your Twilio console, open the number, and set both webhooks (HTTP POST) to this address. Calls are then screened and texts reach you.
+          </PanelDescription>
+        </PanelHeader>
+        <PanelBody>
+          <code className="block break-all rounded-md bg-surface-2 p-3 text-xs text-ink">{address}</code>
+        </PanelBody>
+        <PanelFooter className="flex justify-end">
+          <Button size="sm" onClick={onDone}>Done</Button>
+        </PanelFooter>
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel>
+      <form onSubmit={submit}>
+        <PanelHeader>
+          <div>
+            <PanelTitle>Phone & texts</PanelTitle>
+            <PanelDescription>Use a Twilio number. The token is stored encrypted and never shown again.</PanelDescription>
+          </div>
+        </PanelHeader>
+        <PanelBody className="space-y-5">
+          <FormError message={error} />
+          <Field label="Account SID" htmlFor="ph-sid" required error={fieldErrors.accountSid?.[0]}>
+            <Input id="ph-sid" value={form.accountSid} onChange={(e) => setForm({ ...form, accountSid: e.target.value })} placeholder="AC…" />
+          </Field>
+          <Field label="Auth Token" htmlFor="ph-token" required error={fieldErrors.authToken?.[0]}>
+            <Input id="ph-token" type="password" autoComplete="off" value={form.authToken} onChange={(e) => setForm({ ...form, authToken: e.target.value })} />
+          </Field>
+          <Field label="Your Twilio number" htmlFor="ph-from" required hint="International format." error={fieldErrors.from?.[0]}>
+            <Input id="ph-from" value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })} placeholder="+14155550123" />
+          </Field>
+          <Field label="Screening language" htmlFor="ph-lang" hint="What callers hear and the language it listens for.">
+            <Select value={form.language} onValueChange={(v) => setForm({ ...form, language: v as "en-US" | "th-TH" })}>
+              <SelectTrigger id="ph-lang"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en-US">English</SelectItem>
+                <SelectItem value="th-TH">ไทย</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
         </PanelBody>
         <PanelFooter className="flex justify-end">

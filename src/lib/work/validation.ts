@@ -103,6 +103,14 @@ export const integrationInputSchema = z.discriminatedUnion("type", [
       .min(1, "Paste the API key from your Resend account.")
       .max(200, "That does not look like a Resend key."),
   }),
+  z.object({
+    type: z.literal(INTEGRATION_TYPES[2]),
+    name: z.string().trim().min(1, "Give this connection a name you will recognise.").max(80, "Keep the name under 80 characters."),
+    accountSid: z.string().trim().regex(/^AC[0-9a-fA-F]{32}$/, "That is not a Twilio Account SID (it starts with AC)."),
+    authToken: z.string().trim().min(16, "Paste the Auth Token from your Twilio console.").max(100, "That does not look like a Twilio token."),
+    from: z.string().trim().regex(/^\+[1-9]\d{6,14}$/, "Use the number in international format, like +14155550123."),
+    language: z.enum(["en-US", "th-TH"]),
+  }),
 ]);
 export type IntegrationInputPayload = z.infer<typeof integrationInputSchema>;
 

@@ -49,6 +49,8 @@ export const GATED_TOOL_IDS = [
   "calendar_create_event",
   "calendar_reschedule",
   "calendar_cancel_event",
+  "tasks_write",
+  "phone_send",
   "inbox_reply",
   "slack_post_message",
   "github_write",
@@ -68,7 +70,7 @@ export function effectiveAutonomy(
 
 export const DRAFT_KINDS = ["blog_post", "social_caption", "email"] as const;
 
-export const INTEGRATION_TYPES = ["webhook", "email"] as const;
+export const INTEGRATION_TYPES = ["webhook", "email", "phone"] as const;
 
 /** How a run was started, as the Work list, approvals and the editor name it. */
 export const TRIGGER_LABELS: Record<string, string> = {

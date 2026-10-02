@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { syncCalendar } from "./calendar-sync";
+import { syncTasks } from "./task-sync";
 import { buildLife, renderLife, type Life } from "./context";
 
 const DAY = 86_400_000;
@@ -8,7 +9,12 @@ const DAY = 86_400_000;
 /** Reads the whole life context for a personal space. */
 export async function readLife(projectId: string, now = new Date()): Promise<Life> {
   const org = await prisma.project.findUnique({ where: { id: projectId }, select: { organizationId: true } });
-  if (org) await syncCalendar(org.organizationId).catch((error) => console.error("[life] calendar sync failed", error));
+  if (org) {
+    await Promise.all([
+      syncCalendar(org.organizationId).catch((error) => console.error("[life] calendar sync failed", error)),
+      syncTasks(org.organizationId).catch((error) => console.error("[life] task sync failed", error)),
+    ]);
+  }
   const where = { projectId };
   const [events, entries, tasks, goals, workouts, prefs, notes] = await Promise.all([
     prisma.lifeEvent.findMany({ where: { ...where, startsAt: { lte: new Date(now.getTime() + 30 * DAY) } }, take: 300 }),

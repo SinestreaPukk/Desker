@@ -33,7 +33,8 @@ interface EmailConfig {
 export function splitIntegrationInput(
   input:
     | { type: "webhook"; url: string; secret?: string; platform?: string }
-    | { type: "email"; from: string; apiKey: string },
+    | { type: "email"; from: string; apiKey: string }
+    | { type: "phone"; accountSid: string; authToken: string; from: string; language: string },
 ): { config: Record<string, string>; secret: string } {
   if (input.type === "webhook") {
     let host = "webhook";
@@ -49,6 +50,12 @@ export function splitIntegrationInput(
         ...(input.platform ? { platform: input.platform } : {}),
       },
       secret: seal({ url: input.url, ...(input.secret ? { secret: input.secret } : {}) }),
+    };
+  }
+  if (input.type === "phone") {
+    return {
+      config: { from: input.from, language: input.language, account: `…${input.accountSid.slice(-4)}` },
+      secret: seal({ accountSid: input.accountSid, authToken: input.authToken, from: input.from }),
     };
   }
   return {

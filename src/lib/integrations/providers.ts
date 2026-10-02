@@ -345,3 +345,18 @@ export async function writeGithub(token: string, input: GithubWrite): Promise<De
     return { ok: false, status: 0, detail: `GitHub could not be reached: ${error instanceof Error ? error.message : "unknown error"}` };
   }
 }
+
+/** Recent messages from a Slack channel (#name or id), newest first, as plain lines. */
+export async function readSlackChannel(token: string, channel: string, limit = 20): Promise<string> {
+  let id = channel;
+  if (channel.startsWith("#")) {
+    const list = await call("https://slack.com/api/conversations.list?limit=500&exclude_archived=true", token);
+    const found = ((list.data.channels as Array<{ id: string; name: string }> | undefined) ?? []).find((c) => c.name === channel.slice(1));
+    if (!found) throw new Error(`Slack has no channel ${channel} that the Desker app can see - invite it there first.`);
+    id = found.id;
+  }
+  const { ok, status, data } = await call(`https://slack.com/api/conversations.history?channel=${encodeURIComponent(id)}&limit=${limit}`, token);
+  if (!ok) throw new Error(failure("Slack", status, data) + (data.error === "missing_scope" ? " - reconnect Slack to allow reading" : data.error === "not_in_channel" ? " - invite the Desker app to that channel first" : ""));
+  const messages = (data.messages as Array<{ ts: string; user?: string; text?: string }> | undefined) ?? [];
+  return messages.map((m) => `${new Date(Number(m.ts) * 1000).toISOString().slice(0, 16)} ${m.user ?? "bot"}: ${(m.text ?? "").slice(0, 400)}`).join("\n") || "No recent messages.";
+}
