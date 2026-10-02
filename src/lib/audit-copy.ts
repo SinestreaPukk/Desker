@@ -172,6 +172,11 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
           }
         : { title: "Added a calendar event", detail: summary ? clip(summary, 120) : null, tone: "positive", icon: "schedule" };
     }
+    case "calendar_cancel_event":
+      if (!ok) return failed("Tried to cancel a calendar event");
+      return gated
+        ? { title: "Queued cancelling a calendar event for your approval", detail: `${text(input.title) ? `${clip(String(input.title), 80)}. ` : ""}It waits in Needs you. Nothing is cancelled yet.`, tone: "warning", icon: "approval" }
+        : { title: "Cancelled a calendar event", detail: null, tone: "positive", icon: "schedule" };
     case "calendar_reschedule":
       if (!ok) return failed("Tried to move a calendar event");
       return gated
@@ -267,6 +272,7 @@ const FAILED_DELIVERY: Record<string, string> = {
   send_email: "An email could not be sent",
   calendar_create_event: "A calendar event could not be added",
   calendar_reschedule: "A calendar event could not be moved",
+  calendar_cancel_event: "A calendar event could not be cancelled",
   inbox_reply: "An email reply could not be sent",
   slack_post_message: "A Slack message could not be posted",
   github_write: "A GitHub change could not be made",
@@ -363,6 +369,8 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: "Sent an approved email", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "calendar_create_event.delivered":
       return { title: "Added an approved calendar event", detail: text(meta.detail), tone: "positive", icon: "schedule" };
+    case "calendar_cancel_event.delivered":
+      return { title: "Cancelled an approved calendar event", detail: text(meta.detail), tone: "positive", icon: "schedule" };
     case "calendar_reschedule.delivered":
       return { title: "Moved an approved calendar event", detail: text(meta.detail), tone: "positive", icon: "schedule" };
     case "inbox_reply.delivered":
@@ -376,6 +384,7 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
     case "publish_post.failed":
     case "send_email.failed":
     case "calendar_create_event.failed":
+    case "calendar_cancel_event.failed":
     case "calendar_reschedule.failed":
     case "inbox_reply.failed":
     case "slack_post_message.failed":

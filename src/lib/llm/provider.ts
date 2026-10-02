@@ -37,8 +37,14 @@ export type ToolMessage = {
   results: ToolResultPayload[];
 };
 
+/** A picture the person attached (a bank slip, a bill): base64, no data: prefix. */
+export interface UserImage {
+  mediaType: "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+  data: string;
+}
+
 export type ChatMessage =
-  | { role: "user"; content: string }
+  | { role: "user"; content: string; images?: UserImage[] }
   | AssistantMessage
   | ToolMessage;
 

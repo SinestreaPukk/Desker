@@ -238,6 +238,21 @@ export async function rescheduleEvent(
     : { ok: false, status, detail: failure(name(access, "calendar"), status, data) };
 }
 
+/** Cancels an event, or a whole repeating series. Attendees are told by the provider. */
+export async function cancelEvent(
+  access: Access,
+  cancel: { eventId: string; seriesId?: string | null; wholeSeries?: boolean },
+): Promise<DeliveryResult> {
+  const target = cancel.wholeSeries && cancel.seriesId ? cancel.seriesId : cancel.eventId;
+  const { ok, status, data } =
+    access.provider === "google"
+      ? await call(`${GCAL}/events/${encodeURIComponent(target)}?sendUpdates=all`, access.token, { method: "DELETE" })
+      : await call(`${GRAPH}/events/${encodeURIComponent(target)}`, access.token, { method: "DELETE" });
+  return ok
+    ? { ok, status, detail: cancel.wholeSeries ? "Cancelled every occurrence of the event" : "Cancelled the event" }
+    : { ok: false, status, detail: failure(name(access, "calendar"), status, data) };
+}
+
 // --- mail -----------------------------------------------------------------------
 
 export interface MailThread {

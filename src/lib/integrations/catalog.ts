@@ -63,7 +63,7 @@ export const CONNECTORS: readonly Connector[] = [
       "Warn when a time clashes with something already booked",
     ],
     cannot: ["Read your email or files", "Delete events or calendars", "Change your account settings"],
-    tools: ["calendar_list_events", "calendar_create_event", "calendar_reschedule"],
+    tools: ["calendar_list_events", "calendar_create_event", "calendar_reschedule", "calendar_cancel_event"],
   },
   {
     id: "gmail",
@@ -133,7 +133,7 @@ export const CONNECTORS: readonly Connector[] = [
       "Warn when a time clashes with something already booked",
     ],
     cannot: ["Read your mailbox or files", "Delete events or calendars"],
-    tools: ["calendar_list_events", "calendar_create_event", "calendar_reschedule"],
+    tools: ["calendar_list_events", "calendar_create_event", "calendar_reschedule", "calendar_cancel_event"],
   },
 
   // --- money: the Money Manager's live numbers -----------------------------

@@ -48,6 +48,7 @@ export const GATED_TOOL_IDS = [
   "send_email",
   "calendar_create_event",
   "calendar_reschedule",
+  "calendar_cancel_event",
   "inbox_reply",
   "slack_post_message",
   "github_write",

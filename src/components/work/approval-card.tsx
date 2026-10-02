@@ -39,6 +39,7 @@ const PENDING_COPY: Record<GatedToolId, { verb: string; noun: string; approve: s
     going: "adding",
   },
   calendar_reschedule: { verb: "move a calendar event", noun: "change", approve: "Approve and move it", going: "moving" },
+  calendar_cancel_event: { verb: "cancel a calendar event", noun: "cancellation", approve: "Approve and cancel it", going: "cancelling" },
   inbox_reply: { verb: "reply in an email thread", noun: "reply", approve: "Approve and send", going: "sending" },
   slack_post_message: { verb: "post to Slack", noun: "message", approve: "Approve and post", going: "posting" },
   github_write: { verb: "change GitHub", noun: "change", approve: "Approve and apply", going: "applying" },
@@ -96,7 +97,14 @@ function ActionPreview({ tool, input }: { tool: GatedToolId; input: Record<strin
   const when = (key: string) => (text(key) ? formatDateTime(text(key)) : "");
   return (
     <div className="rounded-lg border border-line bg-surface-2/60 p-3.5 text-sm">
-      {tool === "calendar_reschedule" ? (
+      {tool === "calendar_cancel_event" ? (
+        <>
+          <p className="font-semibold text-ink">Cancel: {text("title")}</p>
+          <p className="mt-0.5 text-xs text-ink-muted">
+            {input.whole_series === true ? "Every occurrence is cancelled." : "Only this occurrence is cancelled."} Attendees are told.
+          </p>
+        </>
+      ) : tool === "calendar_reschedule" ? (
         <>
           <p className="font-semibold text-ink">
             Move to {when("start")} – {when("end")}
@@ -343,6 +351,7 @@ export function ApprovalCard({ item, project }: { item: ActionItemDto; project: 
           )
         ) : pending.tool === "calendar_create_event" ||
           pending.tool === "calendar_reschedule" ||
+          pending.tool === "calendar_cancel_event" ||
           pending.tool === "slack_post_message" ||
           pending.tool === "github_write" ||
           pending.tool === "social_manage" ? (

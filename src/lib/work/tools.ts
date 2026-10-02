@@ -24,6 +24,7 @@ export const WORK_TOOL_IDS = [
   "calendar_list_events",
   "calendar_create_event",
   "calendar_reschedule",
+  "calendar_cancel_event",
   "inbox_read",
   "inbox_reply",
   "slack_post_message",
@@ -73,6 +74,7 @@ export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
   social_manage: "external",
   calendar_create_event: "external",
   calendar_reschedule: "external",
+  calendar_cancel_event: "external",
   inbox_read: "read",
   inbox_reply: "external",
   slack_post_message: "external",
@@ -117,6 +119,10 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   calendar_create_event: {
     label: "Add calendar events",
     blurb: "Put a meeting on the connected calendar. Waits for your approval unless you allow it to go on its own.",
+  },
+  calendar_cancel_event: {
+    label: "Cancel calendar events",
+    blurb: "Cancel an event on the connected calendar. Attendees are told. Waits for your approval first.",
   },
   calendar_reschedule: {
     label: "Move calendar events",
@@ -297,6 +303,23 @@ const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinitio
         note: { type: "string", description: "One line for the approver: what this is and why now." },
       },
       required: ["summary", "start", "end"],
+      additionalProperties: false,
+    },
+  },
+  calendar_cancel_event: {
+    name: "calendar_cancel_event",
+    description:
+      "Cancel an existing event on the connected calendar, with the ids from calendar_list_events. For a repeating event, set whole_series to cancel every occurrence; leave it off to cancel only this one. Attendees are notified, so queue it for approval in draft-only mode and give the approver the title and the reason.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        event_id: { type: "string", description: "The event's id from calendar_list_events." },
+        series_id: { type: "string", description: "Its series id, for a repeating event." },
+        whole_series: { type: "boolean", description: "Cancel every occurrence, not just this one." },
+        title: { type: "string", description: "The event's title, so the approver sees what is being cancelled." },
+        note: { type: "string", description: "One line for the approver: what is cancelled and why." },
+      },
+      required: ["event_id", "title"],
       additionalProperties: false,
     },
   },

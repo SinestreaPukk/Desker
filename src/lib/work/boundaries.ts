@@ -30,6 +30,7 @@ const REACHES_OUT: Record<GatedToolId, string> = {
   publish_post: "Publish posts",
   calendar_create_event: "Add calendar events",
   calendar_reschedule: "Move calendar events",
+  calendar_cancel_event: "Cancel calendar events",
   inbox_reply: "Reply to emails",
   slack_post_message: "Post to Slack",
   github_write: "Change GitHub: commits, pull requests and issues",

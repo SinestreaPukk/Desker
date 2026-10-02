@@ -16,6 +16,7 @@ import {
   Menu,
   MessagesSquare,
   Newspaper,
+  Wallet,
   Plus,
   Route,
   UserRound,
@@ -70,6 +71,7 @@ const NAV_GROUPS: { title: string; items: readonly NavItem[] }[] = [
       { segment: "needs-you", label: "Needs you", icon: BellDot },
       { segment: "roster", label: "Roster", icon: UsersRound },
       { segment: "team", label: "Chat", icon: MessagesSquare },
+      { segment: "money", label: "Money", icon: Wallet },
       { segment: "work", label: "Work", icon: Workflow },
       { segment: "workflows", label: "Workflows", icon: Route },
       { segment: "insights", label: "Insights", icon: Activity },
@@ -349,7 +351,7 @@ function ProjectSwitcher({
    * comparing two projects' inboxes is the obvious reason to switch at all.
    */
   const tab = React.useMemo(() => {
-    const match = pathname.match(/^\/p\/[^/]+\/(roster|needs-you|work|insights|agents)/);
+    const match = pathname.match(/^\/p\/[^/]+\/(roster|needs-you|money|work|insights|agents)/);
     const segment = match?.[1];
     // Detail routes (a specific conversation or agent) do not exist in the
     // other project, so fall back to that section's index.

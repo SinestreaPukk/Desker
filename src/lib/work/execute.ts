@@ -11,6 +11,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import * as life from "@/lib/life/store";
+import { syncCalendar } from "@/lib/life/calendar-sync";
 import { audit } from "@/lib/audit";
 import { searchDocuments } from "@/lib/rag/search-documents";
 import { searchDocumentsInput } from "@/lib/rag/search-documents-tool";
@@ -27,6 +28,7 @@ import { splitOptedOut } from "@/lib/email-optout";
 import {
   calendarAccess,
   conflictsWith,
+  cancelEvent,
   createEvent,
   createReplyDraft,
   describeEvents,
@@ -195,6 +197,13 @@ const rescheduleSchema = z.object({
   whole_series: z.boolean().optional(),
   start: isoTime,
   end: isoTime,
+  note: z.string().trim().max(500).optional(),
+});
+const cancelSchema = z.object({
+  event_id: z.string().trim().min(1).max(1024),
+  series_id: z.string().trim().max(1024).optional(),
+  whole_series: z.boolean().optional(),
+  title: z.string().trim().min(1).max(300),
   note: z.string().trim().max(500).optional(),
 });
 const inboxReadSchema = z.object({
@@ -900,6 +909,19 @@ async function calendarReschedule(input: unknown, ctx: RunContext): Promise<Work
   });
 }
 
+async function calendarCancel(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = cancelSchema.safeParse(input);
+  if (!parsed.success) return invalid("calendar_cancel_event", parsed.error);
+  const { event_id, series_id, whole_series, title, note } = parsed.data;
+  if (whole_series && !series_id) return { content: "To cancel a whole series, pass its series id from calendar_list_events.", isError: true };
+  if (!(await calendarAccess(ctx.organizationId))) return notConnected("A calendar (Google or Outlook)");
+  return gateOrDeliver(ctx, {
+    tool: "calendar_cancel_event",
+    input: { event_id, series_id: series_id ?? null, whole_series: Boolean(whole_series), title },
+    note,
+  });
+}
+
 async function inboxRead(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
   const parsed = inboxReadSchema.safeParse(input);
   if (!parsed.success) return invalid("inbox_read", parsed.error);
@@ -1110,6 +1132,9 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
         case "calendar_reschedule":
           outcome = await calendarReschedule(call.input, ctx);
           break;
+        case "calendar_cancel_event":
+          outcome = await calendarCancel(call.input, ctx);
+          break;
         case "inbox_read":
           outcome = await inboxRead(call.input, ctx);
           break;
@@ -1237,7 +1262,7 @@ export async function executePendingAction(
         metadata: draft.metadata,
       },
     });
-  } else if (action.tool === "calendar_create_event" || action.tool === "calendar_reschedule") {
+  } else if (action.tool === "calendar_create_event" || action.tool === "calendar_reschedule" || action.tool === "calendar_cancel_event") {
     const access = await calendarAccess(organizationId);
     if (!access) return { ok: false, status: 0, detail: "No calendar is connected." };
     delivery =
@@ -1249,13 +1274,21 @@ export async function executePendingAction(
             description: action.input.description ? String(action.input.description) : undefined,
             attendees: Array.isArray(action.input.attendees) ? (action.input.attendees as string[]) : [],
           })
-        : await rescheduleEvent(access, {
-            eventId: String(action.input.event_id ?? ""),
-            seriesId: action.input.series_id ? String(action.input.series_id) : null,
-            wholeSeries: action.input.whole_series === true,
-            start: String(action.input.start ?? ""),
-            end: String(action.input.end ?? ""),
-          });
+        : action.tool === "calendar_cancel_event"
+          ? await cancelEvent(access, {
+              eventId: String(action.input.event_id ?? ""),
+              seriesId: action.input.series_id ? String(action.input.series_id) : null,
+              wholeSeries: action.input.whole_series === true,
+            })
+          : await rescheduleEvent(access, {
+              eventId: String(action.input.event_id ?? ""),
+              seriesId: action.input.series_id ? String(action.input.series_id) : null,
+              wholeSeries: action.input.whole_series === true,
+              start: String(action.input.start ?? ""),
+              end: String(action.input.end ?? ""),
+            });
+    // Two-way: what was just approved is read back into the life context.
+    if (delivery.ok) await syncCalendar(organizationId, true).catch((error) => console.error("[life] calendar sync failed", error));
   } else if (action.tool === "inbox_reply") {
     const access = await mailAccess(organizationId);
     if (!access) return { ok: false, status: 0, detail: "No mailbox is connected." };

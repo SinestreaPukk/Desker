@@ -105,6 +105,7 @@
         "inbox_read",
         "inbox_reply",
         "calendar_reschedule",
+        "calendar_cancel_event",
         "escalate_to_human"
       ],
       "suggestedIntegrations": [
@@ -443,7 +444,9 @@
         "web_research",
         "schedule_followup",
         "suggest_opportunity",
-        "escalate_to_human"
+        "escalate_to_human",
+        "calendar_reschedule",
+        "calendar_cancel_event"
       ],
       "suggestedIntegrations": [
         "google_calendar"

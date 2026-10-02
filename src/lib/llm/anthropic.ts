@@ -44,7 +44,15 @@ function toAnthropicMessages(messages: ChatMessage[]): Anthropic.MessageParam[] 
 
   for (const message of messages) {
     if (message.role === "user") {
-      out.push({ role: "user", content: message.content });
+      out.push({
+        role: "user",
+        content: message.images?.length
+          ? [
+              ...message.images.map((image) => ({ type: "image" as const, source: { type: "base64" as const, media_type: image.mediaType, data: image.data } })),
+              { type: "text" as const, text: message.content },
+            ]
+          : message.content,
+      });
       continue;
     }
 
