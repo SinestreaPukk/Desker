@@ -79,7 +79,10 @@ export function mentioned(content: string, team: TeamAgent[]): TeamAgent[] | nul
   const lower = content.toLowerCase();
   if (/@(everyone|team|all)\b/.test(lower)) return team;
   const named = team.filter((agent) => lower.includes(`@${agent.name.toLowerCase()}`));
-  return named.length > 0 ? named : null;
+  if (named.length > 0) return named;
+  // "Coach, plan my week" / "Gebby: remind me": a name that opens the message is an address, as in any chat app.
+  const opener = team.find((agent) => new RegExp(`^${agent.name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*[,:!-]`).test(lower.trim()));
+  return opener ? [opener] : null;
 }
 
 /** Adds a line to a chat and moves the chat to the top of the history. */

@@ -63,11 +63,17 @@ export async function personalSpace(userId: string) {
  * A whole turn, start to finish, for channels that wait for the answer (LINE).
  * One thread per channel, so the conversation continues across messages.
  */
-export async function chatOnce(userId: string, text: string, channel: string): Promise<string> {
+export interface Said {
+  /** The agent speaking, or null for the system. */
+  agent: string | null;
+  text: string;
+}
+
+export async function chatTurn(userId: string, text: string): Promise<Said[]> {
   const space = await personalSpace(userId);
-  if (!space) return "Your space isn't set up yet. Open Desker Personal once to finish setup.";
+  if (!space) return [{ agent: null, text: "Your space isn't set up yet. Open Desker Personal once to finish setup." }];
   const team = await teamOf(space.projectId);
-  if (team.length === 0) return "No assistant is switched on yet. Open Desker Personal and hire one from the Roster.";
+  if (team.length === 0) return [{ agent: null, text: "No assistant is switched on yet. Open Desker Personal and hire one from the Roster." }];
   // One shared thread for every messaging app, so LINE, Telegram and the alerts the system sends are one conversation, visible in the web chat too.
   const title = EVERYDAY_THREAD;
   const thread =
@@ -77,6 +83,12 @@ export async function chatOnce(userId: string, text: string, channel: string): P
   const since = new Date();
   await addTeamMessage({ projectId: space.projectId, threadId: thread.id, userId, authorName: "You", content: text });
   await runChat(await planChat({ text, team, threadId: thread.id, organizationId: space.organizationId }), text, team, ctx);
-  const replies = await prisma.teamMessage.findMany({ where: { threadId: thread.id, agentId: { not: null }, createdAt: { gte: since } }, orderBy: { createdAt: "asc" }, select: { content: true } });
-  return replies.map((r) => r.content).join("\n\n") || "I'm on it.";
+  const replies = await prisma.teamMessage.findMany({ where: { threadId: thread.id, agentId: { not: null }, createdAt: { gte: since } }, orderBy: { createdAt: "asc" }, select: { content: true, agent: { select: { name: true } } } });
+  return replies.length ? replies.map((r) => ({ agent: r.agent?.name ?? null, text: r.content })) : [{ agent: null, text: "I'm on it." }];
+}
+
+/** The same turn as one string, for apps that take a single message. */
+export async function chatOnce(userId: string, text: string, _channel: string): Promise<string> {
+  const said = await chatTurn(userId, text);
+  return said.map((s) => (s.agent && said.length > 1 ? `${s.agent}: ${s.text}` : s.text)).join("\n\n");
 }

@@ -11,7 +11,8 @@ import { agentsVisibleTo } from "@/lib/projects";
 import { approveItem, rejectItem } from "@/lib/work/decide";
 import { previewPending } from "@/lib/work/pending-preview";
 import type { PendingAction } from "@/lib/work/types";
-import { chatOnce, personalSpace } from "@/lib/life/chat";
+import { chatTurn, personalSpace } from "@/lib/life/chat";
+import { describePhoto, nextSteps } from "@/lib/life/photo";
 import { readLife } from "@/lib/life/read";
 import { importFiles } from "@/lib/life/slips";
 import { moneyInsights } from "@/lib/life/money-insights";
@@ -20,13 +21,13 @@ import * as store from "@/lib/life/store";
 import { handleInbound } from "./inbound";
 import { parseCommand } from "./prefs";
 import { senderKey } from "./send";
-import { approvalFlex, billsFlex, budgetFlex, lineContent, lineLoading, linePush, lineReplyMessages, parsePostback, text, type LineMessage } from "./line";
+import { approvalFlex, billsFlex, budgetFlex, lineContent, lineLoading, linePush, lineReplyMessages, parsePostback, text, withQuickReplies, type LineMessage } from "./line";
 
 export interface LineEvent {
   type: string;
   replyToken?: string;
   source?: { userId?: string };
-  message?: { type: string; id?: string; text?: string };
+  message?: { type: string; id?: string; text?: string; fileName?: string };
   postback?: { data?: string };
 }
 
@@ -93,6 +94,36 @@ async function postback(userId: string, data: string): Promise<LineMessage[]> {
   }
 }
 
+/**
+ * A photo or file the person sent. Bank slips, bills, PDFs and CSVs go to the
+ * ledger; any other picture is looked at, remembered, and offered next steps,
+ * so "add it to my calendar" in the next message has something to work from.
+ */
+async function attachment(userId: string, messageId: string, name: string, isImage: boolean): Promise<LineMessage[]> {
+  const space = await personalSpace(userId);
+  const file = await lineContent(messageId);
+  if (!space || !file) return [text("I couldn't open that. Try sending it again.")];
+  const ledger = async () => {
+    const [r] = await importFiles(space, [{ name: isImage ? "slip.jpg" : name, type: file.type, data: file.data }]);
+    return r;
+  };
+  if (!isImage) {
+    if (!/\.(pdf|csv)$/i.test(name)) return [text("I can read PDF bills and CSV statements. Send those, or a photo.")];
+    const r = await ledger();
+    return [text(r?.error ? `I couldn't read that: ${r.error}` : r?.duplicates ? "I already have that one." : "Added to your money. Say \"budget\" to see where you stand.")];
+  }
+  const media = file.type.split(";")[0]!.trim();
+  const mediaType = (["image/jpeg", "image/png", "image/webp", "image/gif"] as const).find((t) => t === media) ?? "image/jpeg";
+  const photo = await describePhoto(space.organizationId, { mediaType, data: file.data.toString("base64") });
+  if (!photo) return [text("I couldn't make out that photo. Try a clearer one, or tell me what it is.")];
+  if (photo.kind === "slip" || photo.kind === "bill") {
+    const r = await ledger();
+    if (r && !r.error) return [text(r.duplicates ? "I already have that one." : `Added to your money (${photo.kind}). Say "budget" to see where you stand.`)];
+  }
+  await store.addNote({ ...space, source: "chat" }, `Photo they sent: ${photo.summary}`);
+  return [withQuickReplies(text(photo.summary), nextSteps(photo.kind))];
+}
+
 /** Handles one webhook event. Never throws: a bad event must not stop the rest. */
 export async function handleLineEvent(event: LineEvent): Promise<void> {
   const chatId = event.source?.userId;
@@ -114,12 +145,11 @@ export async function handleLineEvent(event: LineEvent): Promise<void> {
 
     if (event.type === "postback" && event.postback?.data) return void (await reply(await postback(userId, event.postback.data)));
 
-    if (event.type === "message" && event.message?.type === "image" && event.message.id) {
-      const space = await personalSpace(userId);
-      const file = await lineContent(event.message.id);
-      if (!space || !file) return void (await reply([text("I couldn't open that photo. Try sending it again.")]));
-      const [r] = await importFiles(space, [{ name: "slip.jpg", type: file.type, data: file.data }]);
-      return void (await reply([text(r?.error ? `I couldn't read that as a slip or bill: ${r.error}` : r?.duplicates ? "I already have that one." : "Added to your money. Say \"budget\" to see where you stand.")]));
+    if (event.type === "message" && (event.message?.type === "image" || event.message?.type === "file") && event.message.id) {
+      return void (await reply(await attachment(userId, event.message.id, event.message.type === "file" ? (event.message.fileName ?? "file") : "photo.jpg", event.message.type === "image")));
+    }
+    if (event.type === "message" && (event.message?.type === "audio" || event.message?.type === "video")) {
+      return void (await reply([text("I can't listen to voice messages or watch videos yet. Type it or send a photo.")]));
     }
 
     if (raw === null) return;
@@ -143,7 +173,9 @@ export async function handleLineEvent(event: LineEvent): Promise<void> {
 
     // Free chat: the same front door as the web. The answer is pushed, so a slow model never loses the reply token.
     await lineLoading(chatId);
-    await linePush(chatId, [text(await chatOnce(userId, raw.trim(), "LINE"))]);
+    const said = await chatTurn(userId, raw.trim());
+    // One bubble per agent, named, so it is clear who is answering.
+    await linePush(chatId, said.map((s) => text(s.agent && said.length > 1 ? `${s.agent}\n${s.text}` : s.text)));
   } catch (error) {
     console.error("[line] event failed", error);
   }

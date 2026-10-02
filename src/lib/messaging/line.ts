@@ -13,6 +13,12 @@ const token = () => process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim() ?? "";
 export type LineMessage = Record<string, unknown>;
 export const text = (t: string): LineMessage => ({ type: "text", text: t.slice(0, 4900) });
 
+/** One-tap replies under a message. The label is what gets sent when tapped. */
+export const withQuickReplies = (message: LineMessage, labels: string[]): LineMessage => ({
+  ...message,
+  quickReply: { items: labels.slice(0, 13).map((label) => ({ type: "action", action: { type: "message", label: label.slice(0, 20), text: label } })) },
+});
+
 /** What the approve/reject buttons send back. The webhook re-checks who tapped and what it is allowed to touch. */
 export function postbackData(action: "approve" | "reject" | "paid", id: string): string {
   return `a=${action}&id=${id}`;

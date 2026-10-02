@@ -37,3 +37,16 @@ describe("what sets an agent's tasks apart", () => {
     expect(specialAbilities({ scopeOfWork: { tools: ["search_documents", "draft_content"] } })).toEqual([]);
   });
 });
+
+describe("addressing an agent by name", () => {
+  const team = [agent("Coach"), agent("Gebby"), agent("A.J.")];
+  it("treats a name that opens the message as an address", () => {
+    expect(mentioned("Coach, plan my week", team)?.map((a) => a.name)).toEqual(["Coach"]);
+    expect(mentioned("gebby: remind me to call mum", team)?.map((a) => a.name)).toEqual(["Gebby"]);
+    expect(mentioned("A.J. - what's up", team)?.map((a) => a.name)).toEqual(["A.J."]);
+  });
+  it("does not fire on a name used mid-sentence or as a prefix of another word", () => {
+    expect(mentioned("Tell the coach I said hi", team)).toBeNull();
+    expect(mentioned("Coachella tickets?", team)).toBeNull();
+  });
+});
