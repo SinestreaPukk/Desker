@@ -173,9 +173,11 @@ export async function handleLineEvent(event: LineEvent): Promise<void> {
 
     // Free chat: the same front door as the web. The answer is pushed, so a slow model never loses the reply token.
     await lineLoading(chatId);
-    const said = await chatTurn(userId, raw.trim());
+    const { said, later } = await chatTurn(userId, raw.trim());
     // One bubble per agent, named, so it is clear who is answering.
     await linePush(chatId, said.map((s) => text(s.agent && said.length > 1 ? `${s.agent}\n${s.text}` : s.text)));
+    // A reminder that is seconds away waits here, after the confirmation has been sent.
+    await later?.();
   } catch (error) {
     console.error("[line] event failed", error);
   }

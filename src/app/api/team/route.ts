@@ -79,9 +79,10 @@ export async function POST(request: Request) {
     const plan = team.length > 0 ? await planChat({ text: input.content, team, threadId: thread.id, organizationId: project.organizationId }) : null;
     const responders = plan?.responders ?? [];
     if (plan) {
-      afterResponse(() =>
-        runChat(plan, input.content, team, { projectId: project.id, threadId: thread.id, organizationId: project.organizationId, userId }),
-      );
+      afterResponse(async () => {
+        const later = await runChat(plan, input.content, team, { projectId: project.id, threadId: thread.id, organizationId: project.organizationId, userId });
+        await later?.();
+      });
     }
 
     return {

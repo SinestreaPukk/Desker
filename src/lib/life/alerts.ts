@@ -38,6 +38,11 @@ export function dueAlerts(life: Life, now = new Date()): Alert[] {
   }
   for (const t of life.openTasks) {
     const left = t.dueAt ? t.dueAt.getTime() - now.getTime() : Infinity;
+    // A reminder is for its moment, not the day before: the sweep only catches one that was missed.
+    if (t.kind === "reminder") {
+      if (left <= 0) out.push({ key: `reminder:${t.id}`, title: "Reminder", body: t.title });
+      continue;
+    }
     if (left > 0 && left <= 24 * HOUR) out.push({ key: `task:${t.id}`, title: "Due within a day", body: `${t.title} is due ${day(t.dueAt!)}.` });
   }
   // A clash is worth a nudge once: key it by what clashes, not by when we noticed.
@@ -63,6 +68,7 @@ export async function runLifeAlerts(now = new Date()): Promise<number> {
           const thread = (await prisma.teamThread.findFirst({ where: { projectId: project.id, title: EVERYDAY_THREAD }, select: { id: true } })) ?? (await prisma.teamThread.create({ data: { projectId: project.id, title: EVERYDAY_THREAD }, select: { id: true } }));
           await addTeamMessage({ projectId: project.id, threadId: thread.id, agentId: speaker.id, content: `${alert.title}: ${alert.body}` });
         }
+        if (alert.key.startsWith("reminder:")) await prisma.lifeTask.update({ where: { id: alert.key.slice(9) }, data: { status: "done" } }).catch(() => {});
         sent++;
       }
     } catch (error) {

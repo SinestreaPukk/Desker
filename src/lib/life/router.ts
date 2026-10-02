@@ -3,6 +3,7 @@
  *  - engine: touches more than one domain ("can I afford this trip next week")
  *  - specialist: one named or obvious agent's job ("remind me to renew my passport")
  *  - direct: a statement or question the front-door assistant answers from the shared context and what it knows
+ *  - reminder: "remind me to ... in 30 minutes": saved and delivered on time (life/reminders.ts)
  *  - research: an open question about the outside world, answered from a web search (life/research.ts)
  * Deciding is cheap and only reads the message; anything consequential that
  * follows still stops for approval in the work runner.
@@ -11,9 +12,10 @@ import "server-only";
 import { env } from "@/lib/env";
 import { getProvider } from "@/lib/llm/provider";
 import { parseModelJson, stringField } from "@/lib/work/model-json";
+import { REMIND } from "./reminders";
 import { chooseResponders, mentioned, type TeamAgent } from "@/lib/team";
 
-export type Route = "engine" | "specialist" | "direct" | "research";
+export type Route = "engine" | "specialist" | "direct" | "research" | "reminder";
 
 export interface Plan {
   route: Route;
@@ -36,6 +38,8 @@ export async function planChat(input: { text: string; team: TeamAgent[]; threadI
   const { text, team, threadId, organizationId } = input;
   const named = mentioned(text, team);
   if (named) return { route: "specialist", responders: named };
+  // A reminder is recognised by its words, with no model call, so it is never mistaken for a task to run.
+  if (REMIND.test(text)) return { route: "reminder", responders: [frontDoor(team)] };
   let route: Route = CROSS_DOMAIN.test(text) ? "engine" : "specialist";
   if ((env.hasAnthropicKey || env.hasOpenAiKey) && team.length > 0) {
     try {
