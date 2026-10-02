@@ -17,7 +17,7 @@ import { answeredCount } from "@/lib/work/context";
  * Each field carries an example in its placeholder - never as real text the
  * owner has to delete first, which is the trap prefilled "starter" copy falls
  * into: it gets left in, and the agent ends up describing somebody else's
- * business.
+ * life.
  */
 export function ContextQuestions({
   questions,
@@ -165,7 +165,7 @@ export function ContextDraftButton({
 
 /**
  * What an agent gets for free from its project. Shown above its own answers
- * so nobody types the company background a second time - and so the four
+ * so nobody types the background about themselves a second time - and so the four
  * questions underneath read as "what is different about this role".
  */
 export function InheritedProjectContext({ project }: { project: string }) {
@@ -176,7 +176,7 @@ export function InheritedProjectContext({ project }: { project: string }) {
   if (loaded.answered === 0) {
     return (
       <div className="rounded-lg border border-dashed border-line bg-surface-2/50 px-3 py-2.5 text-xs text-ink-muted">
-        <span className="text-ink">Nothing shared yet.</span> Describe the business once on the{" "}
+        <span className="text-ink">Nothing shared yet.</span> Describe yourself once on the{" "}
         <Link href={`/p/${project}/roster`} className="text-accent hover:underline">
           roster
         </Link>{" "}

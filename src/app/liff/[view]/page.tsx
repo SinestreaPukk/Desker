@@ -18,11 +18,12 @@ const money = (minor: number, cur: string) => `${Math.round(minor / 100).toLocal
 export default function LiffView() {
   const { view } = useParams<{ view: string }>();
   const [data, setData] = React.useState<Budget | Digest | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
+  const [failure, setError] = React.useState<string | null>(null);
+  const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
+  const error = liffId ? failure : "LIFF isn't set up on this server yet.";
 
   React.useEffect(() => {
-    const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-    if (!liffId) return setError("LIFF isn't set up on this server yet.");
+    if (!liffId) return;
     const script = document.createElement("script");
     script.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
     script.onload = async () => {
@@ -39,7 +40,7 @@ export default function LiffView() {
     };
     document.body.appendChild(script);
     return () => script.remove();
-  }, [view]);
+  }, [view, liffId]);
 
   return (
     <main className="mx-auto min-h-dvh max-w-md bg-paper px-4 py-6 text-ink">

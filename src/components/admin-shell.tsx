@@ -291,7 +291,7 @@ export function AdminShell({
         </div>
         {process.env.NEXT_PUBLIC_ENVIRONMENT === "staging" ? (
           <p className="border-b border-warning-line bg-warning-soft px-4 py-1.5 text-center text-xs text-warning">
-            Staging - demo data, reset without notice. Nothing here reaches real clients.
+            Staging - demo data, reset without notice. Nothing here reaches real people.
           </p>
         ) : null}
         {children}

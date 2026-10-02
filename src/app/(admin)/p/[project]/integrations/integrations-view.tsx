@@ -514,7 +514,7 @@ function EmailForm({ project, onDone }: { project: string; onDone: () => void })
               id="em-from"
               value={form.from}
               onChange={(e) => setForm({ ...form, from: e.target.value })}
-              placeholder="Mia at Northwind <mia@northwind.example>"
+              placeholder="You <you@yourdomain.example>"
             />
           </Field>
           <Field

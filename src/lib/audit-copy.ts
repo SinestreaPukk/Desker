@@ -520,25 +520,14 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
 
     case "organization.created":
       return { title: "Workspace created", detail: null, tone: "neutral", icon: "settings" };
-    case "organization.mailing_address_updated":
-      return { title: `${who} updated the mailing address on agent emails`, detail: null, tone: "neutral", icon: "settings" };
     case "user.password_reset":
       return { title: `${who} reset their password`, detail: "Every other session was signed out.", tone: "neutral", icon: "person" };
     case "organization.renamed":
-      return { title: `${who} renamed the organisation`, detail: null, tone: "neutral", icon: "settings" };
-    case "project.created":
-      return { title: `${who} created a project`, detail: text(meta.name), tone: "neutral", icon: "settings" };
+      return { title: `${who} renamed your space`, detail: null, tone: "neutral", icon: "settings" };
     case "project.updated":
       return { title: `${who} renamed a project`, detail: text(meta.name), tone: "neutral", icon: "settings" };
     case "project.deleted":
       return { title: `${who} deleted a project`, detail: text(meta.name), tone: "warning", icon: "settings" };
-    case "membership.role_changed":
-      return {
-        title: `${who} changed a teammate's role`,
-        detail: text(meta.role) ? `Now ${meta.role}.` : null,
-        tone: "neutral",
-        icon: "person",
-      };
 
     case "billing.checkout_started":
       return { title: `${who} started a plan change`, detail: text(meta.plan), tone: "neutral", icon: "billing" };

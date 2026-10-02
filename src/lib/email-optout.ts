@@ -1,7 +1,6 @@
 /**
- * What every email an agent sends must carry under anti-spam law (CAN-SPAM in
- * the US, and its equivalents): who it is from, a postal address, and a way
- * to stop receiving them that works in one step and is honoured.
+ * What a recurring email from Desker (a digest or check-in) carries: who it is
+ * from and a way to stop receiving it that works in one step and is honoured.
  *
  * The unsubscribe link is signed, so it cannot be forged for someone else.
  * An email to one person carries a link for that address - one click, done.
@@ -79,7 +78,7 @@ export async function splitOptedOut(
  * (RFC 8058). Both are null when the deployment does not know its own URL.
  */
 export function optOutFor(
-  organization: { id: string; name: string; mailingAddress: string | null },
+  organization: { id: string; name: string },
   recipients: readonly string[],
 ): { footer: string; headers: Record<string, string> } {
   const token = optOutToken(organization.id, recipients.length === 1 ? recipients[0]! : null);
@@ -87,7 +86,7 @@ export function optOutFor(
   const oneClickUrl = env.appUrl && recipients.length === 1 ? `${env.appUrl}/api/unsubscribe/${token}` : null;
   const lines = [
     "--",
-    `Sent by ${organization.name}${organization.mailingAddress ? `, ${organization.mailingAddress.replace(/\s*\n\s*/g, ", ")}` : ""}.`,
+    `Sent by ${organization.name}.`,
     pageUrl
       ? `To stop receiving emails from ${organization.name}: ${pageUrl}`
       : `To stop receiving emails from ${organization.name}, reply with "unsubscribe".`,

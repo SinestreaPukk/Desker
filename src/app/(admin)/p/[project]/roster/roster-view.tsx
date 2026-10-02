@@ -7,7 +7,6 @@ import { useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   BookOpen,
-  BotMessageSquare,
   CalendarClock,
   Hand,
   Pause,
@@ -261,22 +260,6 @@ function AgentCard({ agent, project }: { agent: AgentSummaryDto; project: string
 
       {/* What it has done, in words, not icons. */}
       <dl className="mx-5 flex flex-wrap gap-2 border-t border-note-ink/10 py-3 text-xs text-ink-muted">
-        <div className="flex items-center">
-          <dt className="sr-only">Conversations</dt>
-          <dd>
-            <Link
-              href={`/p/${project}/conversations?agent=${agent.id}`}
-              className="pill-interactive group/pill relative z-10 items-center gap-1.5 rounded-full border border-note-ink/10 bg-surface/80 px-2.5 py-0.5 text-xs font-medium leading-5 text-ink-muted hover:border-note-ink/25 hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
-              title={`View ${agent.name}'s conversations`}
-            >
-              <BotMessageSquare className="size-3 text-ink-subtle transition-colors duration-150 group-hover/pill:text-ink" aria-hidden />
-              <span>
-                <span className="font-semibold tabular-nums text-ink">{agent.conversationCount}</span>{" "}
-                conversation{agent.conversationCount === 1 ? "" : "s"}
-              </span>
-            </Link>
-          </dd>
-        </div>
         <div className="flex items-center">
           <dt className="sr-only">Context documents</dt>
           <dd>

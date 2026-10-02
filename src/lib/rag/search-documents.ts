@@ -34,7 +34,7 @@ export async function searchDocuments(input: {
     return {
       content:
         "No passage in your uploaded documents matches that query. Try other wording; if the documents " +
-        "do not cover it, say you do not have that information rather than guessing. (Company Context is " +
+        "do not cover it, say you do not have that information rather than guessing. (What they told you about themselves is " +
         "already in your instructions and is never in the documents.)",
       hits: 0,
     };

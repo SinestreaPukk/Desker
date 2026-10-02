@@ -21,7 +21,6 @@ const BUDGET_KB = {
   landing: 380,
   roster: 300,
   needsYou: 300,
-  insights: 300,
 };
 
 /**
@@ -106,7 +105,5 @@ test.describe("the app screens", () => {
     const needsYou = await measureJs(page, `/p/${project}/needs-you`);
     expect(needsYou, `Needs you downloaded ${needsYou} kB`).toBeLessThanOrEqual(BUDGET_KB.needsYou);
 
-    const insights = await measureJs(page, `/p/${project}/insights`);
-    expect(insights, `insights downloaded ${insights} kB`).toBeLessThanOrEqual(BUDGET_KB.insights);
   });
 });

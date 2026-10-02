@@ -28,7 +28,6 @@ export function ContactForm() {
         body: JSON.stringify({
           name: String(data.get("name") ?? ""),
           email: String(data.get("email") ?? ""),
-          company: String(data.get("company") ?? ""),
           message: String(data.get("message") ?? ""),
           // A field people never see, and how long the form was open: bots give both away.
           ...trap.values(data),
@@ -65,9 +64,6 @@ export function ContactForm() {
           <Input id="contact-email" name="email" type="email" autoComplete="email" required />
         </Field>
       </div>
-      <Field label={form.company} htmlFor="contact-company" error={fieldErrors.company?.[0]}>
-        <Input id="contact-company" name="company" autoComplete="organization" />
-      </Field>
       <Field label={form.message} htmlFor="contact-message" required error={fieldErrors.message?.[0]}>
         <Textarea id="contact-message" name="message" rows={6} required />
       </Field>

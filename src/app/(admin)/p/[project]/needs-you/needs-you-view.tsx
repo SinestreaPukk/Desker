@@ -320,11 +320,7 @@ function IssueRow({
         <>
           <span>{issue.source === "agent" ? "Raised by the agent" : "Raised in a chat"}</span>
           <span aria-hidden>·</span>
-          {issue.conversationId ? (
-            <Link href={`/p/${project}/conversations/${issue.conversationId}`} className="text-accent hover:underline">
-              View conversation
-            </Link>
-          ) : issue.actionItemId ? (
+          {issue.actionItemId ? (
             <Link href={`/p/${project}/work/${issue.actionItemId}`} className="text-accent hover:underline">
               View the run
             </Link>

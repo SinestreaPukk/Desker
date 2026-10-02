@@ -19,10 +19,10 @@ import type { ProjectContextDto } from "@/lib/work/project-context";
 import { ContextDraftButton, ContextQuestions } from "./context-questions";
 
 /**
- * The company, typed once.
+ * About you, typed once.
  *
  * Every agent in the project reads these answers before its own, so hiring a
- * third agent is not a third round of describing the business. It sits at the
+ * third agent is not a third round of describing yourself. It sits at the
  * top of the roster - the page an owner is on when they hire - and opens by
  * itself while it is still empty, because an owner who never finds it writes
  * the same paragraph three times instead.
@@ -85,7 +85,7 @@ function ContextEditor({
   const subject = "about you";
 
   const [answers, setAnswers] = React.useState<ContextAnswers>(() => loaded.answers);
-  // Default open state; when inside the agent builder's Company Context section,
+  // Default open state; when inside the agent builder's About you section,
   // it opens automatically.
   const [open, setOpen] = React.useState(initialOpen);
   const panel = React.useRef<HTMLDivElement>(null);

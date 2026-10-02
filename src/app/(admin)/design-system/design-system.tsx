@@ -258,7 +258,7 @@ export function DesignSystem() {
       <Section title="Form controls" blurb="Label above, hint below, error replaces the hint. One focus ring everywhere.">
         <Panel>
           <PanelBody className="grid gap-4 sm:grid-cols-2">
-            <Field label="Name" htmlFor="ds-name" required hint="What clients will call the agent.">
+            <Field label="Name" htmlFor="ds-name" required hint="What you will call the assistant.">
               <Input id="ds-name" placeholder="Bright" />
             </Field>
             <Field label="Email" htmlFor="ds-email" error="Enter a valid email address.">
@@ -287,7 +287,7 @@ export function DesignSystem() {
               </div>
             </PanelHeader>
             <PanelBody className="flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" onClick={() => toast.success("Agent published", { description: "Clients can reach Mia at her link." })}>
+              <Button size="sm" variant="secondary" onClick={() => toast.success("Agent published", { description: "Mia is ready to help you." })}>
                 Success
               </Button>
               <Button size="sm" variant="secondary" onClick={() => toast.error("Could not publish", { description: "The Free plan allows 1 published agent." })}>

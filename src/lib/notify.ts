@@ -48,8 +48,7 @@ interface Notification {
   /** Plain-text body. Kept short - this lands in a chat channel. */
   body: string;
   agentName: string;
-  /** One or the other: what the "open" link should point at. */
-  conversationId?: string;
+  /** What the "open" link should point at. */
   path?: string;
   severity?: string | null;
   /** For an approval: the waiting action, so LINE can show exactly what it will do and offer Approve / Not now. */
@@ -64,7 +63,6 @@ function linkFor(notification: Notification): string | null {
   const base = env.appUrl;
   if (!base) return null;
   if (notification.path) return `${base}${notification.path}`;
-  if (notification.conversationId) return `${base}/conversations/${notification.conversationId}`;
   return null;
 }
 
@@ -89,7 +87,6 @@ function toPayload(notification: Notification) {
     // Everything a non-Slack consumer needs, so a generic relay does not have
     // to parse the blocks above.
     kind: notification.kind,
-    conversationId: notification.conversationId ?? null,
     agentName: notification.agentName,
     severity: notification.severity ?? null,
     url,

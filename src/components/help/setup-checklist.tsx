@@ -35,7 +35,7 @@ interface Step {
 
 /**
  * The four things that turn a new space into a working one - different for a
- * business and for a person.
+ * a person.
  *
  * Useful once, not nagging forever: each step ticks itself off from what is
  * actually in the workspace, the whole thing can be dismissed, and it is

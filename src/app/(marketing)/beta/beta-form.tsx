@@ -24,7 +24,7 @@ export function BetaForm() {
     // Checked here first, so a mistyped address gets a message in our voice
     // rather than the browser's; the server checks it again.
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setFieldErrors({ email: ["That address doesn't look right. Try one like you@yourbusiness.com."] });
+      setFieldErrors({ email: ["That address doesn't look right. Try one like you@example.com."] });
       return;
     }
     setState("sending");

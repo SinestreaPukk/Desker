@@ -13,7 +13,6 @@ export const dynamic = "force-dynamic";
 const schema = z.object({
   name: z.string().trim().min(1, "Tell us your name.").max(120),
   email: z.string().trim().toLowerCase().email("Enter a valid email address."),
-  company: z.string().trim().max(120).optional().or(z.literal("")),
   message: z.string().trim().min(10, "Say a little more.").max(4000),
   website: z.string().max(200).optional().or(z.literal("")),
 });
@@ -39,7 +38,6 @@ export async function POST(request: Request) {
 
     const body = [
       `From: ${input.name} <${input.email}>`,
-      input.company ? `Company: ${input.company}` : null,
       "",
       input.message,
     ]
@@ -63,7 +61,7 @@ export async function POST(request: Request) {
     });
 
     emailOwner({
-      subject: `Contact from ${input.name}${input.company ? ` (${input.company})` : ""}`,
+      subject: `Contact from ${input.name}`,
       text: body,
       replyTo: input.email,
     });

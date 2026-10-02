@@ -17,14 +17,13 @@ export async function GET(_request: Request, { params }: Params) {
     if (!role) throw new HttpError(404, "That organisation no longer exists.");
     const org = await prisma.organization.findUniqueOrThrow({
       where: { id: orgId },
-      select: { id: true, name: true, slug: true, plan: true, mailingAddress: true, createdAt: true, _count: { select: { memberships: true, projects: true } } },
+      select: { id: true, name: true, slug: true, plan: true, createdAt: true, _count: { select: { memberships: true, projects: true } } },
     });
     return {
       id: org.id,
       name: org.name,
       slug: org.slug,
       plan: org.plan,
-      mailingAddress: org.mailingAddress,
       role,
       members: org._count.memberships,
       projects: org._count.projects,
@@ -36,10 +35,8 @@ export async function GET(_request: Request, { params }: Params) {
 const patchSchema = z
   .object({
     name: z.string().trim().min(1).max(80).optional(),
-    /** Printed on every agent email; "" clears it. */
-    mailingAddress: z.string().trim().max(300).optional(),
   })
-  .refine((input) => input.name !== undefined || input.mailingAddress !== undefined, "Nothing to change.");
+  .refine((input) => input.name !== undefined, "Nothing to change.");
 
 export async function PATCH(request: Request, { params }: Params) {
   return handle(async () => {
@@ -51,7 +48,6 @@ export async function PATCH(request: Request, { params }: Params) {
       where: { id: orgId },
       data: {
         ...(input.name !== undefined ? { name: input.name } : {}),
-        ...(input.mailingAddress !== undefined ? { mailingAddress: input.mailingAddress || null } : {}),
       },
     });
     if (input.name !== undefined) {
@@ -65,16 +61,6 @@ export async function PATCH(request: Request, { params }: Params) {
         metadata: { name: org.name },
       });
     }
-    if (input.mailingAddress !== undefined) {
-      await audit({
-        organizationId: orgId,
-        actorType: "user",
-        actorId: userId,
-        action: "organization.mailing_address_updated",
-        targetType: "organization",
-        targetId: orgId,
-      });
-    }
-    return { id: org.id, name: org.name, mailingAddress: org.mailingAddress };
+    return { id: org.id, name: org.name };
   });
 }

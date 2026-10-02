@@ -164,10 +164,6 @@ model Organization {
   /// Stripe's subscription status (active, past_due, canceled...), or null.
   subscriptionStatus   String?
   currentPeriodEnd     DateTime?
-  /// The postal address printed at the foot of every email an agent sends.
-  /// Anti-spam law (CAN-SPAM and similar) requires one on commercial email,
-  /// so agent email is refused until it is set.
-  mailingAddress       String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

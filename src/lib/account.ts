@@ -64,7 +64,6 @@ export async function exportAccount(userId: string) {
       id: true,
       name: true,
       plan: true,
-      mailingAddress: true,
       createdAt: true,
       projects: {
         select: {

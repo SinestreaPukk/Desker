@@ -211,7 +211,7 @@ async function emailCheckIn(input: { id: string; organizationId: string; project
     await prisma.projectCheckIn.update({ where: { id: input.id }, data: { emailError: "All recipients have unsubscribed." } });
     return;
   }
-  const organization = await prisma.organization.findUniqueOrThrow({ where: { id: input.organizationId }, select: { id: true, name: true, mailingAddress: true } });
+  const organization = await prisma.organization.findUniqueOrThrow({ where: { id: input.organizationId }, select: { id: true, name: true } });
   const optOut = optOutFor(organization, allowed);
   const link = env.appUrl ? `${env.appUrl}/p/${input.projectSlug}/work?view=digests` : "";
   const labels = { heads_up: "Needs you", pending: "Waiting", done: "Done" } as const;

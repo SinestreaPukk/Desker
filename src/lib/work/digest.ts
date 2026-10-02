@@ -517,7 +517,7 @@ async function emailDigest(input: {
   }
   const organization = await prisma.organization.findUniqueOrThrow({
     where: { id: input.organizationId },
-    select: { id: true, name: true, mailingAddress: true },
+    select: { id: true, name: true },
   });
   const optOut = optOutFor(organization, allowed);
   const delivery = await deliverEmail(config, {

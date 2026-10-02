@@ -64,7 +64,6 @@ const contactSchema = z.object({
   form: z.object({
     name: z.string(),
     email: z.string(),
-    company: z.string(),
     message: z.string(),
     submit: z.string(),
     success: z.string(),
@@ -80,24 +79,6 @@ const contactSchema = z.object({
 });
 
 export const TEMPLATE_ICONS = [
-  "headset",
-  "route",
-  "search",
-  "megaphone",
-  "calendar",
-  "code",
-  "handshake",
-  "users",
-  "sparkles",
-  "life-buoy",
-  "compass",
-  "file-search",
-  "trending-up",
-  "briefcase",
-  "terminal",
-  "target",
-  "heart-handshake",
-  // Personal roles
   "wallet",
   "calendar-heart",
   "at-sign",
