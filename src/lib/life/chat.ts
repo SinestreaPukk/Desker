@@ -11,6 +11,8 @@ import { readLife } from "./read";
 import { negotiate } from "./negotiate";
 import { planChat, type Plan } from "./router";
 
+export const EVERYDAY_THREAD = "Everyday chat";
+
 interface ChatCtx {
   projectId: string;
   organizationId: string;
@@ -53,7 +55,8 @@ export async function chatOnce(userId: string, text: string, channel: string): P
   if (!space) return "Your space isn't set up yet. Open Desker Personal once to finish setup.";
   const team = await teamOf(space.projectId);
   if (team.length === 0) return "No assistant is switched on yet. Open Desker Personal and hire one from the Roster.";
-  const title = `${channel} chat`;
+  // One shared thread for every messaging app, so LINE, Telegram and the alerts the system sends are one conversation, visible in the web chat too.
+  const title = EVERYDAY_THREAD;
   const thread =
     (await prisma.teamThread.findFirst({ where: { projectId: space.projectId, title }, select: { id: true } })) ??
     (await prisma.teamThread.create({ data: { projectId: space.projectId, title }, select: { id: true } }));

@@ -181,6 +181,7 @@ export async function checkAutonomousWork(now = new Date()): Promise<WatchdogRep
       path: `/p/${item.agent.project.slug}/work/${item.id}`,
       severity: "low",
       organizationId: item.organizationId,
+      actionItemId: item.id,
     });
     approvalsNudged++;
   }

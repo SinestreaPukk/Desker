@@ -14,6 +14,9 @@
 import "server-only";
 import { afterResponse } from "@/lib/after-response";
 import { env } from "@/lib/env";
+import { prisma } from "@/lib/db";
+import { previewPending } from "@/lib/work/pending-preview";
+import type { PendingAction } from "@/lib/work/types";
 import { messageOrganization } from "@/lib/messaging/send";
 import type { EventKind } from "@/lib/messaging/prefs";
 
@@ -49,6 +52,8 @@ interface Notification {
   conversationId?: string;
   path?: string;
   severity?: string | null;
+  /** For an approval: the waiting action, so LINE can show exactly what it will do and offer Approve / Not now. */
+  actionItemId?: string;
   /** Whose space it happened in: its people get it in the apps they chose under Alerts. */
   organizationId?: string;
   /** Routine news for the space's people only, not the operators' webhooks. */
@@ -91,7 +96,17 @@ function toPayload(notification: Notification) {
   };
 }
 
+async function approvalOf(notification: Notification) {
+  if (notification.kind !== "approval_waiting" || !notification.actionItemId) return undefined;
+  const item = await prisma.actionItem.findUnique({ where: { id: notification.actionItemId }, select: { pendingAction: true, status: true } });
+  const pending = item?.status === "needs_approval" ? (item.pendingAction as PendingAction | null) : null;
+  if (!pending) return undefined;
+  const draft = pending.draftId ? await prisma.draft.findUnique({ where: { id: pending.draftId }, select: { title: true, body: true } }) : null;
+  return { actionItemId: notification.actionItemId, agent: notification.agentName, ...previewPending(pending, draft) };
+}
+
 export async function notify(notification: Notification): Promise<void> {
+  const approval = await approvalOf(notification).catch(() => undefined);
   await Promise.all([
     notification.peopleOnly ? null : notifyOperators(notification),
     notification.organizationId
@@ -99,6 +114,7 @@ export async function notify(notification: Notification): Promise<void> {
           title: notification.title,
           body: `${notification.body}\n\n${notification.agentName}`,
           url: linkFor(notification),
+          approval,
         }).catch((error: unknown) => console.error("[notify] messaging failed:", error))
       : null,
   ]);

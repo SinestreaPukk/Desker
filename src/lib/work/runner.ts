@@ -293,6 +293,7 @@ async function finishRun(
       agentName: agent.name,
       path,
       organizationId: item.organizationId,
+      actionItemId,
       peopleOnly: true,
     });
   }

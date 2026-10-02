@@ -9,12 +9,15 @@ import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { deliverAppEmail } from "@/lib/app-email";
 import { open } from "@/lib/vault";
+import { approvalFlex, linePush, text as lineText } from "./line";
 import { CHANNELS, readPrefs, type ChannelKind, type EventKind } from "./prefs";
 
 export interface OutboundMessage {
   title: string;
   body: string;
   url?: string | null;
+  /** A consequential action waiting for a yes: LINE shows exactly what it will do, with Approve / Not now buttons. */
+  approval?: { actionItemId: string; verb: string; lines: string[]; agent: string };
 }
 
 const env = (name: string) => process.env[name]?.trim() || "";
@@ -123,12 +126,10 @@ export async function whatsappSend(phone: string, text: string): Promise<Result>
 async function deliver(kind: ChannelKind, target: string, message: OutboundMessage): Promise<Result> {
   const text = plainText(message);
   switch (kind) {
-    case "line":
-      return post(
-        "https://api.line.me/v2/bot/message/push",
-        { to: target, messages: [{ type: "text", text }] },
-        { authorization: `Bearer ${env("LINE_CHANNEL_ACCESS_TOKEN")}` },
-      );
+    case "line": {
+      const a = message.approval;
+      return linePush(target, a ? [approvalFlex({ ...a, actionItemId: a.actionItemId, url: message.url })] : [lineText(text)]);
+    }
     case "telegram":
       return telegramSend(target, text);
     case "whatsapp":

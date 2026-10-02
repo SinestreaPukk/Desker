@@ -1,7 +1,7 @@
 /** Every Inngest function the app serves. Add new jobs here and nowhere else. */
 import { heartbeat } from "./heartbeat";
 import { digestScheduler, digestNowFn } from "./digest";
-import { briefScheduler, lifeDigestScheduler } from "./brief";
+import { briefScheduler, lifeAlertScheduler, lifeDigestScheduler } from "./brief";
 import { executeApprovedFn, fireScopeFn, runActionItemFn, scopeScheduler, workWatchdogFn } from "./work";
 
 export const functions = [
@@ -15,5 +15,6 @@ export const functions = [
   digestNowFn,
   briefScheduler,
   lifeDigestScheduler,
+  lifeAlertScheduler,
 ];
 export { inngest } from "./client";

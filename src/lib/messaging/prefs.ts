@@ -36,7 +36,7 @@ export function webhookAllowed(kind: ChannelKind, url: string): boolean {
   }
 }
 
-export const EVENT_KINDS = ["approval", "escalation", "failure", "issue", "digest", "done", "phone"] as const;
+export const EVENT_KINDS = ["approval", "escalation", "failure", "issue", "digest", "done", "phone", "life"] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
 export const EVENTS: Record<EventKind, { label: string; hint: string }> = {
@@ -46,6 +46,7 @@ export const EVENTS: Record<EventKind, { label: string; hint: string }> = {
   issue: { label: "Serious issues", hint: "Critical problems agents report." },
   digest: { label: "Agent digests", hint: "An agent's daily or weekly summary." },
   done: { label: "Every finished task", hint: "Can be a lot on a busy day." },
+  life: { label: "Bills, clashes and workouts", hint: "A bill coming due, a schedule clash, a workout reminder." },
   phone: { label: "Calls and texts", hint: "A screened call or a text to your Desker number." },
 };
 
@@ -95,7 +96,7 @@ export type AlertPrefs = z.infer<typeof prefsSchema>;
 export const DEFAULT_PREFS: AlertPrefs = {
   paused: false,
   timeZone: "UTC",
-  events: { approval: true, escalation: true, failure: true, issue: true, digest: true, done: false, phone: true },
+  events: { approval: true, escalation: true, failure: true, issue: true, digest: true, done: false, phone: true, life: true },
   mutedSpaces: [],
   brief: { on: true, time: "07:30", days: [0, 1, 2, 3, 4, 5, 6], calendar: true, waiting: true, recap: true, news: true },
   news: { topics: [], edition: "US:en" },
