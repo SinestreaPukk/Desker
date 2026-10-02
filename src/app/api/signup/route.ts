@@ -4,7 +4,7 @@ import { hashPassword } from "@/lib/auth";
 import { passwordProblem } from "@/lib/password-check";
 import { signupSchema } from "@/lib/validation";
 import { createSpaceFor } from "@/lib/projects";
-import { personalSpaceName, spacesFor } from "@/lib/space";
+import { personalSpaceName } from "@/lib/space";
 import { audit } from "@/lib/audit";
 import { findOpenInvitation } from "@/lib/invites";
 import { TERMS_VERSION } from "@/lib/legal";
@@ -48,7 +48,6 @@ export async function POST(request: Request) {
       firstName: input.firstName,
       lastName: input.lastName,
       username: input.username,
-      useType: input.useType,
     };
 
     // Signing up from an invitation joins that organisation instead of
@@ -93,11 +92,10 @@ export async function POST(request: Request) {
       return user;
     }
 
-    // A new account founds its own spaces: a business, a personal space, or
-    // one of each ("mixed"). Each gets a first project so there is somewhere
-    // to put an agent. All or none - a user with no space can reach nothing.
+    // A new account founds its own personal space, with a first project so
+    // there is somewhere to put an agent. All or none - a user with no space can reach nothing.
     const passwordHash = await hashPassword(input.password);
-    const { user, spaces } = await prisma.$transaction(async (tx) => {
+    const { user, space } = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email: input.email,
@@ -108,31 +106,19 @@ export async function POST(request: Request) {
         },
         select: { id: true, email: true, name: true },
       });
-      const spaces = [];
-      for (const kind of spacesFor(input.useType)) {
-        spaces.push(
-          await createSpaceFor(
-            user.id,
-            kind,
-            kind === "personal" ? personalSpaceName(input.firstName) : input.organization!,
-            tx,
-          ),
-        );
-      }
-      return { user, spaces };
+      const space = await createSpaceFor(user.id, personalSpaceName(input.firstName), tx);
+      return { user, space };
     });
 
-    for (const space of spaces) {
-      await audit({
-        organizationId: space.id,
-        actorType: "user",
-        actorId: user.id,
-        action: "organization.created",
-        targetType: "organization",
-        targetId: space.id,
-        metadata: { name: space.name, kind: space.kind, via: "signup" },
-      });
-    }
+    await audit({
+      organizationId: space.id,
+      actorType: "user",
+      actorId: user.id,
+      action: "organization.created",
+      targetType: "organization",
+      targetId: space.id,
+      metadata: { name: space.name, via: "signup" },
+    });
 
     return user;
   });

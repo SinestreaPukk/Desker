@@ -22,8 +22,7 @@ export default function TermsPage() {
     >
       <h2>1. The Service</h2>
       <p>
-        {LEGAL.companyName} lets you set up AI agents for a business - answering its clients and
-        carrying out work you define - and personal AI assistants for your own life. They act on
+        {LEGAL.companyName} lets you set up personal AI assistants for your own life, carrying out work you define. They act on
         your instructions and your content; you are responsible for what you configure them to do,
         for the content they are given, and for reviewing anything they produce before it reaches
         other people or the public.
@@ -33,21 +32,14 @@ export default function TermsPage() {
       <ul>
         <li>
           You must be at least 18 years old (or the age of majority where you live, if that is higher) to create an
-          account. The Service is not directed at children, and a business must not use its agents to collect
-          personal information from children under 13 (or the higher age its country sets).
+          account. The Service is not directed at children.
         </li>
         <li>You must give accurate information and keep your credentials confidential.</li>
-        <li>An account can own a business space, a personal space, or both. A personal space is for your own use and cannot be shared.</li>
-        <li>A business owner is responsible for the people they invite and the roles they assign.</li>
+        <li>Your space is for your own use and cannot be shared.</li>
         <li>You must not use the Service to break the law, to send unsolicited messages, or to interfere with the Service or other customers.</li>
         <li>
-          If your agents talk to people for you, you must not present them as human. {LEGAL.companyName}&rsquo;s chat
-          says it is an AI assistant and that conversations are saved; you must not remove or hide that, and you
-          must tell people how their messages are used where the law requires it.
-        </li>
-        <li>
-          You must not publish reviews, testimonials or results your agents wrote as if they came from real
-          customers.
+          You must not present anything your assistants write as if a person wrote it where that would mislead, and
+          you must not publish reviews or testimonials they wrote as if they came from real customers.
         </li>
       </ul>
 
@@ -80,9 +72,7 @@ export default function TermsPage() {
       <p>
         Email an agent sends goes out from your space, and you are its sender. You must
         only email people you have a lawful reason to contact and must follow the anti-spam law
-        that applies to you. For a business, the Service adds your business name, the postal
-        address you set, and an unsubscribe link to every agent email, and it stops emailing anyone
-        who unsubscribes; do not remove or work around them.
+        that applies to you.
       </p>
 
       <h2>6. Copyright complaints</h2>

@@ -17,11 +17,10 @@ export default async function StatsPage() {
 
   const since7 = new Date(Date.now() - 7 * DAY);
   const since14 = new Date(Date.now() - 14 * DAY);
-  const [users, orgs, recent, byUse, withChannel, busyOrgs, tasks7] = await Promise.all([
+  const [users, orgs, recent, withChannel, busyOrgs, tasks7] = await Promise.all([
     prisma.user.count(),
     prisma.organization.count(),
     prisma.user.findMany({ where: { createdAt: { gte: since14 } }, select: { createdAt: true } }),
-    prisma.user.groupBy({ by: ["useType"], _count: true }),
     prisma.user.count({ where: { messageChannels: { some: { enabled: true } } } }),
     prisma.actionItem.groupBy({ by: ["organizationId"], where: { createdAt: { gte: since7 } } }),
     prisma.actionItem.count({ where: { createdAt: { gte: since7 } } }),
@@ -46,11 +45,11 @@ export default async function StatsPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-2xl font-semibold">Stats</h1>
+      <h1 className="text-xl font-semibold">Stats</h1>
       <div className="mt-6 grid grid-cols-2 gap-3">
         {cards.map(([label, value]) => (
           <div key={label} className="rounded-lg border p-4">
-            <div className="text-3xl font-semibold">{value}</div>
+            <div className="text-xl font-semibold">{value}</div>
             <div className="text-sm opacity-70">{label}</div>
           </div>
         ))}
@@ -62,12 +61,6 @@ export default async function StatsPage() {
             <span className="w-24 tabular-nums">{d}</span>
             <span>{"█".repeat(n)} {n}</span>
           </li>
-        ))}
-      </ul>
-      <h2 className="mt-8 font-medium">Used for</h2>
-      <ul className="mt-2 text-sm">
-        {byUse.map((r) => (
-          <li key={r.useType ?? "none"}>{r.useType ?? "not said"}: {r._count}</li>
         ))}
       </ul>
     </main>

@@ -1,7 +1,6 @@
 /** What the Alerts page shows: this person's settings, channels and spaces. */
 import "server-only";
 import { prisma } from "@/lib/db";
-import { spaceKind } from "@/lib/space";
 import { CHANNEL_KINDS, readPrefs, type AlertPrefs, type ChannelKind } from "./prefs";
 import QRCode from "qrcode";
 import { appHandle, channelAvailable, linkUrl } from "./send";
@@ -27,7 +26,7 @@ export interface AlertSettingsDto {
   saved: boolean;
   channels: ChannelDto[];
   available: Record<ChannelKind, boolean>;
-  spaces: { id: string; name: string; kind: "business" | "personal" }[];
+  spaces: { id: string; name: string }[];
 }
 
 export async function alertSettings(userId: string): Promise<AlertSettingsDto> {
@@ -36,7 +35,7 @@ export async function alertSettings(userId: string): Promise<AlertSettingsDto> {
     select: {
       alertPrefs: true,
       messageChannels: { orderBy: { createdAt: "asc" } },
-      memberships: { select: { organization: { select: { id: true, name: true, kind: true } } } },
+      memberships: { select: { organization: { select: { id: true, name: true } } } },
     },
   });
   return {
@@ -64,7 +63,6 @@ export async function alertSettings(userId: string): Promise<AlertSettingsDto> {
     spaces: user.memberships.map(({ organization }) => ({
       id: organization.id,
       name: organization.name,
-      kind: spaceKind(organization.kind),
     })),
   };
 }

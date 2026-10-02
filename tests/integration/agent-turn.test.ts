@@ -102,17 +102,8 @@ beforeAll(async () => {
         "Direct and factual. Answers in one or two sentences with no preamble.",
       responsibilities: [
         "Answer questions about the returns policy",
-        "Log bugs clients report",
-        "Record feature requests",
       ],
-      allowedTools: [
-        "search_documents",
-        "log_issue",
-        "log_suggestion",
-        "escalate_to_human",
-      ],
-      escalationRule:
-        "Escalate if the client asks for a refund over $200 or asks to speak to a person.",
+      allowedTools: ["search_documents"],
       status: "published",
       modelProvider: "anthropic",
     },
@@ -187,65 +178,6 @@ describeLive("a live agent turn", () => {
     expect(persisted.some((message) => message.role === "user")).toBe(true);
     expect(persisted.some((message) => message.role === "assistant")).toBe(true);
     expect(persisted.some((message) => message.role === "tool")).toBe(true);
-  });
-
-  it("logs an issue when the client reports something broken", async () => {
-    const conversation = await prisma.conversation.create({
-      data: { agentId, clientSessionId: `integration-issue-${Date.now()}` },
-    });
-
-    const { events } = await collect(
-      "Your checkout page throws a 500 error every time I click Pay with my saved card. " +
-        "I have tried three times on Chrome and it fails every time.",
-      { conversation: conversation.id },
-    );
-
-    expect(toolsUsed(events)).toContain("log_issue");
-
-    const issues = await prisma.issue.findMany({
-      where: { conversationId: conversation.id, type: "issue" },
-    });
-    expect(issues.length).toBeGreaterThanOrEqual(1);
-    expect(issues[0]!.summary.length).toBeGreaterThan(5);
-    expect(["low", "medium", "high", "critical"]).toContain(issues[0]!.severity);
-  });
-
-  it("records a suggestion separately from a bug", async () => {
-    const conversation = await prisma.conversation.create({
-      data: { agentId, clientSessionId: `integration-suggestion-${Date.now()}` },
-    });
-
-    const { events } = await collect(
-      "Everything works fine, but it would be really useful if you offered a dark mode " +
-        "for the account dashboard. I use it at night a lot.",
-      { conversation: conversation.id },
-    );
-
-    expect(toolsUsed(events)).toContain("log_suggestion");
-
-    const suggestions = await prisma.issue.findMany({
-      where: { conversationId: conversation.id, type: "suggestion" },
-    });
-    expect(suggestions.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("escalates and flags the conversation when the rule is met", async () => {
-    const conversation = await prisma.conversation.create({
-      data: { agentId, clientSessionId: `integration-escalate-${Date.now()}` },
-    });
-
-    const { events } = await collect(
-      "This is unacceptable. I want a full refund of $450 right now and I want to " +
-        "speak to a real person, not a bot.",
-      { conversation: conversation.id },
-    );
-
-    expect(toolsUsed(events)).toContain("escalate_to_human");
-
-    const updated = await prisma.conversation.findUniqueOrThrow({
-      where: { id: conversation.id },
-    });
-    expect(updated.status).toBe("escalated");
   });
 
   it("does not invent an answer that is absent from the documents", async () => {

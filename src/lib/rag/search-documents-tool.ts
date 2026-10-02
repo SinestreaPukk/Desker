@@ -3,10 +3,10 @@ import type { ToolDefinition } from "@/lib/llm/provider";
 
 /**
  * The one way an agent looks something up in the documents uploaded to it -
- * in a client chat and in autonomous work alike.
+ * in chat and in autonomous work alike.
  *
  * Two tiers of context, two mechanics:
- * - Company Context (the four answers about the business) is not searchable.
+ * - What the person told Desker about themselves is not searchable.
  *   It is injected into every agent's instructions on every chat turn and every
  *   run, so a saved answer can never come back as "nothing found".
  * - Uploaded documents are longer reference material where only part is
@@ -26,9 +26,9 @@ export const SEARCH_DOCUMENTS_TOOL: ToolDefinition = {
   name: SEARCH_DOCUMENTS,
   description:
     "Search the documents that were uploaded to you (the files listed in your instructions) for passages " +
-    "relevant to a question: product details, policies, pricing sheets, procedures, past work. " +
-    "Do not use it for what the business does, who its customers are, or how to sound - that Company " +
-    "Context is already in your instructions, complete, and is not in any document. Returns the most " +
+    "relevant to a question: statements, bookings, policies, plans, past work. " +
+    "Do not use it for who they are, what they want help with, or how to talk to them - that " +
+    "context is already in your instructions, complete, and is not in any document. Returns the most " +
     "relevant excerpts with their source filenames; search again with other wording if the first try misses.",
   inputSchema: {
     type: "object",

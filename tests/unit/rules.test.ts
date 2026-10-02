@@ -9,7 +9,6 @@ describe("saved corrections", () => {
       personality: "Plain.",
       responsibilities: [],
       allowedTools: [],
-      audience: "colleague",
       rules: ["Never mention discounts in posts.", "Sign off with the owner's first name."],
     });
     expect(prompt).toContain("## Corrections from your owner");

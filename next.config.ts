@@ -23,41 +23,17 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
-    // Defence in depth for the admin app. The embed routes are exempt from
-    // the frame rule below because being framed is their whole purpose.
-    const baseline = [
-      { key: "X-Content-Type-Options", value: "nosniff" },
-      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-      { key: "X-DNS-Prefetch-Control", value: "off" },
-      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-      { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
-    ];
+    // Defence in depth: nothing here is meant to be framed or called cross-origin.
     return [
       {
-        // Everything except the embeddable widget and its loader.
-        source: "/((?!embed/|embed\\.js).*)",
-        headers: [...baseline, { key: "X-Frame-Options", value: "DENY" }],
-      },
-      {
-        // The embed loader is fetched cross-origin by third-party sites.
-        source: "/embed.js",
+        source: "/:path*",
         headers: [
-          { key: "Access-Control-Allow-Origin", value: "*" },
-          { key: "Cache-Control", value: "public, max-age=300" },
-          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
-        ],
-      },
-      {
-        // The widget iframe must be embeddable anywhere; the admin app must not.
-        source: "/embed/:agentId",
-        headers: [{ key: "Content-Security-Policy", value: "frame-ancestors *" }],
-      },
-      {
-        source: "/api/chat/:path*",
-        headers: [
-          { key: "Access-Control-Allow-Origin", value: "*" },
-          { key: "Access-Control-Allow-Headers", value: "Content-Type" },
-          { key: "Access-Control-Allow-Methods", value: "GET,POST,OPTIONS" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-DNS-Prefetch-Control", value: "off" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+          { key: "X-Frame-Options", value: "DENY" },
         ],
       },
     ];

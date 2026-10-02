@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-logo";
-import { SITE, TEMPLATES } from "@/lib/content";
+import { SITE } from "@/lib/content";
 import { CTA_NAV } from "@/components/marketing/cta";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { NavCta, SiteMenu, SiteNav } from "@/components/marketing/site-nav";
@@ -71,10 +71,6 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             ) : null}
           </div>
           <FooterColumn heading={SITE.footer.columns[0]!.heading} links={SITE.footer.columns[0]!.links} />
-          <FooterColumn
-            heading={SITE.footer.rolesHeading}
-            links={TEMPLATES.map((role) => ({ label: role.name, href: `/showcase#${role.id}` }))}
-          />
           {SITE.footer.columns.slice(1).map((column) => (
             <FooterColumn key={column.heading} heading={column.heading} links={column.links} />
           ))}

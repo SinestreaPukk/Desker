@@ -16,7 +16,6 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 import { createOrganizationFor, primaryOrganizationFor } from "@/lib/organizations";
-import type { SpaceKind } from "@/lib/space";
 
 export { slugify };
 
@@ -50,7 +49,6 @@ export function projectsVisibleTo(userId: string): Prisma.ProjectWhereInput {
 export async function findProject(handle: string, userId: string) {
   return prisma.project.findFirst({
     where: { AND: [projectsVisibleTo(userId), { OR: [{ slug: handle }, { id: handle }] }] },
-    include: { organization: { select: { kind: true } } },
   });
 }
 
@@ -77,7 +75,6 @@ export async function defaultProject(userId: string) {
   const existing = await prisma.project.findFirst({
     where: projectsVisibleTo(userId),
     orderBy: { createdAt: "asc" },
-    include: { organization: { select: { kind: true } } },
   });
   if (existing) return existing;
 
@@ -88,26 +85,24 @@ export async function defaultProject(userId: string) {
       slug: await uniqueSlug("default"),
       organizationId: organization.id,
     },
-    include: { organization: { select: { kind: true } } },
   });
 }
 
 /**
- * A new space - a business or a personal one - owned by `userId`, with a
+ * A new personal space owned by `userId`, with a
  * first project to put agents in. Runs inside the caller's transaction so
  * sign-up is all-or-nothing.
  */
 export async function createSpaceFor(
   userId: string,
-  kind: SpaceKind,
   name: string,
   db: Prisma.TransactionClient = prisma,
 ) {
-  const organization = await createOrganizationFor(userId, name, db, kind);
+  const organization = await createOrganizationFor(userId, name, db);
   const project = await db.project.create({
     data: {
-      name: kind === "personal" ? "Personal" : "Default project",
-      slug: await uniqueSlug(kind === "personal" ? "personal" : "default", db),
+      name: "Personal",
+      slug: await uniqueSlug("personal", db),
       organizationId: organization.id,
     },
   });
@@ -119,15 +114,6 @@ export function agentsVisibleTo(userId: string): Prisma.AgentWhereInput {
   return { project: projectsVisibleTo(userId) };
 }
 
-/** Whether the user may see a conversation: it belongs to one of their agents. */
-export async function canSeeConversation(conversationId: string, userId: string): Promise<boolean> {
-  const row = await prisma.conversation.findFirst({
-    where: { id: conversationId, agent: agentsVisibleTo(userId) },
-    select: { id: true },
-  });
-  return row !== null;
-}
-
 /**
  * An agent the user may act on, with the organisation it bills to. Null when
  * it does not exist or belongs to a tenant the user is not part of.
@@ -136,7 +122,7 @@ export async function findAgentFor(agentId: string, userId: string) {
   return prisma.agent.findFirst({
     where: { AND: [agentsVisibleTo(userId), { id: agentId }] },
     include: {
-      project: { select: { id: true, slug: true, organizationId: true, organization: { select: { kind: true } } } },
+      project: { select: { id: true, slug: true, organizationId: true } },
     },
   });
 }

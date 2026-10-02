@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Building, Check, ChevronRight, Save, UserRound } from "lucide-react";
+import { Check, ChevronRight, Save, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
 } from "@/hooks/use-work-data";
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { answeredCount, contextQuestionsFor, type ContextAnswers } from "@/lib/work/context";
+import { answeredCount, contextQuestions, type ContextAnswers } from "@/lib/work/context";
 import type { ProjectContextDto } from "@/lib/work/project-context";
 import { ContextDraftButton, ContextQuestions } from "./context-questions";
 
@@ -81,9 +81,8 @@ function ContextEditor({
 }) {
   const save = useSaveProjectContext(project);
   const draft = useDraftProjectContext(project);
-  const personal = loaded.kind === "personal";
-  const questions = contextQuestionsFor(loaded.kind);
-  const subject = personal ? "about you" : "about your business";
+  const questions = contextQuestions();
+  const subject = "about you";
 
   const [answers, setAnswers] = React.useState<ContextAnswers>(() => loaded.answers);
   // Default open state; when inside the agent builder's Company Context section,
@@ -112,9 +111,7 @@ function ContextEditor({
     try {
       await save.mutateAsync(value);
       toast.success("Shared context saved", {
-        description: personal
-          ? "Every assistant reads it before its own brief, from the next run on."
-          : "Every agent in this project reads it before its own brief, from the next run on.",
+        description: "Every assistant reads it before its own brief, from the next run on.",
       });
       if (!embedded) setOpen(false);
     } catch (caught) {
@@ -132,8 +129,7 @@ function ContextEditor({
       {embedded ? (
         <div className="flex items-center gap-3.5 px-4 py-3.5">
           <ContextHeading
-            personal={personal}
-            description={`Shared by every ${personal ? "assistant" : "agent"} in ${loaded.name}. Changes apply from the next run.`}
+            description={`Shared by every assistant in ${loaded.name}. Changes apply from the next run.`}
           />
           <ContextBadge loaded={loaded} />
         </div>
@@ -145,10 +141,9 @@ function ContextEditor({
           className="group flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors duration-150 hover:bg-surface-2/60"
         >
           <ContextHeading
-            personal={personal}
             description={
               loaded.answered === 0
-                ? `Questions ${subject}, read by every ${personal ? "assistant" : "agent"} here.`
+                ? `Questions ${subject}, read by every assistant here.`
                 : `Questions ${subject} · ${loaded.answered} of ${loaded.total} answered.`
             }
           />
@@ -172,9 +167,7 @@ function ContextEditor({
             <FormError message={error} />
             <div className="flex flex-wrap items-start justify-between gap-2">
               <p className="max-w-xl text-xs text-ink-muted">
-                {personal
-                  ? "Every assistant in your space reads these before it does anything. They stay in this space and are never shared."
-                  : "Answers to questions about your business in this organisation. Every agent here inherits these answers as its core company context."}
+                Every assistant in your space reads these before it does anything. They stay in this space and are never shared.
               </p>
               <ContextDraftButton
                 questions={questions.all}
@@ -197,7 +190,7 @@ function ContextEditor({
             >
               <summary className="flex cursor-pointer select-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink hover:bg-surface-2/60">
                 <span>
-                  {personal ? "More about you" : "More about your business"}{" "}
+                  More about you{" "}
                   <span className="font-normal text-ink-muted">
                     · optional · {answeredCount(value, questions.extra)} of{" "}
                     {questions.extra.length} answered
@@ -268,17 +261,17 @@ function ContextBadge({ loaded }: { loaded: ProjectContextDto }) {
   return <Badge tone="accent">Start here</Badge>;
 }
 
-function ContextHeading({ description, personal }: { description: string; personal: boolean }) {
+function ContextHeading({ description }: { description: string }) {
   return (
     <>
       <span
         aria-hidden
         className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-accent-line/60 bg-accent-soft/60 text-accent-soft-fg [&_svg]:size-5"
       >
-        {personal ? <UserRound /> : <Building />}
+        <UserRound />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold tracking-tight text-ink">{personal ? "About you" : "Company context"}</span>
+        <span className="block text-sm font-semibold tracking-tight text-ink">About you</span>
         <span className="block text-xs text-ink-muted">{description}</span>
       </span>
     </>

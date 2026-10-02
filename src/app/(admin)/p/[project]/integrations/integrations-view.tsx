@@ -28,8 +28,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ConnectorCard } from "@/components/integrations/connector-card";
 import { CONNECTORS, CONNECTOR_CATEGORIES, connectorById } from "@/lib/integrations/catalog";
 import { TEMPLATES } from "@/lib/content";
-import { useSpaceKind } from "@/components/space-kind";
-import { SupportInboxForm } from "@/components/integrations/support-inbox-form";
 import { ApiError, errorMessage } from "@/lib/api-client";
 import { integrationInputSchema } from "@/lib/work/validation";
 import { validate } from "@/lib/form-errors";
@@ -90,11 +88,7 @@ export function IntegrationsView({ project }: { project: string }) {
   }, []);
 
   const byType = new Map((list.data ?? []).map((row) => [row.type, row]));
-  // A personal space has no customers writing in.
-  const personal = useSpaceKind() === "personal";
-  const shown = CONNECTORS.filter(
-    (connector) => (role === "all" || connector.roles.includes(role)) && !(personal && connector.id === "support_inbox"),
-  );
+  const shown = CONNECTORS.filter((connector) => role === "all" || connector.roles.includes(role));
   // The library is for choosing: an OAuth connector already set up lives in
   // "Your connections" above. Key and webhook ones stay, since you can add another.
   const library = shown.filter(
@@ -209,11 +203,6 @@ export function IntegrationsView({ project }: { project: string }) {
                   {formHere?.id === "webhook" ? (
                     <div className="mt-3 max-w-2xl">
                       <WebhookForm project={project} onDone={() => setOpenForm(null)} />
-                    </div>
-                  ) : null}
-                  {formHere?.id === "support_inbox" ? (
-                    <div className="mt-3 max-w-3xl">
-                      <SupportInboxForm project={project} onDone={() => setOpenForm(null)} />
                     </div>
                   ) : null}
                   {formHere?.id === "email" ? (

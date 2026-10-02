@@ -32,26 +32,21 @@ export default function PrivacyPage() {
         <li>You can download everything, or delete everything, yourself, at any time, from inside the app.</li>
       </ul>
 
-      <h2>Business spaces and personal spaces</h2>
+      <h2>Your personal space</h2>
       <p>
-        {LEGAL.companyName} has two kinds of space. A <strong>business space</strong> is for a company and its
-        team: agents there may talk to that business&rsquo;s clients and hold the clients&rsquo; messages. For
-        that client data the business decides what is collected and why, and we process it on the business&rsquo;s
-        instructions; clients with a request about it should contact the business, and we will help the business
-        answer. A <strong>personal space</strong> is for one person&rsquo;s own life. It has one member, cannot be
-        shared, and its assistants cannot be reached from outside it. For your account and your personal space we
-        are responsible for your data as described here.
+        Your space is for your own life. It has one member, cannot be shared, and its assistants cannot be
+        reached from outside it. For your account and your space we are responsible for your data as described
+        here.
       </p>
 
       <h2>What we collect</h2>
       <ul>
         <li>
           <strong>Your account:</strong> name, username, email address, a one-way hash of your password (never the
-          password itself), what you told us Desker is for, and when you accepted these terms.
+          password itself), and when you accepted these terms.
         </li>
         <li>
-          <strong>What you tell your assistants and agents:</strong> your answers to the setup questions (about your
-          business, or about you), their instructions, schedules and objectives.
+          <strong>What you tell your assistants and agents:</strong> your answers to the setup questions (about you), their instructions, schedules and objectives.
         </li>
         <li>
           <strong>Documents you upload:</strong> the files and the text extracted from them, so agents can search
@@ -61,7 +56,7 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Work and conversations:</strong> chats with your agents, the work they do, what they draft,
-          research findings, digests and suggestions; in a business space, conversations with its clients.
+          research findings, digests and suggestions.
         </li>
         <li>
           <strong>Records:</strong> an audit log of what people and agents did and when, and simple product usage
@@ -182,7 +177,7 @@ export default function PrivacyPage() {
       <ul>
         <li>
           <strong>AI model providers</strong> (Anthropic; OpenAI if you choose one of its models, and for document
-          search indexing) receive the text needed for each reply or task. Under their business API terms they do
+          search indexing) receive the text needed for each reply or task. Under their API terms they do
           not train on it, and keep it only for a limited period for abuse and safety monitoring.
         </li>
         <li><strong>A web search provider</strong> (Brave or Tavily) receives the search queries an agent makes - never your documents.</li>
@@ -204,15 +199,6 @@ export default function PrivacyPage() {
         data leaves your country we rely on the provider&rsquo;s contractual commitments to protect it.
       </p>
 
-      <h2>If you chat with an agent for a business</h2>
-      <p>
-        When you use a business&rsquo;s chat on a website or a shared link, you are talking to an AI assistant set
-        up by that business, not a person. What you write is saved, so the business&rsquo;s team can read it and
-        follow up, and it is processed by the AI model providers listed above to write each reply. The business
-        decides what happens to your conversation; ask it if you want a copy or want it deleted. Please don&rsquo;t
-        share passwords, card numbers or ID numbers in a chat.
-      </p>
-
       <h2>Cookies and tracking</h2>
       <p>
         We set one cookie, to keep you signed in. Your browser also remembers display preferences (like the
@@ -222,9 +208,8 @@ export default function PrivacyPage() {
 
       <h2>Email your agents send</h2>
       <p>
-        Email from a business space goes out as that business, with its name, its postal address and an
-        unsubscribe link; anyone who unsubscribes is not emailed by its agents again. Email from a personal space
-        is written as you, to people you choose, and only with your approval unless you have switched that on.
+        Email from your assistants is written as you, to people you choose, and only with your approval unless you
+        have switched that on.
       </p>
 
       <h2>How long we keep it</h2>
@@ -236,14 +221,12 @@ export default function PrivacyPage() {
           and connected-app credentials - immediately. Copies in our database provider&rsquo;s backups expire on
           its normal schedule and are never restored except to recover from an outage.
         </li>
-        <li>If you are a member of a business space someone else owns, deleting your account removes you from it; that business keeps its own records, such as the audit log of work done there.</li>
         <li>We keep billing records as long as tax law requires.</li>
       </ul>
 
       <h2>Your rights, as buttons</h2>
       <p>
-        Wherever you live, you can do these yourself, without writing to us: open <strong>Your space</strong> (or
-        <strong> Organisation</strong> in a business) and use <strong>Download my data</strong> for a complete
+        Wherever you live, you can do these yourself, without writing to us: open <strong>Your space</strong> and use <strong>Download my data</strong> for a complete
         copy of your account and the spaces you own, as a machine-readable file; or <strong>Delete my
         account</strong> to erase it. You can correct anything by editing it in the app. You may also ask us to
         restrict or stop a particular use of your data, or ask any question about it, at {LEGAL.contactEmail};

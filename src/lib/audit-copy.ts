@@ -119,6 +119,16 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
         icon: "documents",
       };
     }
+    case "life_record": {
+      const kind = text(input.kind) ?? "something";
+      if (!ok) return failed("Tried to update your life context");
+      return {
+        title: `Noted a ${kind}${text(input.title) ? `: ${clip(String(input.title), 60)}` : ""}`,
+        detail: "Saved in your shared context so every assistant sees it.",
+        tone: "neutral",
+        icon: "note",
+      };
+    }
     case "draft_content": {
       const title = text(input.title);
       const kind = text(input.kind)?.replace(/_/g, " ") ?? "something";
@@ -410,17 +420,6 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
 
     case "draft.edited":
       return { title: `${who} edited a draft before approving it`, detail: null, tone: "neutral", icon: "draft" };
-    case "support_inbox.created":
-      return { title: `${who} set up the support inbox`, detail: "Customer messages sent to its address are answered by the Support agent, and each reply waits for approval.", tone: "neutral", icon: "settings" };
-    case "support_inbox.updated":
-      return {
-        title: meta.rotated ? `${who} replaced the support inbox address` : `${who} changed the support inbox`,
-        detail: meta.rotated ? "The old address stopped working at once." : null,
-        tone: "neutral",
-        icon: "settings",
-      };
-    case "support_inbox.removed":
-      return { title: `${who} removed the support inbox`, detail: "Its address no longer accepts messages.", tone: "neutral", icon: "settings" };
     case "workflow.started":
       return {
         title: `${who} started the “${text(meta.name) ?? "a"}” workflow`,

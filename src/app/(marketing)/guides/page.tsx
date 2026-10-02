@@ -3,22 +3,15 @@ import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Panel } from "@/components/ui/panel";
-import { GUIDES, guidesFor } from "@/lib/guides";
+import { GUIDES } from "@/lib/guides";
 import { pageMetadata } from "@/lib/content";
 
 export const metadata: Metadata = pageMetadata({
   title: "Guides",
   description:
-    "Short, specific how-tos: hiring AI staff for a business, setting up private assistants for your own life, approvals and privacy. Two minutes each.",
+    "Short, specific how-tos: setting up private assistants for your own life, approvals and privacy. Two minutes each.",
   path: "/guides",
 });
-
-/** Business first, then personal, then what both share - the help panel's split. */
-const GROUPS = [
-  { id: "business", heading: "For your business", guides: guidesFor("business").filter((g) => g.audience === "business") },
-  { id: "personal", heading: "For your personal space", guides: guidesFor("personal").filter((g) => g.audience === "personal") },
-  { id: "all", heading: "For both", guides: GUIDES.filter((g) => g.audience === "all") },
-];
 
 /**
  * The same guides the help panel inside the app reads, on the public site.
@@ -35,13 +28,8 @@ export default function GuidesPage() {
       />
 
       <div className="mx-auto max-w-4xl space-y-14 px-4 py-16 sm:px-6 sm:py-20">
-      {GROUPS.map((group) => (
-      <section key={group.id} aria-labelledby={`guides-${group.id}`}>
-        <h2 id={`guides-${group.id}`} className="mb-5 font-hand text-hand-cta font-bold text-ink">
-          {group.heading}
-        </h2>
         <ul className="grid gap-3 sm:grid-cols-2">
-          {group.guides.map((guide) => (
+          {GUIDES.map((guide) => (
             <li key={guide.slug}>
                 <Panel className="group relative h-full p-5 transition-colors hover:border-accent-line">
                   <div className="flex items-center gap-2 text-ink-muted">
@@ -65,8 +53,6 @@ export default function GuidesPage() {
             </li>
           ))}
         </ul>
-      </section>
-      ))}
       </div>
     </>
   );

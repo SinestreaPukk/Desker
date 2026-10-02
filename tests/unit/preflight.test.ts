@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { missingGrounding, type PreflightInput } from "@/lib/work/preflight";
 
 const grounded: PreflightInput = {
-  projectAnswers: { business: "b", audience: "a", tone: "t", never: "n" },
+  projectAnswers: { about: "a", goals: "g", tone: "t", never: "n" },
   agentAnswers: { project: "Q4 warranty push", stakeholders: "Priya" },
   objectives: ["x"],
   tools: ["draft_content", "send_email"],
@@ -15,7 +15,7 @@ describe("missingGrounding", () => {
     expect(missingGrounding(grounded)).toEqual([]);
   });
 
-  it("lists everything a blind content marketer is missing", () => {
+  it("lists everything a blind writer is missing", () => {
     const missing = missingGrounding({
       ...grounded,
       projectAnswers: {},
@@ -23,7 +23,7 @@ describe("missingGrounding", () => {
       objectives: [],
       tools: ["web_research", "draft_content", "publish_post"],
     });
-    expect(missing).toHaveLength(5);
+    expect(missing).toHaveLength(4);
     expect(missing.some((m) => m.startsWith("What to write about"))).toBe(true);
   });
 
@@ -34,14 +34,14 @@ describe("missingGrounding", () => {
 
   it("holds an agent with every tool to the company-wide checks only", () => {
     expect(missingGrounding({ ...grounded, agentAnswers: {}, tools: null })).toEqual([]);
-    expect(missingGrounding({ ...grounded, projectAnswers: { business: "b" }, tools: null })).toHaveLength(2);
+    expect(missingGrounding({ ...grounded, projectAnswers: { about: "a" }, tools: null })).toHaveLength(1);
   });
 
-  it("only needs the business for a non-writing role", () => {
+  it("only needs who you are for a non-writing role", () => {
     expect(
       missingGrounding({
         ...grounded,
-        projectAnswers: { business: "b" },
+        projectAnswers: { about: "a" },
         agentAnswers: {},
         tools: ["web_research"],
         trigger: "manual",

@@ -22,7 +22,6 @@ async function ownership(userId: string) {
         select: {
           id: true,
           name: true,
-          kind: true,
           subscriptionStatus: true,
           memberships: { select: { userId: true, role: true } },
         },
@@ -50,7 +49,6 @@ export async function exportAccount(userId: string) {
       email: true,
       name: true,
       username: true,
-      useType: true,
       termsAcceptedAt: true,
       termsVersion: true,
       createdAt: true,
@@ -65,7 +63,6 @@ export async function exportAccount(userId: string) {
     select: {
       id: true,
       name: true,
-      kind: true,
       plan: true,
       mailingAddress: true,
       createdAt: true,
@@ -123,7 +120,7 @@ export async function exportAccount(userId: string) {
     exportedAt: new Date().toISOString(),
     note: "Everything Desker holds for your account and the spaces you own. Saved passwords for connected apps are left out on purpose.",
     account: user,
-    memberships: memberships.map((m) => ({ space: m.organization.name, kind: m.organization.kind, role: m.role })),
+    memberships: memberships.map((m) => ({ space: m.organization.name, role: m.role })),
     spaces: spaces.map(({ projects, ...space }) => ({
       ...space,
       projects: projects.map(({ agents, ...project }) => ({

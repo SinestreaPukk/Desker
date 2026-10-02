@@ -37,15 +37,15 @@ describe("outcomes", () => {
   });
 
   it("groups by role, from the template or the job title", () => {
-    expect(roleOf({ templateId: "researcher", jobTitle: "Anything" }).name).toBe("Researcher");
-    expect(roleOf({ templateId: null, jobTitle: "content marketer" }).name).toBe("Marketer");
+    expect(roleOf({ templateId: "money-manager", jobTitle: "Anything" }).name).toBe("Money");
+    expect(roleOf({ templateId: null, jobTitle: "social media manager" }).name).toBe("Social media");
     expect(roleOf({ templateId: null, jobTitle: "Night Owl" }).id).toBe("custom:night owl");
   });
 
   it("ranks hand-offs by how often their work is rejected", () => {
     const agents = [
-      { id: "r", name: "Sol", jobTitle: "Research Analyst", templateId: "researcher" },
-      { id: "m", name: "Nova", jobTitle: "Content Marketer", templateId: "marketer" },
+      { id: "r", name: "Sol", jobTitle: "Money Manager", templateId: "money-manager" },
+      { id: "m", name: "Nova", jobTitle: "Social Media Manager", templateId: "social-media-manager" },
     ];
     const summary = summarizeOutcomes({
       agents,
@@ -55,7 +55,7 @@ describe("outcomes", () => {
         run({ agentId: "m", type: "colleague_delegation", parentAgentId: "r", status: "rejected", awaitingSince: at(0), completedAt: at(5) }),
       ],
     });
-    expect(summary.byHandoff[0]).toMatchObject({ from: "Researcher", to: "Marketer", rejected: 1, reworkRate: 1 });
-    expect(summary.byRole.map((r) => r.roleName)).toEqual(["Researcher", "Marketer"]);
+    expect(summary.byHandoff[0]).toMatchObject({ from: "Money", to: "Social media", rejected: 1, reworkRate: 1 });
+    expect(summary.byRole.map((r) => r.roleName)).toEqual(["Money", "Social media"]);
   });
 });

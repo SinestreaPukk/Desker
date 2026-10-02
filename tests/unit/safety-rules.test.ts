@@ -5,8 +5,8 @@ import { buildRunPrompt } from "@/lib/work/prompt";
 const agent = { name: "Sam", jobTitle: "Support", department: null, personality: "Plain.", escalationRule: null };
 
 describe("safety rules every agent follows", () => {
-  it("are in a client chat: crisis lines, hand-off, and never claiming to be human", () => {
-    const prompt = buildSystemPrompt({ ...agent, responsibilities: [], allowedTools: ["escalate_to_human"], companyContext: "", audience: "client" });
+  it("are in a chat: crisis lines, hand-off, and never claiming to be human", () => {
+    const prompt = buildSystemPrompt({ ...agent, responsibilities: [], allowedTools: ["escalate_to_human"], companyContext: "" });
     expect(prompt).toContain("988");
     expect(prompt).toContain("findahelpline.com");
     expect(prompt).toContain("escalate_to_human");

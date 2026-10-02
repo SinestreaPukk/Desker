@@ -24,7 +24,6 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { ApprovalCard } from "@/components/work/approval-card";
 import { RemoveButton } from "@/components/work/row-actions";
 import { SuggestionRow } from "@/components/work/suggestion-row";
-import { useSpaceKind } from "@/components/space-kind";
 import { useAgents, useIssues, useSetIssueStatus } from "@/hooks/use-admin-data";
 import { useActionItems, useSuggestions, type RemoveTarget } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
@@ -67,7 +66,6 @@ export function NeedsYouView({
   focus,
   initialAgentId,
 }: NeedsYouViewProps) {
-  const personal = useSpaceKind() === "personal";
   const [kind, setKind] = React.useState<NeedsYouKind | "all">("all");
   const [view, setView] = React.useState<"waiting" | "handled">("waiting");
   const [agentId, setAgentId] = React.useState(initialAgentId ?? "all");
@@ -134,11 +132,7 @@ export function NeedsYouView({
     <Page>
       <PageHeader
         title="Needs you"
-        description={
-          personal
-            ? "Everything your assistants are waiting on you for, in one place: what to approve, what they flagged, what failed, and what they suggest."
-            : "Everything that needs a person, in one place: approvals, escalations, failed runs, agents' questions and problems reported in chats."
-        }
+        description="Everything your assistants are waiting on you for, in one place: what to approve, what they flagged, what failed, and what they suggest."
       />
 
       <PageToolbar stack>
@@ -148,7 +142,7 @@ export function NeedsYouView({
               All
               <TabCount value={entries.length} tone="warning" label={view} />
             </TabsTrigger>
-            {NEEDS_YOU_KINDS.filter((k) => !(personal && k === "reported")).map((k) => (
+            {NEEDS_YOU_KINDS.filter((k) => k !== "reported").map((k) => (
               <TabsTrigger key={k} value={k} className="whitespace-nowrap">
                 {LABELS[k]}
                 <TabCount value={counts[k]} tone={k === "approval" ? "warning" : k === "question" ? "accent" : "danger"} label={view} />
@@ -174,7 +168,7 @@ export function NeedsYouView({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{personal ? "All assistants" : "All agents"}</SelectItem>
+                <SelectItem value="all">All assistants</SelectItem>
                 {(agents ?? []).map((entry) => (
                   <SelectItem key={entry.id} value={entry.id}>
                     {entry.name}

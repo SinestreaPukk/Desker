@@ -3,7 +3,7 @@
  *
  * It is the same mechanism as an agent's own context (lib/work/context.ts) at
  * a different scope - typed once for the whole project, inherited by every
- * agent in it, so hiring a third agent does not mean describing the company a
+ * agent in it, so hiring a third agent does not mean describing yourself a
  * third time.
  */
 import "server-only";
@@ -11,10 +11,9 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { HttpError } from "@/lib/http-error";
 import { audit } from "@/lib/audit";
-import { spaceKind, type SpaceKind } from "@/lib/space";
 import {
   answeredCount,
-  contextQuestionsFor,
+  contextQuestions,
   hasCoreContext,
   answersFor,
   composeContext,
@@ -28,15 +27,12 @@ type ProjectRow = {
   name: string;
   context: string;
   contextAnswers: unknown;
-  organization: { kind: string };
 };
 
 export interface ProjectContextDto {
   projectId: string;
   slug: string;
   name: string;
-  /** Business or personal: decides which questions the form asks. */
-  kind: SpaceKind;
   answers: ContextAnswers;
   /** The composed string every agent in the project inherits. */
   context: string;
@@ -48,8 +44,7 @@ export interface ProjectContextDto {
 }
 
 export async function readProjectContext(project: ProjectRow): Promise<ProjectContextDto> {
-  const kind = spaceKind(project.organization.kind);
-  const questions = contextQuestionsFor(kind);
+  const questions = contextQuestions();
   const answers = answersFor(project.contextAnswers, project.context, questions.all);
   const documentCount = await prisma.document.count({
     where: { status: "ready", agent: { projectId: project.id } },
@@ -58,7 +53,6 @@ export async function readProjectContext(project: ProjectRow): Promise<ProjectCo
     projectId: project.id,
     slug: project.slug,
     name: project.name,
-    kind,
     answers,
     context: project.context,
     answered: answeredCount(answers, questions.core),
@@ -68,11 +62,11 @@ export async function readProjectContext(project: ProjectRow): Promise<ProjectCo
 }
 
 export async function saveProjectContext(
-  project: { id: string; organizationId: string; organization: { kind: string } },
+  project: { id: string; organizationId: string },
   input: ContextAnswers,
   userId: string,
 ): Promise<ProjectContextDto> {
-  const questions = contextQuestionsFor(spaceKind(project.organization.kind));
+  const questions = contextQuestions();
   const answers = toContextAnswers(input, questions.all);
   const context = composeContext(answers, questions.all);
   const updated = await prisma.project.update({
@@ -84,7 +78,6 @@ export async function saveProjectContext(
       name: true,
       context: true,
       contextAnswers: true,
-      organization: { select: { kind: true } },
     },
   });
 
@@ -102,21 +95,18 @@ export async function saveProjectContext(
 }
 
 /**
- * Refuses to put an agent in front of clients before the company is
+ * Refuses to switch an assistant on before the person is
  * described. An agent published without it works blind - the gap this closes.
  */
 export async function assertProjectGrounded(projectId: string): Promise<void> {
   const project = await prisma.project.findUniqueOrThrow({
     where: { id: projectId },
-    select: { context: true, contextAnswers: true, organization: { select: { kind: true } } },
+    select: { context: true, contextAnswers: true },
   });
-  const kind = spaceKind(project.organization.kind);
-  if (!hasCoreContext(project, kind)) {
+  if (!hasCoreContext(project)) {
     throw new HttpError(
       409,
-      kind === "personal"
-        ? "Answer the four questions about you before switching an assistant on - every assistant works from them."
-        : "Answer the four Company context questions before publishing - every agent needs them to work from.",
+      "Answer the four questions about you before switching an assistant on - every assistant works from them.",
     );
   }
 }

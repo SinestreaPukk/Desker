@@ -2,8 +2,8 @@
   "company": {
     "name": "Desker",
     "legalName": "Desker",
-    "tagline": "AI staff for your business, AI help for your life",
-    "description": "Hire AI staff for your company and private AI assistants for your own life. They know your business or you, work on a schedule, and stop for your approval before anything goes out.",
+    "tagline": "Private AI help for your own life",
+    "description": "Private AI assistants for your own life. They know you, work on a schedule, and stop for your approval before anything goes out.",
     "email": "sakditouch.pu@gmail.com",
     "location": "Bangkok, Thailand",
     "siteUrl": "https://desker.dev",
@@ -13,10 +13,6 @@
     {
       "label": "Product",
       "href": "/#product"
-    },
-    {
-      "label": "Roles",
-      "href": "/showcase"
     },
     {
       "label": "FAQ",
@@ -40,7 +36,7 @@
     "href": "/signup"
   },
   "footer": {
-    "blurb": "Desker gives you an AI team you can actually trust, at work and at home: every agent has a job, your context, and your sign-off before it publishes or sends. Personal spaces stay private to you.",
+    "blurb": "Desker gives you AI assistants you can actually trust: every one has a job, your context, and your sign-off before it publishes or sends. Your space stays private to you.",
     "rolesHeading": "Roles",
     "columns": [
       {
@@ -52,7 +48,7 @@
           },
           {
             "label": "Trust & control",
-            "href": "/#trust"
+            "href": "/privacy"
           },
           {
             "label": "FAQ",
@@ -94,7 +90,7 @@
           },
           {
             "label": "Security",
-            "href": "/#trust"
+            "href": "/privacy"
           }
         ]
       }

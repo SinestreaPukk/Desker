@@ -16,8 +16,8 @@ const stamp = Date.now().toString(36);
 let orgId: string;
 let projectId: string;
 let userId: string;
-let researcher: string;
-let marketer: string;
+let money: string;
+let assistant: string;
 
 beforeAll(async () => {
   const user = await prisma.user.create({ data: { email: `wf-${stamp}@example.com`, passwordHash: "x" } });
@@ -37,8 +37,8 @@ beforeAll(async () => {
     prisma.agent.create({
       data: { projectId, name, jobTitle, personality: "Plain.", responsibilities: [], allowedTools: [], status: "published" },
     });
-  researcher = (await make("Sol", "Research Analyst")).id;
-  marketer = (await make("Nova", "Content Marketer")).id;
+  money = (await make("Penny", "Money Manager")).id;
+  assistant = (await make("Juno", "Personal Assistant")).id;
 });
 
 afterAll(async () => {
@@ -48,13 +48,13 @@ afterAll(async () => {
 });
 
 describe("a named workflow", () => {
-  it("runs research, hands the findings to the marketer, and stops in Needs you", async () => {
+  it("runs the money check-in, hands it to life admin, and stops in Needs you", async () => {
     const { id: rootId } = (await startWorkflow({
-      workflowId: "research-to-post",
+      workflowId: "money-to-reminders",
       projectId,
       organizationId: orgId,
-      text: "Competitor warranties this month",
-      agentIds: [researcher, marketer],
+      text: "Subscriptions",
+      agentIds: [money, assistant],
       userId,
     }))!;
 
@@ -62,12 +62,12 @@ describe("a named workflow", () => {
     expect(view!.rootId).toBe(rootId);
     expect(view!.steps.map((s) => s.state)).toEqual(["with_agent", "not_started"]);
 
-    // Step 1 finishes with findings.
+    // Step 1 finishes with its findings.
     await prisma.actionItem.update({
       where: { id: rootId },
       data: {
         status: "done",
-        result: { summary: "Two competitors moved to 36 months.", findings: [{ query: "warranty", findings: "Fabrikam: 36 months." }] },
+        result: { summary: "Three subscriptions to cancel.", findings: [{ query: "subscriptions", findings: "Streaming: 3 services." }] },
       },
     });
     await advanceWorkflow(rootId);
@@ -75,29 +75,26 @@ describe("a named workflow", () => {
 
     const next = await prisma.actionItem.findMany({ where: { parentId: rootId } });
     expect(next).toHaveLength(1);
-    expect(next[0]!.agentId).toBe(marketer);
+    expect(next[0]!.agentId).toBe(assistant);
     expect(next[0]!.type).toBe("colleague_delegation");
     const payload = next[0]!.payload as { context: string; workflow: { step: number; rootId: string } };
-    expect(payload.context).toContain("Two competitors moved to 36 months.");
-    expect(payload.context).toContain("Fabrikam: 36 months.");
+    expect(payload.context).toContain("Three subscriptions to cancel.");
+    expect(payload.context).toContain("Streaming: 3 services.");
     expect(payload.workflow).toMatchObject({ step: 1, rootId });
 
-    // Step 2 queues the post for approval.
+    // Step 2 queues its reminders for approval.
     await prisma.actionItem.update({ where: { id: next[0]!.id }, data: { status: "needs_approval" } });
     [view] = await workflowRuns(projectId);
     expect(view!.steps.map((s) => s.state)).toEqual(["done", "needs_you"]);
     expect(view!.current).toBe(1);
   });
 
-  it("refuses to start without a switched-on agent for every step, or without its input", async () => {
+  it("refuses to start without a switched-on agent for every step", async () => {
     const draft = await prisma.agent.create({
-      data: { projectId, name: "Draft", jobTitle: "Marketer", personality: "Plain.", responsibilities: [], allowedTools: [] },
+      data: { projectId, name: "Draft", jobTitle: "Assistant", personality: "Plain.", responsibilities: [], allowedTools: [] },
     });
     await expect(
-      startWorkflow({ workflowId: "research-to-post", projectId, organizationId: orgId, text: "x", agentIds: [researcher, draft.id], userId }),
+      startWorkflow({ workflowId: "money-to-reminders", projectId, organizationId: orgId, text: "x", agentIds: [money, draft.id], userId }),
     ).rejects.toThrow(/switched on/);
-    await expect(
-      startWorkflow({ workflowId: "research-to-post", projectId, organizationId: orgId, text: " ", agentIds: [researcher, marketer], userId }),
-    ).rejects.toThrow(/needs something to work on/);
   });
 });

@@ -2,8 +2,7 @@ import { AgentAvatar } from "@/components/ui/avatar";
 
 /**
  * The sign-in pages' backdrop: the whole cast, in round frames, circling the
- * form on two slow orbits - the business staff on the outer ring, the
- * personal assistants on the inner one, turning the other way. The faces are
+ * form on two slow orbits - the assistants on two rings, turning the other way. The faces are
  * counter-rotated so they stay upright. Pure CSS (globals.css, .orbit);
  * still for anyone who prefers reduced motion, and hidden from assistive tech.
  */

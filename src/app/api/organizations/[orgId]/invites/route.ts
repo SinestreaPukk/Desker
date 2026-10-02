@@ -55,10 +55,7 @@ export async function POST(request: Request, { params }: Params) {
     const actorRole = await requireRole(userId, orgId, "admin");
     const input = await parseJson(request, createSchema);
     // A personal space is one person's. Nobody else is ever let in.
-    const space = await prisma.organization.findUniqueOrThrow({ where: { id: orgId }, select: { kind: true } });
-    if (space.kind === "personal") {
-      throw new HttpError(403, "A personal space is private to you, so nobody can be invited into it. Invite people to a business instead.");
-    }
+    throw new HttpError(403, "Your space is private to you, so nobody can be invited into it.");
     // Only an owner can mint another owner.
     if (input.role === "owner" && actorRole !== "owner") {
       throw new HttpError(403, "Only an owner can invite another owner.");

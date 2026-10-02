@@ -31,7 +31,7 @@ test("hire an agent from a role template", async ({ page }) => {
   project = await currentProjectSlug(page);
   await page.goto(`/p/${project}/agents/new`);
 
-  await page.getByRole("button", { name: /Content marketer|Marketer/ }).first().click();
+  await page.getByRole("button", { name: /^Social media\b/ }).first().click();
   await page.getByRole("button", { name: "Continue" }).click();
 
   await page.getByLabel("Name").fill(AGENT);
@@ -53,12 +53,8 @@ test("hire an agent from a role template", async ({ page }) => {
 
 test("publish it", async ({ page }) => {
   await page.goto(`/p/${project}/agents/${agentId}`);
-  await page.getByRole("button", { name: "Publish", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Unpublish" })).toBeVisible({ timeout: 20_000 });
-
-  // Published means reachable: the public link answers without a session.
-  const response = await page.request.get(`/c/${agentId}`);
-  expect(response.status()).toBe(200);
+  await page.getByRole("button", { name: "Switch on", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Switch off" })).toBeVisible({ timeout: 20_000 });
 });
 
 test("its scope of work produces a task", async ({ page }) => {

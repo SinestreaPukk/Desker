@@ -12,8 +12,6 @@
  * Pure and free of server imports: the Workflows page, the start API and the
  * tests read the same definitions.
  */
-import type { SpaceKind } from "@/lib/space";
-
 export interface WorkflowStep {
   /** Which kind of agent owns it; matched against job titles to suggest one. */
   role: string;
@@ -27,7 +25,6 @@ export interface WorkflowStep {
 
 export interface Workflow {
   id: string;
-  audience: SpaceKind;
   name: string;
   pitch: string;
   input: { label: string; placeholder: string; optional?: boolean };
@@ -38,52 +35,7 @@ export interface Workflow {
 
 export const WORKFLOWS: readonly Workflow[] = [
   {
-    id: "research-to-post",
-    audience: "business",
-    name: "Research → post",
-    pitch: "A researcher finds out what matters on a topic, a marketer turns it into a post, and you approve it before it goes out.",
-    input: { label: "What should they research?", placeholder: "What our three main competitors changed about their warranties this month" },
-    steps: [
-      {
-        role: "researcher",
-        roleLabel: "Researcher",
-        match: /research|analyst|intelligence/i,
-        title: "Research the topic",
-        instruction: (input) =>
-          `Research this, with sources: ${input}\n\nWrite up the findings a marketer needs to write one post from them: the facts, the numbers, and what is new. Do not write the post yourself - a colleague does that next, from your report.`,
-      },
-      {
-        role: "marketer",
-        roleLabel: "Marketer",
-        match: /market|content|social|brand|copy/i,
-        title: "Draft the post",
-        instruction: () =>
-          "Write one post from the research below, in the house style, and publish it with publish_post - it waits for the owner's approval. If no publishing integration is connected, leave it as a finished draft and say so.",
-      },
-    ],
-    gate: "You approve the post",
-  },
-  {
-    id: "question-to-answer",
-    audience: "business",
-    name: "Customer question → answer",
-    pitch: "Support answers a customer's question from your own policies and drafts the reply - or, if the documents don't settle it, stops and hands it to you.",
-    input: { label: "The customer's question, and their email address", placeholder: "jo@example.com asks: can I return a drill I bought 40 days ago if it's unopened?" },
-    steps: [
-      {
-        role: "customer-support",
-        roleLabel: "Support",
-        match: /support|customer|service|success|help/i,
-        title: "Answer from your policies",
-        instruction: (input) =>
-          `A customer wrote in:\n\n${input}\n\nSearch the uploaded documents for the answer. If they clearly answer it, draft a short, warm reply and send it with send_email to the customer's address - it waits for the owner's approval. If the documents do not clearly settle it, do not guess: call escalate_to_human with what is missing, and draft nothing.`,
-      },
-    ],
-    gate: "You approve the reply, or answer it yourself",
-  },
-  {
     id: "money-to-reminders",
-    audience: "personal",
     name: "Money check-in → reminders",
     pitch: "Your money manager adds up your latest statement and picks what to change; life admin puts a reminder in your calendar for each one.",
     input: { label: "Anything to focus on?", placeholder: "Subscriptions, and anything that went up this month", optional: true },
@@ -111,10 +63,6 @@ export const WORKFLOWS: readonly Workflow[] = [
 
 export function workflowById(id: string): Workflow | undefined {
   return WORKFLOWS.find((workflow) => workflow.id === id);
-}
-
-export function workflowsFor(kind: SpaceKind): Workflow[] {
-  return WORKFLOWS.filter((workflow) => workflow.audience === kind);
 }
 
 /** The agent to suggest for a step: the first published one whose job title fits. */

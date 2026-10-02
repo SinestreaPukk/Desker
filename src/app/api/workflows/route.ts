@@ -2,9 +2,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { findProject } from "@/lib/projects";
-import { spaceKind } from "@/lib/space";
 import { startWorkflow, workflowRuns } from "@/lib/work/workflow-run";
-import { suggestAgent, workflowsFor } from "@/lib/work/workflows";
+import { suggestAgent, WORKFLOWS } from "@/lib/work/workflows";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +26,7 @@ export async function GET(request: Request) {
       orderBy: { name: "asc" },
     });
     return {
-      workflows: workflowsFor(spaceKind(project.organization.kind)).map((workflow) => ({
+      workflows: WORKFLOWS.map((workflow) => ({
         id: workflow.id,
         name: workflow.name,
         pitch: workflow.pitch,

@@ -41,11 +41,10 @@ describe("the connector catalog", () => {
     }
   });
 
-  it("gives the Assistant and Developer roles a working connector", () => {
+  it("gives the Assistant role a working connector", () => {
     const available = (role: string) =>
       CONNECTORS.filter((c) => c.status === "available" && c.auth === "oauth" && c.roles.includes(role)).map((c) => c.id);
-    expect(available("secretary")).toEqual(expect.arrayContaining(["google_calendar", "slack"]));
-    expect(available("dev-support")).toContain("github");
+    expect(available("personal-assistant")).toEqual(expect.arrayContaining(["google_calendar"]));
   });
 });
 

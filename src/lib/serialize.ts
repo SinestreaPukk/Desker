@@ -36,22 +36,7 @@ export interface AgentDetailDto extends Omit<AgentSummaryDto, "conversationCount
   escalationRule: string | null;
   welcomeMessage: string | null;
   model: string | null;
-  publicPasscode: string | null;
-  widgetLabel: string | null;
-  widgetColor: string | null;
-  widgetSide: string | null;
   createdAt: string;
-}
-
-/** The only agent fields a client browser is allowed to see. */
-export interface PublicAgentDto {
-  id: string;
-  name: string;
-  jobTitle: string;
-  department: string | null;
-  avatarUrl: string | null;
-  welcomeMessage: string | null;
-  requiresPasscode: boolean;
 }
 
 type AgentRow = {
@@ -69,10 +54,6 @@ type AgentRow = {
   status: string;
   modelProvider: string;
   model: string | null;
-  publicPasscode: string | null;
-  widgetLabel: string | null;
-  widgetColor: string | null;
-  widgetSide: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -93,33 +74,8 @@ export function toAgentDetail(agent: AgentRow): AgentDetailDto {
     status: agent.status,
     modelProvider: agent.modelProvider,
     model: agent.model,
-    publicPasscode: agent.publicPasscode,
-    widgetLabel: agent.widgetLabel,
-    widgetColor: agent.widgetColor,
-    widgetSide: agent.widgetSide,
     createdAt: agent.createdAt.toISOString(),
     updatedAt: agent.updatedAt.toISOString(),
-  };
-}
-
-export function toPublicAgent(agent: {
-  id: string;
-  name: string;
-  jobTitle: string;
-  department: string | null;
-  avatarUrl: string | null;
-  welcomeMessage: string | null;
-  publicPasscode: string | null;
-}): PublicAgentDto {
-  return {
-    id: agent.id,
-    name: agent.name,
-    jobTitle: agent.jobTitle,
-    department: agent.department,
-    avatarUrl: agent.avatarUrl,
-    welcomeMessage: agent.welcomeMessage,
-    // The passcode itself never crosses the wire - only whether one exists.
-    requiresPasscode: Boolean(agent.publicPasscode),
   };
 }
 

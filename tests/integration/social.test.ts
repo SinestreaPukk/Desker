@@ -158,7 +158,7 @@ describe("changing posts afterwards", () => {
 describe("in a personal space", () => {
   it("posts to X from someone's own space the same way, once they approve", async () => {
     const personal = await prisma.organization.create({
-      data: { name: `Me ${stamp}`, slug: `me-${stamp}`, kind: "personal", projects: { create: { name: "Me", slug: `me-${stamp}` } } },
+      data: { name: `Me ${stamp}`, slug: `me-${stamp}`, projects: { create: { name: "Me", slug: `me-${stamp}` } } },
       include: { projects: true },
     });
     try {

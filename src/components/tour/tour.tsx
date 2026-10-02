@@ -6,7 +6,6 @@ import { ArrowLeft, ArrowRight, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSpaceKind } from "@/components/space-kind";
 import { cn } from "@/lib/utils";
 import { Callouts } from "./infographic";
 import { TOUR } from "./tour-content";
@@ -18,19 +17,19 @@ export function openTour() {
   window.dispatchEvent(new Event(TOUR_OPEN_EVENT));
 }
 
-// Seen once per browser and kind of space: a preference of the person looking,
+// Seen once per browser: a preference of the person looking,
 // like the setup checklist's, and never a reason to break the page.
-const seenKey = (kind: string) => `desker.tour.seen.${kind}`;
-function seen(kind: string): boolean {
+const seenKey = () => "desker.tour.seen.personal";
+function seen(): boolean {
   try {
-    return window.localStorage.getItem(seenKey(kind)) === "1";
+    return window.localStorage.getItem(seenKey()) === "1";
   } catch {
     return true;
   }
 }
-function markSeen(kind: string) {
+function markSeen() {
   try {
-    window.localStorage.setItem(seenKey(kind), "1");
+    window.localStorage.setItem(seenKey(), "1");
   } catch {
     /* a convenience, not a record */
   }
@@ -45,8 +44,7 @@ type Chapter = "setup" | "features";
  * different about Desker, each with one thing worth trying and a link to it.
  */
 export function Tour({ project }: { project: string }) {
-  const kind = useSpaceKind();
-  const { setup, features } = TOUR[kind];
+  const { setup, features } = TOUR;
   const [open, setOpen] = React.useState(false);
   const [chapter, setChapter] = React.useState<Chapter>("setup");
   const [index, setIndex] = React.useState(0);
@@ -54,7 +52,7 @@ export function Tour({ project }: { project: string }) {
   React.useEffect(() => {
     // After the page has painted, so it opens over something recognisable.
     const timer = window.setTimeout(() => {
-      if (!seen(kind)) setOpen(true);
+      if (!seen()) setOpen(true);
     }, 400);
     function reopen() {
       setChapter("setup");
@@ -66,11 +64,11 @@ export function Tour({ project }: { project: string }) {
       window.clearTimeout(timer);
       window.removeEventListener(TOUR_OPEN_EVENT, reopen);
     };
-  }, [kind]);
+  }, []);
 
   function close(next: boolean) {
     setOpen(next);
-    if (!next) markSeen(kind);
+    if (!next) markSeen();
   }
 
   const items = chapter === "setup" ? setup : features;

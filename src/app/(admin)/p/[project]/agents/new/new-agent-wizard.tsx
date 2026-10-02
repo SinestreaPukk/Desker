@@ -23,9 +23,8 @@ import { useCreateAgent } from "@/hooks/use-admin-data";
 import { api, ApiError, errorMessage } from "@/lib/api-client";
 import { randomAgentName } from "@/lib/agent-fields";
 import type { ToolId } from "@/lib/tools/registry";
-import { templateById, templatesFor, type AgentTemplate } from "@/lib/content";
-import { useSpaceKind } from "@/components/space-kind";
-import { spaceCopy } from "@/lib/space-copy";
+import { templateById, TEMPLATES, type AgentTemplate } from "@/lib/content";
+import { SPACE_COPY as copy } from "@/lib/space-copy";
 import { TemplateIcon, ScratchCuteIcon } from "@/components/marketing/template-icon";
 import { AGENT_CONTEXT_QUESTIONS } from "@/lib/work/context";
 import type { WorkToolId } from "@/lib/work/tools";
@@ -85,10 +84,7 @@ export function NewAgentWizard({ project }: { project: string }) {
   const router = useRouter();
   const search = useSearchParams();
   const create = useCreateAgent(project);
-  const kind = useSpaceKind();
-  const roles = templatesFor(kind);
-  const copy = spaceCopy(kind);
-  const personal = kind === "personal";
+  const roles = TEMPLATES;
 
   // A showcase link (/signup?template=x) arrives with the role already chosen.
   const preselected = roles.find((role) => role.id === search.get("template"));
@@ -167,23 +163,21 @@ export function NewAgentWizard({ project }: { project: string }) {
         <Breadcrumbs
           items={[
             { label: "Roster", href: `/p/${project}/roster` },
-            { label: personal ? "Add an assistant" : "Hire an AI employee" },
+            { label: "Add an assistant" },
           ]}
           className="mb-4"
         />
-        <h1 className="text-xl font-bold tracking-tight text-ink">{personal ? "Add an assistant" : "Hire an AI employee"}</h1>
+        <h1 className="text-xl font-bold tracking-tight text-ink">Add an assistant</h1>
         <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
           {step === 0
-            ? personal
-              ? "Pick what you want help with. Everything after that is filled in for you - change what you like."
-              : "Pick a role. Everything after that is filled in for you - change what you like."
+            ? "Pick what you want help with. Everything after that is filled in for you - change what you like."
             : "Filled in from the role. Tick, untick or add - then it's ready to try."}
         </p>
 
         <Panel className="mt-5">
           <PanelHeader>
             <div>
-              <PanelTitle>{step === 0 ? (personal ? "What should they help with?" : "Pick a role") : "Make it yours"}</PanelTitle>
+              <PanelTitle>{step === 0 ? ("What should they help with?") : "Make it yours"}</PanelTitle>
               <PanelDescription>
                 {step === 0 ? `Step 1 of 2` : `Step 2 of 2${preset ? ` · ${preset.name}` : " · from scratch"}`}
               </PanelDescription>
@@ -245,7 +239,7 @@ export function NewAgentWizard({ project }: { project: string }) {
 
                 <details className="rounded-md border border-line">
                   <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2/60">
-                    Face{copy.showTeam ? " and team" : ""} <span className="font-normal text-ink-muted">· optional</span>
+                    Face <span className="font-normal text-ink-muted">· optional</span>
                   </summary>
                   <div className="space-y-4 border-t border-line p-3">
                     <div className="space-y-1.5">
@@ -257,16 +251,6 @@ export function NewAgentWizard({ project }: { project: string }) {
                         onChange={(next) => set("avatarUrl", next)}
                       />
                     </div>
-                    {copy.showTeam ? (
-                      <Field label="Team" htmlFor="department" hint="Only used to group the roster once you have a few.">
-                        <Input
-                          id="department"
-                          value={form.department}
-                          onChange={(event) => set("department", event.target.value)}
-                          placeholder={copy.teamPlaceholder}
-                        />
-                      </Field>
-                    ) : null}
                   </div>
                 </details>
 
@@ -277,7 +261,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                   idPrefix="hire"
                 />
 
-                <EscalationPicker value={form.escalationRule} onChange={(next) => set("escalationRule", next)} kind={kind} idPrefix="hire" />
+                <EscalationPicker value={form.escalationRule} onChange={(next) => set("escalationRule", next)} idPrefix="hire" />
 
                 <ObjectivesSection
                   value={scope}
@@ -318,7 +302,7 @@ export function NewAgentWizard({ project }: { project: string }) {
                 Other roles
               </Button>
               <Button onClick={() => void hire()} loading={saving} disabled={!ready}>
-                {personal ? "Add" : "Hire"} {form.name.trim() || "them"}
+                Add {form.name.trim() || "them"}
                 <ArrowRight aria-hidden />
               </Button>
             </PanelFooter>

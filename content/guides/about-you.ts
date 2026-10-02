@@ -1,5 +1,4 @@
 export const guide = {
-  audience: "personal",
   slug: "about-you",
   title: "Tell your assistants about you",
   summary: "Four short answers every assistant reads - and what never to put in them.",

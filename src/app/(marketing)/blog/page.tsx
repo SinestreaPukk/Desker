@@ -38,7 +38,7 @@ export default async function BlogIndexPage() {
     <>
       <PageHeader
         title="Blog & Updates"
-        intro="Product updates, patch notes, announcements, and perspectives on building reliable AI teams."
+        intro="Product updates, patch notes, announcements, and perspectives on building reliable AI assistants."
         eyebrow="Desker Journal"
       />
 

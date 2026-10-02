@@ -5,10 +5,10 @@
  * public/brand, and nothing else - never hardcode the name in components.
  */
 export const BRAND = {
-  name: "Desker",
-  tagline: "Agentic AI Platform",
+  name: "Desker Personal",
+  tagline: "Your personal agentic AI",
   /** Used in the assembled system prompt so agents know what platform they run on. */
-  platformDescription: "an agentic AI platform",
+  platformDescription: "a personal agentic AI assistant",
   /**
    * The brand ink blue. The UI reads it from the `--brand` design token
    * rather than from here; this is the reference value

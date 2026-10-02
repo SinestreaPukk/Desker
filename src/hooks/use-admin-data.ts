@@ -6,20 +6,15 @@ import { api, queryString } from "@/lib/api-client";
 import type {
   AgentDetailDto,
   AgentSummaryDto,
-  ConversationSummaryDto,
   DocumentDto,
   IssueDto,
-  MessageDto,
-} from "@/lib/serialize";
+  } from "@/lib/serialize";
 import type { AgentInput } from "@/lib/validation";
 
 export const keys = {
   agents: (project: string) => ["agents", project] as const,
   agent: (id: string) => ["agents", id] as const,
   documents: (agentId: string) => ["agents", agentId, "documents"] as const,
-  conversations: (filters: Record<string, string>) =>
-    ["conversations", filters] as const,
-  conversation: (id: string) => ["conversations", id] as const,
   issues: (filters: Record<string, string>) => ["issues", filters] as const,
   analytics: (project: string, days: number) => ["analytics", project, days] as const,
 };
@@ -119,76 +114,6 @@ export function useDeleteDocument(agentId: string) {
   });
 }
 
-// --- inbox ------------------------------------------------------------------
-
-export function useConversations(filters: Record<string, string>) {
-  return useQuery({
-    queryKey: keys.conversations(filters),
-    queryFn: () =>
-      api<ConversationSummaryDto[]>(`/api/conversations${queryString(filters)}`),
-    // Backstop for the live SSE feed, which is single-instance only.
-    refetchInterval: 20_000,
-  });
-}
-
-export interface ConversationDetail {
-  id: string;
-  status: string;
-  mode: string;
-  takenOverBy: string | null;
-  summary: string | null;
-  isPreview: boolean;
-  agent: { id: string; name: string; jobTitle: string; avatarUrl: string | null };
-  originalAgent: { id: string; name: string; jobTitle: string; avatarUrl: string | null } | null;
-  createdAt: string;
-  lastMessageAt: string;
-  messages: MessageDto[];
-  issues: IssueDto[];
-}
-
-export function useConversation(conversationId: string | null) {
-  return useQuery({
-    queryKey: keys.conversation(conversationId ?? ""),
-    queryFn: () => api<ConversationDetail>(`/api/conversations/${conversationId}`),
-    enabled: Boolean(conversationId),
-    // A client can reply at any moment while a colleague has the conversation
-    // open, so this view refreshes on its own as well as on the live feed.
-    refetchInterval: 8_000,
-  });
-}
-
-/** A colleague replying into the transcript, which reaches the client's chat. */
-export function useSendReply(conversationId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (input: { message: string; takeOver: boolean }) =>
-      api<MessageDto>(`/api/conversations/${conversationId}/reply`, {
-        method: "POST",
-        body: JSON.stringify(input),
-      }),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: keys.conversation(conversationId) });
-      void client.invalidateQueries({ queryKey: ["conversations"] });
-    },
-  });
-}
-
-/** Take a conversation over from the agent, or hand it back. */
-export function useSetConversationMode(conversationId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (mode: "agent" | "human") =>
-      api<{ id: string; mode: string }>(`/api/conversations/${conversationId}/mode`, {
-        method: "PATCH",
-        body: JSON.stringify({ mode }),
-      }),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: keys.conversation(conversationId) });
-      void client.invalidateQueries({ queryKey: ["conversations"] });
-    },
-  });
-}
-
 export function useIssues(filters: Record<string, string>) {
   return useQuery({
     queryKey: keys.issues(filters),
@@ -207,30 +132,9 @@ export function useSetIssueStatus() {
       }),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ["issues"] });
-      void client.invalidateQueries({ queryKey: ["conversations"] });
       void client.invalidateQueries({ queryKey: ["agents"] });
       // A run's flag is an issue too: Work's Needs you reads off it.
       void client.invalidateQueries({ queryKey: ["action-items"] });
-    },
-  });
-}
-
-export function useSetConversationStatus() {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      conversationId,
-      status,
-    }: {
-      conversationId: string;
-      status: "open" | "escalated" | "resolved";
-    }) =>
-      api<{ id: string }>(`/api/conversations/${conversationId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
-      }),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
 }
@@ -297,34 +201,6 @@ export function useAnalytics(project: string, days = 30) {
         `/api/analytics?days=${days}&project=${encodeURIComponent(project)}`,
       ),
     enabled: Boolean(project),
-  });
-}
-
-// --- notes ------------------------------------------------------------------
-
-export interface NoteDto {
-  id: string;
-  authorName: string;
-  body: string;
-  createdAt: string;
-}
-
-export function useNotes(conversationId: string) {
-  return useQuery({
-    queryKey: ["notes", conversationId],
-    queryFn: () => api<NoteDto[]>(`/api/conversations/${conversationId}/notes`),
-  });
-}
-
-export function useAddNote(conversationId: string) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (body: string) =>
-      api<NoteDto>(`/api/conversations/${conversationId}/notes`, {
-        method: "POST",
-        body: JSON.stringify({ body }),
-      }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: ["notes", conversationId] }),
   });
 }
 
@@ -413,7 +289,6 @@ export function useAdminLiveFeed() {
       }
 
       void client.invalidateQueries({ queryKey: ["issues"] });
-      void client.invalidateQueries({ queryKey: ["conversations"] });
       void client.invalidateQueries({ queryKey: ["agents"] });
     };
 

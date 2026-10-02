@@ -46,7 +46,6 @@ export async function POST(request: Request) {
         userMessage: input.message,
         persist: true,
         signal: request.signal,
-        mode: "colleague",
       }),
       { signal: request.signal },
     );

@@ -64,16 +64,10 @@ export async function POST(request: Request, { params }: Params) {
         allowedTools: source.allowedTools ?? [],
         escalationRule: source.escalationRule,
         welcomeMessage: source.welcomeMessage,
-        // Always a draft: a copy should never be reachable by clients until
-        // someone has looked at it.
+        // Always a draft: a copy stays off until you have looked at it.
         status: "draft",
         modelProvider: source.modelProvider,
         model: source.model,
-        // Passcodes are per-deployment secrets, not part of the persona.
-        publicPasscode: null,
-        widgetLabel: source.widgetLabel,
-        widgetColor: source.widgetColor,
-        widgetSide: source.widgetSide,
       },
     });
 

@@ -120,30 +120,30 @@ describe("the project's shared context", () => {
   it("is typed once and read by every agent in the project", async () => {
     const project = await prisma.project.findUniqueOrThrow({ where: { id: projectId } });
     const saved = await saveProjectContext(
-      { id: projectId, organizationId, organization: { kind: "business" } },
+      { id: projectId, organizationId },
       {
-        business: "Northwind Supply Co. sells hand tools to tradespeople.",
+        about: "Maya, a designer in Bangkok.",
         tone: "Plain and direct. No hype.",
       },
       "tester",
     );
     expect(saved.answered).toBe(2);
-    expect(saved.context).toContain("The business: Northwind Supply Co.");
-    expect(saved.context).toContain("House style: Plain and direct.");
+    expect(saved.context).toContain("About me: Maya, a designer in Bangkok.");
+    expect(saved.context).toContain("How to talk to me: Plain and direct.");
     expect(project.context).toBe("");
 
     // Nothing was copied into either agent: they inherit it at read time, so
     // editing it once changes what both of them read.
     for (const id of [agentId, secondAgentId]) {
       const scope = await prisma.scopeOfWork.findUniqueOrThrow({ where: { agentId: id } });
-      expect(scope.context).not.toContain("Northwind Supply Co.");
+      expect(scope.context).not.toContain("Maya, a designer in Bangkok.");
 
       const combined = effectiveContext({
         projectContext: saved.context,
         agentContext: scope.context,
       });
-      expect(combined).toContain("Northwind Supply Co.");
-      expect(combined.indexOf("Northwind")).toBeLessThan(
+      expect(combined).toContain("Maya, a designer in Bangkok.");
+      expect(combined.indexOf("Maya")).toBeLessThan(
         combined.indexOf(scope.context.split("\n")[0]!),
       );
     }
@@ -152,7 +152,6 @@ describe("the project's shared context", () => {
   it("reports how much is answered and what can be drafted from", async () => {
     const project = await prisma.project.findUniqueOrThrow({
       where: { id: projectId },
-      include: { organization: { select: { kind: true } } },
     });
     const dto = await readProjectContext(project);
     expect(dto.answered).toBe(2);

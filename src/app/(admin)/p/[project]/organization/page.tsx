@@ -23,7 +23,6 @@ export default async function OrganizationPage({
     <OrganizationView
       project={project}
       organizationId={found.organizationId}
-      currentUserId={user.id}
       checkoutResult={checkout ?? null}
     />
   );

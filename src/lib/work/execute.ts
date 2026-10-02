@@ -10,6 +10,7 @@ import "server-only";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import * as life from "@/lib/life/store";
 import { audit } from "@/lib/audit";
 import { searchDocuments } from "@/lib/rag/search-documents";
 import { searchDocumentsInput } from "@/lib/rag/search-documents-tool";
@@ -22,7 +23,7 @@ import { notifyInBackground } from "@/lib/notify";
 import { canStartRun } from "@/lib/billing/limits";
 import { connectorAccess } from "@/lib/integrations/oauth";
 import { readBanks } from "@/lib/integrations/plaid";
-import { optOutFor, splitOptedOut } from "@/lib/email-optout";
+import { splitOptedOut } from "@/lib/email-optout";
 import {
   calendarAccess,
   conflictsWith,
@@ -1031,6 +1032,38 @@ async function githubWrite(input: unknown, ctx: RunContext): Promise<WorkToolOut
   });
 }
 
+const lifeRecordSchema = z.object({
+  kind: z.enum(["event", "task", "bill", "expense", "income", "goal", "workout", "preference", "note"]),
+  title: z.string().min(1).max(300),
+  at: z.coerce.date().optional(),
+  until: z.coerce.date().optional(),
+  amount: z.number().nonnegative().max(1e9).optional(),
+  category: z.string().max(60).optional(),
+  value: z.string().max(300).optional(),
+});
+
+/** Writes one fact into the shared life context. Stays inside the product, so it is not gated. */
+async function lifeRecord(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = lifeRecordSchema.safeParse(input);
+  if (!parsed.success) return invalid("life_record", parsed.error);
+  const { kind, title, at, until, amount, category, value } = parsed.data;
+  const agent = await prisma.agent.findUnique({ where: { id: ctx.agent.id }, select: { projectId: true } });
+  if (!agent) return { content: "Agent not found.", isError: true };
+  const a = { organizationId: ctx.organizationId, projectId: agent.projectId, source: `agent:${ctx.agent.id}` };
+  const needsDate = ["event", "bill", "expense", "income", "workout"].includes(kind);
+  if (needsDate && !at) return { content: `A ${kind} needs "at" (an ISO date-time).`, isError: true };
+  const minor = Math.round((amount ?? 0) * 100);
+  if (kind === "event") await life.addEvent(a, { title, startsAt: at!, endsAt: until });
+  else if (kind === "task") await life.addTask(a, { title, dueAt: at });
+  else if (kind === "bill") await life.addEntry(a, { kind: "bill", payee: title, amountMinor: minor, category, occurredAt: at!, status: "unpaid" });
+  else if (kind === "expense" || kind === "income") await life.addEntry(a, { kind, payee: title, amountMinor: minor, category, occurredAt: at! });
+  else if (kind === "goal") await life.addGoal(a, { title, domain: category, target: amount !== undefined ? String(amount) : undefined, deadline: at });
+  else if (kind === "workout") await life.addWorkout(a, { title, scheduledAt: at! });
+  else if (kind === "preference") await life.setPreference(a, title, value ?? "");
+  else await life.addNote(a, title);
+  return { content: `Recorded ${kind}: ${title}.` };
+}
+
 export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<WorkToolOutcome> {
   let outcome: WorkToolOutcome;
   if (!isWorkToolId(call.name)) {
@@ -1043,6 +1076,9 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
           break;
         case "review_spending":
           outcome = await reviewSpending(call.input, ctx);
+          break;
+        case "life_record":
+          outcome = await lifeRecord(call.input, ctx);
           break;
         case "web_research":
           outcome = await webResearch(call.input, ctx);
@@ -1249,28 +1285,11 @@ export async function executePendingAction(
     if (to.length === 0 || !subject || !body) {
       return { ok: false, status: 0, detail: "The email is missing a recipient, subject or body." };
     }
-    // Anti-spam law: a postal address on every email, and nobody who opted out.
-    // A personal space's email is one person writing to people they know, not
-    // commercial mail: no business footer, and no postal address to demand.
-    const organization = await prisma.organization.findUniqueOrThrow({
-      where: { id: organizationId },
-      select: { id: true, name: true, mailingAddress: true, kind: true },
-    });
-    const personal = organization.kind === "personal";
-    if (!personal && !organization.mailingAddress?.trim()) {
-      return {
-        ok: false,
-        status: 0,
-        detail:
-          "Add your business's postal address under Organization → Email sender details first. The law requires one on emails to customers, so nothing was sent.",
-      };
-    }
     const { allowed, optedOut } = await splitOptedOut(organizationId, to);
     if (allowed.length === 0) {
       return { ok: false, status: 0, detail: `Nothing was sent: ${optedOut.join(", ")} asked not to receive emails from you.` };
     }
-    const optOut = personal ? { footer: "", headers: {} } : optOutFor(organization, allowed);
-    delivery = await deliverEmail(email, { to: allowed, subject, text: body + optOut.footer, headers: optOut.headers });
+    delivery = await deliverEmail(email, { to: allowed, subject, text: body });
     if (delivery.ok && optedOut.length > 0) {
       delivery = { ...delivery, detail: `${delivery.detail}. Skipped ${optedOut.join(", ")}, who asked not to receive emails from you.` };
     }

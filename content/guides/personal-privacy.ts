@@ -1,5 +1,4 @@
 export const guide = {
-  audience: "personal",
   slug: "personal-privacy",
   title: "What stays private",
   summary: "Who can see your personal space, what the AI reads, and how to take it all back.",
@@ -8,11 +7,11 @@ export const guide = {
 
 ## Only you
 
-Nobody can be invited into a personal space, not even from a business you own. Its assistants have no public chat link or website widget, so a link that leaks goes nowhere. If you also run a business on Desker, the two are separate spaces: your business, its team and its clients never see anything personal.
+Nobody can be invited into your space. Your assistants have no public chat link or website widget, so a link that leaks goes nowhere.
 
 ## What the AI reads
 
-To write a reply or finish a task, an assistant sends the text it needs to the AI model provider. Under their business terms that text is not used to train their models. Nothing you share is sold or used for advertising. Account and card numbers in uploaded statements are masked before any AI reads them.
+To write a reply or finish a task, an assistant sends the text it needs to the AI model provider. Under their API terms that text is not used to train their models. Nothing you share is sold or used for advertising. Account and card numbers in uploaded statements are masked before any AI reads them.
 
 ## Nothing leaves without you
 

@@ -11,7 +11,6 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/slug";
-import { spaceKind, type SpaceKind } from "@/lib/space";
 
 export type OrganizationRole = "owner" | "admin" | "member";
 
@@ -48,12 +47,10 @@ export async function createOrganizationFor(
   userId: string,
   name: string,
   db: Prisma.TransactionClient = prisma,
-  kind: SpaceKind = "business",
 ) {
   return db.organization.create({
     data: {
       name,
-      kind,
       slug: await uniqueOrganizationSlug(name, db),
       memberships: { create: { userId, role: "owner" } },
     },
@@ -67,12 +64,11 @@ export async function organizationsFor(userId: string) {
     orderBy: { createdAt: "asc" },
     select: {
       role: true,
-      organization: { select: { id: true, name: true, slug: true, kind: true } },
+      organization: { select: { id: true, name: true, slug: true } },
     },
   });
   return memberships.map((membership) => ({
     ...membership.organization,
-    kind: spaceKind(membership.organization.kind),
     role: membership.role as OrganizationRole,
   }));
 }
@@ -95,7 +91,7 @@ export async function primaryOrganizationFor(userId: string) {
     userId,
     defaultOrganizationName(user),
   );
-  return { id: organization.id, name: organization.name, slug: organization.slug, kind: spaceKind(organization.kind), role: "owner" as const };
+  return { id: organization.id, name: organization.name, slug: organization.slug, role: "owner" as const };
 }
 
 /** Membership check. Null when the user is not in the organisation. */

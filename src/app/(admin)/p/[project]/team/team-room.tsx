@@ -14,7 +14,6 @@ import { ChatComposer } from "@/components/chat/chat-composer";
 import { TypingIndicator } from "@/components/chat/chat-thread";
 import { MessageText } from "@/components/chat/message-text";
 import { useAgents } from "@/hooks/use-admin-data";
-import { useSpaceKind } from "@/components/space-kind";
 import { api, errorMessage } from "@/lib/api-client";
 import type { TeamMessageDto, TeamThreadDto } from "@/lib/team-dto";
 import { cn, formatRelativeTime, formatTime } from "@/lib/utils";
@@ -23,16 +22,10 @@ import { cn, formatRelativeTime, formatTime } from "@/lib/utils";
 const REPLY_TIMEOUT_MS = 90_000;
 
 /** Openers for an empty chat: one tap sends them. */
-const PERSONAL_STARTERS = [
+const STARTERS = [
   "What should I focus on this week?",
   "@everyone What's coming up that I might forget?",
   "Where did my money go last month?",
-];
-
-const STARTERS = [
-  "What should we focus on this week?",
-  "@everyone Quick check-in: what are you each working on?",
-  "Draft a short LinkedIn post about what we do.",
 ];
 
 type Waiting = { threadId: string; agents: { id: string; name: string }[]; since: string };
@@ -47,8 +40,6 @@ export function TeamRoom({ project }: { project: string }) {
   const client = useQueryClient();
   const agents = useAgents(project);
   const team = (agents.data ?? []).filter((agent) => agent.status === "published");
-  const personal = useSpaceKind() === "personal";
-  const starters = personal ? PERSONAL_STARTERS : STARTERS;
 
   // The open chat lives in the address (?chat=), so a refresh or a shared link keeps it.
   // Null is a new, unsent chat; undefined means nothing chosen yet.
@@ -157,11 +148,7 @@ export function TeamRoom({ project }: { project: string }) {
         <EmptyState
           icon={UsersRound}
           title="Nobody in the room yet"
-          description={
-            personal
-              ? "Switch an assistant on from the Roster and you can chat with it here."
-              : "Publish an agent from the Roster and it joins the team chat."
-          }
+          description="Switch an assistant on from the Roster and you can chat with it here."
         />
       </div>
     );
@@ -172,7 +159,7 @@ export function TeamRoom({ project }: { project: string }) {
       {/* The chat history. */}
       <aside aria-label="Chat history" className="hidden w-72 shrink-0 flex-col border-r border-line/70 md:flex">
         <div className="flex items-center justify-between gap-2 px-4 pb-3 pt-5">
-          <h1 className="text-lg font-semibold text-ink">{personal ? "Chats" : "Team chats"}</h1>
+          <h1 className="text-lg font-semibold text-ink">Chats</h1>
           <Button size="sm" variant="secondary" onClick={() => open(null)}>
             <SquarePen aria-hidden />
             New chat
@@ -255,15 +242,13 @@ export function TeamRoom({ project }: { project: string }) {
                   <MessagesSquare className="size-5" aria-hidden />
                 </div>
                 <h2 className="text-lg font-semibold text-ink">
-                  {personal ? "Talk to your assistants" : "Talk to your whole team"}
+                  Talk to your assistants
                 </h2>
                 <p className="mt-1 max-w-md text-sm text-ink-muted">
-                  {personal
-                    ? "Ask anything or hand over a job. The right assistant answers. Use @Name to ask one, or @everyone for all of them."
-                    : "Ask a question or give them work. The right people answer. Use @Name to ask someone, or @everyone for the whole team."}
+                  Ask anything or hand over a job. The right assistant answers. Use @Name to ask one, or @everyone for all of them.
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-2">
-                  {starters.map((starter) => (
+                  {STARTERS.map((starter) => (
                     <button
                       key={starter}
                       type="button"
@@ -314,11 +299,7 @@ export function TeamRoom({ project }: { project: string }) {
             key={threadId ?? "new"}
             onSend={(text) => send.mutate(text)}
             sending={send.isPending}
-            placeholder={
-              personal
-                ? "Message your assistants… (@Name to ask one, @everyone for all)"
-                : "Message the team… (@Name to ask someone, @everyone for all)"
-            }
+            placeholder="Message your assistants… (@Name to ask one, @everyone for all)"
             autoFocus
             className="mx-auto max-w-3xl border-t-0 bg-transparent p-0"
           />

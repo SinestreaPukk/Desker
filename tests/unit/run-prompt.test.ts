@@ -11,13 +11,13 @@ const base = {
 
 describe("what a run is told about publishing", () => {
   it("offers publish_post for a directly connected network even with no webhook", () => {
-    const prompt = buildRunPrompt({ ...base, kind: "personal", hasPublishing: false, socialNetworks: ["LinkedIn"] });
+    const prompt = buildRunPrompt({ ...base, hasPublishing: false, socialNetworks: ["LinkedIn"] });
     expect(prompt).toContain("LinkedIn is connected directly");
     expect(prompt).not.toContain("do not call publish_post");
   });
 
   it("still says nothing can be published when nothing is connected", () => {
-    const prompt = buildRunPrompt({ ...base, kind: "business", hasPublishing: false, socialNetworks: [] });
+    const prompt = buildRunPrompt({ ...base, hasPublishing: false, socialNetworks: [] });
     expect(prompt).toContain("do not call publish_post");
   });
 });

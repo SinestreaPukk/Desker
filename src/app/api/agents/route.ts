@@ -2,7 +2,6 @@ import { prisma } from "@/lib/db";
 import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { agentInputSchema } from "@/lib/validation";
 import { defaultPersonality } from "@/lib/work/agent-choices";
-import { spaceKind } from "@/lib/space";
 import { templateById } from "@/lib/content";
 import { findProject, projectsVisibleTo } from "@/lib/projects";
 import { canPublishAgent } from "@/lib/billing/limits";
@@ -116,7 +115,7 @@ export async function POST(request: Request) {
         personality:
           input.personality ||
           (input.templateId ? templateById(input.templateId)?.personality : undefined) ||
-          defaultPersonality(spaceKind(project.organization.kind)),
+          defaultPersonality(),
         responsibilities: input.responsibilities,
         allowedTools: input.allowedTools,
         escalationRule: input.escalationRule || null,
@@ -124,10 +123,6 @@ export async function POST(request: Request) {
         status: input.status,
         modelProvider: input.modelProvider,
         model: input.model || null,
-        publicPasscode: input.publicPasscode || null,
-        widgetLabel: input.widgetLabel || null,
-        widgetColor: input.widgetColor || null,
-        widgetSide: input.widgetSide ?? null,
       },
     });
 

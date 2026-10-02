@@ -9,8 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Input } from "@/components/ui/field";
 import { Markdown } from "@/components/markdown";
 import { EmptyState } from "@/components/ui/states";
-import { guideBySlug, guidesFor, helpTopic, searchGuides, type HelpTopic } from "@/lib/guides";
-import { useSpaceKind } from "@/components/space-kind";
+import { GUIDES, guideBySlug, helpTopic, searchGuides, type HelpTopic } from "@/lib/guides";
 import { CHECKLIST_REOPEN_EVENT, showChecklist } from "@/components/help/checklist-state";
 import { openTour } from "@/components/tour/tour";
 import { cn } from "@/lib/utils";
@@ -57,7 +56,6 @@ export function HelpProvider({
 }) {
   const [target, setTarget] = React.useState<HelpTarget | null>(null);
   const [isOpen, setIsOpen] = React.useState(false);
-  const kind = useSpaceKind();
 
   const value = React.useMemo<HelpContextValue>(
     () => ({
@@ -66,12 +64,12 @@ export function HelpProvider({
         setIsOpen(true);
       },
       openTopic: (topic) => {
-        setTarget(helpTopic(topic, kind));
+        setTarget(helpTopic(topic));
         setIsOpen(true);
       },
       close: () => setIsOpen(false),
     }),
-    [kind],
+    [],
   );
 
   // "?" opens help from anywhere that is not a text field, the way every
@@ -121,10 +119,7 @@ function HelpDialog({
   const [query, setQuery] = React.useState("");
   const bodyRef = React.useRef<HTMLDivElement>(null);
   const guide = target ? guideBySlug(target.slug) : null;
-  // A business and a personal space are different products: each panel
-  // lists and searches only its own guides, plus the shared ones.
-  const kind = useSpaceKind();
-  const guides = React.useMemo(() => guidesFor(kind), [kind]);
+  const guides = GUIDES;
   const results = React.useMemo(() => searchGuides(query, guides), [query, guides]);
 
   // Opening at a heading should land on that heading, not at the top of a

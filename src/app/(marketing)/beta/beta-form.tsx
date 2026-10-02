@@ -59,9 +59,6 @@ export function BetaForm() {
           We&apos;ll email <span className="font-medium text-ink">{email}</span> when your group opens. There&apos;s
           no payment during the beta.
         </p>
-        <Link href="/showcase" className="inline-flex min-h-[44px] items-center text-sm font-medium text-accent hover:underline">
-          Meanwhile, see every role at work
-        </Link>
       </div>
     );
   }

@@ -9,10 +9,9 @@
  * The draft is never saved on the owner's behalf. It is handed back to the
  * form, where they edit it and press Save like any other change: a document
  * can be out of date or wrong, and an unreviewed answer would quietly become
- * what every run believes about the business.
+ * what every run believes about the person.
  */
 import "server-only";
-import type { SpaceKind } from "@/lib/space";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getProvider, type ChatMessage } from "@/lib/llm/provider";
@@ -44,30 +43,19 @@ interface ContextDraft {
   sources: string[];
 }
 
-const BUSINESS_PROMPT = `You are helping a business owner set up an AI worker.
+const SYSTEM_PROMPT = `You are helping someone set up a personal AI assistant for their own life.
 
-You are given extracts from the documents they have uploaded, and a short list of questions they have to answer about their business and their work. Propose an answer to each question, using only what the documents actually say.
+You are given extracts from the documents they have uploaded, and a short list of questions they have to answer about themselves and what they want help with. Propose an answer to each question, using only what the documents actually say.
 
 Reply with one JSON object and nothing else: the keys are the question ids you were given, the values are the proposed answers as plain strings.
 
 Rules:
-- Only what the documents support. Never invent a product, a customer, a policy or a number.
+- Only what the documents support. Never invent a fact about them, a person they know, or a number.
 - Leave a question out of the object entirely when the documents say nothing about it. A missing answer is far better than a plausible one.
-- Write the answer as the owner would write it: plain sentences in the first person plural ("We sell..."), specific, no marketing language.
+- Write the answer as they would write it: plain sentences in the first person ("I work as..."), specific, no marketing language.
 - Two to four sentences each. No markdown, no bullet points, no headings.
-- These answers become standing instructions to a worker, so write what is true, not what sounds good.`;
-
-/** The same job for one person's own space: first person singular, and no copying of identifiers. */
-const PERSONAL_PROMPT = BUSINESS_PROMPT.replace(
-  "You are helping a business owner set up an AI worker.",
-  "You are helping someone set up a personal AI assistant for their own life.",
-)
-  .replace("about their business and their work", "about themselves and what they want help with")
-  .replace("Never invent a product, a customer, a policy or a number.", "Never invent a fact about them, a person they know, or a number.")
-  .replace('plain sentences in the first person plural ("We sell...")', 'plain sentences in the first person ("I work as...")')
-  .concat(
-    "\n- Never copy an account number, card number, password, ID number or full address into an answer, even when a document contains one.",
-  );
+- These answers become standing instructions to an assistant, so write what is true, not what sounds good.
+- Never copy an account number, card number, password, ID number or full address into an answer, even when a document contains one.`;
 
 function questionList(questions: readonly ContextQuestion[]): string {
   return questions
@@ -86,8 +74,6 @@ export async function draftContextFromDocuments(input: {
   agentId?: string;
   projectId?: string;
   questions: readonly ContextQuestion[];
-  /** Whose space it is: decides how the answers are written. */
-  kind: SpaceKind;
   /** Which agent's model to bill and use. */
   model: { provider: string; name: string | null };
   billingAgentId?: string;
@@ -114,7 +100,7 @@ export async function draftContextFromDocuments(input: {
     select: { documentId: true, content: true },
   });
 
-  // The opening chunks of each document, which is where what a business does
+  // The opening chunks of each document, which is where who someone is
   // is usually stated, rather than a retrieval query against questions the
   // documents were not written to answer.
   const byDocument = new Map<string, string>();
@@ -158,7 +144,7 @@ export async function draftContextFromDocuments(input: {
   const provider = await getProvider(input.model.provider);
   const turn = await provider.complete({
     billing: { organizationId: input.organizationId, agentId: input.billingAgentId },
-    systemPrompt: input.kind === "personal" ? PERSONAL_PROMPT : BUSINESS_PROMPT,
+    systemPrompt: SYSTEM_PROMPT,
     messages,
     tools: [],
     model: input.model.name,

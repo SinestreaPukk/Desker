@@ -11,7 +11,6 @@
  * No server imports for the same reason.
  */
 import { GUIDE_SOURCES } from "../../content/guides";
-import type { SpaceKind } from "@/lib/space";
 
 interface GuideSection {
   /** Slugified heading; the anchor a contextual link points at. */
@@ -23,8 +22,6 @@ interface GuideSection {
 
 export interface Guide {
   slug: string;
-  /** Whose help panel lists it: a business space, a personal space, or both. */
-  audience: SpaceKind | "all";
   title: string;
   summary: string;
   /** Rounded reading time, in minutes. Every guide is meant to be one or two. */
@@ -85,7 +82,6 @@ function toGuide(source: (typeof GUIDE_SOURCES)[number]): Guide {
   const { intro, sections } = splitSections(source.body);
   return {
     slug: source.slug,
-    audience: source.audience,
     title: source.title,
     summary: source.summary,
     minutes: source.minutes,
@@ -97,14 +93,6 @@ function toGuide(source: (typeof GUIDE_SOURCES)[number]): Guide {
 }
 
 export const GUIDES: Guide[] = GUIDE_SOURCES.map(toGuide);
-
-/** The guides for one kind of space: its own first, then the ones every space shares. */
-export function guidesFor(kind: SpaceKind): Guide[] {
-  return [
-    ...GUIDES.filter((guide) => guide.audience === kind),
-    ...GUIDES.filter((guide) => guide.audience === "all"),
-  ];
-}
 
 export function guideBySlug(slug: string): Guide | null {
   return GUIDES.find((guide) => guide.slug === slug) ?? null;
@@ -208,23 +196,19 @@ export function searchGuides(query: string, guides: Guide[] = GUIDES): GuideMatc
  * site so a renamed heading breaks in one place - and so every contextual
  * link in the product can be listed and checked.
  */
-export const HELP_TOPICS = {
-  escalationRule: { slug: "approvals", section: "escalation-rules" },
-  flowView: { slug: "scope-of-work", section: "view-as-flow" },
-  trust: { slug: "approvals", section: "extending-trust" },
-  projectContext: { slug: "project-context", section: "type-the-company-once" },
-  agentContext: { slug: "project-context", section: "answer-four-questions-not-a-blank-box" },
-  draftFromDocuments: { slug: "project-context", section: "let-your-documents-do-the-first-draft" },
-  digest: { slug: "insights", section: "the-rest-in-plain-terms" },
-  webhookTrigger: { slug: "scope-of-work", section: "a-trigger" },
-  integrationSecret: { slug: "integrations", section: "keys-and-secrets" },
-  approvals: { slug: "approvals", section: "your-three-options" },
-} as const;
+export type HelpTopic =
+  | "escalationRule"
+  | "flowView"
+  | "trust"
+  | "projectContext"
+  | "agentContext"
+  | "draftFromDocuments"
+  | "digest"
+  | "webhookTrigger"
+  | "integrationSecret"
+  | "approvals";
 
-export type HelpTopic = keyof typeof HELP_TOPICS;
-
-/** The same "?" links in a personal space, pointing at its own guides. */
-export const PERSONAL_HELP_TOPICS: Record<HelpTopic, { slug: string; section: string }> = {
+export const HELP_TOPICS: Record<HelpTopic, { slug: string; section: string }> = {
   escalationRule: { slug: "approvals", section: "escalation-rules" },
   flowView: { slug: "personal-routines", section: "see-it-as-a-flow" },
   trust: { slug: "approvals", section: "extending-trust" },
@@ -237,6 +221,6 @@ export const PERSONAL_HELP_TOPICS: Record<HelpTopic, { slug: string; section: st
   approvals: { slug: "approvals", section: "your-three-options" },
 };
 
-export function helpTopic(topic: HelpTopic, kind: SpaceKind) {
-  return kind === "personal" ? PERSONAL_HELP_TOPICS[topic] : HELP_TOPICS[topic];
+export function helpTopic(topic: HelpTopic) {
+  return HELP_TOPICS[topic];
 }

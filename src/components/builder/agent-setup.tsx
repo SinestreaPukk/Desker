@@ -15,7 +15,6 @@ import {
   parseEscalation,
   type Choices,
 } from "@/lib/work/agent-choices";
-import type { SpaceKind } from "@/lib/space";
 import { cn } from "@/lib/utils";
 
 /**
@@ -114,17 +113,15 @@ export function ResponsibilitiesPicker({
 export function EscalationPicker({
   value,
   onChange,
-  kind,
   idPrefix,
 }: {
   value: string;
   onChange: (next: string) => void;
-  kind: SpaceKind;
   idPrefix: string;
 }) {
-  const choices = parseEscalation(value, kind);
+  const choices = parseEscalation(value);
   const set = (next: Choices) => onChange(composeEscalation(next));
-  const options = ESCALATION_OPTIONS[kind];
+  const options = ESCALATION_OPTIONS;
   return (
     <fieldset className="space-y-2">
       <legend className="text-sm font-medium text-ink">Stop and ask me when…</legend>
@@ -158,7 +155,7 @@ export function EscalationPicker({
         rows={2}
         value={choices.other}
         onChange={(event) => set({ ...choices, other: event.target.value })}
-        placeholder={kind === "personal" ? "e.g. it's about my children's school" : "e.g. a refund over $200"}
+        placeholder={"e.g. it's about my children's school"}
       />
     </fieldset>
   );

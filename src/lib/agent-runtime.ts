@@ -3,17 +3,15 @@
  *
  * Loads the agent and its conversation history, assembles the system prompt,
  * picks the provider, runs the streamed tool loop, and persists every turn.
- * Both the public chat endpoint and the builder's preview pane go through here,
- * so the preview is genuinely the same code path the client hits - not a
- * lookalike that can drift.
+ * The owner's chat with their assistant (the builder's preview pane) goes
+ * through here.
  */
 import "server-only";
 import { prisma } from "@/lib/db";
 import { publishAdminEvent } from "@/lib/events";
 import { toStringArray } from "@/lib/agent-fields";
-import { buildSystemPrompt, buildCompanyContextPrompt } from "@/lib/agent-prompt";
+import { buildSystemPrompt } from "@/lib/agent-prompt";
 import { effectiveContext } from "@/lib/work/context";
-import { spaceKind } from "@/lib/space";
 import { rulesFor } from "@/lib/work/rules";
 import {
   getProvider,
@@ -29,14 +27,12 @@ import { timeNote, validTimeZone } from "@/lib/local-time";
 import { audit } from "@/lib/audit";
 import { WORK_TOOL_IDS, scopeTools } from "@/lib/work/tools";
 import { executeToolCall, type ToolOutcome } from "@/lib/tools/execute";
-import { recallForSession, refreshSummaryInBackground } from "@/lib/summarize";
 
 /** What the transport layer forwards to the browser. */
 export type RuntimeEvent =
   | { type: "text"; text: string }
   | { type: "tool_start"; name: string; id: string }
   | { type: "tool_end"; name: string; id: string; effect?: ToolOutcome["effect"] }
-  | { type: "transferred"; toAgentId: string; toAgentName: string }
   /** The saved id of the reply just streamed, so the client can rate it. */
   | { type: "persisted"; messageId: string }
   | { type: "done" }
@@ -44,7 +40,6 @@ export type RuntimeEvent =
 
 interface AgentForRun {
   id: string;
-  /** Scopes the colleague list: a router must never reach another project. */
   projectId: string;
   name: string;
   jobTitle: string;
@@ -52,7 +47,6 @@ interface AgentForRun {
   personality: string;
   responsibilities: unknown;
   allowedTools: unknown;
-  escalationRule: string | null;
   modelProvider: string;
   model: string | null;
 }
@@ -66,15 +60,6 @@ function messagesFromRows(
   for (const row of rows) {
     if (row.role === "user") {
       messages.push({ role: "user", content: row.content });
-      continue;
-    }
-    // A colleague's reply is part of what the client was told, so the agent has
-    // to see it - as an assistant turn, since from the client's side it came
-    // from the same conversation. It carries no tool calls to pair up.
-    if (row.role === "human") {
-      if (row.content.trim()) {
-        messages.push({ role: "assistant", content: row.content });
-      }
       continue;
     }
     // `blocks` holds the neutral ChatMessage payload written when the turn was
@@ -107,72 +92,40 @@ function renderToolTurn(results: { name: string; content: string }[]): string {
 }
 
 interface RunTurnOptions {
-  /** The agent actually answering. See resolveActiveAgent(). */
   agent: AgentForRun;
   conversationId: string;
-  /** The client's session id, used to recall their earlier conversations. */
-  clientSessionId?: string;
   userMessage: string;
   /** Preview runs skip persistence and admin notifications. */
   persist: boolean;
   signal?: AbortSignal;
-  /**
-   * "client": Live client conversation turn (default).
-   * "colleague": Platform user chatting/collaborating with their agent as a coworker.
-   * "company_context": Legacy platform user asking company-context questions.
-   */
-  mode?: "client" | "colleague" | "company_context";
 }
 
 export async function* runAgentTurn(
   options: RunTurnOptions,
 ): AsyncGenerator<RuntimeEvent> {
-  const { agent, conversationId, userMessage, persist, signal, mode = "client" } = options;
-  const isCompanyContext = mode === "company_context";
-  const isColleague = mode === "colleague";
+  const { agent, conversationId, userMessage, persist, signal } = options;
 
-  const rawTools = toStringArray(agent.allowedTools);
-  const allowedTools = isCompanyContext
-    ? ["search_documents"]
-    : isColleague
-      ? Array.from(new Set([...rawTools, "search_documents"]))
-      : rawTools;
+  const allowedTools = Array.from(new Set([...toStringArray(agent.allowedTools), "search_documents"]));
   const responsibilities = toStringArray(agent.responsibilities);
 
-  const [project, historyRows, documents, colleagues, recall, scope, rules] = await Promise.all([
+  const [project, historyRows, documents, scope, rules] = await Promise.all([
     // The tenant to bill this turn to. An agent whose project is gone cannot
     // answer, so a missing project is an error rather than a free turn.
     prisma.project.findUniqueOrThrow({
       where: { id: agent.projectId },
-      select: { organizationId: true, context: true, organization: { select: { kind: true } } },
+      select: { organizationId: true, context: true },
     }),
     prisma.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: "asc" },
       select: { role: true, content: true, blocks: true },
     }),
-    isCompanyContext || allowedTools.includes("search_documents")
+    allowedTools.includes("search_documents")
       ? prisma.document.findMany({
           where: { agentId: agent.id, status: "ready" },
           select: { filename: true },
         })
       : Promise.resolve([]),
-    !isCompanyContext && (isColleague || allowedTools.includes("transfer_to_agent"))
-      ? prisma.agent.findMany({
-          // Same project only. Offering another client's roster would be a
-          // data leak, not merely a bad routing decision.
-          where: {
-            status: "published",
-            projectId: agent.projectId,
-            id: { not: agent.id },
-          },
-          select: { id: true, name: true, jobTitle: true, department: true },
-          orderBy: { name: "asc" },
-        })
-      : Promise.resolve([]),
-    !isCompanyContext && options.clientSessionId
-      ? recallForSession(options.clientSessionId, conversationId, agent.projectId)
-      : Promise.resolve(null),
     prisma.scopeOfWork.findUnique({
       where: { agentId: agent.id },
       select: { context: true, tools: true, timezone: true },
@@ -188,50 +141,28 @@ export async function* runAgentTurn(
       : allowedTools.filter((tool) => tool !== "search_documents");
 
   // The owner's own chat can read the calendar when this agent's runs may.
-  // Never a client's chat: that would hand the owner's diary to strangers.
-  const calendarInChat =
-    isColleague && (scope ? (scopeTools(scope.tools) ?? [...WORK_TOOL_IDS]) : []).includes("calendar_list_events");
+  const calendarInChat = (scope ? (scopeTools(scope.tools) ?? [...WORK_TOOL_IDS]) : []).includes("calendar_list_events");
 
-  const kind = spaceKind(project.organization.kind);
   const companyContext = effectiveContext({
     projectContext: project.context,
     agentContext: scope?.context,
-    kind,
   });
 
-  let systemPrompt: string;
-  if (isCompanyContext) {
-    systemPrompt = buildCompanyContextPrompt({
-      name: agent.name,
-      jobTitle: agent.jobTitle,
-      department: agent.department,
-      personality: agent.personality,
-      companyContext,
-      documentNames: documents.map((document) => document.filename),
-      kind,
-      rules,
-    });
-  } else {
-    systemPrompt = buildSystemPrompt({
+  const systemPrompt =
+    buildSystemPrompt({
       name: agent.name,
       jobTitle: agent.jobTitle,
       department: agent.department,
       personality: agent.personality,
       responsibilities,
-      escalationRule: agent.escalationRule,
       allowedTools: offeredTools,
       documentNames: documents.map((document) => document.filename),
-      colleagues,
-      recall,
       companyContext,
-      audience: isColleague ? "colleague" : "client",
-      kind,
       rules,
-    });
-    systemPrompt += `\n\n${timeNote(new Date(), scope?.timezone)}`;
-    if (calendarInChat) systemPrompt += `\n\n${CALENDAR_CHAT_NOTE}`;
-    systemPrompt += `\n\n${WEB_CHAT_NOTE}`;
-  }
+    }) +
+    `\n\n${timeNote(new Date(), scope?.timezone)}` +
+    (calendarInChat ? `\n\n${CALENDAR_CHAT_NOTE}` : "") +
+    `\n\n${WEB_CHAT_NOTE}`;
 
   const history = messagesFromRows(historyRows);
   const messages: ChatMessage[] = [...history, { role: "user", content: userMessage }];
@@ -247,7 +178,7 @@ export async function* runAgentTurn(
   const effects = new Map<string, ToolOutcome["effect"]>();
 
   const executeTool = async (call: ToolCall) => {
-    if (!isCompanyContext && call.name === WEB_SEARCH.name) {
+    if (call.name === WEB_SEARCH.name) {
       const result = await webSearch(
         { organizationId: project.organizationId, agentId: agent.id, modelProvider: agent.modelProvider, model: agent.model },
         call.input,
@@ -282,14 +213,11 @@ export async function* runAgentTurn(
       });
       return result;
     }
-    // Preview runs execute the real tools too - an admin testing an escalation
-    // rule needs to see it actually fire. Preview conversations carry a
-    // `preview:` session prefix and are filtered out of the inbox by default.
+    // Preview conversations carry a `preview:` session prefix.
     const outcome = await executeToolCall(
       call,
       {
         agentId: agent.id,
-        projectId: agent.projectId,
         organizationId: project.organizationId,
         conversationId,
       },
@@ -307,7 +235,7 @@ export async function* runAgentTurn(
       billing: { organizationId: project.organizationId, agentId: agent.id },
       systemPrompt,
       messages,
-      tools: [...toolDefinitionsFor(offeredTools), ...(calendarInChat ? [CHECK_CALENDAR] : []), ...(isCompanyContext ? [] : [WEB_SEARCH])],
+      tools: [...toolDefinitionsFor(offeredTools), ...(calendarInChat ? [CHECK_CALENDAR] : []), WEB_SEARCH],
       executeTool,
       model: agent.model,
       signal,
@@ -342,15 +270,6 @@ export async function* runAgentTurn(
           id: event.result.id,
           effect,
         };
-        // Tell the client's UI who they are now talking to, so the header and
-        // the avatar change mid-conversation rather than at the next reload.
-        if (effect?.kind === "transfer") {
-          yield {
-            type: "transferred",
-            toAgentId: effect.toAgentId,
-            toAgentName: effect.toAgentName,
-          };
-        }
         break;
       }
 
@@ -406,9 +325,6 @@ export async function* runAgentTurn(
       conversationId,
       agentId: agent.id,
     });
-    // Keeps the inbox scannable and feeds the recall a returning client gets.
-    // Throttled inside, and nothing waits on it.
-    refreshSummaryInBackground(conversationId);
   }
 
   if (!sawError) yield { type: "done" };

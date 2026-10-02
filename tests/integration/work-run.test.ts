@@ -35,8 +35,7 @@ beforeAll(async () => {
           // pre-flight check stops a writing agent before it starts.
           context: "The business: Northwind Supply Co. sells hand tools to tradespeople.",
           contextAnswers: {
-            business: "Northwind Supply Co. sells hand tools to tradespeople.",
-            audience: "Self-employed tradespeople.",
+            about: "Northwind Supply Co. sells hand tools to tradespeople.",
             tone: "Plain and direct.",
           },
         },

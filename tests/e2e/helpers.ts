@@ -9,8 +9,6 @@ export const ADMIN = {
   firstName: "E2E",
   lastName: "Admin",
   username: "e2e-admin",
-  organization: "E2E Org",
-  useType: "business",
   acceptTerms: true,
 };
 
@@ -34,12 +32,11 @@ export async function currentProjectSlug(page: Page): Promise<string> {
   return page.url().match(/\/p\/([^/]+)\//)![1]!;
 }
 
-/** The profile fields every sign-up asks for (the organisation is asked separately, not on an invitation). */
+/** The profile fields every sign-up asks for . */
 export async function fillProfile(page: Page, username: string) {
   await page.getByLabel("First name").fill("E2E");
   await page.getByLabel("Last name").fill("Tester");
   await page.getByLabel("Username").fill(username);
-  await page.getByText("Business", { exact: true }).click();
 }
 
 export async function signUp(
@@ -50,7 +47,6 @@ export async function signUp(
 ) {
   await page.goto(path);
   await fillProfile(page, admin.username);
-  await page.getByLabel("Organisation").fill("E2E Org");
   await page.getByLabel("Email").fill(admin.email);
   await page.getByLabel("Password").fill(admin.password);
   await page.getByLabel(/I agree to the/).check();
@@ -61,19 +57,19 @@ export async function signUp(
   await expect(page).toHaveURL(/\/p\/[^/]+\//, { timeout: 30_000 });
 }
 
-/** The four core Company context answers, as a new organisation writes them on the welcome step. */
+/** The four core "About you" answers, as a new person writes them on the welcome step. */
 export const COMPANY_CONTEXT = {
-  business: "Northwind Supply Co. sells hand tools and workwear to tradespeople.",
-  audience: "Self-employed tradespeople and small site crews.",
-  tone: "Plain, direct, no hype.",
-  never: "Never quote a discount or a delivery date.",
+  about: "Maya, a product designer in Bangkok.",
+  goals: "Get my spending under control and plan a trip.",
+  tone: "Short and friendly.",
+  never: "Never post or email in my name without asking.",
 };
 
 /** Fills the welcome step and moves on to the hire wizard. */
 export async function answerCompanyContext(page: Page) {
-  await page.getByLabel("What does this business do?").fill(COMPANY_CONTEXT.business);
-  await page.getByLabel("Who are your customers?").fill(COMPANY_CONTEXT.audience);
-  await page.getByLabel("How should your agents sound?").fill(COMPANY_CONTEXT.tone);
-  await page.getByLabel("Anything no agent should ever do or say?").fill(COMPANY_CONTEXT.never);
+  await page.getByLabel("Tell your assistants about you").fill(COMPANY_CONTEXT.about);
+  await page.getByLabel("What do you want help with right now?").fill(COMPANY_CONTEXT.goals);
+  await page.getByLabel("How should they talk to you?").fill(COMPANY_CONTEXT.tone);
+  await page.getByLabel("Anything they should never do?").fill(COMPANY_CONTEXT.never);
   await page.getByRole("button", { name: "Choose your first agent" }).click();
 }

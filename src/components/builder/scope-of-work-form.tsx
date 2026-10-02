@@ -31,7 +31,6 @@ import { choicesFor } from "@/lib/work/agent-choices";
 import { useIntegrations } from "@/hooks/use-work-data";
 import { CONNECTORS, connectorsForTool } from "@/lib/integrations/catalog";
 import { GATED_TOOL_IDS } from "@/lib/work/types";
-import { useSpaceKind } from "@/components/space-kind";
 import { ContextQuestions } from "./context-questions";
 import { looksLikeCron } from "@/lib/form-errors";
 import { HelpLink } from "@/components/help/help-panel";
@@ -384,8 +383,7 @@ export function ContextSection({
   heading?: boolean;
 }) {
   const set = updater({ value, onChange });
-  const kind = useSpaceKind();
-  const agentQuestions = shownAgentQuestions(kind, value.contextAnswers);
+  const agentQuestions = shownAgentQuestions(value.contextAnswers);
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -407,7 +405,7 @@ export function ContextSection({
       {inherited}
 
       {agentQuestions.map((question) => {
-        const options = choicesFor(question.id, kind);
+        const options = choicesFor(question.id);
         return options ? (
           <ChoicePicker
             key={question.id}

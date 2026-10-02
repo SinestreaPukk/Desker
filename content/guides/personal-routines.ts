@@ -1,5 +1,4 @@
 export const guide = {
-  audience: "personal",
   slug: "personal-routines",
   title: "Put an assistant on a routine",
   summary: "A goal, a time, and what it may do - so the work happens without you asking.",

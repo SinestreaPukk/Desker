@@ -6,7 +6,6 @@ import { buildSystemPrompt } from "@/lib/agent-prompt";
 import { toolDefinitionsFor } from "@/lib/tools/registry";
 import { buildRunPrompt } from "@/lib/work/prompt";
 import { effectiveContext } from "@/lib/work/context";
-import { spaceKind } from "@/lib/space";
 import { WORK_TOOL_IDS, WORK_TOOL_METADATA, scopeTools } from "@/lib/work/tools";
 import { findIntegration, resolveEmail } from "@/lib/work/integrations";
 import type { AutonomyMode } from "@/lib/work/types";
@@ -29,7 +28,7 @@ export async function GET(_request: Request, { params }: Params) {
     const agent = await prisma.agent.findFirst({
       where: { id: agentId, ...agentsVisibleTo(userId) },
       include: {
-        project: { select: { organizationId: true, context: true, organization: { select: { kind: true } } } },
+        project: { select: { organizationId: true, context: true } },
         rules: { select: { text: true }, orderBy: { createdAt: "asc" } },
       },
     });
@@ -37,28 +36,19 @@ export async function GET(_request: Request, { params }: Params) {
 
     const allowedTools = toStringArray(agent.allowedTools);
 
-    const [documents, colleagues, scope, publishing, email] = await Promise.all([
+    const [documents, scope, publishing, email] = await Promise.all([
       prisma.document.findMany({
         where: { agentId, status: "ready" },
         select: { filename: true },
       }),
-      allowedTools.includes("transfer_to_agent")
-        ? prisma.agent.findMany({
-            where: { status: "published", projectId: agent.projectId, id: { not: agentId } },
-            select: { id: true, name: true, jobTitle: true, department: true },
-            orderBy: { name: "asc" },
-          })
-        : Promise.resolve([]),
       prisma.scopeOfWork.findUnique({ where: { agentId } }),
       findIntegration(agent.project.organizationId, "webhook"),
       resolveEmail(agent.project.organizationId),
     ]);
 
-    const kind = spaceKind(agent.project.organization.kind);
     const companyContext = effectiveContext({
       projectContext: agent.project.context,
       agentContext: scope?.context,
-      kind,
     });
 
     const prompt = buildSystemPrompt({
@@ -67,13 +57,9 @@ export async function GET(_request: Request, { params }: Params) {
       department: agent.department,
       personality: agent.personality,
       responsibilities: toStringArray(agent.responsibilities),
-      escalationRule: agent.escalationRule,
       allowedTools,
       documentNames: documents.map((document) => document.filename),
-      colleagues,
-      recall: null,
       companyContext,
-      kind,
       rules: agent.rules.map((rule) => rule.text),
     });
 
@@ -85,11 +71,9 @@ export async function GET(_request: Request, { params }: Params) {
         context: effectiveContext({
           projectContext: agent.project.context,
           agentContext: scope?.context,
-          kind,
         }),
         objectives: scope ? toStringArray(scope.objectives) : [],
       },
-      kind,
       rules: agent.rules.map((rule) => rule.text),
       autonomy: (scope?.autonomy as AutonomyMode) ?? "draft_only",
       documentNames: documents.map((document) => document.filename),

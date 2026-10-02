@@ -5,7 +5,6 @@ import { findProject } from "@/lib/projects";
 import { limitOrganization } from "@/lib/rate-limit";
 import { getProvider } from "@/lib/llm/provider";
 import { parseModelJson } from "@/lib/work/model-json";
-import { spaceKind } from "@/lib/space";
 
 export const runtime = "nodejs";
 
@@ -27,7 +26,6 @@ export async function POST(request: Request) {
     if (!env.hasAnthropicKey && !env.hasOpenAiKey) throw new HttpError(503, "No AI model is set up on this server yet.");
     await limitOrganization(project.organizationId, "model");
     const input = await parseJson(request, inputSchema);
-    const personal = spaceKind(project.organization.kind) === "personal";
 
     const provider = await getProvider(env.hasAnthropicKey ? "anthropic" : "openai");
     const turn = await provider.complete({
@@ -36,7 +34,7 @@ export async function POST(request: Request) {
       messages: [
         {
           role: "user",
-          content: `${personal ? "It helps one person with their own life." : "It works for a business."}\nJob: ${input.jobTitle}\nDuties:\n${input.responsibilities.map((line) => `- ${line}`).join("\n") || "- (none given)"}`,
+          content: `It helps one person with their own life.\nJob: ${input.jobTitle}\nDuties:\n${input.responsibilities.map((line) => `- ${line}`).join("\n") || "- (none given)"}`,
         },
       ],
       tools: [],

@@ -31,9 +31,6 @@ model User {
   lastName     String?
   /// Chosen at sign-up; lowercase letters, numbers, dots, dashes, underscores.
   username     String?  @unique
-  /// What they said Desker is for at sign-up: business | personal | mixed.
-  /// "mixed" founds one space of each kind.
-  useType      String?
   /// When the password last changed. Sessions signed in before it are ended.
   passwordChangedAt DateTime?
   /// Devices this person has signed in from (a hash of browser and system,
@@ -157,10 +154,6 @@ model Organization {
   name      String
   /// URL-safe handle, reserved for when organisations get their own segment.
   slug      String   @unique
-  /// business | personal. A personal space belongs to one person: no members,
-  /// no invitations, no public chat links, and its context is about them
-  /// rather than a company. See lib/space.ts.
-  kind      String   @default("business")
   /// free | starter | growth - see lib/billing/plans.ts. Set by the Stripe
   /// webhook; never trusted from the client.
   plan                 String    @default("free")
@@ -188,7 +181,6 @@ model Organization {
   projectCheckIns ProjectCheckIn[]
   suggestions   Suggestion[]
   emailSuppressions EmailSuppression[]
-  supportInboxes    SupportInbox[]
   socialSnapshots   SocialSnapshot[]
 }
 
@@ -270,8 +262,14 @@ model Project {
   agents       Agent[]
   teamThreads  TeamThread[]
   teamMessages TeamMessage[]
-  supportInbox SupportInbox?
   checkIns     ProjectCheckIn[]
+  lifeEvents   LifeEvent[]
+  lifeEntries  LifeEntry[]
+  lifeTasks    LifeTask[]
+  lifeGoals    LifeGoal[]
+  lifeWorkouts LifeWorkout[]
+  lifePrefs    LifePreference[]
+  lifeNotes    LifeNote[]
 
   @@index([organizationId])
 }
@@ -299,11 +297,6 @@ model Agent {
   status           String   @default("draft") // draft | published
   modelProvider    String   @default("anthropic")
   model            String?  // null -> provider default
-  publicPasscode   String?  // optional gate on the public chat link
-  // Embedded-widget appearance. Baked into the snippet the share panel emits.
-  widgetLabel      String?
-  widgetColor      String?  // CSS colour; null -> brand default
-  widgetSide       String?  // right | left
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -319,36 +312,9 @@ model Agent {
   suggestions         Suggestion[]
   teamMessages        TeamMessage[]
   rules               AgentRule[]
-  supportInboxes      SupportInbox[]
 
   @@index([status])
   @@index([projectId])
-}
-
-/// The support desk's closed loop: customer messages come in at a private
-/// address (from a helpdesk, a website form, or a Zapier/Make zap), the
-/// Support agent answers from the project's documents, the reply waits in
-/// Needs you, and once it is sent the helpdesk is told the ticket was
-/// answered. One per project.
-model SupportInbox {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  projectId      String       @unique
-  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  agentId        String
-  agent          Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  /// The path credential for the intake address. Replacing it retires the old address.
-  token          String       @unique
-  /// Where "answered" and "handed to a person" are reported back. Optional.
-  callbackUrl    String?
-  /// Vault-sealed signing secret for the callback (X-Desker-Signature).
-  callbackSecret String?
-  enabled        Boolean      @default(true)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  @@index([organizationId])
 }
 
 /// A correction the owner chose to keep: saved from a rejected or edited
@@ -958,4 +924,140 @@ model Post {
 
   @@index([status, publishedAt])
   @@index([category, status])
+}
+
+// ---------------------------------------------------------------------------
+// Life context (lib/life/*): the one shared picture of a person's life that
+// every agent and the chat read from and write to. Every row is scoped to the
+// personal space's project, carries where it came from (`source`), and is only
+// ever written through lib/life/store.ts so each change is audited.
+// ---------------------------------------------------------------------------
+
+/// A calendar entry: meeting, event, trip, appointment. Mirrors an external
+/// calendar when `externalId` is set; `source` says who put it here.
+model LifeEvent {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title      String
+  startsAt   DateTime
+  endsAt     DateTime?
+  allDay     Boolean  @default(false)
+  location   String?
+  /// meeting | trip | appointment | other
+  kind       String   @default("other")
+  status     String   @default("confirmed") // confirmed | tentative | cancelled
+  /// user | agent:<id> | google | outlook | chat
+  source     String   @default("user")
+  externalId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([projectId, startsAt])
+}
+
+/// A money fact: a spend, an income, or a bill. Slips, invoices and CSV rows
+/// all become one of these, with the line items and the source image kept.
+model LifeEntry {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// expense | income | bill
+  kind       String
+  payee      String
+  /// Minor units (satang/cents) so sums never drift.
+  amountMinor Int
+  currency   String   @default("THB")
+  category   String?
+  /// When it happened (expense/income) or is due (bill).
+  occurredAt DateTime
+  /// bills only: unpaid | paid | overdue
+  status     String?
+  lineItems  Json?
+  /// slip | invoice | csv | manual | agent:<id>
+  source     String   @default("manual")
+  /// Document id or stored image the entry was read from.
+  sourceRef  String?
+  createdAt  DateTime @default(now())
+
+  @@index([projectId, occurredAt])
+  @@index([projectId, kind, status])
+}
+
+/// A task, reminder or deadline.
+model LifeTask {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  /// task | reminder | deadline
+  kind      String   @default("task")
+  dueAt     DateTime?
+  status    String   @default("open") // open | done | dropped
+  source    String   @default("user")
+  externalId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, status, dueAt])
+}
+
+/// What the person is working toward, in any domain.
+model LifeGoal {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title      String
+  /// money | fitness | travel | career | learning | other
+  domain     String   @default("other")
+  /// Minor units for money goals, otherwise the goal's own unit; free text says which.
+  target     String?
+  deadline   DateTime?
+  status     String   @default("active") // active | done | dropped
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([projectId, status])
+}
+
+/// A planned or finished workout session.
+model LifeWorkout {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  scheduledAt DateTime
+  durationMin Int?
+  status      String   @default("planned") // planned | done | skipped
+  notes       String?
+  source      String   @default("user")
+  createdAt   DateTime @default(now())
+
+  @@index([projectId, scheduledAt])
+}
+
+/// A standing preference ("no meetings before 10", "monthly budget 30000").
+model LifePreference {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, key])
+}
+
+/// Recent interaction history and conclusions an agent or the engine wants
+/// remembered ("trip to Chiang Mai blows June budget"). Short, dated, readable.
+model LifeNote {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// chat | agent:<id> | engine
+  source    String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([projectId, createdAt])
 }

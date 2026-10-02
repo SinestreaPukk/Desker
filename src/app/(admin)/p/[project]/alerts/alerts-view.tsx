@@ -359,7 +359,6 @@ function EventsPanel({
                       }
                     />
                     {space.name}
-                    <span className="text-xs text-ink-muted">{space.kind === "personal" ? "Personal" : "Business"}</span>
                   </label>
                 </li>
               ))}

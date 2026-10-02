@@ -1,5 +1,4 @@
 export const guide = {
-  audience: "all",
   slug: "approvals",
   title: "Approve what goes out",
   summary: "Nothing leaves until you say so. Here is where it waits and what your options are.",

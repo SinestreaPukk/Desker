@@ -1,6 +1,5 @@
 "use client";
 
-import { useSpaceKind } from "@/components/space-kind";
 import { AgentHealth } from "@/components/work/agent-health";
 import * as React from "react";
 import Link from "next/link";
@@ -40,9 +39,8 @@ import type { AgentSummaryDto } from "@/lib/serialize";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils";
 
 export function RosterView({ project }: { project: string }) {
-  // "Open Company context" from the setup checklist.
+  // "Open About you" from the setup checklist.
   const openContext = useSearchParams().get("context") === "open";
-  const personal = useSpaceKind() === "personal";
   const { data: agents, isPending, error, refetch, isRefetching } = useAgents(project);
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState("all");
@@ -71,16 +69,12 @@ export function RosterView({ project }: { project: string }) {
     <Page>
       <PageHeader
         title="Roster"
-        description={
-          personal
-            ? "Your assistants. Switched on, they work on their schedule and answer you in Chat; off, they do nothing."
-            : "Everyone on your AI staff. Published agents work on their schedule and answer in Team; drafts do nothing until you publish them."
-        }
+        description="Your assistants. Switched on, they work on their schedule and answer you in Chat; off, they do nothing."
         actions={
           <Button asChild>
             <Link href={`/p/${project}/agents/new`}>
               <UserRoundPlus aria-hidden />
-              {personal ? "New assistant" : "New agent"}
+              New assistant
             </Link>
           </Button>
         }
@@ -102,7 +96,7 @@ export function RosterView({ project }: { project: string }) {
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder={personal ? "Search by name or what they help with…" : "Search by name, title or team…"}
+            placeholder="Search by name or what they help with…"
             className="pl-9 pr-10"
           />
           <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
@@ -154,7 +148,7 @@ export function RosterView({ project }: { project: string }) {
 
       <PageBody>
         {/* The week at a glance, then the four things that make a workspace
-            work, then the company context every agent below inherits. */}
+            work, then the context about you every assistant below inherits. */}
         <ActivityStrip project={project} />
         <SetupChecklist project={project} />
         <ProjectContextPanel project={project} initialOpen={openContext} />
@@ -170,23 +164,19 @@ export function RosterView({ project }: { project: string }) {
         ) : agents!.length === 0 ? (
           <EmptyState
             icon={UserRoundPlus}
-            title={personal ? "No assistants yet" : "Nobody on the roster yet"}
-            description={
-              personal
-                ? "Start with your week: see one planned on example data, then connect your calendar and get your own plan - any change waits for your yes."
-                : "Start with support: see a customer answered from a policy on example data, then give it yours and try a real question - replies wait for you."
-            }
+            title="No assistants yet"
+            description="Start with your week: see one planned on example data, then connect your calendar and get your own plan - any change waits for your yes."
             action={
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button asChild>
                   <Link href={`/p/${project}/start`}>
-                    {personal ? "Plan your week" : "Answer your first customer"}
+                    Plan your week
                   </Link>
                 </Button>
                 <Button asChild variant="ghost">
                   <Link href={`/p/${project}/agents/new`}>
                     <UserRoundPlus aria-hidden />
-                    {personal ? "Or pick another assistant" : "Or pick another role"}
+                    Or pick another assistant
                   </Link>
                 </Button>
               </div>

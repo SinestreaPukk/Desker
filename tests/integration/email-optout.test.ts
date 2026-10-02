@@ -1,7 +1,7 @@
 /**
- * Anti-spam rules on agent email: no postal address, no send; the footer and
- * one-click headers on every email; anyone who unsubscribed is skipped; the
- * unsubscribe endpoint records the opt-out from a signed link only.
+ * Opt-outs on agent email: anyone who unsubscribed is skipped; the unsubscribe
+ * endpoint records the opt-out from a signed link only. Personal email carries
+ * no business footer.
  *
  * Needs DATABASE_URL and AUTH_SECRET. Resend is stubbed with a fetch mock.
  */
@@ -63,32 +63,22 @@ const email = (to: string[]) =>
   executePendingAction(actionItemId, organizationId, { tool: "send_email", input: { to, subject: "New opening hours" }, draftId });
 
 describe("agent email and anti-spam law", () => {
-  it("refuses to send until the business has a postal address", async () => {
-    const result = await email(["a@example.com"]);
-    expect(result.ok).toBe(false);
-    expect(result.detail).toMatch(/postal address/);
-    expect(sent).toHaveLength(0);
-  });
-
-  it("adds the sender, address and a one-click unsubscribe to every email", async () => {
-    await prisma.organization.update({ where: { id: organizationId }, data: { mailingAddress: "12 Sukhumvit Soi 11\nBangkok 10110" } });
+  it("sends the body as written, with no business footer or address demanded", async () => {
     const result = await email(["a@example.com"]);
     expect(result.ok).toBe(true);
     const message = sent.at(-1)!;
-    expect(message.text).toContain("We now open on Saturdays.");
-    expect(message.text).toContain(`Sent by Northwind ${stamp}, 12 Sukhumvit Soi 11, Bangkok 10110.`);
-    expect(message.text).toMatch(/To stop receiving emails .*https:\/\/desker\.test\/unsubscribe\//);
-    expect(message.headers?.["List-Unsubscribe-Post"]).toBe("List-Unsubscribe=One-Click");
+    expect(message.text).toBe("We now open on Saturdays.");
+    expect(message.headers?.["List-Unsubscribe"]).toBeUndefined();
+  });
 
-    // The mail app's own Unsubscribe button: a one-click POST to the header URL.
-    const url = message.headers!["List-Unsubscribe"]!.slice(1, -1);
-    const token = url.split("/").at(-1)!;
+  it("skips anyone who opted out, and sends nothing when nobody is left", async () => {
+    const token = optOutToken(organizationId, "a@example.com");
+    const url = `https://desker.test/api/unsubscribe/${token}`;
     const body = new FormData();
     body.set("List-Unsubscribe", "One-Click");
     const response = await unsubscribe(new Request(url, { method: "POST", body }), { params: Promise.resolve({ token }) });
     expect(response.status).toBe(200);
 
-    // From now on that address is skipped, and alone it means nothing is sent.
     const before = sent.length;
     const again = await email(["a@example.com"]);
     expect(again.ok).toBe(false);

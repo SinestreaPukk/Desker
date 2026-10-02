@@ -57,7 +57,7 @@ export function ForgotPasswordForm() {
             <form onSubmit={onSubmit} className="space-y-5" noValidate>
               <FormError message={error} />
               <Field label="Email" htmlFor="email" required>
-                <Input name="email" type="email" autoComplete="email" required placeholder="you@company.com" />
+                <Input name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
               </Field>
               <Button type="submit" className="w-full" loading={pending}>
                 Send reset link

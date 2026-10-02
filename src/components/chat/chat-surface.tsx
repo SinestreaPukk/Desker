@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { ChatComposer } from "./chat-composer";
 import { ChatThread } from "./chat-thread";
 import { useChatStream, type ChatBubble } from "@/hooks/use-chat-stream";
-import { useClientLiveFeed } from "@/hooks/use-client-live-feed";
 import { cn } from "@/lib/utils";
 
 interface ChatSurfaceAgent {
@@ -20,9 +19,7 @@ interface ChatSurfaceAgent {
 }
 
 /**
- * The chat experience itself, shared verbatim by the public page, the embedded
- * widget and the builder's preview pane. One implementation means the preview
- * cannot drift away from what a client actually sees.
+ * The chat experience itself, used by the builder's preview pane.
  */
 export const ChatSurface = React.memo(function ChatSurface({
   agent,
@@ -36,9 +33,6 @@ export const ChatSurface = React.memo(function ChatSurface({
   autoFocus,
   onSettled,
   controlsRef,
-  liveFeedUrl,
-  onRate,
-  initiallyHandedToHuman = false,
 }: {
   agent: ChatSurfaceAgent;
   endpoint: string;
@@ -52,19 +46,6 @@ export const ChatSurface = React.memo(function ChatSurface({
   onSettled?: () => void;
   /** Lets a parent reset the thread (e.g. the builder's "Restart" button). */
   controlsRef?: React.RefObject<{ reset: (next?: ChatBubble[]) => void } | null>;
-  /**
-   * SSE endpoint carrying turns this client did not ask for - a colleague
-   * replying from the inbox. Omitted in the builder preview, which has no
-   * client on the other end.
-   */
-  liveFeedUrl?: string;
-  /**
-   * Persists a rating. Omitted in the builder preview - an admin rating their
-   * own agent's test answers would pollute the insights.
-   */
-  onRate?: (messageId: string, rating: 1 | -1 | 0) => Promise<void>;
-  /** Whether a colleague already holds the conversation on first load. */
-  initiallyHandedToHuman?: boolean;
 }) {
   const greeting = React.useMemo<ChatBubble[]>(
     () =>
@@ -80,30 +61,11 @@ export const ChatSurface = React.memo(function ChatSurface({
     [agent.welcomeMessage],
   );
 
-  const [handedToHuman, setHandedToHuman] = React.useState(initiallyHandedToHuman);
-
   const chat = useChatStream({
     endpoint,
     payload,
     initialMessages: initialMessages ?? greeting,
     onSettled,
-  });
-
-  // A colleague's reply arrives here rather than as a response to anything the
-  // client sent, which is what makes an escalation a conversation instead of a
-  // dead end.
-  useClientLiveFeed(liveFeedUrl, {
-    onMessage: (message) => {
-      chat.receive({
-        id: message.messageId,
-        serverId: message.messageId,
-        persisted: true,
-        role: "assistant",
-        content: message.content,
-        authorName: message.authorName,
-      });
-    },
-    onMode: (mode) => setHandedToHuman(mode === "human"),
   });
 
   React.useImperativeHandle(controlsRef, () => ({ reset: chat.reset }), [chat.reset]);
@@ -118,16 +80,6 @@ export const ChatSurface = React.memo(function ChatSurface({
         agentAvatarUrl={agent.avatarUrl}
         agentSeed={agent.id}
         sending={chat.sending}
-        onRate={
-          onRate
-            ? (messageId, rating) => {
-                // Optimistic: the thumbs respond immediately, and a failed
-                // save simply reverts on the next reload.
-                chat.setRating(messageId, rating === 0 ? null : rating);
-                void onRate(messageId, rating);
-              }
-            : undefined
-        }
         emptyState={
           <div className="max-w-xs text-center">
             <AgentAvatar
@@ -172,15 +124,6 @@ export const ChatSurface = React.memo(function ChatSurface({
             </Button>
           ) : null}
         </div>
-      ) : null}
-
-      {handedToHuman ? (
-        <p
-          className="mx-3 mb-2 rounded-md border border-accent-line bg-accent-soft px-3 py-2 text-xs leading-relaxed text-accent-soft-fg"
-          role="status"
-        >
-          A colleague has joined and is answering you directly.
-        </p>
       ) : null}
 
       <ChatComposer

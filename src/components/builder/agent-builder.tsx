@@ -80,11 +80,9 @@ import { HelpLink } from "@/components/help/help-panel";
 import { DuplicateAgentDialog } from "./duplicate-agent-dialog";
 import { DocumentsPanel } from "./documents-panel";
 import { ProjectContextPanel } from "./project-context-panel";
-import { SharePanel } from "./share-panel";
 import { AgentHealth } from "@/components/work/agent-health";
 import { RulesPanel } from "./rules-panel";
-import { useSpaceKind } from "@/components/space-kind";
-import { spaceCopy } from "@/lib/space-copy";
+import { SPACE_COPY as copy } from "@/lib/space-copy";
 import { useAgents, useDeleteAgent, useUpdateAgent } from "@/hooks/use-admin-data";
 import { useRunScope, useScope } from "@/hooks/use-work-data";
 import { describeCadence } from "@/lib/work/cadence";
@@ -114,10 +112,6 @@ interface FormState {
   escalationRule: string;
   modelProvider: "anthropic" | "openai";
   model: string;
-  publicPasscode: string;
-  widgetLabel: string;
-  widgetColor: string;
-  widgetSide: "right" | "left";
 }
 
 function toFormState(agent: AgentDetailDto): FormState {
@@ -134,10 +128,6 @@ function toFormState(agent: AgentDetailDto): FormState {
     escalationRule: agent.escalationRule ?? "",
     modelProvider: agent.modelProvider === "openai" ? "openai" : "anthropic",
     model: agent.model ?? "",
-    publicPasscode: agent.publicPasscode ?? "",
-    widgetLabel: agent.widgetLabel ?? "",
-    widgetColor: agent.widgetColor ?? "",
-    widgetSide: agent.widgetSide === "left" ? "left" : "right",
   };
 }
 
@@ -153,10 +143,6 @@ function toPayload(form: FormState) {
     escalationRule: form.escalationRule.trim(),
     modelProvider: form.modelProvider,
     model: form.model.trim(),
-    publicPasscode: form.publicPasscode.trim(),
-    widgetLabel: form.widgetLabel.trim(),
-    widgetColor: form.widgetColor.trim(),
-    widgetSide: form.widgetSide,
   };
 }
 
@@ -169,9 +155,9 @@ const SECTIONS: {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 }[] = [
   { id: "work", label: "Work & schedule", hint: "When it runs, what it works on, what needs approval", icon: Workflow },
-  { id: "knowledge", label: "Knowledge", hint: "Company context and reference documents", icon: BookOpen },
+  { id: "knowledge", label: "Knowledge", hint: "About you and your documents", icon: BookOpen },
   { id: "profile", label: "Profile", hint: "Name, character, responsibilities, chat abilities", icon: UserCheck },
-  { id: "settings", label: "Sharing & model", hint: "Public link, widget, passcode, model", icon: Sliders },
+  { id: "settings", label: "Model", hint: "Which AI model it uses", icon: Sliders },
 ];
 
 /** Fields the server can reject, and the section that owns each. */
@@ -184,27 +170,15 @@ const FIELD_SECTION: Record<string, EditorSection> = {
   responsibilities: "profile",
   escalationRule: "profile",
   allowedTools: "profile",
-  widgetColor: "settings",
-  publicPasscode: "settings",
   model: "settings",
   modelProvider: "settings",
 };
 
-/** A personal assistant has no public link or widget: its last section is only the model. */
-const PERSONAL_SECTIONS = SECTIONS.map((item) =>
-  item.id === "settings"
-    ? { ...item, label: "Model", hint: "Which AI model it uses" }
-    : item.id === "knowledge"
-      ? { ...item, hint: "About you and your documents" }
-      : item,
-);
-
 function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next: EditorSection) => void }) {
-  const sections = useSpaceKind() === "personal" ? PERSONAL_SECTIONS : SECTIONS;
   return (
     <nav id="editor-sections" aria-label="Editor sections" className="-mx-1 scroll-mt-4 overflow-x-auto pb-1">
       <ul className="inline-flex min-w-max items-center gap-1 rounded-lg border border-line bg-surface-2/80 p-1">
-        {sections.map((item) => {
+        {SECTIONS.map((item) => {
           const active = item.id === value;
           const Icon = item.icon;
           return (
@@ -342,12 +316,9 @@ export function AgentBuilder({
   }
 
   const [confirmUnpublish, setConfirmUnpublish] = React.useState(false);
-  const kind = useSpaceKind();
-  const personal = kind === "personal";
   // The role it was hired as offers its usual duties, ticked or not.
   const role = agent.templateId ? templateById(agent.templateId) : undefined;
   const dutyOptions = role ? [...role.responsibilities, ...role.moreResponsibilities] : [];
-  const copy = spaceCopy(kind);
   // One decision at a time: the form is grouped into sections and only the
   // current one is on screen. Edits in every section persist until saved.
   // A new agent still needs its grounding; an existing one is usually opened
@@ -391,10 +362,8 @@ export function AgentBuilder({
     }
     const result = await save({ status: "published" });
     if (!result) return;
-    toast.success(personal ? `${result.name} is on` : `${result.name} is live`, {
-      description: personal
-        ? "They work on their schedule and answer you in Chat. Only you can reach them."
-        : "They work on their schedule and join the team chat. Share their link or widget if the role talks to clients.",
+    toast.success(`${result.name} is on`, {
+      description: "They work on their schedule and answer you in Chat. Only you can reach them.",
     });
     router.refresh();
   }
@@ -403,16 +372,14 @@ export function AgentBuilder({
     const result = await save({ status: "draft" });
     if (!result) return;
     router.refresh();
-    toast(personal ? `${result.name} is off` : `${result.name} is unpublished`, {
-      description: personal
-        ? "They stop working on their schedule until you switch them back on."
-        : "The public link and widget stop working immediately.",
+    toast(`${result.name} is off`, {
+      description: "They stop working on their schedule until you switch them back on.",
       action: {
         label: "Undo",
         onClick: () => {
           void save({ status: "published" }).then((again) => {
             if (again) {
-              toast.success(`${again.name} is live again`);
+              toast.success(`${again.name} is on again`);
               router.refresh();
             }
           });
@@ -420,8 +387,6 @@ export function AgentBuilder({
       },
     });
   }
-
-  const escalationEnabled = form.allowedTools.includes("escalate_to_human");
 
   return (
     <div className="flex min-h-dvh flex-col lg:h-dvh">
@@ -493,7 +458,7 @@ export function AgentBuilder({
               onClick={() => void togglePublish()}
               loading={update.isPending}
             >
-              {agent.status === "published" ? (personal ? "Switch off" : "Unpublish") : personal ? "Switch on" : "Publish"}
+              {agent.status === "published" ? "Switch off" : "Switch on"}
             </Button>
 
             <DropdownMenu>
@@ -548,9 +513,9 @@ export function AgentBuilder({
       <ConfirmDialog
         open={confirmUnpublish}
         onOpenChange={setConfirmUnpublish}
-        title={personal ? `Switch ${agent.name} off?` : `Unpublish ${agent.name}?`}
-        description="Anyone using the public link or the widget gets a 404 from the moment you confirm. Conversations and documents are kept, and you can undo right after."
-        confirmLabel={personal ? "Switch off" : "Unpublish"}
+        title={`Switch ${agent.name} off?`}
+        description="It stops working on its schedule from the moment you confirm. Its documents are kept, and you can undo right after."
+        confirmLabel="Switch off"
         onConfirm={unpublish}
       />
       <PromptPreviewDialog
@@ -667,20 +632,6 @@ export function AgentBuilder({
                       placeholder={copy.rolePlaceholder}
                     />
                   </Field>
-
-                  {copy.showTeam ? (
-                    <Field
-                      label="Team"
-                      htmlFor="department"
-                      hint="Optional. Groups the roster."
-                    >
-                      <Input
-                        value={form.department}
-                        onChange={(event) => set("department", event.target.value)}
-                        placeholder={copy.teamPlaceholder}
-                      />
-                    </Field>
-                  ) : null}
                 </div>
 
                 <div className="space-y-1.5">
@@ -709,9 +660,8 @@ export function AgentBuilder({
                     anyway. What it does on its own is set under Work &amp; schedule.
                   </p>
                   <div className="grid gap-2 sm:grid-cols-2">
-                  {/* In a personal space nobody but you chats with it, so the
-                      client-facing actions (log a bug, transfer) do not apply. */}
-                  {TOOL_IDS.filter((tool) => !personal || tool === "search_documents").map((tool) => {
+                  {/* Nobody but you chats with it, so client-facing actions (log a bug, transfer) do not apply. */}
+                  {TOOL_IDS.filter((tool) => tool === "search_documents").map((tool) => {
                     const meta = TOOL_METADATA[tool];
                     const Icon = TOOL_ICONS[meta.icon];
                     const checked = form.allowedTools.includes(tool);
@@ -757,49 +707,26 @@ export function AgentBuilder({
                   </div>
                 </fieldset>
 
-                {escalationEnabled ? (
-                  <div className="space-y-1">
-                    <EscalationPicker
-                      value={form.escalationRule}
-                      onChange={(next) => set("escalationRule", next)}
-                      kind={personal ? "personal" : "business"}
-                      idPrefix="profile"
-                    />
-                    <HelpLink topic="escalationRule" label="When does an agent escalate?" />
-                  </div>
-                ) : null}
+                <div className="space-y-1">
+                  <EscalationPicker
+                    value={form.escalationRule}
+                    onChange={(next) => set("escalationRule", next)}
+                    idPrefix="profile"
+                  />
+                  <HelpLink topic="escalationRule" label="When does an agent escalate?" />
+                </div>
               </PanelBody>
             </Panel>
             </>
             ) : null}
 
-            {/* Sharing & model ------------------------------------------- */}
+            {/* Model ------------------------------------------- */}
             {section === "settings" ? (
               <>
-                {personal ? (
-                  <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-muted">
-                    <span className="font-medium text-ink">Private to you.</span> Assistants in your personal space have
-                    no public link or widget, and nobody else can chat with them.
-                  </p>
-                ) : (
-                <SharePanel
-                  agentId={agent.id}
-                  published={agent.status === "published"}
-                  passcode={form.publicPasscode}
-                  onPasscodeChange={(value) => set("publicPasscode", value)}
-                  widget={{
-                    label: form.widgetLabel,
-                    color: form.widgetColor,
-                    side: form.widgetSide,
-                  }}
-                  onWidgetChange={(next) => {
-                    if (next.label !== undefined) set("widgetLabel", next.label);
-                    if (next.color !== undefined) set("widgetColor", next.color);
-                    if (next.side !== undefined) set("widgetSide", next.side);
-                  }}
-                  widgetFieldError={fieldErrors.widgetColor?.[0]}
-                />
-                )}
+                <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-muted">
+                  <span className="font-medium text-ink">Private to you.</span> Your assistants have no public link or
+                  widget, and nobody else can chat with them.
+                </p>
 
                 <Panel>
                   <PanelHeader>
@@ -949,7 +876,6 @@ function DeleteAgentItem({
 }
 
 function OnboardingChecklist({ agent }: { agent: AgentDetailDto }) {
-  const personal = useSpaceKind() === "personal";
   return (
     <div className="border-b border-accent-line bg-accent-soft px-4 py-3 sm:px-6">
       <p className="text-sm font-medium text-accent-soft-fg">
@@ -957,14 +883,10 @@ function OnboardingChecklist({ agent }: { agent: AgentDetailDto }) {
       </p>
       <ol className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-accent-soft-fg/90">
         <li>
-          {personal
-            ? "1. Answer the questions about you & upload what it should read (a statement, your CV, notes)"
-            : "1. Answer company context & upload reference documents"}
+          1. Answer the questions about you & upload what it should read (a statement, your CV, notes)
         </li>
         <li>
-          {personal
-            ? "2. Try it in the chat beside the editor, then switch it on"
-            : "2. Chat with your agent to test work & collaborate, then hit Publish"}
+          2. Try it in the chat beside the editor, then switch it on
         </li>
       </ol>
     </div>

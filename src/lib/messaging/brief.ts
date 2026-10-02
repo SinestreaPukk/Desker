@@ -178,7 +178,7 @@ export async function composeBrief(userId: string, now = new Date(), previousBri
   return {
     title: `Good morning${user.firstName ? `, ${user.firstName}` : ""}. ${date}`,
     body: sections.length ? sections.join("\n\n") : "Nothing waiting on you. Have a good day.",
-    url: env.appUrl ? `${env.appUrl}${waitingPath ?? "/choose-space"}` : null,
+    url: env.appUrl ? `${env.appUrl}${waitingPath ?? "/"}` : null,
   };
 }
 

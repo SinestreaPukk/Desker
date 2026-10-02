@@ -41,7 +41,13 @@ setup("authenticate", async ({ page, request }) => {
       where: { organization: { memberships: { some: { user: { email: ADMIN.email } } } } },
       data: {
         contextAnswers: COMPANY_CONTEXT,
-        context: `The business: ${COMPANY_CONTEXT.business}\n\nCustomers: ${COMPANY_CONTEXT.audience}\n\nHouse style: ${COMPANY_CONTEXT.tone}\n\nNever: ${COMPANY_CONTEXT.never}`,
+        context: `About me: ${COMPANY_CONTEXT.about}
+
+What I want help with: ${COMPANY_CONTEXT.goals}
+
+How to talk to me: ${COMPANY_CONTEXT.tone}
+
+Never: ${COMPANY_CONTEXT.never}`,
       },
     });
     await prisma.organization.updateMany({

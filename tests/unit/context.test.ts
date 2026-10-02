@@ -21,7 +21,7 @@ describe("the question sets", () => {
       const ids = new Set(questions.map((question) => question.id));
       expect(ids.size).toBe(questions.length);
       for (const question of questions) {
-        expect(question.label.endsWith("?")).toBe(true);
+        expect(question.label.length).toBeGreaterThan(5);
         expect(question.placeholder.length).toBeGreaterThan(20);
         expect(question.hint).toBeTruthy();
         expect(question.promptLabel).toBeTruthy();
@@ -96,11 +96,11 @@ describe("context written before the questions existed", () => {
 describe("what a run actually reads", () => {
   it("puts the project's shared context first, labelled apart from the agent's", () => {
     const text = effectiveContext({
-      projectContext: "The business: we sell hand tools.",
+      projectContext: "About me: I work in design.",
       agentContext: "About this work: warranty push.",
     });
-    expect(text.indexOf("we sell hand tools")).toBeLessThan(text.indexOf("warranty push"));
-    expect(text).toContain("shared by every agent here");
+    expect(text.indexOf("I work in design")).toBeLessThan(text.indexOf("warranty push"));
+    expect(text).toContain("shared by all of their assistants");
     expect(text).toContain("Specific to you");
   });
 

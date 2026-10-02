@@ -12,6 +12,7 @@ import { effectiveAutonomy, GATED_TOOL_IDS, type AutonomyMode, type GatedToolId,
 const CAN: Record<Exclude<WorkToolId, GatedToolId>, string | null> = {
   search_documents: "Look things up in the documents you gave it",
   review_spending: "Add up the statements you uploaded, exactly",
+  life_record: "Keep your calendar, bills, goals and routine up to date inside Desker",
   web_research: "Research the web and cite its sources",
   draft_content: "Write drafts for you to review",
   github_read: "Read the GitHub repositories you shared",

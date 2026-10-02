@@ -1,5 +1,4 @@
 export const guide = {
-  audience: "personal",
   slug: "personal-space",
   title: "Set up your personal space",
   summary: "About you, your first assistant, and switching it on - about ten minutes.",

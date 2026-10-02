@@ -1,17 +1,14 @@
 import { expect, test } from "@playwright/test";
-import { ANONYMOUS, currentProjectSlug, hasModelKey, signUp, uniqueAdmin } from "./helpers";
+import { ANONYMOUS, currentProjectSlug, signUp, uniqueAdmin } from "./helpers";
 
 /**
- * The acceptance path from the build brief: an admin signs up, builds an agent,
- * uploads context, publishes, a client chats on the public link, and the
- * conversation shows up under Conversations, and anything the agent logged
- * waits in Needs you.
+ * The acceptance path: someone signs up, builds an assistant from a role,
+ * uploads a document and switches it on.
  */
 test.describe.configure({ mode: "serial" });
 
 let project: string;
 let agentUrl: string;
-let publicChatUrl: string;
 
 test.describe("signing up", () => {
   // This block must not inherit the shared signed-in session.
@@ -33,18 +30,16 @@ test("the wizard creates an agent from a role template", async ({ page }) => {
 
   // Step 1 - pick a role. Nothing else is possible until one is chosen.
   await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
-  await page.getByRole("button", { name: /^Support\b/ }).click();
+  await page.getByRole("button", { name: /^Money\b/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Step 2 - the role brings the job and team; the name is the admin's own.
-  await expect(page.getByLabel("Job title")).toHaveValue("Customer Support Lead");
-  await expect(page.getByLabel("Team")).toHaveValue("Customer Experience");
-  await page.getByLabel("Name").fill("Mia");
+  await expect(page.getByLabel("Job title")).toHaveValue("Money Manager");
+  await page.getByLabel("Name").fill("Penny");
   await page.getByRole("button", { name: "Continue" }).click();
 
-  // Step 3 - personality is required; the role also brings an escalation rule.
+  // Step 3 - personality is required and comes with the role.
   await expect(page.getByLabel("Personality and tone")).not.toHaveValue("");
-  await expect(page.getByLabel("Escalation rule")).not.toHaveValue("");
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Step 4 - answering from context documents is on by default, and the
@@ -58,9 +53,8 @@ test("the wizard creates an agent from a role template", async ({ page }) => {
     timeout: 30_000,
   });
   agentUrl = page.url().split("?")[0]!;
-  publicChatUrl = `/c/${agentUrl.split("/").pop()}`;
 
-  await expect(page.getByText(/Mia is created/)).toBeVisible();
+  await expect(page.getByText(/Penny is created/)).toBeVisible();
 });
 
 test("uploading a document indexes it and retrieval finds it", async ({ page }) => {
@@ -90,68 +84,10 @@ test("uploading a document indexes it and retrieval finds it", async ({ page }) 
   await expect(page.getByText(/30 days/).first()).toBeVisible();
 });
 
-test("an unpublished agent is not reachable by a client", async ({ page }) => {
-  const response = await page.goto(publicChatUrl);
-  expect(response?.status()).toBe(404);
-});
-
-test("publishing makes the public chat link work", async ({ page }) => {
+test("switching an assistant on", async ({ page }) => {
   await page.goto(agentUrl);
-  await page.getByRole("button", { name: "Publish", exact: true }).click();
-  await expect(page.getByText(/is live/)).toBeVisible({ timeout: 20_000 });
-
-  const response = await page.goto(publicChatUrl);
-  expect(response?.status()).toBe(200);
-  await expect(page.getByRole("heading", { name: "Mia" })).toBeVisible();
-});
-
-test("a client gets a streamed, grounded reply and it lands in Conversations", async ({
-  page,
-}) => {
-  test.skip(!hasModelKey, "ANTHROPIC_API_KEY is not set");
-
-  await page.goto(publicChatUrl);
-  await page.getByRole("textbox", { name: "Message" }).fill("How many days do I have to return an item?");
-  await page.getByRole("button", { name: "Send message" }).click();
-
-  // The agent should search the uploaded policy, then answer from it.
-  await expect(page.getByText("Searching company documents")).toBeVisible({
-    timeout: 30_000,
-  });
-  await expect(page.getByText(/30/).first()).toBeVisible({ timeout: 60_000 });
-
-  await page.goto(`/p/${project}/conversations`);
-  await expect(page.getByRole("heading", { name: "Mia" }).first()).toBeVisible({
-    timeout: 20_000,
-  });
-});
-
-test("a reported bug becomes an issue on the dashboard", async ({ page }) => {
-  test.skip(!hasModelKey, "ANTHROPIC_API_KEY is not set");
-
-  await page.goto(publicChatUrl);
-  await page
-    .getByRole("textbox", { name: "Message" })
-    .fill(
-      "Your checkout page throws a 500 error every time I click Pay. I have tried " +
-        "three times in Chrome and it fails every time.",
-    );
-  await page.getByRole("button", { name: "Send message" }).click();
-
-  await expect(page.getByText("Issue logged")).toBeVisible({ timeout: 60_000 });
-
-  await page.goto(`/p/${project}/needs-you`);
-  await page.getByRole("tab", { name: /Reported/ }).click();
-  await expect(page.getByText("Issue", { exact: true }).first()).toBeVisible({
-    timeout: 20_000,
-  });
-
-  // It can be resolved from here, and then sits under Handled.
-  await page.getByRole("button", { name: "Resolve" }).first().click();
-  await page.getByRole("tab", { name: "Handled" }).click();
-  await expect(page.getByRole("button", { name: "Reopen" }).first()).toBeVisible({
-    timeout: 20_000,
-  });
+  await page.getByRole("button", { name: "Switch on", exact: true }).click();
+  await expect(page.getByText(/is on/)).toBeVisible({ timeout: 20_000 });
 });
 
 test("a second project has its own roster, work and insights", async ({ page }) => {
@@ -181,10 +117,10 @@ test("a second project has its own roster, work and insights", async ({ page }) 
   // toHaveCount(0) rather than toBeHidden: the assertion is "none of the other
   // project's agents are here", and a count is both the precise claim and safe
   // when earlier runs have left more than one agent sharing a name.
-  await expect(page.getByRole("heading", { name: "Mia" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Penny" })).toHaveCount(0);
 
   await page.goto(`/p/${first}/roster`);
-  await expect(page.getByRole("heading", { name: "Mia" }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Penny" }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Iris" })).toHaveCount(0);
 });
 

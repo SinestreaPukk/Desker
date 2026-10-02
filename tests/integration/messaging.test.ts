@@ -26,7 +26,7 @@ beforeAll(async () => {
   userId = (await prisma.user.create({ data: { email: `alerts-${stamp}@example.test`, passwordHash: "x", firstName: "Nok" } })).id;
   orgId = (
     await prisma.organization.create({
-      data: { name: `Nok's shop ${stamp}`, slug: `alerts-${stamp}`, kind: "business", memberships: { create: { userId, role: "owner" } } },
+      data: { name: `Nok's shop ${stamp}`, slug: `alerts-${stamp}`, memberships: { create: { userId, role: "owner" } } },
     })
   ).id;
   await prisma.messageChannel.create({ data: { userId, kind: "line", label: "LINE (waiting)", linkCode: "AB3K7Q" } });

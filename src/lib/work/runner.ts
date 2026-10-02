@@ -25,6 +25,7 @@ import { findIntegration, resolveEmail } from "./integrations";
 import { captureMessage } from "@/lib/monitoring";
 import { notifyInBackground } from "@/lib/notify";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
+import { lifeText } from "@/lib/life/read";
 import { validTimeZone } from "@/lib/local-time";
 
 /** Which networks each social connection reaches, in the words an agent sets on a draft. */
@@ -34,8 +35,7 @@ const SOCIAL_CONNECTORS: [string, string[]][] = [
   ["x", ["X"]],
   ["threads", ["Threads"]],
 ];
-import { answersFor, contextQuestionsFor, effectiveContext } from "./context";
-import { spaceKind } from "@/lib/space";
+import { answersFor, contextQuestions, effectiveContext } from "./context";
 import { missingGrounding } from "./preflight";
 import { connectorChoice, connectorsForTool } from "@/lib/integrations/catalog";
 import { summarizeRun } from "./summary";
@@ -106,7 +106,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
           scopeOfWork: true,
           documents: { where: { status: "ready" }, select: { id: true, filename: true } },
           // The project's shared context is inherited by every agent in it.
-          project: { select: { context: true, contextAnswers: true, organization: { select: { kind: true } } } },
+          project: { select: { context: true, contextAnswers: true } },
           rules: { select: { text: true }, orderBy: { createdAt: "asc" } },
         },
       },
@@ -118,8 +118,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
   const scope = item.agent.scopeOfWork;
   // Its schedule's zone is the owner's: set from their browser when it was hired.
   const timeZone = validTimeZone(scope?.timezone);
-  const kind = spaceKind(item.agent.project.organization.kind);
-  const questions = contextQuestionsFor(kind);
+  const questions = contextQuestions();
   const autonomy = (scope?.autonomy ?? "draft_only") as AutonomyMode;
   const documentIds = scope ? toStringArray(scope.documentIds) : [];
   const objectives = scope ? toStringArray(scope.objectives) : [];
@@ -192,11 +191,9 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
         context: effectiveContext({
           projectContext: item.agent.project.context,
           agentContext: scope?.context,
-          kind,
         }),
         objectives,
       },
-      kind,
       rules: item.agent.rules.map((rule) => rule.text),
       autonomy,
       documentNames: documents.map((d) => d.filename),
@@ -206,6 +203,7 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       missingConnections,
       colleagues,
       timeZone,
+      life: await lifeText(item.agent.projectId, timeZone),
     }),
     missing: missingGrounding({
       projectAnswers: answersFor(
@@ -218,7 +216,6 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       tools,
       documentCount: documents.length,
       trigger: item.trigger,
-      kind,
     }),
     kickoff: kickoffMessage({
       trigger: item.trigger,
@@ -309,14 +306,6 @@ async function finishRun(
     metadata: outcome.error ? { error: outcome.error } : { summary: outcome.summary.slice(0, 300) },
   });
   if (to === "done") await continueWorkflow(actionItemId);
-  // A support ticket the agent could not settle: the helpdesk hears it needs a person.
-  if (to !== "failed") {
-    const flagged = await prisma.actionItem.findUnique({ where: { id: actionItemId }, select: { escalatedAt: true } });
-    if (flagged?.escalatedAt) {
-      const { reportToHelpdesk } = await import("./support-inbox");
-      await reportToHelpdesk(actionItemId, "needs_human");
-    }
-  }
 }
 
 /** A finished workflow step starts the next one (workflow-run.ts). Never fails the run it follows. */
@@ -482,13 +471,6 @@ export async function executeApprovedAction(
     });
   });
   if (delivery.ok) await step("continue-workflow", () => continueWorkflow(actionItemId));
-  // The reply to a support ticket went out: the helpdesk hears it was answered.
-  if (delivery.ok && action.tool === "send_email") {
-    await step("report-to-helpdesk", async () => {
-      const { reportToHelpdesk } = await import("./support-inbox");
-      await reportToHelpdesk(actionItemId, "answered");
-    });
-  }
   return delivery.ok ? "done" : "failed";
 }
 

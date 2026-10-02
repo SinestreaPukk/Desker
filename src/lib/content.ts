@@ -6,16 +6,13 @@
  * is required", never a blank hero in production.
  */
 import { z } from "zod";
-import { BRAND_LOGO_IDS } from "@/components/marketing/brand-logos";
 import site from "../../content/site.json";
 import landing from "../../content/landing.json";
 import showcase from "../../content/showcase.json";
 import contact from "../../content/contact.json";
 import templates from "../../content/templates.json";
-import { PLAN_IDS } from "@/lib/billing/plans";
 import { TOOL_IDS } from "@/lib/tools/registry";
 import { WORK_TOOL_IDS } from "@/lib/work/tools";
-import { SPACE_KINDS, type SpaceKind } from "@/lib/space";
 
 const link = z.object({ label: z.string().min(1), href: z.string().min(1) });
 const meta = z.object({ title: z.string().min(1).max(70), description: z.string().min(1).max(200) });
@@ -45,149 +42,11 @@ const siteSchema = z.object({
   }),
 });
 
-/** Glyphs the landing page may put beside a point. A closed set, so a new one is a decision. */
-/** The screenshots in public/product, written by scripts/product-shots.mjs. */
-export const PRODUCT_SHOTS = ["approval", "boundaries", "handoff-thread", "activity"] as const;
-
-export const LANDING_ICONS = [
-  "upload",
-  "calendar",
-  "approve",
-  "draft",
-  "person",
-  "source",
-  "log",
-  "lock",
-  "handoff",
-] as const;
-
-/** Section heading pattern used by every landing section: eyebrow, heading, intro. */
-const sectionHead = {
-  eyebrow: z.string().min(1).max(32),
-  heading: z.string().min(1).max(64),
-  intro: z.string().max(200).optional(),
-};
-
-/** The product pieces the landing page's feature tiles can show. */
-export const FEATURE_DEMOS = ["alerts", "team", "competitor", "week", "money"] as const;
-
+/** What the front door still reads: the share card and the showcase's closing call. */
 const landingSchema = z.object({
   meta,
-  hero: z.object({
-    headline: z.string().min(1).max(60),
-    subhead: z.string().max(200),
-    primaryCta: link,
-    secondaryCta: link,
-    /** One line of reassurance under the buttons. */
-    microcopy: z.string().max(90),
-  }),
-  /** "Built on" facts: the model providers, with their marks. */
-  trustStrip: z.object({
-    label: z.string(),
-    items: z
-      .array(z.object({ name: z.string().min(1).max(40), logo: z.enum(BRAND_LOGO_IDS).optional() }))
-      .min(1)
-      .max(6),
-  }),
-  /** Business and personal, side by side: the two things Desker is for. */
-  desks: z.object({
-    ...sectionHead,
-    business: z.object({
-      label: z.string().min(1).max(32),
-      title: z.string().min(1).max(64),
-      body: z.string().min(1).max(200),
-      points: z.array(z.string().min(1).max(80)).min(2).max(4),
-    }),
-    personal: z.object({
-      label: z.string().min(1).max(32),
-      title: z.string().min(1).max(64),
-      body: z.string().min(1).max(200),
-      points: z.array(z.string().min(1).max(80)).min(2).max(4),
-    }),
-    /** The one line between them: what never crosses. */
-    wall: z.string().min(1).max(120),
-  }),
-  features: z.object({
-    ...sectionHead,
-    items: z
-      .array(
-        z.object({
-          /** Short label above the title, e.g. the agent and role. */
-          label: z.string().min(1).max(32),
-          title: z.string().min(1).max(64),
-          body: z.string().min(1).max(200),
-          /** Which piece of the product the tile shows. */
-          demo: z.enum(FEATURE_DEMOS),
-        }),
-      )
-      .min(2)
-      .max(8),
-  }),
-  trust: z.object({
-    ...sectionHead,
-    /** Real screenshots of the product (scripts/product-shots.mjs), not mock-ups. */
-    shots: z
-      .array(
-        z.object({
-          image: z.enum(PRODUCT_SHOTS),
-          title: z.string().min(1).max(48),
-          body: z.string().min(1).max(160),
-        }),
-      )
-      .min(1)
-      .max(4),
-    items: z
-      .array(z.object({ icon: z.enum(LANDING_ICONS), title: z.string().min(1).max(48), body: z.string().min(1).max(160) }))
-      .min(3)
-      .max(8),
-  }),
-  roles: z.object({
-    ...sectionHead,
-    cta: z.string().min(1).max(24),
-    /** Headings over each audience's roles. */
-    groups: z.object({ business: z.string().min(1).max(32), personal: z.string().min(1).max(32) }),
-  }),
-  /** What it connects to: the lists themselves come from the connector catalog and the alert channels. */
-  integrations: z.object({ ...sectionHead }),
-  /** Real quotes only. Hidden until enabled with at least one item. */
-  testimonials: z.object({
-    enabled: z.boolean(),
-    ...sectionHead,
-    items: z.array(z.object({ quote: z.string().min(1), name: z.string().min(1), title: z.string().min(1) })),
-  }),
-  /** While pricing is off: what the beta is, its limits, and what it will cost after. */
-  beta: z.object({
-    ...sectionHead,
-    included: z.array(z.string().min(1)).min(2).max(6),
-    limits: z.array(z.string().min(1)).min(2).max(6),
-    /** Over the planned prices, read from billing/plans.ts. */
-    pricingLabel: z.string().min(1).max(80),
-    pricingNote: z.string().min(1).max(240),
-  }),
-  pricing: z.object({
-    /** Off while there is nothing to buy yet: the section and its links are hidden. */
-    enabled: z.boolean(),
-    ...sectionHead,
-    /** Which tier carries the emphasis. A decision, so it is written down. */
-    popularPlan: z.enum(PLAN_IDS),
-    popularLabel: z.string().min(1).max(24),
-    footnote: z.string(),
-    /** Under the cards, where the reader is deciding: the money reassurance. */
-    reassurance: z.string().max(140).optional(),
-    /** One real screenshot beside the plans: what every plan is watched by. */
-    proof: z.object({ image: z.enum(PRODUCT_SHOTS), caption: z.string().min(1).max(160) }).optional(),
-  }),
-  faq: z.object({
-    ...sectionHead,
-    items: z.array(z.object({ q: z.string().min(1), a: z.string().min(1) })).min(3).max(12),
-  }),
-  cta: z.object({
-    heading: z.string(),
-    body: z.string(),
-    button: link,
-    secondary: link.optional(),
-    microcopy: z.string().max(90).optional(),
-  }),
+  hero: z.object({ headline: z.string().min(1).max(60) }),
+  cta: z.object({ heading: z.string(), body: z.string(), button: link }),
 });
 
 const showcaseSchema = z.object({
@@ -249,8 +108,6 @@ export const TEMPLATE_ICONS = [
 
 const templateSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
-  /** Which kind of space hires this role: a business, or one person for their own life. */
-  audience: z.enum(SPACE_KINDS).default("business"),
   name: z.string().min(1),
   icon: z.enum(TEMPLATE_ICONS),
   jobTitle: z.string().min(1),
@@ -305,11 +162,6 @@ export type AgentTemplate = (typeof TEMPLATES)[number];
 
 export function templateById(id: string): AgentTemplate | undefined {
   return TEMPLATES.find((t) => t.id === id);
-}
-
-/** The roles a space of this kind can hire. */
-export function templatesFor(kind: SpaceKind): AgentTemplate[] {
-  return TEMPLATES.filter((t) => t.audience === kind);
 }
 
 /**

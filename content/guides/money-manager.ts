@@ -1,5 +1,4 @@
 export const guide = {
-  audience: "personal",
   slug: "money-manager",
   title: "Hand your money manager a statement",
   summary: "Export a CSV from your bank, upload it, and get exact totals every week.",

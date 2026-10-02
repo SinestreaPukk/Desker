@@ -38,12 +38,6 @@ async function main() {
     scopes++;
   }
   console.log(`[migrate-data] search_documents: ${agents} agent(s), ${scopes} scope(s) updated`);
-
-  const users = await prisma.user.updateMany({
-    where: { useType: { in: ["freelancer", "startup"] } },
-    data: { useType: "business" },
-  });
-  console.log(`[migrate-data] useType: ${users.count} user(s) updated`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -65,12 +65,6 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.modelProvider !== undefined ? { modelProvider: input.modelProvider } : {}),
         ...(input.model !== undefined ? { model: input.model || null } : {}),
-        ...(input.publicPasscode !== undefined
-          ? { publicPasscode: input.publicPasscode || null }
-          : {}),
-        ...(input.widgetLabel !== undefined ? { widgetLabel: input.widgetLabel || null } : {}),
-        ...(input.widgetColor !== undefined ? { widgetColor: input.widgetColor || null } : {}),
-        ...(input.widgetSide !== undefined ? { widgetSide: input.widgetSide ?? null } : {}),
       },
     });
 

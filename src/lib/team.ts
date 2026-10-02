@@ -18,7 +18,6 @@ import { toStringArray } from "@/lib/agent-fields";
 import { buildSystemPrompt } from "@/lib/agent-prompt";
 import { getProvider } from "@/lib/llm/provider";
 import { effectiveContext } from "@/lib/work/context";
-import { spaceKind, type SpaceKind } from "@/lib/space";
 import { rulesFor } from "@/lib/work/rules";
 import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { RunRefused, startRun } from "@/lib/work/scope";
@@ -175,7 +174,7 @@ ${documents.length > 0 ? `Documents uploaded to you: ${documents.join(", ")}.` :
 - If something you need is truly missing - a document, a tool, a connection - say exactly what the owner should add and where. Documents: Roster, open your page, Knowledge tab. Tools: Roster, your page, Work & schedule. Apps and accounts: Integrations. Never say "here": this chat cannot take files.`;
 }
 
-function roomSection(agent: TeamAgent, team: TeamAgent[], kind: SpaceKind): string {
+function roomSection(agent: TeamAgent, team: TeamAgent[]): string {
   const others = team
     .filter((other) => other.id !== agent.id)
     .map((other) => {
@@ -183,7 +182,7 @@ function roomSection(agent: TeamAgent, team: TeamAgent[], kind: SpaceKind): stri
       return `${other.name} (${other.jobTitle}${can.length > 0 ? `; their tasks can: ${can.join(", ")}` : ""})`;
     });
   return `## The team room
-You are in a group chat with ${kind === "personal" ? "the person you work for (the owner)" : "the business owner"}${others.length > 0 ? ` and your colleagues ${others.join(", ")}` : ""}. The owner can ask anything or hand out work.
+You are in a group chat with the person you work for (the owner)${others.length > 0 ? ` and your colleagues ${others.join(", ")}` : ""}. The owner can ask anything or hand out work.
 
 Reply with one JSON object and nothing else:
 {"reply": "your message to the room", "task": null | "the task you are starting, written as an instruction to yourself", "handoff": null | "a colleague's name"}
@@ -223,13 +222,12 @@ export async function replyAs(input: {
       const [project, scope, documents, rules] = await Promise.all([
         prisma.project.findUnique({
           where: { id: projectId },
-          select: { context: true, organization: { select: { kind: true } } },
+          select: { context: true },
         }),
         prisma.scopeOfWork.findUnique({ where: { agentId: agent.id }, select: { context: true, tools: true, timezone: true } }),
         prisma.document.findMany({ where: { agentId: agent.id, status: "ready" }, select: { filename: true }, take: 30 }),
         rulesFor(agent.id),
       ]);
-      const kind = spaceKind(project?.organization.kind);
       const systemPrompt = [
         buildSystemPrompt({
           name: agent.name,
@@ -238,18 +236,16 @@ export async function replyAs(input: {
           personality: agent.personality,
           responsibilities: toStringArray(agent.responsibilities),
           allowedTools: [],
-          companyContext: effectiveContext({ projectContext: project?.context, agentContext: scope?.context, kind }),
-          audience: "colleague",
-          kind,
+          companyContext: effectiveContext({ projectContext: project?.context, agentContext: scope?.context }),
           rules,
         }),
         abilitiesSection(
           toStringArray(scope?.tools),
           documents.map((document) => document.filename),
         ),
-        roomSection(agent, team, kind),
+        roomSection(agent, team),
         timeNote(new Date(), scope?.timezone),
-        safetyRules("owner"),
+        safetyRules(),
       ].join("\n\n");
       const provider = await getProvider(agent.modelProvider);
       const turn = await provider.complete({

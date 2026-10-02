@@ -1,13 +1,11 @@
 import type { MetadataRoute } from "next";
-import { TEMPLATES, absoluteUrl } from "@/lib/content";
+import { absoluteUrl } from "@/lib/content";
 import { GUIDES } from "@/lib/guides";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   return [
     { url: absoluteUrl("/"), lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: absoluteUrl("/showcase"), lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    ...TEMPLATES.map((t) => ({ url: absoluteUrl(`/showcase#${t.id}`), lastModified: now, priority: 0.6 })),
     { url: absoluteUrl("/guides"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     // Every guide is its own page: concrete answers are what search engines
     // have to index beyond the landing page.

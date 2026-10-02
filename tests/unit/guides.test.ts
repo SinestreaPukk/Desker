@@ -7,9 +7,7 @@ import { describe, expect, it } from "vitest";
 import {
   GUIDES,
   HELP_TOPICS,
-  PERSONAL_HELP_TOPICS,
   guideBySlug,
-  guidesFor,
   headingId,
   plainText,
   searchGuides,
@@ -24,11 +22,7 @@ describe("the guides themselves", () => {
   it("covers the tasks an owner gets stuck on", () => {
     const slugs = GUIDES.map((guide) => guide.slug);
     for (const expected of [
-      "hire-an-agent",
-      "project-context",
-      "scope-of-work",
       "approvals",
-      "insights",
       "integrations",
       "personal-space",
       "about-you",
@@ -40,13 +34,8 @@ describe("the guides themselves", () => {
     }
   });
 
-  it("gives a personal space its own tutorial, free of business setup", () => {
-    const personal = guidesFor("personal");
-    const business = guidesFor("business");
-    expect(personal.map((g) => g.slug)).toContain("personal-space");
-    expect(personal.map((g) => g.slug)).not.toContain("hire-an-agent");
-    expect(business.map((g) => g.slug)).not.toContain("personal-space");
-    for (const guide of personal.filter((g) => g.audience === "personal")) {
+  it("speaks to one person, free of business setup", () => {
+    for (const guide of GUIDES) {
       const text = plainText(guide.body).toLowerCase();
       for (const word of ["job title", "company context", "organisation", "hire"]) {
         expect(text, `${guide.slug} mentions "${word}"`).not.toContain(word);
@@ -102,8 +91,8 @@ describe("splitting a body into sections", () => {
 });
 
 describe("the contextual links", () => {
-  it("every one points at a guide and a heading that exist, in both kinds of space", () => {
-    for (const [topic, target] of [...Object.entries(HELP_TOPICS), ...Object.entries(PERSONAL_HELP_TOPICS)]) {
+  it("every one points at a guide and a heading that exist, ", () => {
+    for (const [topic, target] of Object.entries(HELP_TOPICS)) {
       const guide = guideBySlug(target.slug);
       expect(guide, `${topic} points at a missing guide`).not.toBeNull();
       expect(
@@ -123,8 +112,8 @@ describe("searching the guides", () => {
   });
 
   it("ranks a title hit above a passing mention", () => {
-    const results = searchGuides("insights");
-    expect(results[0]?.guide.slug).toBe("insights");
+    const results = searchGuides("money manager");
+    expect(results[0]?.guide.slug).toBe("money-manager");
   });
 
   it("matches the words on the screen, not just our headings", () => {

@@ -2,8 +2,7 @@ import { prisma } from "@/lib/db";
 import { limitOrganization } from "@/lib/rate-limit";
 import { handle, requireAdmin, HttpError } from "@/lib/api";
 import { findAgentFor } from "@/lib/projects";
-import { contextQuestionsFor } from "@/lib/work/context";
-import { spaceKind } from "@/lib/space";
+import { contextQuestions } from "@/lib/work/context";
 import { NoDocuments, NoModel, draftContextFromDocuments } from "@/lib/work/context-draft";
 
 export const runtime = "nodejs";
@@ -33,8 +32,7 @@ export async function POST(_request: Request, { params }: Params) {
       return await draftContextFromDocuments({
         organizationId: agent.project.organizationId,
         agentId,
-        questions: contextQuestionsFor(spaceKind(agent.project.organization.kind)).agent,
-        kind: spaceKind(agent.project.organization.kind),
+        questions: contextQuestions().agent,
         model: { provider: model.modelProvider, name: model.model },
         billingAgentId: agentId,
       });

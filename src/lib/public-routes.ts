@@ -10,7 +10,6 @@ const PUBLIC_PATHS = new Set([
   "/contact",
   "/privacy",
   "/terms",
-  "/showcase",
   "/guides",
   "/blog",
 ]);

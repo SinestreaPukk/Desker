@@ -16,6 +16,7 @@ import { DRAFT_KINDS, GATED_TOOL_IDS } from "./types";
 export const WORK_TOOL_IDS = [
   "search_documents",
   "review_spending",
+  "life_record",
   "web_research",
   "draft_content",
   "publish_post",
@@ -56,6 +57,7 @@ type RiskLevel = "read" | "draft" | "internal" | "external";
 export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
   search_documents: "read",
   review_spending: "read",
+  life_record: "draft",
   web_research: "read",
   draft_content: "draft",
   suggest_opportunity: "draft",
@@ -87,6 +89,10 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   review_spending: {
     label: "Review spending",
     blurb: "Add up the bank or card statements (CSV) uploaded to this agent: totals by category, subscriptions, biggest costs. Worked out exactly, never guessed; account numbers are masked.",
+  },
+  life_record: {
+    label: "Update your life context",
+    blurb: "Record an event, task, bill, expense, goal, workout, preference or note in the shared picture of your life every assistant reads. Stays inside Desker; nothing is sent anywhere.",
   },
   web_research: {
     label: "Research the web",
@@ -174,6 +180,25 @@ const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinitio
         since: { type: "string", description: "Optional. Only count transactions on or after this date (YYYY-MM-DD)." },
         until: { type: "string", description: "Optional. Only count transactions on or before this date (YYYY-MM-DD)." },
       },
+      additionalProperties: false,
+    },
+  },
+  life_record: {
+    name: "life_record",
+    description:
+      "Record one fact in the person's shared life context so every assistant sees it: a calendar event, task/reminder/deadline, bill (with due date), expense or income, goal, workout, standing preference, or a short note. Stays inside this product; it does not touch their real calendar or send anything. Amounts are in major units (e.g. 120.50). Dates are ISO 8601.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        kind: { type: "string", enum: ["event", "task", "bill", "expense", "income", "goal", "workout", "preference", "note"] },
+        title: { type: "string", description: "Event/task/goal/workout title, bill or expense payee, preference key, or the note text." },
+        at: { type: "string", description: "Start, due or occurred date-time (ISO 8601). Required for event, bill, expense, income, workout." },
+        until: { type: "string", description: "Optional end date-time for an event." },
+        amount: { type: "number", description: "Money amount in major units, for bill/expense/income. A goal's target may also be given here." },
+        category: { type: "string", description: "Spending category or goal domain (money, fitness, travel, career, learning)." },
+        value: { type: "string", description: "A preference's value." },
+      },
+      required: ["kind", "title"],
       additionalProperties: false,
     },
   },

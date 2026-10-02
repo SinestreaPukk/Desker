@@ -1,5 +1,5 @@
 /**
- * Every agent, conversation and issue route must treat another organisation's
+ * Every agent and issue route must treat another organisation's
  * records as if they did not exist. Calls the real route handlers as a
  * signed-in outsider and expects a 404 each time, with nothing changed.
  * Needs DATABASE_URL; no model key.
@@ -74,7 +74,6 @@ afterAll(async () => {
 const json = (body: unknown) =>
   new Request("http://test", { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json" } });
 const agent = () => ({ params: Promise.resolve({ agentId }) });
-const conversation = () => ({ params: Promise.resolve({ conversationId }) });
 
 describe("another organisation's records are invisible", () => {
   it("agent routes", async () => {
@@ -94,26 +93,9 @@ describe("another organisation's records are invisible", () => {
     expect(await prisma.agent.count({ where: { projectId: outsiderProjectId } })).toBe(0);
   });
 
-  it("conversation and issue routes", async () => {
-    const detail = await import("@/app/api/conversations/[conversationId]/route");
-    const mode = await import("@/app/api/conversations/[conversationId]/mode/route");
-    const reply = await import("@/app/api/conversations/[conversationId]/reply/route");
-    const notes = await import("@/app/api/conversations/[conversationId]/notes/route");
+  it("issue routes", async () => {
     const issue = await import("@/app/api/issues/[issueId]/route");
-
-    expect((await detail.GET(new Request("http://test"), conversation())).status).toBe(404);
-    expect((await detail.PATCH(json({ status: "resolved" }), conversation())).status).toBe(404);
-    expect((await mode.PATCH(json({ mode: "human" }), conversation())).status).toBe(404);
-    expect((await reply.POST(json({ message: "hello" }), conversation())).status).toBe(404);
-    expect((await notes.GET(new Request("http://test"), conversation())).status).toBe(404);
-    expect((await notes.POST(json({ body: "note" }), conversation())).status).toBe(404);
     expect((await issue.PATCH(json({ status: "resolved" }), { params: Promise.resolve({ issueId }) })).status).toBe(404);
-
-    const after = await prisma.conversation.findUniqueOrThrow({ where: { id: conversationId } });
-    expect(after.status).toBe("open");
-    expect(after.replyMode).not.toBe("human");
-    expect(await prisma.message.count({ where: { conversationId } })).toBe(0);
-    expect(await prisma.conversationNote.count({ where: { conversationId } })).toBe(0);
     expect((await prisma.issue.findUniqueOrThrow({ where: { id: issueId } })).status).toBe("open");
   });
 });
