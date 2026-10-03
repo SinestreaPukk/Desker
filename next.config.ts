@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ["pdf-parse", "mammoth"],
   outputFileTracingIncludes: {
-    "/api/**": ["./node_modules/.prisma/client/**"],
+    "/api/**": ["./node_modules/.prisma/client/**", "./node_modules/playwright-core/**"],
   },
   async headers() {
     // Defence in depth: nothing here is meant to be framed or called cross-origin.

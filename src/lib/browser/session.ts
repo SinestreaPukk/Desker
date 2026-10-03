@@ -4,7 +4,10 @@
  * Locally, BROWSER_LOCAL=1 launches Chromium on this machine for development.
  */
 import "server-only";
-import { chromium, type Browser, type Page } from "playwright-core";
+import type { Page } from "playwright-core";
+
+// playwright-core is loaded only when a browser is opened: a problem with it must never break unrelated routes.
+const playwright = () => import("playwright-core");
 
 /** One fixed size: screenshots stay small, and the model's coordinates map 1:1 onto the page. */
 export const VIEWPORT = { width: 1024, height: 768 } as const;
@@ -31,7 +34,8 @@ async function cloud(): Promise<BrowserSession> {
   });
   if (!created.ok) throw new Error(`The cloud browser would not start (${created.status}).`);
   const { id, connectUrl } = (await created.json()) as { id: string; connectUrl: string };
-  const browser: Browser = await chromium.connectOverCDP(connectUrl);
+  const { chromium } = await playwright();
+  const browser = await chromium.connectOverCDP(connectUrl);
   const context = browser.contexts()[0] ?? (await browser.newContext());
   const page = context.pages()[0] ?? (await context.newPage());
   await page.setViewportSize(VIEWPORT);
@@ -45,6 +49,7 @@ async function cloud(): Promise<BrowserSession> {
 }
 
 async function local(): Promise<BrowserSession> {
+  const { chromium } = await playwright();
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: VIEWPORT });
   const page = await context.newPage();
