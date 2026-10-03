@@ -742,7 +742,7 @@ export function AgentBuilder({
           className={cn(
             "flex min-h-0 flex-col border-line bg-surface lg:border-l",
             mobilePane === "configure" && "hidden lg:flex",
-            section === "chat" && "hidden",
+            section === "chat" && "hidden lg:hidden",
           )}
           aria-label={`Chat with ${form.name || agent.name}`}
         >
