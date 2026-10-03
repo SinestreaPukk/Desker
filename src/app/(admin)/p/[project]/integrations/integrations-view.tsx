@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
+import { MessagingSection } from "@/components/integrations/messaging-panels";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -100,9 +101,10 @@ export function IntegrationsView({ project }: { project: string }) {
     <Page>
       <PageHeader
         title="Integrations"
-        description="Connect the tools your agents work with. Each asks for the least access it needs, and anything that reaches outside Desker waits for your approval first. Shared by every project in your organisation."
+        description="Connect LINE, Telegram, Gmail, your calendar and the other tools your assistant works with. Each asks for the least access it needs, and anything that reaches outside Desker waits for your approval first."
       />
       <PageBody className="space-y-8">
+        <MessagingSection />
         <Panel>
           <PanelHeader>
             <div>

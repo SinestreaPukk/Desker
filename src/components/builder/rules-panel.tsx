@@ -79,14 +79,6 @@ export function RulesPanel({ agentId, agentName, project }: { agentId: string; a
                   <p className="text-sm text-ink">{rule.text}</p>
                   <p className="meta mt-1">
                     {FROM[rule.source]}
-                    {rule.actionItemId ? (
-                      <>
-                        {" · "}
-                        <Link href={`/p/${project}/work/${rule.actionItemId}`} className="text-accent hover:underline">
-                          the run
-                        </Link>
-                      </>
-                    ) : null}
                     {" · "}
                     <span title={formatDateTime(rule.updatedAt)}>{formatRelativeTime(rule.createdAt)}</span>
                   </p>

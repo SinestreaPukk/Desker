@@ -336,12 +336,6 @@ function ScopeEditor({
         <div className="border-t border-line pt-4">
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-sm font-medium text-ink">Recent runs</h3>
-            <Link
-              href={`/p/${project}/work?agentId=${agentId}`}
-              className="text-xs text-accent hover:underline"
-            >
-              All work
-            </Link>
           </div>
           {recent.data && recent.data.length > 0 ? (
             <ul className="divide-y divide-line rounded-lg border border-line">

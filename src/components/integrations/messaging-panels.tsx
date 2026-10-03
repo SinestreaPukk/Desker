@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Bell, Newspaper, Plus, Send, Sunrise, Trash2, X } from "lucide-react";
 import { api, errorMessage } from "@/lib/shared/api-client";
-import { Page, PageBody, PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,17 +57,18 @@ function useSave() {
   });
 }
 
-export function AlertsView() {
+/** Where messages reach you (LINE, Telegram, email ...) and what they carry: alerts, the morning brief, news. */
+export function MessagingSection() {
   const settings = useSettings();
   const save = useSave();
-  if (settings.isPending) return <Shell><LoadingRows /></Shell>;
-  if (settings.isError) return <Shell><ErrorState message={errorMessage(settings.error)} onRetry={() => settings.refetch()} /></Shell>;
+  if (settings.isPending) return <LoadingRows />;
+  if (settings.isError) return <ErrorState message={errorMessage(settings.error)} onRetry={() => settings.refetch()} />;
   const data = settings.data;
   const prefs = data.prefs;
   const set = (next: Partial<AlertPrefs>) => save.mutate({ ...prefs, ...next });
 
   return (
-    <Shell>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-2">
       <div className="space-y-5">
         <ChannelsPanel data={data} />
         <EventsPanel prefs={prefs} set={set} spaces={data.spaces} />
@@ -77,19 +77,7 @@ export function AlertsView() {
         <BriefPanel prefs={prefs} set={set} />
         <NewsPanel prefs={prefs} set={set} />
       </div>
-    </Shell>
-  );
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <Page>
-      <PageHeader
-        title="Alerts"
-        description="Get Desker's messages in the app you already use: when something needs you, and a brief each morning. For every space you're in."
-      />
-      <PageBody className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-2">{children}</PageBody>
-    </Page>
+    </div>
   );
 }
 

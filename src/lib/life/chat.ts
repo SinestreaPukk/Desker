@@ -14,6 +14,7 @@ import { renderLife } from "./context";
 import { planChat, type Plan } from "./router";
 import { createReminder, extractReminder } from "./reminders";
 import { readPrefs } from "@/lib/messaging/prefs";
+import { learnFromChat } from "@/lib/agents/learn";
 import { afterResponse } from "@/lib/platform/after-response";
 
 export const EVERYDAY_THREAD = "Everyday chat";
@@ -30,6 +31,20 @@ export type Later = () => Promise<void>;
 
 /** Carries out a plan. Writes the replies into the thread; never throws. */
 export async function runChat(plan: Plan, text: string, team: TeamAgent[], ctx: ChatCtx): Promise<Later | undefined> {
+  const since = new Date();
+  const later = await respond(plan, text, team, ctx);
+  const agent = plan.responders[0];
+  // The assistant keeps the profile current from what was just said; after the reply, so it never slows it down.
+  if (agent && plan.route !== "reminder") {
+    afterResponse(async () => {
+      const last = await prisma.teamMessage.findFirst({ where: { threadId: ctx.threadId, agentId: agent.id, createdAt: { gte: since } }, orderBy: { createdAt: "desc" }, select: { content: true } });
+      await learnFromChat({ projectId: ctx.projectId, organizationId: ctx.organizationId, userText: text, agent, reply: last?.content ?? "" });
+    });
+  }
+  return later;
+}
+
+async function respond(plan: Plan, text: string, team: TeamAgent[], ctx: ChatCtx): Promise<Later | undefined> {
   if (plan.route === "reminder") {
     const speaker = plan.responders[0]!;
     const say = (content: string) => addTeamMessage({ projectId: ctx.projectId, threadId: ctx.threadId, agentId: speaker.id, content });

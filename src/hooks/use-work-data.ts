@@ -246,6 +246,8 @@ export function useProjectContext(project: string) {
     queryFn: () =>
       api<ProjectContextDto>(`/api/projects/${encodeURIComponent(project)}/context`),
     enabled: Boolean(project),
+    // The assistant updates these as you talk to it.
+    refetchInterval: 20_000,
   });
 }
 

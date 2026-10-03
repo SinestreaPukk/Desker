@@ -176,11 +176,8 @@ export function InheritedProjectContext({ project }: { project: string }) {
   if (loaded.answered === 0) {
     return (
       <div className="rounded-lg border border-dashed border-line bg-surface-2/50 px-3 py-2.5 text-xs text-ink-muted">
-        <span className="text-ink">Nothing shared yet.</span> Describe yourself once on the{" "}
-        <Link href={`/p/${project}/roster`} className="text-accent hover:underline">
-          roster
-        </Link>{" "}
-        and every agent here inherits it - then these questions are only about this role.
+        <span className="text-ink">Nothing shared yet.</span> Describe yourself once under Knowledge and
+        your assistant reads it first - then these questions are only about this work.
       </div>
     );
   }
@@ -194,9 +191,6 @@ export function InheritedProjectContext({ project }: { project: string }) {
       <pre className="mt-2 whitespace-pre-wrap font-sans leading-relaxed text-ink-muted">
         {loaded.context}
       </pre>
-      <Link href={`/p/${project}/roster`} className="mt-2 inline-block text-accent hover:underline">
-        Edit the shared context
-      </Link>
     </details>
   );
 }

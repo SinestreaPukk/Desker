@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ project: string; agentId: string }>;
-  searchParams: Promise<{ onboarding?: string; section?: string }>;
+  searchParams: Promise<{ section?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -27,7 +27,7 @@ export default async function AgentPage({ params, searchParams }: Props) {
   if (!user) redirect("/login");
 
   const { project, agentId } = await params;
-  const { onboarding, section } = await searchParams;
+  const { section } = await searchParams;
 
   // Scoped lookup: an agent from another project - or another organisation -
   // must not resolve here, or the URL would quietly cross a tenant boundary.
@@ -39,7 +39,6 @@ export default async function AgentPage({ params, searchParams }: Props) {
     <AgentBuilder
       agent={toAgentDetail(agent)}
       project={project}
-      onboarding={onboarding === "1"}
       initialSection={section as EditorSection | undefined}
     />
   );

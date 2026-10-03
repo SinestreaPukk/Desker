@@ -10,6 +10,16 @@ Personal-only: one person, one private space, one assistant that you configure
 public chat links, business roles or billing. Architecture and the decisions behind it:
 [`docs/ARCHITECTURE.md`](docs/personal/ARCHITECTURE.md).
 
+## The interface
+
+Three screens, nothing else:
+
+1. **Agent** (`/p/<space>/agent`): the settings of the one assistant: profile, responsibilities, tools, model, schedule, documents and rules, plus *About you*. The assistant keeps *About you* current as you talk to it (`src/lib/agents/learn.ts`); every change is visible and editable there.
+2. **Integrations**: connect LINE, Telegram, WhatsApp, Gmail, calendars, Slack and the rest, and choose what reaches you there (alerts, morning brief, news).
+3. **Productivity**: intentionally blank for now.
+
+Chat happens in the messaging apps you connect, and anything that needs your yes arrives there as an approval card.
+
 ## What is in it
 
 - **Life context** (`src/lib/life/`): one shared, continuously updated picture of your calendar, money, tasks, goals, workouts and preferences that the assistant and the chat read from and write to.

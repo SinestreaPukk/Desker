@@ -102,6 +102,16 @@ function ContextEditor({
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
 
+  // The assistant updates these as you talk to it: show what it learned, unless you are mid-edit.
+  const shown = React.useRef(loaded.answers);
+  React.useEffect(() => {
+    const before = shown.current;
+    shown.current = loaded.answers;
+    if (JSON.stringify(before) !== JSON.stringify(loaded.answers)) {
+      setAnswers((current) => (JSON.stringify(current) === JSON.stringify(before) ? loaded.answers : current));
+    }
+  }, [loaded.answers]);
+
   const value = answers;
   const dirty = JSON.stringify(value) !== JSON.stringify(loaded.answers);
 
@@ -129,7 +139,7 @@ function ContextEditor({
       {embedded ? (
         <div className="flex items-center gap-3.5 px-4 py-3.5">
           <ContextHeading
-            description={`Shared by every assistant in ${loaded.name}. Changes apply from the next run.`}
+            description="What your assistant knows about you. It updates this as you talk to it, and you can correct anything here."
           />
           <ContextBadge loaded={loaded} />
         </div>

@@ -3,16 +3,13 @@
 import * as React from "react";
 import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   AlertCircle,
-  ArrowLeft,
   ArrowRightLeft,
   BookOpen,
   BotMessageSquare,
   CalendarClock,
   Check,
-  Copy,
   FileCode2,
   Hand,
   MoreVertical,
@@ -23,7 +20,6 @@ import {
   Shuffle,
   Sliders,
   Sparkles,
-  Trash2,
   UserCheck,
   UserRoundCheck,
   Workflow,
@@ -42,7 +38,6 @@ import {
   PanelHeader,
   PanelTitle,
 } from "@/components/ui/panel";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
   Select,
   SelectContent,
@@ -51,15 +46,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FormError } from "@/components/ui/states";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,13 +63,11 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EscalationPicker, ResponsibilitiesPicker } from "./agent-setup";
 import { templateById } from "@/lib/site/content";
 import { HelpLink } from "@/components/help/help-panel";
-import { DuplicateAgentDialog } from "./duplicate-agent-dialog";
 import { DocumentsPanel } from "./documents-panel";
 import { ProjectContextPanel } from "./project-context-panel";
-import { AgentHealth } from "@/components/work/agent-health";
 import { RulesPanel } from "./rules-panel";
 import { SPACE_COPY as copy } from "@/lib/tenancy/space-copy";
-import { useAgents, useDeleteAgent, useUpdateAgent } from "@/hooks/use-admin-data";
+import { useUpdateAgent } from "@/hooks/use-admin-data";
 import { useRunScope, useScope } from "@/hooks/use-work-data";
 import { describeCadence } from "@/lib/work/cadence";
 import { errorMessage, ApiError } from "@/lib/shared/api-client";
@@ -209,19 +193,14 @@ function SectionNav({ value, onChange }: { value: EditorSection; onChange: (next
 export function AgentBuilder({
   agent,
   project,
-  onboarding,
   initialSection,
 }: {
   agent: AgentDetailDto;
   project: string;
-  onboarding: boolean;
   initialSection?: EditorSection;
 }) {
   const router = useRouter();
   const update = useUpdateAgent(agent.id);
-  const remove = useDeleteAgent();
-  // How it is doing - last run, next run, what waits, what broke - from the roster's own list.
-  const health = useAgents(project).data?.find((entry) => entry.id === agent.id)?.health;
 
   const [form, setForm] = React.useState<FormState>(() => toFormState(agent));
   const [saved, setSaved] = React.useState<FormState>(() => toFormState(agent));
@@ -231,7 +210,6 @@ export function AgentBuilder({
     "configure",
   );
   const [showPrompt, setShowPrompt] = React.useState(false);
-  const [showDuplicate, setShowDuplicate] = React.useState(false);
 
   // Preview conversations are keyed per mounted builder so two open tabs do not
   // share a thread. useId is stable across renders and unique per instance,
@@ -328,7 +306,7 @@ export function AgentBuilder({
       ? initialSection
       : undefined;
   const [section, setSection] = React.useState<EditorSection>(
-    validInitial ?? (onboarding ? "knowledge" : "work"),
+    validInitial ?? "knowledge",
   );
 
   React.useEffect(() => {
@@ -396,12 +374,6 @@ export function AgentBuilder({
             wrap they squeeze the name to zero and push the overflow menu off
             the right edge. */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:flex-nowrap sm:px-6">
-          <Button asChild variant="ghost" size="icon" aria-label="Back to roster" className="rounded-lg">
-            <Link href={`/p/${project}/roster`}>
-              <ArrowLeft aria-hidden />
-            </Link>
-          </Button>
-
           <AgentAvatar
             name={form.name || "?"}
             src={form.avatarUrl}
@@ -411,13 +383,6 @@ export function AgentBuilder({
           />
 
           <div className="min-w-0 flex-1 basis-24">
-            <Breadcrumbs
-              items={[
-                { label: "Roster", href: `/p/${project}/roster` },
-                { label: form.name || "Untitled agent" },
-              ]}
-              className="mb-0.5"
-            />
             <div className="flex items-center gap-2">
               <h1 className="truncate text-base font-bold text-ink">
                 {form.name || "Untitled agent"}
@@ -472,19 +437,6 @@ export function AgentBuilder({
                   <FileCode2 aria-hidden />
                   View the agent&apos;s instructions
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setShowDuplicate(true)}>
-                  <Copy aria-hidden />
-                  Duplicate…
-                </DropdownMenuItem>
-                <DeleteAgentItem
-                  name={agent.name}
-                  pending={remove.isPending}
-                  onConfirm={async () => {
-                    await remove.mutateAsync(agent.id);
-                    toast.success(`${agent.name} removed from the roster`);
-                    router.push(`/p/${project}/roster`);
-                  }}
-                />
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -524,15 +476,7 @@ export function AgentBuilder({
         onOpenChange={setShowPrompt}
         dirty={dirty}
       />
-      <DuplicateAgentDialog
-        agentId={agent.id}
-        agentName={agent.name}
-        currentProjectSlug={project}
-        open={showDuplicate}
-        onOpenChange={setShowDuplicate}
-      />
 
-      {onboarding ? <OnboardingChecklist agent={agent} /> : null}
 
       {/* --- body ------------------------------------------------------ */}
       <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_30rem]">
@@ -545,7 +489,6 @@ export function AgentBuilder({
           <div className="mx-auto max-w-3xl space-y-5 pb-16">
             <FormError message={saveError} />
 
-            {health ? <AgentHealth status={health} project={project} /> : null}
             <ScheduleSummary agentId={agent.id} onEdit={() => openAt("work", "scope-trigger")} />
             <BoundariesCard
               agentId={agent.id}
@@ -835,60 +778,6 @@ export function AgentBuilder({
           />
         </aside>
       </div>
-    </div>
-  );
-}
-
-function DeleteAgentItem({
-  name,
-  pending,
-  onConfirm,
-}: {
-  name: string;
-  pending: boolean;
-  onConfirm: () => Promise<void>;
-}) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <DropdownMenuItem destructive onSelect={(event) => event.preventDefault()}>
-          <Trash2 aria-hidden />
-          Delete agent
-        </DropdownMenuItem>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogTitle>Delete {name}?</DialogTitle>
-        <DialogDescription>
-          This removes the agent along with every uploaded document, conversation
-          transcript and logged issue. It cannot be undone.
-        </DialogDescription>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="secondary">Cancel</Button>
-          </DialogClose>
-          <Button variant="danger" loading={pending} onClick={() => void onConfirm()}>
-            Delete permanently
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function OnboardingChecklist({ agent }: { agent: AgentDetailDto }) {
-  return (
-    <div className="border-b border-accent-line bg-accent-soft px-4 py-3 sm:px-6">
-      <p className="text-sm font-medium text-accent-soft-fg">
-        {agent.name} is created. Two steps left:
-      </p>
-      <ol className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-accent-soft-fg/90">
-        <li>
-          1. Answer the questions about you & upload what it should read (a statement, your CV, notes)
-        </li>
-        <li>
-          2. Try it in the chat beside the editor, then switch it on
-        </li>
-      </ol>
     </div>
   );
 }
