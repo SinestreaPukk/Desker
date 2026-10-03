@@ -162,50 +162,56 @@ export function AgentChat({ project, agent, live }: { project: string; agent: { 
         </button>
       </div>
 
-      {!live ? (
-        <p className="mb-3 rounded-md px-4 py-2.5 text-sm text-ink" style={{ background: "var(--note-lemon)" }}>
-          {agent.name} is off. Add a few lines about you in Profile, then switch it on.
-        </p>
-      ) : null}
+      {/* One tinted note behind the whole conversation, so the white message box stands out from it. */}
+      <div
+        className="flex min-h-0 flex-1 flex-col rounded-panel border border-line p-4 sm:p-5"
+        style={{ background: "color-mix(in oklch, var(--note-lemon) 38%, var(--surface))" }}
+      >
+        {!live ? (
+          <p className="mb-3 rounded-md bg-surface px-4 py-2.5 text-sm text-ink shadow-xs">
+            {agent.name} is off. Add a few lines about you in Profile, then switch it on.
+          </p>
+        ) : null}
 
-      {empty ? (
-        <div className="flex min-h-0 flex-1 flex-col justify-center gap-6 pb-16">
-          <h2 className="text-center font-hand text-large-title text-ink">How can I help?</h2>
-          {composer}
-          {live ? (
-            <div className="flex flex-wrap justify-center gap-2">
-              {STARTERS.map((starter) => (
-                <button
-                  key={starter}
-                  type="button"
-                  disabled={send.isPending}
-                  onClick={() => send.mutate(starter)}
-                  className="rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm text-ink transition-colors hover:border-accent-line hover:bg-accent-soft/40"
-                >
-                  {starter}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : (
-        <>
-          <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
-            <ol className="space-y-6 pb-4 pt-2" aria-label="Messages" aria-live="polite">
-              {list.map((message) => (
-                <Line key={message.id} message={message} />
-              ))}
-              {answering ? (
-                <li className="flex items-center gap-3">
-                  <AgentAvatar name={agent.name} seed={agent.id} size="sm" />
-                  <TypingIndicator agentName={agent.name} />
-                </li>
-              ) : null}
-            </ol>
+        {empty ? (
+          <div className="flex min-h-0 flex-1 flex-col justify-center gap-6 pb-16">
+            <h2 className="text-center font-hand text-large-title text-ink">How can I help?</h2>
+            {composer}
+            {live ? (
+              <div className="flex flex-wrap justify-center gap-2">
+                {STARTERS.map((starter) => (
+                  <button
+                    key={starter}
+                    type="button"
+                    disabled={send.isPending}
+                    onClick={() => send.mutate(starter)}
+                    className="rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm text-ink transition-colors hover:border-accent-line hover:bg-accent-soft/40"
+                  >
+                    {starter}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
-          <div className="pb-4 pt-2">{composer}</div>
-        </>
-      )}
+        ) : (
+          <>
+            <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+              <ol className="space-y-6 pb-4 pt-2" aria-label="Messages" aria-live="polite">
+                {list.map((message) => (
+                  <Line key={message.id} message={message} />
+                ))}
+                {answering ? (
+                  <li className="flex items-center gap-3">
+                    <AgentAvatar name={agent.name} seed={agent.id} size="sm" />
+                    <TypingIndicator agentName={agent.name} />
+                  </li>
+                ) : null}
+              </ol>
+            </div>
+            <div className="pb-4 pt-2">{composer}</div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
