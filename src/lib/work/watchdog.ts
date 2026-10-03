@@ -19,6 +19,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
+import { inngest } from "@/lib/jobs/client";
 import { captureMessage } from "@/lib/monitoring";
 import { notifyInBackground } from "@/lib/notify";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -204,6 +205,19 @@ export async function checkAutonomousWork(now = new Date()): Promise<WatchdogRep
       title: "Autonomous work is backing up",
       detail: `${queued} runs waiting; the oldest for ${Math.round(oldestQueuedMs! / 60_000)} minutes. The job runtime is down or saturated - check Inngest and WORK_MAX_CONCURRENT_RUNS.`,
     });
+    // Self-heal: a start signal sent while the job runtime was not registered is simply lost, and nobody
+    // is watching an alert on a personal deployment. Send it again; the run function de-duplicates by item.
+    const stalled = await prisma.actionItem.findMany({
+      where: { status: "queued", createdAt: { lt: waitingSince }, OR: [{ scheduledFor: null }, { scheduledFor: { lte: waitingSince } }] },
+      orderBy: { createdAt: "asc" },
+      take: 20,
+      select: { id: true, organizationId: true },
+    });
+    if (stalled.length > 0) {
+      await inngest
+        .send(stalled.map((item) => ({ name: "work/action-item.run", data: { actionItemId: item.id, organizationId: item.organizationId } })))
+        .catch((error: unknown) => console.error("[watchdog] could not re-send stalled runs", error));
+    }
   }
 
   // --- platform-wide spikes ------------------------------------------------------
