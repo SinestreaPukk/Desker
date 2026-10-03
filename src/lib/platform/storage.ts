@@ -1,13 +1,17 @@
 /**
- * File storage for uploaded documents, on local disk.
+ * File storage for uploads, kept in the database.
  *
- * Nothing outside this module may assume uploads live on a disk: callers go
- * through `storage` and keep only the opaque key it returns.
+ * The host has no writable disk to rely on (Vercel), so the bytes live in a
+ * table next to everything else. Nothing outside this module may assume where
+ * uploads live: callers go through `storage` and keep only the opaque key it
+ * returns. A key written before this (a path on local disk) is still read from
+ * disk, so older development data keeps working.
  */
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { readFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import { prisma } from "@/lib/platform/db";
 import { env } from "@/lib/platform/env";
 
 interface StoredFile {
@@ -24,39 +28,24 @@ export function safeFilename(filename: string): string {
   return cleaned.slice(0, 180) || "file";
 }
 
-function resolveKey(storageKey: string): string {
-  // The storage root is operator-configurable, so this path cannot be
-  // statically analysed. Nothing is bundled from it - it is read at runtime.
-  const root = resolve(/* turbopackIgnore: true */ process.cwd(), env.storageDir);
-  const target = resolve(root, storageKey);
-  // Defence in depth: a crafted key must never escape the storage root.
-  if (target !== root && !target.startsWith(root + "/")) {
-    throw new Error("Invalid storage key");
-  }
-  return target;
-}
-
-// ponytail: local disk only; a multi-instance deploy needs an S3-backed version of these three.
 export const storage = {
   async put(namespace: string, filename: string, data: Buffer): Promise<StoredFile> {
     const storageKey = join(namespace, `${randomUUID()}-${safeFilename(filename)}`);
-    const target = resolveKey(storageKey);
-    await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, data);
-    return {
-      storageKey,
-      sizeBytes: data.byteLength,
-      sha256: createHash("sha256").update(data).digest("hex"),
-    };
+    await prisma.storedBlob.create({ data: { key: storageKey, data: new Uint8Array(data), sizeBytes: data.byteLength } });
+    return { storageKey, sizeBytes: data.byteLength, sha256: createHash("sha256").update(data).digest("hex") };
   },
 
   async get(storageKey: string): Promise<Buffer> {
-    return readFile(resolveKey(storageKey));
+    const blob = await prisma.storedBlob.findUnique({ where: { key: storageKey }, select: { data: true } });
+    if (blob) return Buffer.from(blob.data);
+    // Legacy: a file saved to local disk before uploads moved into the database.
+    const root = resolve(/* turbopackIgnore: true */ process.cwd(), env.storageDir);
+    const target = resolve(root, storageKey);
+    if (target !== root && !target.startsWith(root + "/")) throw new Error("Invalid storage key");
+    return readFile(target);
   },
 
   async delete(storageKey: string): Promise<void> {
-    await unlink(resolveKey(storageKey)).catch((error: NodeJS.ErrnoException) => {
-      if (error.code !== "ENOENT") throw error;
-    });
+    await prisma.storedBlob.deleteMany({ where: { key: storageKey } });
   },
 };

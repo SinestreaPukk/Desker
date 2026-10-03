@@ -292,6 +292,15 @@ model Agent {
   @@index([projectId])
 }
 
+/// An uploaded file's bytes. Kept in the database so uploads survive on a host
+/// with no writable disk (Vercel); `storage` in lib/platform/storage.ts is the only reader.
+model StoredBlob {
+  key       String   @id
+  data      Bytes
+  sizeBytes Int
+  createdAt DateTime @default(now())
+}
+
 /// One scheduled job: "every Monday at 8, plan my week". An agent has any number.
 model Routine {
   id          String    @id @default(cuid())

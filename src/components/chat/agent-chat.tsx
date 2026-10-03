@@ -4,6 +4,7 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/shared/utils";
 import { AgentAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,6 +14,7 @@ import { TypingIndicator } from "@/components/chat/chat-thread";
 import { MessageText } from "@/components/chat/message-text";
 import { api, errorMessage } from "@/lib/shared/api-client";
 import { EVERYDAY_THREAD, type TeamMessageDto, type TeamThreadDto } from "@/lib/agents/team-dto";
+import { ATTACHMENT_ACCEPT } from "@/lib/life/attachments-shared";
 
 /** How long the chat waits on a reply before it stops showing the assistant typing. */
 const REPLY_TIMEOUT_MS = 90_000;
@@ -36,6 +38,8 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
   const client = useQueryClient();
   const [chosen, setChosen] = React.useState<string | null>(null);
   const [typing, setTyping] = React.useState<{ threadId: string; since: string } | null>(null);
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const [dragging, setDragging] = React.useState(false);
     const threadsKey = ["team-threads", project];
 
   const threads = useQuery({
@@ -74,6 +78,7 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
         body: JSON.stringify({ project, content, ...(isNew ? { newChat: true } : { threadId }) }),
       }),
     onSuccess: ({ threadId: id, message }) => {
+      setSuggestions([]);
       client.setQueryData<TeamMessageDto[]>(["team-messages", id], (old = []) =>
         old.some((item) => item.id === message.id) ? old : [...old, message],
       );
@@ -83,6 +88,27 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
     },
     onError: (caught) => toast.error(errorMessage(caught)),
   });
+
+  const upload = useMutation({
+    mutationFn: (files: File[]) => {
+      const form = new FormData();
+      form.append("project", project);
+      for (const file of files) form.append("file", file);
+      if (isNew) form.append("newChat", "true");
+      else if (threadId) form.append("threadId", threadId);
+      return api<{ threadId: string; nextSteps: string[] }>("/api/team/attachments", { method: "POST", body: form });
+    },
+    onSuccess: ({ threadId: id, nextSteps }) => {
+      void client.invalidateQueries({ queryKey: threadsKey });
+      void client.invalidateQueries({ queryKey: ["team-messages", id] });
+      setChosen(id);
+      setSuggestions(nextSteps);
+    },
+    onError: (caught) => toast.error(errorMessage(caught)),
+  });
+  const attach = (files: File[]) => {
+    if (live && !upload.isPending) upload.mutate(files);
+  };
 
   async function remove(id: string) {
     try {
@@ -112,8 +138,25 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
       disabled={!live}
       placeholder={live ? `Message ${agent.name}` : `${agent.name} is off`}
       autoFocus
+      onAttach={attach}
+      accept={ATTACHMENT_ACCEPT}
+      attaching={upload.isPending}
     />
   );
+  const chips = suggestions.length > 0 && !send.isPending ? (
+    <div className="mb-2 flex flex-wrap gap-2">
+      {suggestions.map((suggestion) => (
+        <button
+          key={suggestion}
+          type="button"
+          onClick={() => send.mutate(suggestion)}
+          className="rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm text-ink transition-colors hover:border-accent-line hover:bg-accent-soft/40 pointer-coarse:min-h-11"
+        >
+          {suggestion}
+        </button>
+      ))}
+    </div>
+  ) : null;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -158,12 +201,30 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
         </p>
       ) : null}
       {/* One white panel around the whole conversation. */}
-      <div className="flex min-h-0 flex-1 flex-col rounded-panel border border-line bg-surface p-4 shadow-xs sm:p-5">
+      <div
+        className={cn("flex min-h-0 flex-1 flex-col rounded-panel border bg-surface p-4 shadow-xs transition-colors sm:p-5", dragging ? "border-accent bg-accent-soft/30" : "border-line")}
+        onDragOver={(event) => {
+          if (!live || !event.dataTransfer.types.includes("Files")) return;
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragging(false);
+          attach(Array.from(event.dataTransfer.files));
+        }}
+      >
 
         {empty ? (
           <div className="flex min-h-0 flex-1 flex-col justify-center gap-6 pb-16">
             <h2 className="text-center font-hand text-large-title text-ink">How can I help?</h2>
-            {composer}
+            <div>
+              {chips}
+              {composer}
+            </div>
             {live ? (
               <div className="flex flex-wrap justify-center gap-2">
                 {STARTERS.map((starter) => (
@@ -187,7 +248,7 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
                 {list.map((message) => (
                   <Line key={message.id} message={message} />
                 ))}
-                {answering ? (
+                {answering || upload.isPending ? (
                   <li className="flex items-center gap-3">
                     <AgentAvatar name={agent.name} seed={agent.id} size="sm" />
                     <TypingIndicator agentName={agent.name} />
@@ -195,7 +256,10 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
                 ) : null}
               </ol>
             </div>
-            <div className="pb-4 pt-2">{composer}</div>
+            <div className="pb-4 pt-2">
+              {chips}
+              {composer}
+            </div>
           </>
         )}
       </div>

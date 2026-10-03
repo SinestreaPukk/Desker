@@ -12,9 +12,8 @@ import { approveItem, rejectItem } from "@/lib/work/decide";
 import { previewPending } from "@/lib/work/pending-preview";
 import type { PendingAction } from "@/lib/work/types";
 import { chatTurn, personalSpace } from "@/lib/life/chat";
-import { describePhoto, nextSteps } from "@/lib/life/photo";
+import { receiveAttachment } from "@/lib/life/attachments";
 import { readLife } from "@/lib/life/read";
-import { importFiles } from "@/lib/life/slips";
 import { moneyInsights } from "@/lib/life/money-insights";
 import { composeLifeDigest } from "@/lib/life/digest";
 import * as store from "@/lib/life/store";
@@ -94,34 +93,16 @@ async function postback(userId: string, data: string): Promise<LineMessage[]> {
   }
 }
 
-/**
- * A photo or file the person sent. Bank slips, bills, PDFs and CSVs go to the
- * ledger; any other picture is looked at, remembered, and offered next steps,
- * so "add it to my calendar" in the next message has something to work from.
- */
+/** A photo or file the person sent: the same pipeline as the web chat. */
 async function attachment(userId: string, messageId: string, name: string, isImage: boolean): Promise<LineMessage[]> {
   const space = await personalSpace(userId);
   const file = await lineContent(messageId);
   if (!space || !file) return [text("I couldn't open that. Try sending it again.")];
-  const ledger = async () => {
-    const [r] = await importFiles(space, [{ name: isImage ? "slip.jpg" : name, type: file.type, data: file.data }]);
-    return r;
-  };
-  if (!isImage) {
-    if (!/\.(pdf|csv)$/i.test(name)) return [text("I can read PDF bills and CSV statements. Send those, or a photo.")];
-    const r = await ledger();
-    return [text(r?.error ? `I couldn't read that: ${r.error}` : r?.duplicates ? "I already have that one." : "Added to your money. Say \"budget\" to see where you stand.")];
-  }
-  const media = file.type.split(";")[0]!.trim();
-  const mediaType = (["image/jpeg", "image/png", "image/webp", "image/gif"] as const).find((t) => t === media) ?? "image/jpeg";
-  const photo = await describePhoto(space.organizationId, { mediaType, data: file.data.toString("base64") });
-  if (!photo) return [text("I couldn't make out that photo. Try a clearer one, or tell me what it is.")];
-  if (photo.kind === "slip" || photo.kind === "bill") {
-    const r = await ledger();
-    if (r && !r.error) return [text(r.duplicates ? "I already have that one." : `Added to your money (${photo.kind}). Say "budget" to see where you stand.`)];
-  }
-  await store.addNote({ ...space, source: "chat" }, `Photo they sent: ${photo.summary}`);
-  return [withQuickReplies(text(photo.summary), nextSteps(photo.kind))];
+  const agent = await prisma.agent.findFirst({ where: { projectId: space.projectId, status: "published" }, orderBy: { createdAt: "asc" }, select: { id: true } });
+  // LINE names a photo nothing: take the extension from what it actually is.
+  const fileName = isImage ? `photo${/png/.test(file.type) ? ".png" : /webp/.test(file.type) ? ".webp" : /gif/.test(file.type) ? ".gif" : ".jpg"}` : name;
+  const reply = await receiveAttachment(space, agent?.id ?? null, { name: fileName, type: file.type, data: file.data });
+  return [reply.nextSteps ? withQuickReplies(text(reply.text), reply.nextSteps) : text(reply.text)];
 }
 
 /** Handles one webhook event. Never throws: a bad event must not stop the rest. */

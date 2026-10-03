@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUp, Paperclip, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/shared/utils";
 
@@ -13,6 +13,9 @@ export function ChatComposer({
   placeholder = "Type your message…",
   autoFocus,
   className,
+  onAttach,
+  accept,
+  attaching,
 }: {
   onSend: (text: string) => void;
   onStop?: () => void;
@@ -21,7 +24,12 @@ export function ChatComposer({
   placeholder?: string;
   autoFocus?: boolean;
   className?: string;
+  /** Photos or files chosen, dropped or pasted. Omit to hide the paperclip. */
+  onAttach?: (files: File[]) => void;
+  accept?: string;
+  attaching?: boolean;
 }) {
+  const picker = React.useRef<HTMLInputElement>(null);
   const [value, setValue] = React.useState("");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -68,6 +76,13 @@ export function ChatComposer({
           disabled={disabled}
           placeholder={placeholder}
           onChange={(event) => setValue(event.target.value)}
+          onPaste={(event) => {
+            const files = Array.from(event.clipboardData.files);
+            if (onAttach && files.length > 0) {
+              event.preventDefault();
+              onAttach(files);
+            }
+          }}
           onKeyDown={(event) => {
             // Enter sends; Shift+Enter is a newline. Never hijack IME composition.
             if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -80,6 +95,35 @@ export function ChatComposer({
             "placeholder:text-ink-muted focus:outline-none disabled:cursor-not-allowed",
           )}
         />
+
+        {onAttach ? (
+          <>
+            <input
+              ref={picker}
+              type="file"
+              hidden
+              multiple
+              accept={accept}
+              onChange={(event) => {
+                const files = Array.from(event.target.files ?? []);
+                if (files.length > 0) onAttach(files);
+                event.target.value = "";
+              }}
+            />
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label="Attach a photo or file"
+              title="Attach a photo or file"
+              disabled={disabled || attaching}
+              onClick={() => picker.current?.click()}
+              className="absolute bottom-3 left-3"
+            >
+              <Paperclip aria-hidden />
+            </Button>
+          </>
+        ) : null}
 
         {sending && onStop ? (
           <Button type="button" size="icon" variant="subtle" onClick={onStop} aria-label="Stop generating" className="absolute bottom-3 right-3">
