@@ -4,8 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * End-to-end configuration.
  *
- * Boots the production artifact (the same standalone server the Docker image
- * runs) so `npm run test:e2e` works from a clean checkout with nothing running.
+ * Boots the production build (`next start`) so `npm run test:e2e` works from a clean checkout with nothing running.
  * The chat specs need a live ANTHROPIC_API_KEY and skip themselves without one;
  * everything else runs regardless.
  */
@@ -13,15 +12,9 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 /**
- * Absolute, because the standalone server runs with its cwd set to
- * .next/standalone - a relative sqlite path there resolves to a different
- * (empty) file than the one `prisma db push` creates at the project root.
- */
-/**
  * Always absolute. Prisma resolves a relative sqlite path against the schema
- * file it was generated from, and the standalone server carries its own copy
- * of the schema - so `file:./e2e.db` would name one file for `db push` and a
- * different, empty one for the running app.
+ * file it was generated from, so a relative `file:./e2e.db` could name one file
+ * for `db push` and a different, empty one for the running app.
  */
 function absoluteSqlite(url: string): string {
   const match = /^file:(?!\/)(.+)$/.exec(url);
@@ -69,7 +62,7 @@ export default defineConfig({
 
   webServer: {
     // Self-contained: schema, build, then serve the production artifact.
-    command: `npm run db:push && npm run build:standalone && PORT=${PORT} npm run start:standalone`,
+    command: `npm run db:push && npm run build && npx next start -p ${PORT}`,
     url: `${BASE_URL}/api/health`,
     // A production build on a two-core CI runner takes a few minutes.
     timeout: 600_000,

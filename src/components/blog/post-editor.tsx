@@ -220,7 +220,7 @@ export function PostEditor({
               )}
             </div>
             <div className="mt-2 flex items-center rounded-md border border-line bg-surface-2 px-3 py-1.5 text-xs text-ink-muted">
-              <span>https://desker.dev/blog/</span>
+              <span>https://personal.desker.dev/blog/</span>
               <input
                 id="post-slug"
                 type="text"

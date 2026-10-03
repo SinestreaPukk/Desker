@@ -58,7 +58,7 @@ export async function signInFailed(email: string, account: { email: string; firs
         `Someone typed the wrong password for this account ${PER_ACCOUNT} times, so we've paused signing in to it for 15 minutes.`,
         "",
         "If it was you, wait a few minutes and try again - or reset your password:",
-        `${env.appUrl || "https://desker.dev"}/forgot-password`,
+        `${env.appUrl || "https://personal.desker.dev"}/forgot-password`,
         "",
         "If it wasn't you, nothing has been changed and your password still works. Resetting it is the safe choice.",
       ].join("\n"),
@@ -148,7 +148,7 @@ export async function noteDevice(
       "If this was you, there's nothing to do.",
       "",
       "If it wasn't, reset your password now - that signs out every other session:",
-      `${env.appUrl || "https://desker.dev"}/forgot-password`,
+      `${env.appUrl || "https://personal.desker.dev"}/forgot-password`,
     ].join("\n"),
   });
 }

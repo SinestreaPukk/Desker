@@ -2,25 +2,10 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
-  // Produces .next/standalone for a small production container image. Vercel
-  // builds its own serverless output and breaks on standalone mode, so it is
-  // skipped there - Vercel sets the VERCEL variable during builds.
-  ...(process.env.VERCEL ? {} : { output: "standalone" as const }),
   reactStrictMode: true,
   serverExternalPackages: ["pdf-parse", "mammoth"],
   outputFileTracingIncludes: {
     "/api/**": ["./node_modules/.prisma/client/**"],
-  },
-  async redirects() {
-    // One address: www.desker.dev forwards to desker.dev, path and all.
-    return [
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "www.desker.dev" }],
-        destination: "https://desker.dev/:path*",
-        permanent: true,
-      },
-    ];
   },
   async headers() {
     // Defence in depth: nothing here is meant to be framed or called cross-origin.

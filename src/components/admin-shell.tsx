@@ -289,11 +289,6 @@ export function AdminShell({
           <span className="absolute right-[8%] -top-16 h-72 w-96 rounded-panel bg-note-sky" style={{ rotate: "7deg" }} />
           <span className="absolute left-[42%] top-24 h-48 w-72 rounded-panel bg-note-lilac" style={{ rotate: "-4deg" }} />
         </div>
-        {process.env.NEXT_PUBLIC_ENVIRONMENT === "staging" ? (
-          <p className="border-b border-warning-line bg-warning-soft px-4 py-1.5 text-center text-xs text-warning">
-            Staging - demo data, reset without notice. Nothing here reaches real people.
-          </p>
-        ) : null}
         {children}
       </main>
       <UsageTracker project={project.slug} />
