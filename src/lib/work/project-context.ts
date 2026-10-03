@@ -106,7 +106,7 @@ export async function assertProjectGrounded(projectId: string): Promise<void> {
   if (!hasCoreContext(project)) {
     throw new HttpError(
       409,
-      "Answer the four questions about you before switching an assistant on - every assistant works from them.",
+      "Write a few lines about you first, then switch it on.",
     );
   }
 }

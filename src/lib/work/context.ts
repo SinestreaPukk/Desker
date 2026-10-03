@@ -256,9 +256,8 @@ export function answeredCount(
 /** The longest an answer may be. Generous; the cap is there to stop a paste of a whole handbook. */
 export const MAX_CONTEXT_ANSWER = 4_000;
 
-/** Whether the four core questions are answered: the bar for publishing an agent. */
+/** Whether the person has said anything about themselves: the bar for switching the assistant on. */
 export function hasCoreContext(project: { context: string | null; contextAnswers: unknown }): boolean {
-  const core = PROJECT_CONTEXT_QUESTIONS;
-  const answers = answersFor(project.contextAnswers, project.context, core);
-  return answeredCount(answers, core) === core.length;
+  const answers = answersFor(project.contextAnswers, project.context, PROJECT_CONTEXT_QUESTIONS);
+  return Boolean(answers.about?.trim());
 }

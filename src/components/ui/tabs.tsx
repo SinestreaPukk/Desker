@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/shared/utils";
 
 export const Tabs = TabsPrimitive.Root;
+export const TabsContent = TabsPrimitive.Content;
 
 export function TabsList({
   className,

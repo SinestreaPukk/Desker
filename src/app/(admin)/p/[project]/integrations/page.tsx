@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { IntegrationsView } from "./integrations-view";
+import { IntegrationsScreen } from "@/components/integrations/integrations-screen";
 
 export const metadata: Metadata = { title: "Integrations" };
 
-export default async function IntegrationsPage({
-  params,
-}: {
-  params: Promise<{ project: string }>;
-}) {
+export default async function IntegrationsPage({ params }: { params: Promise<{ project: string }> }) {
   const { project } = await params;
-  return <IntegrationsView project={project} />;
+  return <IntegrationsScreen project={project} />;
 }

@@ -3,14 +3,7 @@ import { currentUser } from "@/lib/auth/auth";
 import { findProject } from "@/lib/tenancy/projects";
 import { AdminShell } from "@/components/admin-shell";
 
-/**
- * The chrome every admin page sits inside.
- *
- * It renders once for the whole project section, so moving between the roster,
- * the inbox and insights swaps only the page body - the sidebar, the project
- * switcher and the account menu are never torn down and rebuilt, and nothing
- * shifts under the cursor.
- */
+/** The chrome every screen sits inside: one top bar, rendered once for the whole project section. */
 export default async function ProjectLayout({
   children,
   params,
@@ -31,12 +24,7 @@ export default async function ProjectLayout({
     <AdminShell
       email={user.email}
       name={user.name}
-      project={{
-        id: project.id,
-        name: project.name,
-        slug: project.slug,
-        organizationId: project.organizationId,
-      }}
+      project={{ slug: project.slug }}
     >
       {children}
     </AdminShell>

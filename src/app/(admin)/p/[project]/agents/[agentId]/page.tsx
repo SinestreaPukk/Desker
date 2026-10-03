@@ -4,7 +4,7 @@ import { prisma } from "@/lib/platform/db";
 import { currentUser } from "@/lib/auth/auth";
 import { toAgentDetail } from "@/lib/shared/serialize";
 import { findAgentFor } from "@/lib/tenancy/projects";
-import { AgentBuilder, type EditorSection } from "@/components/builder/agent-builder";
+import { AgentScreen } from "@/components/agent/agent-screen";
 
 export const dynamic = "force-dynamic";
 
@@ -35,11 +35,5 @@ export default async function AgentPage({ params, searchParams }: Props) {
   if (!agent) notFound();
   if (agent.project.slug !== project && agent.project.id !== project) notFound();
 
-  return (
-    <AgentBuilder
-      agent={toAgentDetail(agent)}
-      project={project}
-      initialSection={section as EditorSection | undefined}
-    />
-  );
+  return <AgentScreen agent={toAgentDetail(agent)} project={project} initialTab={section} />;
 }

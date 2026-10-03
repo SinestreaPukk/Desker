@@ -15,7 +15,6 @@ import type { ProjectCheckInDto, SuggestionStatus } from "@/lib/work/types";
 import type { ContextAnswers } from "@/lib/work/context";
 import type { ProjectContextDto } from "@/lib/work/project-context";
 import type { AgentRuleDto } from "@/lib/work/rules";
-import type { ContextDraftResult } from "@/components/builder/context-questions";
 
 const workKeys = {
   scope: (agentId: string) => ["scope", agentId] as const,
@@ -264,24 +263,6 @@ export function useSaveProjectContext(project: string) {
       // Every agent's prompt preview now reads differently.
       void client.invalidateQueries({ queryKey: ["prompt"] });
     },
-  });
-}
-
-/** Proposes answers from the project's documents. Nothing is saved. */
-export function useDraftProjectContext(project: string) {
-  return useMutation({
-    mutationFn: () =>
-      api<ContextDraftResult>(`/api/projects/${encodeURIComponent(project)}/context/draft`, {
-        method: "POST",
-      }),
-  });
-}
-
-/** The same, for one agent's own questions and its own documents. */
-export function useDraftAgentContext(agentId: string) {
-  return useMutation({
-    mutationFn: () =>
-      api<ContextDraftResult>(`/api/agents/${agentId}/scope/context-draft`, { method: "POST" }),
   });
 }
 

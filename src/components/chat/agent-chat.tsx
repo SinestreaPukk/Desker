@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { MessagesSquare } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AgentAvatar } from "@/components/ui/avatar";
@@ -74,22 +73,17 @@ export function AgentChat({ project, agent, live }: { project: string; agent: { 
   if (threads.error) return <ErrorState message={errorMessage(threads.error)} onRetry={() => void threads.refetch()} />;
 
   return (
-    <div className="flex h-[calc(100dvh-14rem)] min-h-96 flex-col rounded-lg border border-line bg-surface">
+    <div className="flex h-[calc(100dvh-19rem)] min-h-[26rem] flex-col rounded-lg border border-line bg-surface shadow-xs">
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
         {!live ? (
-          <p className="mb-4 rounded-lg border border-warning-line bg-warning-soft px-3 py-2 text-sm text-warning">
-            {agent.name} is switched off, so it will not answer yet. Answer the questions under Knowledge, then use Switch on above.
+          <p className="mb-4 rounded-md px-3 py-2 text-sm text-ink" style={{ background: "var(--note-lemon)" }}>
+            {agent.name} is off. Add a few lines about you in Profile, then switch it on.
           </p>
         ) : null}
         {list.length === 0 && !messages.isLoading ? (
-          <div className="flex flex-col items-center py-10 text-center">
-            <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
-              <MessagesSquare className="size-5" aria-hidden />
-            </div>
-            <h2 className="text-lg font-semibold text-ink">Talk to {agent.name}</h2>
-            <p className="mt-1 max-w-md text-sm text-ink-muted">
-              Ask anything or hand over a job. It remembers what you tell it about yourself, and anything that needs your yes waits for it.
-            </p>
+          <div className="flex h-full flex-col items-center justify-center py-10 text-center">
+            <h2 className="font-hand text-xl text-ink">Say hello to {agent.name}</h2>
+            <p className="mt-2 max-w-sm text-ink-muted">Ask for anything. Tell it about yourself and it remembers.</p>
           </div>
         ) : (
           <ol className="space-y-5" aria-label="Messages" aria-live="polite">
@@ -110,7 +104,7 @@ export function AgentChat({ project, agent, live }: { project: string; agent: { 
           onSend={(text) => send.mutate(text)}
           sending={send.isPending}
           disabled={!live}
-          placeholder={live ? `Message ${agent.name}…` : `${agent.name} is switched off`}
+          placeholder={live ? `Message ${agent.name}` : `${agent.name} is off`}
           autoFocus
           className="border-t-0 bg-transparent p-0"
         />
