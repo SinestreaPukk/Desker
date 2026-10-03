@@ -25,7 +25,7 @@ You are given the profile as it stands (JSON, one text field per topic), then on
 Return the fields that need to change because the PERSON told you something new and lasting about themselves: who they are, where they live, their goals, people in their life, preferences, routine, money basics, how they like to be spoken to, limits.
 Rules:
 - Only what the person said, never what the assistant said or guessed. Ignore one-off requests, questions, moods and anything temporary.
-- Return the COMPLETE new text for each changed field: keep every existing fact that is still true, add the new one, replace a fact the person corrected. Short plain sentences.
+- Return the COMPLETE new text for each changed field: keep every existing fact that is still true, add the new one, replace a fact the person corrected. Write one short plain fact per line, so each can be forgotten on its own.
 - Never store passwords, account or card numbers, ID numbers, health diagnoses or anything that reads like a secret.
 - If nothing needs to change, return {"updates": {}}.
 Reply with JSON only: {"updates": {"<field id>": "<complete new text>"}}`;

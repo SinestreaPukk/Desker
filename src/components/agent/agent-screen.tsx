@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgentChat } from "@/components/chat/agent-chat";
 import { AbilitiesTab } from "@/components/agent/abilities-tab";
 import { AboutTab } from "@/components/agent/about-tab";
+import { MemoryTab } from "@/components/agent/memory-tab";
 import { ScheduleTab } from "@/components/agent/schedule-tab";
 import { useUpdateAgent } from "@/hooks/use-admin-data";
 import { errorMessage } from "@/lib/shared/api-client";
@@ -16,6 +17,7 @@ import type { AgentDetailDto } from "@/lib/shared/serialize";
 const TABS = [
   { id: "chat", label: "Chat" },
   { id: "about", label: "About you" },
+  { id: "memory", label: "Memory" },
   { id: "abilities", label: "Abilities" },
   { id: "schedule", label: "Schedule" },
 ] as const;
@@ -72,6 +74,9 @@ export function AgentScreen({ agent, project, initialTab }: { agent: AgentDetail
         </TabsContent>
         <TabsContent value="about">
           <AboutTab agent={{ id: agent.id, name: agent.name }} project={project} />
+        </TabsContent>
+        <TabsContent value="memory">
+          <MemoryTab project={project} />
         </TabsContent>
         <TabsContent value="abilities">
           <AbilitiesTab agentId={agent.id} project={project} />
