@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Copies settings from .env.local to the Vercel project `desker-personal`
+ * Copies settings from .env / .env.local to the Vercel project `desker-personal`
  * (personal.desker.dev), so a secret is typed once (into .env.local) and never
  * pasted into a chat or a form.
  *
@@ -10,14 +10,16 @@
  * Replaces any value already there. Values are piped to the Vercel CLI on
  * stdin and never printed. Redeploy afterwards.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 const TARGET = { label: "desker-personal", projectId: "prj_KWGM4f5uRe9IE8WXpCT9ZysJDhvR" };
 
+// .env first, .env.local on top: the same precedence the app uses.
 const local = Object.fromEntries(
-  readFileSync(".env.local", "utf8")
-    .split("\n")
+  [".env", ".env.local"]
+    .filter((file) => existsSync(file))
+    .flatMap((file) => readFileSync(file, "utf8").split("\n"))
     .map((line) => line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/))
     .filter(Boolean)
     .map(([, key, raw]) => [key, raw.replace(/^["']|["']$/g, "")]),

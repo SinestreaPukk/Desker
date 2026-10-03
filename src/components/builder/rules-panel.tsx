@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { GraduationCap, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,7 @@ const FROM: Record<AgentRuleDto["source"], string> = {
  * says where it came from, and can be reworded or removed. The agent reads
  * them before everything it does; every change is in the Audit log.
  */
-export function RulesPanel({ agentId, agentName, project }: { agentId: string; agentName: string; project: string }) {
+export function RulesPanel({ agentId, agentName }: { agentId: string; agentName: string }) {
   const rules = useAgentRules(agentId);
   const save = useSaveRule(agentId);
   const remove = useRemoveRule(agentId);

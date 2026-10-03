@@ -14,10 +14,10 @@ import { renderLife } from "./context";
 import { planChat, type Plan } from "./router";
 import { createReminder, extractReminder } from "./reminders";
 import { readPrefs } from "@/lib/messaging/prefs";
+import { EVERYDAY_THREAD } from "@/lib/agents/team-dto";
 import { learnFromChat } from "@/lib/agents/learn";
 import { afterResponse } from "@/lib/platform/after-response";
 
-export const EVERYDAY_THREAD = "Everyday chat";
 
 interface ChatCtx {
   projectId: string;

@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Search,
   Shuffle,
+  MessagesSquare,
   Sliders,
   Sparkles,
   UserCheck,
@@ -65,6 +66,7 @@ import { templateById } from "@/lib/site/content";
 import { HelpLink } from "@/components/help/help-panel";
 import { DocumentsPanel } from "./documents-panel";
 import { ProjectContextPanel } from "./project-context-panel";
+import { AgentChat } from "@/components/chat/agent-chat";
 import { RulesPanel } from "./rules-panel";
 import { SPACE_COPY as copy } from "@/lib/tenancy/space-copy";
 import { useUpdateAgent } from "@/hooks/use-admin-data";
@@ -130,7 +132,7 @@ function toPayload(form: FormState) {
   };
 }
 
-export type EditorSection = "work" | "knowledge" | "profile" | "settings";
+export type EditorSection = "chat" | "work" | "knowledge" | "profile" | "settings";
 
 const SECTIONS: {
   id: EditorSection;
@@ -138,6 +140,7 @@ const SECTIONS: {
   hint: string;
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 }[] = [
+  { id: "chat", label: "Chat", hint: "Talk to your assistant", icon: MessagesSquare },
   { id: "work", label: "Work & schedule", hint: "When it runs, what it works on, what needs approval", icon: Workflow },
   { id: "knowledge", label: "Knowledge", hint: "About you and your documents", icon: BookOpen },
   { id: "profile", label: "Profile", hint: "Name, character, responsibilities, chat abilities", icon: UserCheck },
@@ -302,15 +305,15 @@ export function AgentBuilder({
   // A new agent still needs its grounding; an existing one is usually opened
   // to change what it does and when.
   const validInitial =
-    initialSection && ["work", "knowledge", "profile", "settings"].includes(initialSection)
+    initialSection && ["chat", "work", "knowledge", "profile", "settings"].includes(initialSection)
       ? initialSection
       : undefined;
   const [section, setSection] = React.useState<EditorSection>(
-    validInitial ?? "knowledge",
+    validInitial ?? "chat",
   );
 
   React.useEffect(() => {
-    if (initialSection && ["work", "knowledge", "profile", "settings"].includes(initialSection)) {
+    if (initialSection && ["chat", "work", "knowledge", "profile", "settings"].includes(initialSection)) {
       setSection(initialSection);
     }
   }, [initialSection]);
@@ -443,7 +446,7 @@ export function AgentBuilder({
         </div>
 
         {/* Pane switcher, mobile and tablet only. */}
-        <div className="border-t border-line px-4 py-2 lg:hidden">
+        <div className={cn("border-t border-line px-4 py-2 lg:hidden", section === "chat" && "hidden")}>
           <Tabs
             value={mobilePane}
             onValueChange={(value) => setMobilePane(value as typeof mobilePane)}
@@ -479,7 +482,7 @@ export function AgentBuilder({
 
 
       {/* --- body ------------------------------------------------------ */}
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_30rem]">
+      <div className={cn("grid min-h-0 flex-1", section !== "chat" && "lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_30rem]")}>
         <div
           className={cn(
             "min-w-0 overflow-y-auto p-4 sm:p-6",
@@ -489,15 +492,23 @@ export function AgentBuilder({
           <div className="mx-auto max-w-3xl space-y-5 pb-16">
             <FormError message={saveError} />
 
-            <ScheduleSummary agentId={agent.id} onEdit={() => openAt("work", "scope-trigger")} />
-            <BoundariesCard
-              agentId={agent.id}
-              escalationRule={saved.escalationRule}
-              onEdit={() => openAt("work", "scope-tools")}
-              onRules={() => openAt("profile", "agent-rules")}
-            />
+            {section !== "chat" ? (
+              <>
+                <ScheduleSummary agentId={agent.id} onEdit={() => openAt("work", "scope-trigger")} />
+                <BoundariesCard
+                  agentId={agent.id}
+                  escalationRule={saved.escalationRule}
+                  onEdit={() => openAt("work", "scope-tools")}
+                  onRules={() => openAt("profile", "agent-rules")}
+                />
+              </>
+            ) : null}
 
             <SectionNav value={section} onChange={setSection} />
+
+            {section === "chat" ? (
+              <AgentChat project={project} agent={{ id: agent.id, name: agent.name }} live={agent.status === "published"} />
+            ) : null}
 
             {/* Work & schedule ------------------------------------------ */}
             {section === "work" ? (
@@ -524,7 +535,7 @@ export function AgentBuilder({
             {/* Profile ---------------------------------------------------- */}
             {section === "profile" ? (
             <>
-            <RulesPanel agentId={agent.id} agentName={agent.name} project={project} />
+            <RulesPanel agentId={agent.id} agentName={agent.name} />
             <Panel>
               <PanelHeader>
                 <div>
@@ -731,6 +742,7 @@ export function AgentBuilder({
           className={cn(
             "flex min-h-0 flex-col border-line bg-surface lg:border-l",
             mobilePane === "configure" && "hidden lg:flex",
+            section === "chat" && "hidden",
           )}
           aria-label={`Chat with ${form.name || agent.name}`}
         >

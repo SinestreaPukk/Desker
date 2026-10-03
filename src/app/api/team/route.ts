@@ -7,8 +7,7 @@ import { limitOrganization } from "@/lib/platform/rate-limit";
 import { addTeamMessage, teamOf } from "@/lib/agents/team";
 import { planChat } from "@/lib/life/router";
 import { runChat } from "@/lib/life/chat";
-import { clamp } from "@/lib/work/model-json";
-import type { TeamThreadDto } from "@/lib/agents/team-dto";
+import { EVERYDAY_THREAD, type TeamThreadDto } from "@/lib/agents/team-dto";
 import { messageSelect, toMessageDto } from "./serialize";
 
 export const runtime = "nodejs";
@@ -54,12 +53,12 @@ export async function POST(request: Request) {
     const project = await projectFrom(input.project, userId);
     await limitOrganization(project.organizationId, "model");
 
+    // One conversation, shared with the messaging apps.
+    const title = EVERYDAY_THREAD;
     const thread = input.threadId
       ? await prisma.teamThread.findFirst({ where: { id: input.threadId, projectId: project.id }, select: { id: true } })
-      : await prisma.teamThread.create({
-          data: { projectId: project.id, title: clamp(input.content.replace(/\s+/g, " "), 60) },
-          select: { id: true },
-        });
+      : ((await prisma.teamThread.findFirst({ where: { projectId: project.id, title }, select: { id: true } })) ??
+        (await prisma.teamThread.create({ data: { projectId: project.id, title }, select: { id: true } })));
     if (!thread) throw new HttpError(404, "That chat no longer exists.");
 
     const [team, user] = await Promise.all([

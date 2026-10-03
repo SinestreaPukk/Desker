@@ -9,7 +9,7 @@ import "server-only";
 import { prisma } from "@/lib/platform/db";
 import { messageUser } from "@/lib/messaging/send";
 import { addTeamMessage, teamOf } from "@/lib/agents/team";
-import { EVERYDAY_THREAD } from "./chat";
+import { EVERYDAY_THREAD } from "@/lib/agents/team-dto";
 import { readLife } from "./read";
 import { detectConflicts } from "./conflicts";
 import type { Life } from "./context";

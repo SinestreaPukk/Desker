@@ -16,3 +16,6 @@ export interface TeamThreadDto {
   title: string;
   updatedAt: string;
 }
+
+/** The one conversation: the web chat and every messaging app share this thread. */
+export const EVERYDAY_THREAD = "Everyday chat";
