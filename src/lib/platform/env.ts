@@ -87,8 +87,11 @@ export const env = {
   /** Fairness, not billing: how fast one organisation may draw on shared capacity. */
   orgModelCallsPerMinute: int("ORG_MODEL_CALLS_PER_MINUTE", 120),
   orgRunsPerMinute: int("ORG_RUNS_PER_MINUTE", 30),
-  /** At most this many autonomous runs execute at once across the whole platform. */
-  workMaxConcurrentRuns: int("WORK_MAX_CONCURRENT_RUNS", 50),
+  /**
+   * At most this many autonomous runs execute at once across the whole platform.
+   * 5 is Inngest's free-plan concurrency limit per function; raise it with the plan.
+   */
+  workMaxConcurrentRuns: int("WORK_MAX_CONCURRENT_RUNS", 5),
   /** A run still going after this long is reported as over budget. */
   runTimeBudgetMs: int("RUN_TIME_BUDGET_MS", 15 * 60_000),
 
