@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-03T15:12:35.937Z",
+  "title": "Design System: Desker Personal",
+  "extensions": {
+    "colorMeta": {
+      "ink-blue": {
+        "role": "primary",
+        "displayName": "Ink Blue",
+        "canonical": "oklch(0.527 0.218 267.4)",
+        "tonalRamp": [
+          "oklch(15% 0.2 267.4)",
+          "oklch(25% 0.2 267.4)",
+          "oklch(35% 0.2 267.4)",
+          "oklch(45% 0.2 267.4)",
+          "oklch(60% 0.2 267.4)",
+          "oklch(75% 0.2 267.4)",
+          "oklch(85% 0.2 267.4)",
+          "oklch(95% 0.2 267.4)"
+        ]
+      },
+      "navy-ink": {
+        "role": "neutral",
+        "displayName": "Navy Ink",
+        "canonical": "oklch(0.288 0.052 265.1)",
+        "tonalRamp": [
+          "oklch(15% 0.05 265)",
+          "oklch(25% 0.05 265)",
+          "oklch(35% 0.05 265)",
+          "oklch(45% 0.05 265)",
+          "oklch(60% 0.05 265)",
+          "oklch(75% 0.05 265)",
+          "oklch(85% 0.05 265)",
+          "oklch(95% 0.05 265)"
+        ]
+      },
+      "white-paper": {
+        "role": "neutral",
+        "displayName": "White Paper",
+        "canonical": "oklch(0.984 0.005 258.3)",
+        "tonalRamp": [
+          "oklch(15% 0.01 258)",
+          "oklch(25% 0.01 258)",
+          "oklch(35% 0.01 258)",
+          "oklch(45% 0.01 258)",
+          "oklch(60% 0.01 258)",
+          "oklch(75% 0.01 258)",
+          "oklch(85% 0.01 258)",
+          "oklch(95% 0.01 258)"
+        ]
+      },
+      "note-lemon": {
+        "role": "secondary",
+        "displayName": "Lemon Note",
+        "canonical": "oklch(0.930 0.117 96)",
+        "tonalRamp": [
+          "oklch(15% 0.11 96)",
+          "oklch(25% 0.11 96)",
+          "oklch(35% 0.11 96)",
+          "oklch(45% 0.11 96)",
+          "oklch(60% 0.11 96)",
+          "oklch(75% 0.11 96)",
+          "oklch(85% 0.11 96)",
+          "oklch(95% 0.11 96)"
+        ]
+      },
+      "note-sky": {
+        "role": "secondary",
+        "displayName": "Sky Note",
+        "canonical": "oklch(0.910 0.047 242.5)",
+        "tonalRamp": [
+          "oklch(15% 0.05 242.5)",
+          "oklch(25% 0.05 242.5)",
+          "oklch(35% 0.05 242.5)",
+          "oklch(45% 0.05 242.5)",
+          "oklch(60% 0.05 242.5)",
+          "oklch(75% 0.05 242.5)",
+          "oklch(85% 0.05 242.5)",
+          "oklch(95% 0.05 242.5)"
+        ]
+      },
+      "note-mint": {
+        "role": "secondary",
+        "displayName": "Mint Note",
+        "canonical": "oklch(0.920 0.051 164.8)",
+        "tonalRamp": [
+          "oklch(15% 0.05 165)",
+          "oklch(25% 0.05 165)",
+          "oklch(35% 0.05 165)",
+          "oklch(45% 0.05 165)",
+          "oklch(60% 0.05 165)",
+          "oklch(75% 0.05 165)",
+          "oklch(85% 0.05 165)",
+          "oklch(95% 0.05 165)"
+        ]
+      },
+      "note-coral": {
+        "role": "secondary",
+        "displayName": "Coral Note",
+        "canonical": "oklch(0.895 0.057 37.2)",
+        "tonalRamp": [
+          "oklch(15% 0.06 37)",
+          "oklch(25% 0.06 37)",
+          "oklch(35% 0.06 37)",
+          "oklch(45% 0.06 37)",
+          "oklch(60% 0.06 37)",
+          "oklch(75% 0.06 37)",
+          "oklch(85% 0.06 37)",
+          "oklch(95% 0.06 37)"
+        ]
+      },
+      "note-lilac": {
+        "role": "secondary",
+        "displayName": "Lilac Note",
+        "canonical": "oklch(0.889 0.063 299.3)",
+        "tonalRamp": [
+          "oklch(15% 0.06 299)",
+          "oklch(25% 0.06 299)",
+          "oklch(35% 0.06 299)",
+          "oklch(45% 0.06 299)",
+          "oklch(60% 0.06 299)",
+          "oklch(75% 0.06 299)",
+          "oklch(85% 0.06 299)",
+          "oklch(95% 0.06 299)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "large-title": {
+        "displayName": "Large title",
+        "purpose": "Handwritten page title in Screen."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default Quicksand text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Fields, buttons, tabs."
+      }
+    },
+    "shadows": [
+      {
+        "name": "xs",
+        "value": "0 1px 2px hsl(228 35% 25% / 0.06)",
+        "purpose": "Active tab, buttons, chat frame."
+      },
+      {
+        "name": "sm",
+        "value": "0 2px 8px -2px hsl(228 35% 25% / 0.12), 0 1px 2px hsl(228 35% 25% / 0.06)",
+        "purpose": "Hover, selected segment, popovers."
+      },
+      {
+        "name": "md",
+        "value": "0 12px 32px -12px hsl(228 35% 25% / 0.24), 0 2px 6px hsl(228 35% 25% / 0.08)",
+        "purpose": "Dialogs."
+      },
+      {
+        "name": "note",
+        "value": "0 14px 26px -16px hsl(228 35% 25% / 0.45), 0 1px 2px hsl(228 35% 25% / 0.12)",
+        "purpose": "Sticky notes."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Entering, leaving, press feedback (150ms)."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.77, 0, 0.175, 1)",
+        "purpose": "Things moving on screen."
+      },
+      {
+        "name": "ease",
+        "value": "ease",
+        "purpose": "Hover and color, 150ms default."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action on a screen.",
+      "html": "<button class=\"ds-btn-primary\">Save</button>",
+      "css": ".ds-btn-primary{background:oklch(0.527 0.218 267.4);color:oklch(0.995 0.003 258);height:40px;padding:0 16px;border:0;border-radius:9999px;font:500 0.8125rem Quicksand,system-ui,sans-serif;box-shadow:0 1px 2px hsl(228 35% 25%/.06);transition:transform 150ms,background-color 150ms}.ds-btn-primary:hover{background:oklch(0.442 0.187 267.4)}.ds-btn-primary:active{transform:scale(.97)}.ds-btn-primary:focus-visible{outline:2px solid oklch(0.527 0.218 267.4);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet alternative action.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary{background:#fff;color:oklch(0.288 0.052 265.1);height:40px;padding:0 16px;border:1px solid oklch(0.914 0.017 259.4);border-radius:9999px;font:500 0.8125rem Quicksand,system-ui,sans-serif;transition:transform 150ms}.ds-btn-secondary:hover{border-color:oklch(0.632 0.036 264.3);background:oklch(0.965 0.010 258)}.ds-btn-secondary:active{transform:scale(.97)}.ds-btn-secondary:focus-visible{outline:2px solid oklch(0.527 0.218 267.4);outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled field.",
+      "html": "<label class=\"ds-label\">Name</label><input class=\"ds-input\" placeholder=\"Your name\">",
+      "css": ".ds-label{display:block;margin-bottom:6px;font:500 0.8125rem Quicksand,system-ui,sans-serif;color:oklch(0.288 0.052 265.1)}.ds-input{width:100%;box-sizing:border-box;height:40px;padding:0 12px;background:#fff;color:oklch(0.288 0.052 265.1);border:1px solid oklch(0.632 0.036 264.3 / .8);border-radius:0.875rem;font:0.8125rem Quicksand,system-ui,sans-serif}.ds-input:hover{border-color:oklch(0.650 0.036 261)}.ds-input:focus-visible{border-color:oklch(0.527 0.218 267.4);outline:2px solid oklch(0.527 0.218 267.4);box-shadow:0 0 0 2px oklch(0.527 0.218 267.4 / .2)}"
+    },
+    {
+      "name": "Note Tab",
+      "kind": "nav",
+      "refersTo": "nav-tab-active",
+      "description": "Top-bar navigation; the active tab becomes a tilted note.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" class=\"ds-tab ds-tab-on\">Agent</a><a href=\"#\" class=\"ds-tab\">Integrations</a><a href=\"#\" class=\"ds-tab\">Productivity</a></nav>",
+      "css": ".ds-nav{display:flex;gap:6px}.ds-tab{padding:6px 12px;border-radius:0.625rem;font:600 0.8125rem Quicksand,system-ui,sans-serif;color:oklch(0.495 0.041 264.1);text-decoration:none;transition:background-color 150ms}.ds-tab:hover{background:oklch(0.288 0.052 265.1 / .05);color:oklch(0.288 0.052 265.1)}.ds-tab:focus-visible{outline:2px solid oklch(0.527 0.218 267.4);outline-offset:2px}.ds-tab-on{background:oklch(0.930 0.117 96);color:oklch(0.288 0.052 265.1);rotate:-1deg;box-shadow:0 1px 2px hsl(228 35% 25%/.06)}"
+    },
+    {
+      "name": "Segmented Tabs",
+      "kind": "nav",
+      "refersTo": "segmented-tab-active",
+      "description": "Agent sub-sections.",
+      "html": "<div class=\"ds-seg\"><button class=\"ds-seg-on\">Chat</button><button>Profile</button><button>Abilities</button></div>",
+      "css": ".ds-seg{display:inline-flex;gap:2px;padding:2px;border-radius:9999px;background:oklch(0.288 0.052 265.1 / .06)}.ds-seg button{padding:4px 14px;border:0;border-radius:9999px;background:none;font:500 0.8125rem Quicksand,system-ui,sans-serif;color:oklch(0.495 0.041 264.1)}.ds-seg button:hover{color:oklch(0.288 0.052 265.1)}.ds-seg button:focus-visible{outline:2px solid oklch(0.527 0.218 267.4);outline-offset:2px}.ds-seg .ds-seg-on{background:#fff;color:oklch(0.288 0.052 265.1);box-shadow:0 2px 8px -2px hsl(228 35% 25%/.12)}"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "The one surface: white, hairline, 18px.",
+      "html": "<div class=\"ds-panel\"><h2>Abilities</h2><p>What it may do.</p></div>",
+      "css": ".ds-panel{background:#fff;border:1px solid oklch(0.914 0.017 259.4 / .5);border-radius:1.125rem;padding:20px;font-family:Quicksand,system-ui,sans-serif;color:oklch(0.288 0.052 265.1)}.ds-panel h2{margin:0;font-size:0.9375rem;font-weight:600}.ds-panel p{margin:4px 0 0;font-size:0.75rem;color:oklch(0.495 0.041 264.1)}"
+    },
+    {
+      "name": "Chat Bubbles",
+      "kind": "custom",
+      "refersTo": "chat-bubble-user",
+      "description": "User bubble solid ink blue, agent bubble white with hairline.",
+      "html": "<p class=\"ds-bub ds-bub-user\">Remind me at 5.</p><p class=\"ds-bub ds-bub-agent\">Done.</p>",
+      "css": ".ds-bub{max-width:85%;margin:0 0 8px;padding:10px 16px;border-radius:1.125rem;font:0.8125rem/1.6 Quicksand,system-ui,sans-serif}.ds-bub-user{margin-left:auto;background:oklch(0.527 0.218 267.4);color:oklch(0.995 0.003 258);border-bottom-right-radius:4px}.ds-bub-agent{background:#fff;color:oklch(0.288 0.052 265.1);border:1px solid oklch(0.914 0.017 259.4);border-top-left-radius:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Sticky-Note Studio",
+    "overview": "A clean desk: crisp white paper, navy ink, and a drawer of soft stationery notes. One clear ink blue is the only solid color and the only thing that acts (buttons, links, the user's chat bubble, the focus ring). Everything else is white, slate, or a pale note fill under navy ink. Vivid yet calm; nothing neon, nothing brown.\n\nThe product is Operate mode with three bare screens (Agent, Integrations, Productivity). Density is low: one 768px column, a handwritten page title, one plain line under it, then the content. The charm is carried by two devices only: the Caveat hand on page titles and empty-state headings, and the tilted lemon/sky/mint note that marks the active top-bar tab.",
+    "keyCharacteristics": [
+      "One solid color (ink blue); notes are pale fills, never solid.",
+      "Quicksand everywhere; Caveat only for written moments (page title, empty-state heading).",
+      "Flat white panels with a faint hairline; shadow is reserved for notes, hover and popovers.",
+      "Pill buttons, 18px panels, 3px note corners.",
+      "Plain short copy; no kickers, no nested cards."
+    ],
+    "rules": [
+      {
+        "name": "The One Solid Rule",
+        "body": "Ink blue is the only saturated solid on a screen. Notes stay pale, status colors stay in badges and notices.",
+        "section": "colors"
+      },
+      {
+        "name": "The Note Is Not A Status Rule",
+        "body": "Never use a note color to signal state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Locked Scale Rule",
+        "body": "Only the sizes in the theme exist; Tailwind's defaults are reset, so an off-scale size cannot be written.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hand Is Rare Rule",
+        "body": "Caveat is for the page title and one empty-state heading, never for controls or data.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Panel Rule",
+        "body": "Panels carry no shadow at rest; only notes and pressed-state controls lift.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** frame every screen in `Screen`: hand title, one plain muted line, content.",
+      "**Do** keep ink blue for the one action, and pale note fills under navy ink for identity.",
+      "**Do** use the shared `Button`, `Field`, `Panel` and `Tabs` primitives and the locked type scale.",
+      "**Do** keep copy short and plain; every field must earn its place.",
+      "**Do** honor reduced motion and transparency, and keep the 2px focus ring."
+    ],
+    "donts": [
+      "**Don't** nest cards or panels.",
+      "**Don't** use a note color to signal status, or a solid fill other than ink blue.",
+      "**Don't** set Caveat on controls, data or body text.",
+      "**Don't** add off-scale font sizes, new radii or hard offset shadows."
+    ]
+  }
+}
