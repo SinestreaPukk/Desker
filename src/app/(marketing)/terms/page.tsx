@@ -54,18 +54,11 @@ export default function TermsPage() {
         you.
       </p>
 
-      <h2>4. Plans, automatic renewal and cancellation</h2>
+      <h2>4. Pricing</h2>
       <p>
-        Paid plans are billed monthly in advance through our payment provider.{" "}
-        <strong>
-          A paid plan renews automatically every month, at the price shown when you subscribed,
-          until you cancel.
-        </strong>{" "}
-        You can cancel at any time online, under Billing &rarr; Manage or cancel billing,
-        with no need to contact us. Cancelling stops future charges; the plan stays active until
-        the end of the month you have already paid for. We will tell you by email at least 7 days
-        before any price change applies to you. Plan limits are described on the billing page and
-        enforced by the Service. Fees are non-refundable except where the law requires otherwise.
+        The Service is free while it is in beta. If we introduce paid plans we will tell you by
+        email in advance, and you will never be charged unless you choose a plan and agree to its
+        price and renewal terms first.
       </p>
 
       <h2>5. Email your agents send</h2>

@@ -50,12 +50,7 @@ How to talk to me: ${COMPANY_CONTEXT.tone}
 Never: ${COMPANY_CONTEXT.never}`,
       },
     });
-    await prisma.organization.updateMany({
-      where: { memberships: { some: { user: { email: ADMIN.email } } } },
-      data: { plan: "growth" },
-    });
-    // Every run publishes agents; over enough runs the accumulated ones would
-    // hit even that plan's cap. Each run starts with all of them unpublished.
+    // Each run starts with every agent unpublished.
     await prisma.agent.updateMany({
       where: { project: { organization: { memberships: { some: { user: { email: ADMIN.email } } } } } },
       data: { status: "draft" },

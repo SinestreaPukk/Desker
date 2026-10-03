@@ -68,10 +68,6 @@ export default function PrivacyPage() {
           and email threads to draft replies you approve.
         </li>
         <li>
-          <strong>Billing:</strong> your plan and its status. Card details go straight to our payment provider; we
-          never see or store your card number.
-        </li>
-        <li>
           <strong>Messages to us:</strong> feedback you send from inside the product and what you write on the
           contact or beta forms.
         </li>
@@ -187,7 +183,6 @@ export default function PrivacyPage() {
           <strong>Messaging apps you choose</strong> (LINE, WhatsApp, Telegram, Slack, Discord, Microsoft Teams) carry the
           alerts and morning brief you set up under Alerts. Only the apps you add get messages, and you can remove them at any time.
         </li>
-        <li><strong>Payments</strong> (Stripe) handles subscriptions and card details.</li>
         <li><strong>Error monitoring</strong> (Sentry) receives technical error reports, without message content or request bodies.</li>
         <li>
           <strong>Apps you connect</strong> receive exactly what an agent sends them, after your approval unless you
@@ -221,7 +216,6 @@ export default function PrivacyPage() {
           and connected-app credentials - immediately. Copies in our database provider&rsquo;s backups expire on
           its normal schedule and are never restored except to recover from an outage.
         </li>
-        <li>We keep billing records as long as tax law requires.</li>
       </ul>
 
       <h2>Your rights, as buttons</h2>

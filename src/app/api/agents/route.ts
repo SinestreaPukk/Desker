@@ -4,7 +4,6 @@ import { agentInputSchema } from "@/lib/validation";
 import { defaultPersonality } from "@/lib/work/agent-choices";
 import { templateById } from "@/lib/content";
 import { findProject, projectsVisibleTo } from "@/lib/projects";
-import { canPublishAgent } from "@/lib/billing/limits";
 import { toAgentDetail, type AgentSummaryDto } from "@/lib/serialize";
 import { runModeOf } from "@/lib/work/cadence";
 import { assertProjectGrounded } from "@/lib/work/project-context";
@@ -104,8 +103,6 @@ export async function POST(request: Request) {
     // Born published counts the same as published later.
     if (input.status === "published") {
       await assertProjectGrounded(project.id);
-      const check = await canPublishAgent(project.organizationId, "");
-      if (!check.allowed) throw new HttpError(402, check.reason!);
     }
 
     const agent = await prisma.agent.create({

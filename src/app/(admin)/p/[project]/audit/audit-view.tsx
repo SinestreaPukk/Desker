@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  BadgeDollarSign,
   BookOpen,
   CalendarClock,
   Download,
@@ -210,7 +209,6 @@ const ICONS: Record<AuditIcon, typeof Search> = {
   task: Workflow,
   schedule: CalendarClock,
   settings: Settings2,
-  billing: BadgeDollarSign,
   note: StickyNote,
 };
 

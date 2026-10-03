@@ -22,7 +22,6 @@ async function ownership(userId: string) {
         select: {
           id: true,
           name: true,
-          subscriptionStatus: true,
           memberships: { select: { userId: true, role: true } },
         },
       },
@@ -63,7 +62,6 @@ export async function exportAccount(userId: string) {
     select: {
       id: true,
       name: true,
-      plan: true,
       createdAt: true,
       projects: {
         select: {
@@ -136,7 +134,7 @@ export async function exportAccount(userId: string) {
 /**
  * Deletes the account and every space it solely owns, files included.
  * Refuses while a space it owns has other members (someone must be left in
- * charge) or a paid plan is still running (it would keep billing).
+ * charge).
  */
 export async function deleteAccount(userId: string): Promise<void> {
   const { erasable, blocking } = await ownership(userId);
@@ -145,10 +143,6 @@ export async function deleteAccount(userId: string): Promise<void> {
       409,
       `You're the only owner of ${blocking.map((org) => org.name).join(", ")}, which has other people in it. Make one of them an owner, or remove them, before deleting your account.`,
     );
-  }
-  const paying = erasable.filter((org) => org.subscriptionStatus && !["canceled", "incomplete_expired"].includes(org.subscriptionStatus));
-  if (paying.length > 0) {
-    throw new HttpError(409, `Cancel the paid plan on ${paying.map((org) => org.name).join(", ")} under Billing first, so you are not charged again.`);
   }
 
   const ids = erasable.map((org) => org.id);

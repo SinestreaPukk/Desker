@@ -52,66 +52,6 @@ describe("roles", () => {
   });
 });
 
-describe("plan limits", () => {
-  it("the free plan allows one published agent and refuses a second", async () => {
-    const { canPublishAgent } = await import("@/lib/billing/limits");
-    const a = await prisma.agent.create({
-      data: { projectId, name: "A", jobTitle: "x", personality: "x", responsibilities: [], allowedTools: [], status: "published" },
-    });
-    const b = await prisma.agent.create({
-      data: { projectId, name: "B", jobTitle: "x", personality: "x", responsibilities: [], allowedTools: [] },
-    });
-    expect((await canPublishAgent(organizationId, a.id)).allowed).toBe(true); // already live
-    const refused = await canPublishAgent(organizationId, b.id);
-    expect(refused.allowed).toBe(false);
-    expect(refused.reason).toMatch(/Free plan allows 1 published agent/);
-
-    await prisma.organization.update({ where: { id: organizationId }, data: { plan: "starter" } });
-    expect((await canPublishAgent(organizationId, b.id)).allowed).toBe(true);
-    await prisma.organization.update({ where: { id: organizationId }, data: { plan: "free" } });
-  });
-
-  it("refuses runs past the monthly quota and the hourly rate", async () => {
-    const { canStartRun } = await import("@/lib/billing/limits");
-    const { PLANS } = await import("@/lib/billing/plans");
-    const agent = await prisma.agent.findFirstOrThrow({ where: { projectId } });
-    expect((await canStartRun(organizationId)).allowed).toBe(true);
-
-    // Fill the free plan's hourly rate.
-    await prisma.actionItem.createMany({
-      data: Array.from({ length: PLANS.free.limits.runsPerHour }, () => ({
-        organizationId,
-        agentId: agent.id,
-        type: "scope_run",
-        trigger: "manual",
-        payload: {},
-        status: "done",
-      })),
-    });
-    const rate = await canStartRun(organizationId);
-    expect(rate.allowed).toBe(false);
-    expect(rate.reason).toMatch(/last hour/);
-
-    // Pretend the model budget is spent.
-    const { usagePeriod } = await import("@/lib/usage");
-    await prisma.usageCounter.create({
-      data: {
-        organizationId,
-        period: usagePeriod(),
-        provider: "anthropic",
-        model: "claude-sonnet-4-6",
-        agentId: agent.id,
-        inputTokens: 5_000_000,
-        outputTokens: 0,
-        calls: 1,
-      },
-    });
-    const budget = await canStartRun(organizationId);
-    expect(budget.allowed).toBe(false);
-    expect(budget.reason).toMatch(/model budget/);
-  });
-});
-
 describe("integration secrets", () => {
   it("are sealed at rest and opened only on use, and legacy plaintext rows migrate themselves", async () => {
     const { findIntegration, splitIntegrationInput } = await import("@/lib/work/integrations");

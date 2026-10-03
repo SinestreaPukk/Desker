@@ -159,14 +159,6 @@ model Organization {
   name      String
   /// URL-safe handle, reserved for when organisations get their own segment.
   slug      String   @unique
-  /// free | starter | growth - see lib/billing/plans.ts. Set by the Stripe
-  /// webhook; never trusted from the client.
-  plan                 String    @default("free")
-  stripeCustomerId     String?   @unique
-  stripeSubscriptionId String?   @unique
-  /// Stripe's subscription status (active, past_due, canceled...), or null.
-  subscriptionStatus   String?
-  currentPeriodEnd     DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

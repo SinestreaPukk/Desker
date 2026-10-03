@@ -20,25 +20,18 @@ import {
 } from "@/components/ui/panel";
 import { EmptyState, ErrorState, FormError, LoadingRows } from "@/components/ui/states";
 import {
-  useBilling,
-  useBillingPortal,
-  useCheckout,
   useOrganization,
   useUpdateOrganization,
-  type BillingSummary,
 } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
-import { renewalTerms } from "@/lib/billing/plans";
 import { formatDateTime } from "@/lib/utils";
 
 export function OrganizationView({
   project,
   organizationId,
-  checkoutResult,
 }: {
   project: string;
   organizationId: string;
-  checkoutResult: string | null;
 }) {
   const org = useOrganization(organizationId);
   const role = org.data?.role ?? "member";
@@ -48,7 +41,7 @@ export function OrganizationView({
     <Page>
       <PageHeader
         title={org.data?.name ?? "Your space"}
-        description="Private to you. What your assistants know about you, your plan, and your data."
+        description="Private to you. What your assistants know about you, and your data."
       />
       <PageBody className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="space-y-5">
@@ -57,206 +50,11 @@ export function OrganizationView({
           <PrivacyPanel />
         </div>
         <div className="space-y-5">
-          <BillingPanel project={project} isOwner={isOwner} checkoutResult={checkoutResult} />
           {isOwner && org.data ? <RenamePanel organizationId={organizationId} name={org.data.name} label="Space name" /> : null}
           <YourDataPanel />
         </div>
       </PageBody>
     </Page>
-  );
-}
-
-function Meter({ label, used, limit, money }: { label: string; used: number; limit: number; money?: boolean }) {
-  const unlimited = limit >= Number.MAX_SAFE_INTEGER;
-  const ratio = unlimited || limit <= 0 ? 0 : Math.min(used / limit, 1);
-  const fmt = (n: number) => (money ? `$${n.toFixed(2)}` : n.toLocaleString());
-  if (unlimited) {
-    return (
-      <div className="flex items-baseline justify-between text-sm">
-        <span className="text-ink">{label}</span>
-        <span className="tabular-nums font-mono text-xs text-ink-muted">{fmt(used)} · no limit</span>
-      </div>
-    );
-  }
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-baseline justify-between text-sm">
-        <span className="text-ink">{label}</span>
-        <span className={`tabular-nums font-mono text-xs ${ratio >= 1 ? "font-semibold text-danger" : "text-ink-muted"}`}>
-          {fmt(used)} / {fmt(limit)}
-        </span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-surface-3">
-        <div
-          className={`h-full rounded-full transition duration-500 ${ratio >= 1 ? "bg-danger" : ratio >= 0.8 ? "bg-warning" : "bg-accent"}`}
-          style={{ width: `${ratio * 100}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function BillingPanel({
-  project,
-  isOwner,
-  checkoutResult,
-}: {
-  project: string;
-  isOwner: boolean;
-  checkoutResult: string | null;
-}) {
-  const billing = useBilling(project);
-  const checkout = useCheckout(project);
-  const portal = useBillingPortal(project);
-  const [note, setNote] = React.useState<string | null>(
-    checkoutResult === "success"
-      ? "Payment received. The plan updates as soon as Stripe confirms it - usually within seconds."
-      : checkoutResult === "cancelled"
-        ? "Checkout cancelled; nothing was charged."
-        : null,
-  );
-
-  async function go(fn: () => Promise<{ url: string }>) {
-    setNote(null);
-    try {
-      const { url } = await fn();
-      window.location.assign(url);
-    } catch (caught) {
-      setNote(errorMessage(caught));
-    }
-  }
-
-  if (billing.isPending) {
-    return (
-      <Panel>
-        <PanelBody>
-          <LoadingRows count={3} />
-        </PanelBody>
-      </Panel>
-    );
-  }
-  if (billing.error) {
-    return (
-      <Panel>
-        <PanelBody>
-          <ErrorState message={errorMessage(billing.error)} onRetry={() => void billing.refetch()} />
-        </PanelBody>
-      </Panel>
-    );
-  }
-  const data: BillingSummary = billing.data;
-  const { plan, usage } = data;
-
-  return (
-    <Panel>
-      <PanelHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <PanelTitle>Billing</PanelTitle>
-            <PanelDescription>
-              {plan.name} plan{plan.priceUsd > 0 ? ` · $${plan.priceUsd}/month` : ""}
-              {data.subscriptionStatus && data.subscriptionStatus !== "active"
-                ? ` · ${data.subscriptionStatus.replace("_", " ")}`
-                : ""}
-              {data.currentPeriodEnd ? ` · renews ${formatDateTime(data.currentPeriodEnd)}` : ""}
-            </PanelDescription>
-          </div>
-          <Badge tone={plan.id === "free" ? "neutral" : "accent"}>{plan.name}</Badge>
-        </div>
-      </PanelHeader>
-      <PanelBody className="space-y-4">
-        <FormError message={note} />
-        <p className="text-xs text-ink-muted">
-          What you have used this month. Anything past a limit is refused rather than billed.
-        </p>
-        <Meter label={"Assistants switched on"} used={usage.publishedAgents} limit={plan.limits.publishedAgents} />
-        <Meter label="Tasks done on their own" used={usage.actionItems} limit={plan.limits.actionItemsPerMonth} />
-        <Meter label="Estimated cost of the work" used={usage.modelCostUsd} limit={plan.limits.modelCostUsdPerMonth} money />
-        {plan.limits.runsPerHour < Number.MAX_SAFE_INTEGER ? (
-          <p className="text-xs text-ink-muted">
-            Busy periods are smoothed out: up to {plan.limits.runsPerHour} tasks an hour and{" "}
-            {plan.limits.chatMessagesPerMinute} chat messages a minute.
-          </p>
-        ) : null}
-        {/* The figures behind the estimate, for whoever is checking an invoice. */}
-        <details className="text-xs">
-          <summary className="cursor-pointer text-ink-muted hover:text-ink">
-            View technical details
-          </summary>
-          <p className="mt-1.5 rounded-md border border-line bg-surface-2/60 p-2.5 text-ink-muted">
-            {usage.period} · {(usage.inputTokens + usage.outputTokens).toLocaleString()} model tokens ·{" "}
-            {usage.searches} web searches. Limits are enforced on the server.
-          </p>
-        </details>
-
-        {isOwner ? (
-          <div className="border-t border-line pt-4">
-            {!data.stripeConfigured ? (
-              <EmptyState
-                icon={CreditCard}
-                title="Billing is not connected on this server"
-                description="This is a self-hosted deployment: there is nothing to upgrade to, so no limits apply. Configure Stripe to sell plans."
-                className="py-6"
-              />
-            ) : (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {data.plans
-                  .filter((p) => p.id !== "free")
-                  .map((p) => (
-                    <div key={p.id} className={`rounded-lg border p-3 ${p.id === plan.id ? "border-accent bg-accent-soft/30" : "border-line"}`}>
-                      <p className="text-sm font-medium text-ink">
-                        {p.name}{" "}
-                        <span className="text-ink-muted">
-                          ·{" "}
-                          {p.originalPriceUsd ? (
-                            <span className="line-through decoration-line-strong mr-1 text-ink-muted/80">
-                              <span className="sr-only">Original price: </span>
-                              ${p.originalPriceUsd}
-                            </span>
-                          ) : null}
-                          ${p.priceUsd}/mo
-                        </span>
-                      </p>
-                      <p className="mt-0.5 text-xs text-ink-muted">{p.blurb}</p>
-                      <p className="mt-1 text-xs text-ink-muted">
-                        {p.limits.publishedAgents} agents · {p.limits.actionItemsPerMonth.toLocaleString()} runs ·{" "}
-                        {p.limits.conversationsPerMonth.toLocaleString()} conversations · ${p.limits.modelCostUsdPerMonth} model budget
-                      </p>
-                      {p.id !== plan.id && p.purchasable ? (
-                        <>
-                        <p className="mt-2 text-xs text-ink">{renewalTerms(p)}</p>
-                        <Button
-                          size="sm"
-                          className="mt-2"
-                          onClick={() => void go(() => checkout.mutateAsync(p.id as "starter" | "growth"))}
-                          disabled={checkout.isPending}
-                        >
-                          {plan.id === "free" ? "Choose" : "Switch to"} {p.name}
-                        </Button>
-                        </>
-                      ) : null}
-                    </div>
-                  ))}
-              </div>
-            )}
-            {data.hasPaymentMethod ? (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="mt-3"
-                onClick={() => void go(() => portal.mutateAsync())}
-                disabled={portal.isPending}
-              >
-                <CreditCard aria-hidden />
-                Manage or cancel billing
-              </Button>
-            ) : null}
-          </div>
-        ) : (
-          <p className="text-xs text-ink-muted">Only an owner can change the plan.</p>
-        )}
-      </PanelBody>
-    </Panel>
   );
 }
 

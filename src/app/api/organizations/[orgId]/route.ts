@@ -17,13 +17,12 @@ export async function GET(_request: Request, { params }: Params) {
     if (!role) throw new HttpError(404, "That organisation no longer exists.");
     const org = await prisma.organization.findUniqueOrThrow({
       where: { id: orgId },
-      select: { id: true, name: true, slug: true, plan: true, createdAt: true, _count: { select: { memberships: true, projects: true } } },
+      select: { id: true, name: true, slug: true, createdAt: true, _count: { select: { memberships: true, projects: true } } },
     });
     return {
       id: org.id,
       name: org.name,
       slug: org.slug,
-      plan: org.plan,
       role,
       members: org._count.memberships,
       projects: org._count.projects,

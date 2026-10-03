@@ -24,7 +24,6 @@ import type { ToolCall } from "@/lib/llm/provider";
 import { inngest } from "@/lib/jobs/client";
 import { afterResponse } from "@/lib/after-response";
 import { notifyInBackground } from "@/lib/notify";
-import { canStartRun } from "@/lib/billing/limits";
 import { connectorAccess } from "@/lib/integrations/oauth";
 import { readBanks } from "@/lib/integrations/plaid";
 import { splitOptedOut } from "@/lib/email-optout";
@@ -752,12 +751,6 @@ async function delegateToColleague(input: unknown, ctx: RunContext): Promise<Wor
       content: `This task has already been handed on ${handoffs} times. Finish it yourself, or escalate if you cannot.`,
       isError: true,
     };
-  }
-
-  // A hand-off is a run like any other, so it counts against the plan.
-  const allowed = await canStartRun(ctx.organizationId);
-  if (!allowed.allowed) {
-    return { content: `Could not hand this on: ${allowed.reason}`, isError: true };
   }
 
   const delegatedItem = await prisma.actionItem.create({

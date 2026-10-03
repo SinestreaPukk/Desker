@@ -32,7 +32,6 @@ export type AuditIcon =
   | "task"
   | "schedule"
   | "settings"
-  | "billing"
   | "note";
 
 interface AuditDescription {
@@ -373,14 +372,6 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: `${who} removed a suggestion`, detail: null, tone: "neutral", icon: "note" };
     case "digest.deleted":
       return { title: `${who} removed an update`, detail: null, tone: "neutral", icon: "note" };
-    case "action_item.refused":
-      return {
-        title: "A task was refused before it started",
-        detail: reason ? clip(reason, 140) : "The plan's limit was reached.",
-        tone: "warning",
-        icon: "billing",
-      };
-
     case "publish_post.delivered":
       return { title: "Published a post", detail: text(meta.detail), tone: "positive", icon: "publish" };
     case "send_email.delivered":
@@ -528,23 +519,6 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: `${who} renamed a project`, detail: text(meta.name), tone: "neutral", icon: "settings" };
     case "project.deleted":
       return { title: `${who} deleted a project`, detail: text(meta.name), tone: "warning", icon: "settings" };
-
-    case "billing.checkout_started":
-      return { title: `${who} started a plan change`, detail: text(meta.plan), tone: "neutral", icon: "billing" };
-    case "billing.subscription_updated":
-      return {
-        title: "The plan changed",
-        detail: text(meta.plan) ? `Now on ${meta.plan}.` : null,
-        tone: "accent",
-        icon: "billing",
-      };
-    case "conversation.refused":
-      return {
-        title: "A client message was turned away",
-        detail: reason ? clip(reason, 140) : "The plan's limit was reached.",
-        tone: "warning",
-        icon: "billing",
-      };
 
     default: {
       // Never a raw verb on its own: at worst, the verb with its full stops

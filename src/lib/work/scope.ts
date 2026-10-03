@@ -15,7 +15,6 @@ import { inngest } from "@/lib/jobs/client";
 import { toStringArray } from "@/lib/agent-fields";
 import { afterResponse } from "@/lib/after-response";
 import { runActionItem, inlineSteps } from "./runner";
-import { canStartRun } from "@/lib/billing/limits";
 import { isDigestCadence, type AutonomyMode, type DigestCadence, type ToolAutonomy, type TriggerType } from "./types";
 import {
   AGENT_CONTEXT_QUESTIONS,
@@ -283,22 +282,6 @@ export async function startRun(input: StartRunInput) {
       if (error instanceof OrganizationRateLimited) throw new RunRefused(error.message, error.retryAfterSeconds);
       throw error;
     }
-  }
-
-  // Plan limits are enforced here, where every run is born, so a schedule, a
-  // webhook and a button all hit the same wall. The refusal is on the record.
-  const check = await canStartRun(agent.project.organizationId);
-  if (!check.allowed) {
-    await audit({
-      organizationId: agent.project.organizationId,
-      actorType: input.actor?.type ?? "system",
-      actorId: input.actor?.id ?? null,
-      action: "action_item.refused",
-      targetType: "agent",
-      targetId: agent.id,
-      metadata: { trigger: input.trigger, reason: check.reason },
-    });
-    throw new RunRefused(check.reason!, check.retryAfterSeconds);
   }
 
   let item;

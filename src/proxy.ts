@@ -14,7 +14,7 @@ import { env } from "@/lib/env";
 import { clientIp } from "@/lib/login-guard";
 
 const EXEMPT =
-  /^\/api\/(inngest|cron|health|monitoring|auth|hooks|billing\/webhook|messaging\/(line|whatsapp|telegram)|integrations\/oauth)(\/|$)/;
+  /^\/api\/(inngest|cron|health|monitoring|auth|hooks|messaging\/(line|whatsapp|telegram)|integrations\/oauth)(\/|$)/;
 
 export async function proxy(request: NextRequest) {
   if (EXEMPT.test(request.nextUrl.pathname)) return NextResponse.next();

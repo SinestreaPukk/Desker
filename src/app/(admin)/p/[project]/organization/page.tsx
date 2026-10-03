@@ -6,24 +6,11 @@ import { OrganizationView } from "./organization-view";
 
 export const metadata: Metadata = { title: "Organisation" };
 
-export default async function OrganizationPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ project: string }>;
-  searchParams: Promise<{ checkout?: string }>;
-}) {
+export default async function OrganizationPage({ params }: { params: Promise<{ project: string }> }) {
   const user = await currentUser();
   if (!user) redirect("/login");
   const { project } = await params;
-  const { checkout } = await searchParams;
   const found = await findProject(project, user.id);
   if (!found) notFound();
-  return (
-    <OrganizationView
-      project={project}
-      organizationId={found.organizationId}
-      checkoutResult={checkout ?? null}
-    />
-  );
+  return <OrganizationView project={project} organizationId={found.organizationId} />;
 }

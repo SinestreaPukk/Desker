@@ -81,10 +81,8 @@ export default defineConfig({
       // No Inngest server in the e2e run; keep the SDK out of cloud mode so
       // /api/inngest does not demand a signing key.
       INNGEST_DEV: process.env.INNGEST_DEV ?? "1",
-      // Integrations need a vault key; plan limits are exercised by the team
-      // spec, which signs up a fresh organisation for it.
+      // Integrations need a vault key.
       VAULT_KEY: process.env.VAULT_KEY ?? "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
-      ENFORCE_PLAN_LIMITS: "true",
       // The suite signs up many accounts from one address in a minute.
       SIGNUP_RATE_LIMIT: "1000",
     },

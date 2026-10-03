@@ -12,7 +12,6 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
-import { canStartRun } from "@/lib/billing/limits";
 import { HttpError } from "@/lib/http-error";
 import { dispatchRun, startRun } from "./scope";
 import { currentStep, stepState, workflowById, type StepState, type WorkflowTag } from "./workflows";
@@ -116,8 +115,7 @@ export async function advanceWorkflow(actionItemId: string): Promise<void> {
     where: { id: tag.agents[next]!, status: "published" },
     select: { id: true },
   });
-  const allowed = await canStartRun(item.organizationId);
-  if (!nextAgent || !allowed.allowed) {
+  if (!nextAgent) {
     await prisma.issue.create({
       data: {
         agentId: item.agentId,
@@ -126,7 +124,7 @@ export async function advanceWorkflow(actionItemId: string): Promise<void> {
         type: "failure",
         severity: "medium",
         summary: `The "${workflow.name}" workflow stopped before "${workflow.steps[next]!.title}"`,
-        details: nextAgent ? allowed.reason : "The agent for the next step was switched off or removed.",
+        details: "The agent for the next step was switched off or removed.",
       },
     });
     return;

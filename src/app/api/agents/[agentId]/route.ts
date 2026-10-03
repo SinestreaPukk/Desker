@@ -3,7 +3,6 @@ import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
 import { agentInputSchema } from "@/lib/validation";
 import { toAgentDetail } from "@/lib/serialize";
 import { findAgentFor } from "@/lib/projects";
-import { canPublishAgent } from "@/lib/billing/limits";
 import { assertProjectGrounded } from "@/lib/work/project-context";
 import { track } from "@/lib/product-events";
 import { audit } from "@/lib/audit";
@@ -36,11 +35,8 @@ export async function PATCH(request: Request, { params }: Params) {
     const existing = await findAgentFor(agentId, userId);
     if (!existing) throw new HttpError(404, "That agent no longer exists.");
 
-    // Going live is where a plan's agent count is enforced.
     if (input.status === "published" && existing.status !== "published") {
       await assertProjectGrounded(existing.project.id);
-      const check = await canPublishAgent(existing.project.organizationId, agentId);
-      if (!check.allowed) throw new HttpError(402, check.reason!);
     }
 
     const agent = await prisma.agent.update({

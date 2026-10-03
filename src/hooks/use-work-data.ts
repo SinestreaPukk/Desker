@@ -435,7 +435,6 @@ export function useUpdateDraft() {
 
 const orgKeys = {
   org: (orgId: string) => ["organization", orgId] as const,
-  billing: (project: string) => ["billing", project] as const,
 };
 
 export function useOrganization(orgId: string) {
@@ -461,44 +460,3 @@ export function useUpdateOrganization(orgId: string) {
   });
 }
 
-export interface BillingSummary {
-  organization: { id: string; name: string };
-  role: string;
-  plan: import("@/lib/billing/plans").Plan;
-  subscriptionStatus: string | null;
-  currentPeriodEnd: string | null;
-  hasPaymentMethod: boolean;
-  usage: {
-    period: string;
-    publishedAgents: number;
-    actionItems: number;
-    conversations: number;
-    modelCostUsd: number;
-    inputTokens: number;
-    outputTokens: number;
-    searches: number;
-  };
-  plans: (import("@/lib/billing/plans").Plan & { purchasable: boolean })[];
-  stripeConfigured: boolean;
-}
-
-export function useBilling(project: string) {
-  return useQuery({
-    queryKey: orgKeys.billing(project),
-    queryFn: () => api<BillingSummary>(`/api/billing?project=${encodeURIComponent(project)}`),
-    enabled: Boolean(project),
-  });
-}
-
-export function useCheckout(project: string) {
-  return useMutation({
-    mutationFn: (plan: "starter" | "growth") =>
-      api<{ url: string }>(`/api/billing/checkout`, { method: "POST", body: JSON.stringify({ project, plan }) }),
-  });
-}
-
-export function useBillingPortal(project: string) {
-  return useMutation({
-    mutationFn: () => api<{ url: string }>(`/api/billing/portal`, { method: "POST", body: JSON.stringify({ project }) }),
-  });
-}
