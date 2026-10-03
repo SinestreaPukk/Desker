@@ -36,8 +36,10 @@ export async function GET(request: Request) {
 
 const postSchema = z.object({
   project: z.string().min(1),
-  /** Omitted to start a new chat. */
+  /** The chat to write in. Omitted: the everyday chat, which LINE and the other apps share. */
   threadId: z.string().min(1).optional(),
+  /** Start a separate chat, titled from this first message. */
+  newChat: z.boolean().optional(),
   content: z.string().trim().min(1, "Write a message first.").max(4000),
 });
 
@@ -55,7 +57,9 @@ export async function POST(request: Request) {
 
     // One conversation, shared with the messaging apps.
     const title = EVERYDAY_THREAD;
-    const thread = input.threadId
+    const thread = input.newChat
+      ? await prisma.teamThread.create({ data: { projectId: project.id, title: input.content.replace(/\s+/g, " ").slice(0, 60) }, select: { id: true } })
+      : input.threadId
       ? await prisma.teamThread.findFirst({ where: { id: input.threadId, projectId: project.id }, select: { id: true } })
       : ((await prisma.teamThread.findFirst({ where: { projectId: project.id, title }, select: { id: true } })) ??
         (await prisma.teamThread.create({ data: { projectId: project.id, title }, select: { id: true } })));

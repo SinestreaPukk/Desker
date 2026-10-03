@@ -30,7 +30,7 @@ export function ChatComposer({
     const element = textareaRef.current;
     if (!element) return;
     element.style.height = "auto";
-    element.style.height = `${Math.min(element.scrollHeight, 240)}px`;
+    element.style.height = `${Math.min(element.scrollHeight, 280)}px`;
   }, []);
 
   React.useEffect(resize, [value, resize]);
@@ -52,7 +52,7 @@ export function ChatComposer({
     >
       <div
         className={cn(
-          "flex items-end gap-3 rounded-panel border border-line bg-surface px-5 py-3.5 shadow-sm",
+          "relative rounded-panel border border-line bg-surface p-4 shadow-sm",
           "transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15",
           disabled && "opacity-60",
         )}
@@ -63,7 +63,7 @@ export function ChatComposer({
         <textarea
           id="chat-composer"
           ref={textareaRef}
-          rows={1}
+          rows={3}
           value={value}
           autoFocus={autoFocus}
           disabled={disabled}
@@ -77,20 +77,13 @@ export function ChatComposer({
             }
           }}
           className={cn(
-            "min-h-8 flex-1 resize-none bg-transparent py-1 text-lg leading-relaxed text-ink",
+            "block min-h-[4.5rem] w-full resize-none bg-transparent pb-9 pr-12 text-base leading-relaxed text-ink",
             "placeholder:text-ink-subtle focus:outline-none disabled:cursor-not-allowed",
           )}
         />
 
         {sending && onStop ? (
-          <Button
-            type="button"
-            size="icon-sm"
-            variant="subtle"
-            onClick={onStop}
-            aria-label="Stop generating"
-            className="mb-0.5 rounded-lg"
-          >
+          <Button type="button" size="icon" variant="subtle" onClick={onStop} aria-label="Stop generating" className="absolute bottom-3 right-3">
             <Square className="fill-current" aria-hidden />
           </Button>
         ) : (
@@ -99,7 +92,7 @@ export function ChatComposer({
             size="icon"
             disabled={!value.trim() || sending || disabled}
             aria-label="Send message"
-            className="mb-0.5 size-10"
+            className="absolute bottom-3 right-3"
           >
             <ArrowUp aria-hidden />
           </Button>
