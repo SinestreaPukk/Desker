@@ -9,9 +9,9 @@
  * signature or secret instead. Sign-in has its own guard in login-guard.ts.
  */
 import { NextResponse, type NextRequest } from "next/server";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { env } from "@/lib/env";
-import { clientIp } from "@/lib/login-guard";
+import { checkRateLimit } from "@/lib/platform/rate-limit";
+import { env } from "@/lib/platform/env";
+import { clientIp } from "@/lib/auth/login-guard";
 
 const EXEMPT =
   /^\/api\/(inngest|cron|health|monitoring|auth|hooks|messaging\/(line|whatsapp|telegram)|integrations\/oauth)(\/|$)/;

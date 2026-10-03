@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { afterResponse } from "@/lib/after-response";
+import { afterResponse } from "@/lib/platform/after-response";
 
 /**
  * Notifications are scheduled through this. Inside a request Next keeps the

@@ -4,7 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { MessageSquareHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FormError } from "@/components/ui/states";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage } from "@/lib/shared/api-client";
 
 /**
  * The feedback channel: one button, always there, two fields. What people

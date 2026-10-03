@@ -9,13 +9,13 @@
  * is stored.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
 import { getProvider, type UserImage } from "@/lib/llm/provider";
 import { parseModelJson } from "@/lib/work/model-json";
 import { extractText } from "@/lib/rag/extract";
 import { maskNumbers, parseStatement } from "@/lib/money/statement";
-import { storage } from "@/lib/storage";
+import { storage } from "@/lib/platform/storage";
 import * as store from "./store";
 
 const CATEGORIES = ["food", "transport", "shopping", "bills", "home", "health", "fitness", "travel", "entertainment", "income", "transfer", "other"] as const;

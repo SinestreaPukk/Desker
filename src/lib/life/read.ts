@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { syncCalendar } from "./calendar-sync";
 import { syncTasks } from "./task-sync";
 import { buildLife, renderLife, type Life } from "./context";

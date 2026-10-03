@@ -1,4 +1,4 @@
-import type { TeamMessageDto } from "@/lib/team-dto";
+import type { TeamMessageDto } from "@/lib/agents/team-dto";
 
 export const messageSelect = {
   id: true,

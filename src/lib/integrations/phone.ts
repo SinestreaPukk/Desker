@@ -10,8 +10,8 @@
  */
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { prisma } from "@/lib/db";
-import { open } from "@/lib/vault";
+import { prisma } from "@/lib/platform/db";
+import { open } from "@/lib/auth/vault";
 import type { DeliveryResult } from "@/lib/work/integrations";
 
 export interface PhoneAccess {

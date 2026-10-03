@@ -10,13 +10,13 @@ import { PrismaClient } from "@prisma/client";
 
 vi.mock("@/lib/jobs/client", () => ({ inngest: { send: vi.fn(async () => undefined) } }));
 const session = vi.hoisted(() => ({ user: { id: "", email: "" } }));
-vi.mock("@/lib/auth", () => ({ currentUser: vi.fn(async () => session.user) }));
+vi.mock("@/lib/auth/auth", () => ({ currentUser: vi.fn(async () => session.user) }));
 
 import { executePendingAction, executeWorkTool, type RunContext } from "@/lib/work/execute";
 import { saveConnection } from "@/lib/integrations/oauth";
 import { POST as reject } from "@/app/api/action-items/[actionItemId]/reject/route";
 import type { PendingAction } from "@/lib/work/types";
-import { checkCalendar } from "@/lib/chat-calendar";
+import { checkCalendar } from "@/lib/agents/chat-calendar";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);

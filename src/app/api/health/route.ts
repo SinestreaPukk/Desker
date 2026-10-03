@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
 import { activeEmbeddingBackend } from "@/lib/rag/embeddings";
 import { heartbeatStatus } from "@/lib/jobs/heartbeat";
 

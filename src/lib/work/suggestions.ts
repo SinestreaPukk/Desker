@@ -11,10 +11,10 @@
  */
 import "server-only";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { audit } from "@/lib/audit";
-import { publishAdminEvent } from "@/lib/events";
-import { toStringArray } from "@/lib/agent-fields";
+import { prisma } from "@/lib/platform/db";
+import { audit } from "@/lib/platform/audit";
+import { publishAdminEvent } from "@/lib/platform/events";
+import { toStringArray } from "@/lib/agents/agent-fields";
 import type { SuggestionStatus } from "./types";
 
 /** How long "remind me later" lasts when no explicit period is given. */

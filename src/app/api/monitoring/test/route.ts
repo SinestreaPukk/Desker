@@ -1,7 +1,7 @@
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { findProject } from "@/lib/projects";
-import { requireRole } from "@/lib/organizations";
-import { captureError, captureMessage, monitoringEnabled } from "@/lib/monitoring";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findProject } from "@/lib/tenancy/projects";
+import { requireRole } from "@/lib/tenancy/organizations";
+import { captureError, captureMessage, monitoringEnabled } from "@/lib/platform/monitoring";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

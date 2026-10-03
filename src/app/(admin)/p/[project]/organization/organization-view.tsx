@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Building, Download, ShieldCheck, Trash2 } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { api } from "@/lib/api-client";
+import { api } from "@/lib/shared/api-client";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
 import { ProjectContextPanel } from "@/components/builder/project-context-panel";
 import { CheckInSettingsPanel } from "@/components/work/check-in-settings-panel";
@@ -22,7 +22,7 @@ import {
   useOrganization,
   useUpdateOrganization,
 } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 
 export function OrganizationView({
   project,

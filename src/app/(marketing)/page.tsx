@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { hasCoreContext } from "@/lib/work/context";
-import { currentUser } from "@/lib/auth";
-import { defaultProject } from "@/lib/projects";
-import { entryPath } from "@/lib/space-entry";
+import { currentUser } from "@/lib/auth/auth";
+import { defaultProject } from "@/lib/tenancy/projects";
+import { entryPath } from "@/lib/tenancy/space-entry";
 import { CTA_PRIMARY, CTA_SECONDARY } from "@/components/marketing/cta";
-import { SITE, pageMetadata, templateById } from "@/lib/content";
+import { SITE, pageMetadata, templateById } from "@/lib/site/content";
 
 export const metadata: Metadata = pageMetadata({
   title: SITE.company.name,

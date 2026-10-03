@@ -4,12 +4,12 @@
  * through whichever channels they have linked.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
-import { localIso, validTimeZone } from "@/lib/local-time";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
+import { localIso, validTimeZone } from "@/lib/shared/local-time";
 import { messageUser } from "@/lib/messaging/send";
 import { readPrefs } from "@/lib/messaging/prefs";
-import { teamOf } from "@/lib/team";
+import { teamOf } from "@/lib/agents/team";
 import { personalSpace } from "./chat";
 import { readLife } from "./read";
 import { weeklyDigest } from "./negotiate";

@@ -27,11 +27,11 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConnectorCard } from "@/components/integrations/connector-card";
 import { CONNECTORS, CONNECTOR_CATEGORIES, connectorById } from "@/lib/integrations/catalog";
-import { TEMPLATES } from "@/lib/content";
-import { ApiError, errorMessage } from "@/lib/api-client";
+import { TEMPLATES } from "@/lib/site/content";
+import { ApiError, errorMessage } from "@/lib/shared/api-client";
 import { integrationInputSchema } from "@/lib/work/validation";
-import { validate } from "@/lib/form-errors";
-import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { validate } from "@/lib/shared/form-errors";
+import { cn, formatDateTime, formatRelativeTime } from "@/lib/shared/utils";
 import type { IntegrationDto } from "@/lib/work/serialize";
 
 /**

@@ -10,7 +10,7 @@
  * won't let an app read them back.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { connectorAccess, META_GRAPH, THREADS_GRAPH } from "./oauth";
 import type { DeliveryResult } from "@/lib/work/integrations";
 

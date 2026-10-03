@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { uniqueSlug, findProjectById, projectsVisibleTo } from "@/lib/projects";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { uniqueSlug, findProjectById, projectsVisibleTo } from "@/lib/tenancy/projects";
+import { audit } from "@/lib/platform/audit";
 
 export const runtime = "nodejs";
 

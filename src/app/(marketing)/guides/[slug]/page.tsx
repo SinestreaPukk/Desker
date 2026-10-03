@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Markdown } from "@/components/markdown";
-import { GUIDES, guideBySlug } from "@/lib/guides";
-import { pageMetadata } from "@/lib/content";
+import { GUIDES, guideBySlug } from "@/lib/site/guides";
+import { pageMetadata } from "@/lib/site/content";
 
 type Params = { params: Promise<{ slug: string }> };
 

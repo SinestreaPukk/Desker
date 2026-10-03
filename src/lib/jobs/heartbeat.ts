@@ -5,8 +5,8 @@
  * reports the age of the newest row, so a scheduler that has silently stopped
  * shows up as a failing /api/health rather than as an agent that never ran.
  */
-import { prisma } from "@/lib/db";
-import { withCronMonitor } from "@/lib/monitoring";
+import { prisma } from "@/lib/platform/db";
+import { withCronMonitor } from "@/lib/platform/monitoring";
 import { inngest } from "./client";
 
 const HEARTBEAT_SOURCE = "heartbeat";

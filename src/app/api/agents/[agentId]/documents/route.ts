@@ -1,12 +1,12 @@
-import { prisma } from "@/lib/db";
-import { findAgentFor } from "@/lib/projects";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { env } from "@/lib/env";
-import { safeFilename, storage } from "@/lib/storage";
+import { prisma } from "@/lib/platform/db";
+import { findAgentFor } from "@/lib/tenancy/projects";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { env } from "@/lib/platform/env";
+import { safeFilename, storage } from "@/lib/platform/storage";
 import { isAcceptedUpload, ACCEPTED_EXTENSIONS } from "@/lib/rag/extract";
 import { ingestDocument } from "@/lib/rag/ingest";
-import type { DocumentDto } from "@/lib/serialize";
-import { formatBytes } from "@/lib/utils";
+import type { DocumentDto } from "@/lib/shared/serialize";
+import { formatBytes } from "@/lib/shared/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

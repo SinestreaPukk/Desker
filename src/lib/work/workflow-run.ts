@@ -10,9 +10,9 @@
  */
 import "server-only";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { audit } from "@/lib/audit";
-import { HttpError } from "@/lib/http-error";
+import { prisma } from "@/lib/platform/db";
+import { audit } from "@/lib/platform/audit";
+import { HttpError } from "@/lib/platform/http-error";
 import { dispatchRun, startRun } from "./scope";
 import { currentStep, stepState, workflowById, type StepState, type WorkflowTag } from "./workflows";
 

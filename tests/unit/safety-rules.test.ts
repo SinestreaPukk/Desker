@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSystemPrompt } from "@/lib/agent-prompt";
+import { buildSystemPrompt } from "@/lib/agents/agent-prompt";
 import { buildRunPrompt } from "@/lib/work/prompt";
 
 const agent = { name: "Sam", jobTitle: "Support", department: null, personality: "Plain.", escalationRule: null };

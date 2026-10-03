@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/marketing/page-header";
-import { LEGAL, TERMS_VERSION } from "@/lib/legal";
+import { LEGAL, TERMS_VERSION } from "@/lib/site/legal";
 
 /**
  * The shell both legal documents share.

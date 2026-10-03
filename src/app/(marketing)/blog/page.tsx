@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/marketing/page-header";
 import { BlogFeed } from "@/components/blog/blog-feed";
-import { getPosts } from "@/lib/posts";
-import { pageMetadata } from "@/lib/content";
+import { getPosts } from "@/lib/site/posts";
+import { pageMetadata } from "@/lib/site/content";
 
 export const metadata: Metadata = pageMetadata({
   title: "Blog & Updates",

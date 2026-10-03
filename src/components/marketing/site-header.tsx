@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * The public header's surface. At the top of a page it is clear, sitting on

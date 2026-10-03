@@ -21,7 +21,7 @@ import {
   Workflow,
   X,
 } from "lucide-react";
-import { BRAND } from "@/lib/brand";
+import { BRAND } from "@/lib/site/brand";
 import { BrandMark } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,8 +38,8 @@ import { Tour } from "@/components/tour/tour";
 import { UsageTracker } from "@/components/usage-tracker";
 import { useAdminLiveFeed, useIssues } from "@/hooks/use-admin-data";
 import { useActionItems, useSuggestions } from "@/hooks/use-work-data";
-import { waitingCount as waitingCount_ } from "@/lib/needs-you";
-import { cn, initialsOf } from "@/lib/utils";
+import { waitingCount as waitingCount_ } from "@/lib/agents/needs-you";
+import { cn, initialsOf } from "@/lib/shared/utils";
 
 interface ProjectRef {
   id: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { STARTED_FIELD, TRAP_FIELD } from "@/lib/bot-check";
+import { STARTED_FIELD, TRAP_FIELD } from "@/lib/auth/bot-check";
 
 /**
  * The public forms' bot checks, client side (lib/bot-check.ts): a field

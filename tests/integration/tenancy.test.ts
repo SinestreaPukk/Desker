@@ -6,13 +6,13 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PrismaClient } from "@prisma/client";
-import { recordTokenUsage, usageForOrganization, usagePeriod } from "@/lib/usage";
-import { audit } from "@/lib/audit";
+import { recordTokenUsage, usageForOrganization, usagePeriod } from "@/lib/platform/usage";
+import { audit } from "@/lib/platform/audit";
 import {
   createOrganizationFor,
   organizationsFor,
   primaryOrganizationFor,
-} from "@/lib/organizations";
+} from "@/lib/tenancy/organizations";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);

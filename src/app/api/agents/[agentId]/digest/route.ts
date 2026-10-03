@@ -1,9 +1,9 @@
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { limitOrganization } from "@/lib/rate-limit";
-import { findAgentFor } from "@/lib/projects";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { limitOrganization } from "@/lib/platform/rate-limit";
+import { findAgentFor } from "@/lib/tenancy/projects";
 import { inngest } from "@/lib/jobs/client";
 import { generateDigest } from "@/lib/work/digest";
-import { afterResponse } from "@/lib/after-response";
+import { afterResponse } from "@/lib/platform/after-response";
 import { heartbeatStatus } from "@/lib/jobs/heartbeat";
 
 export const runtime = "nodejs";

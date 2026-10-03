@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { FormError } from "@/components/ui/states";
 import { useDuplicateAgent, useProjects } from "@/hooks/use-admin-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 
 export function DuplicateAgentDialog({
   agentId,

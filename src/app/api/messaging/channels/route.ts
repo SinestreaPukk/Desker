@@ -1,8 +1,8 @@
 import { randomInt } from "node:crypto";
 import { z } from "zod";
-import { handle, HttpError, parseJson, requireAdmin } from "@/lib/api";
-import { prisma } from "@/lib/db";
-import { seal } from "@/lib/vault";
+import { handle, HttpError, parseJson, requireAdmin } from "@/lib/platform/api";
+import { prisma } from "@/lib/platform/db";
+import { seal } from "@/lib/auth/vault";
 import { CHANNEL_KINDS, CHANNELS, webhookAllowed } from "@/lib/messaging/prefs";
 import { channelAvailable } from "@/lib/messaging/send";
 import { alertSettings } from "@/lib/messaging/settings";

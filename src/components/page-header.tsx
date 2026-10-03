@@ -1,6 +1,6 @@
 import * as React from "react";
 import { LargeTitle } from "@/components/large-title";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * The frame every admin page sits in.

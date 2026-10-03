@@ -9,23 +9,23 @@
 import "server-only";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import * as life from "@/lib/life/store";
 import { syncCalendar } from "@/lib/life/calendar-sync";
 import { syncTasks } from "@/lib/life/task-sync";
 import { completeTask, createTask, listTasks, tasksAccess } from "@/lib/integrations/tasks";
 import { isE164, phoneAccess, placeCall, recentTexts, sendSms } from "@/lib/integrations/phone";
-import { audit } from "@/lib/audit";
+import { audit } from "@/lib/platform/audit";
 import { searchDocuments } from "@/lib/rag/search-documents";
 import { searchDocumentsInput } from "@/lib/rag/search-documents-tool";
-import { storage } from "@/lib/storage";
+import { storage } from "@/lib/platform/storage";
 import { describeSpending, parseStatement, summarizeSpending, type Transaction } from "@/lib/money/statement";
 import type { ToolCall } from "@/lib/llm/provider";
 import { inngest } from "@/lib/jobs/client";
-import { afterResponse } from "@/lib/after-response";
-import { notifyInBackground } from "@/lib/notify";
+import { afterResponse } from "@/lib/platform/after-response";
+import { notifyInBackground } from "@/lib/platform/notify";
 import { connectorAccess } from "@/lib/integrations/oauth";
-import { splitOptedOut } from "@/lib/email-optout";
+import { splitOptedOut } from "@/lib/platform/email-optout";
 import {
   calendarAccess,
   conflictsWith,
@@ -77,7 +77,7 @@ import {
   type DeliveryResult,
 } from "./integrations";
 import { WORK_TOOL_RISK, isWorkToolId, type WorkToolId } from "./tools";
-import { localIso } from "@/lib/local-time";
+import { localIso } from "@/lib/shared/local-time";
 import {
   DRAFT_KINDS,
   effectiveAutonomy,

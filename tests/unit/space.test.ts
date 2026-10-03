@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { contextQuestions, effectiveContext, hasCoreContext } from "@/lib/work/context";
 import { missingGrounding } from "@/lib/work/preflight";
-import { buildSystemPrompt } from "@/lib/agent-prompt";
-import { TEMPLATES } from "@/lib/content";
+import { buildSystemPrompt } from "@/lib/agents/agent-prompt";
+import { TEMPLATES } from "@/lib/site/content";
 
 describe("a personal space", () => {
   it("asks a person about themselves", () => {

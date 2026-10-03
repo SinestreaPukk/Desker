@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { ListRow } from "@/components/ui/list-row";
 import { RemoveButton } from "@/components/work/row-actions";
 import { useDecideSuggestion } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 import type { SuggestionDto } from "@/lib/work/serialize";
 import type { SuggestionStatus } from "@/lib/work/types";
-import { formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime } from "@/lib/shared/utils";
 
 /**
  * One thing an agent thinks should happen next - a question for the owner,

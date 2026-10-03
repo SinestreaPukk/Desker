@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { agentsVisibleTo, findProject, projectsVisibleTo } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { agentsVisibleTo, findProject, projectsVisibleTo } from "@/lib/tenancy/projects";
 import { checkInInclude, toCheckInDto } from "./serialize";
 import type { ProjectCheckInDto } from "@/lib/work/types";
 

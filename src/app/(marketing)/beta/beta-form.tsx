@@ -6,8 +6,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { FormError } from "@/components/ui/states";
-import { api, ApiError } from "@/lib/api-client";
-import { FIRST_HIRES } from "@/lib/beta";
+import { api, ApiError } from "@/lib/shared/api-client";
+import { FIRST_HIRES } from "@/lib/site/beta";
 
 export function BetaForm() {
   const [state, setState] = React.useState<"idle" | "sending" | "sent">("idle");

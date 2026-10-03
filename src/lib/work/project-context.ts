@@ -8,9 +8,9 @@
  */
 import "server-only";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { HttpError } from "@/lib/http-error";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { HttpError } from "@/lib/platform/http-error";
+import { audit } from "@/lib/platform/audit";
 import {
   answeredCount,
   contextQuestions,

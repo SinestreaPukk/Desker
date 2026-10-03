@@ -10,14 +10,14 @@ import { PrismaClient } from "@prisma/client";
 
 vi.mock("@/lib/jobs/client", () => ({ inngest: { send: vi.fn(async () => undefined) } }));
 const notified = vi.hoisted(() => [] as { title: string }[]);
-vi.mock("@/lib/notify", () => ({
+vi.mock("@/lib/platform/notify", () => ({
   notifyInBackground: (n: { title: string }) => notified.push(n),
   notify: async () => undefined,
 }));
 
 import { claimDueScopes } from "@/lib/work/scope";
 import { checkAutonomousWork } from "@/lib/work/watchdog";
-import { env } from "@/lib/env";
+import { env } from "@/lib/platform/env";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);

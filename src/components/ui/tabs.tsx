@@ -2,7 +2,7 @@
 
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 export const Tabs = TabsPrimitive.Root;
 

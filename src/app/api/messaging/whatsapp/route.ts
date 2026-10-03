@@ -1,5 +1,5 @@
 /** WhatsApp Cloud API webhook: Meta's verification handshake, then incoming messages. */
-import { afterResponse } from "@/lib/after-response";
+import { afterResponse } from "@/lib/platform/after-response";
 import { handleInbound } from "@/lib/messaging/inbound";
 import { whatsappSend } from "@/lib/messaging/send";
 import { hmacMatches, sameSecret } from "@/lib/messaging/verify";

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { findProject } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findProject } from "@/lib/tenancy/projects";
 import { startWorkflow, workflowRuns } from "@/lib/work/workflow-run";
 import { suggestAgent, WORKFLOWS } from "@/lib/work/workflows";
 

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { deleteAccount, exportAccount } from "@/lib/account";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { deleteAccount, exportAccount } from "@/lib/tenancy/account";
+import { checkRateLimit } from "@/lib/platform/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

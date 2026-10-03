@@ -15,14 +15,14 @@ import { ContextQuestions } from "@/components/builder/context-questions";
 import { browserTimezone } from "@/components/builder/scope-of-work-form";
 import { useAgents, useCreateAgent } from "@/hooks/use-admin-data";
 import { useIntegrations, useOAuthProviders, useProjectContext, useSaveProjectContext } from "@/hooks/use-work-data";
-import { api, errorMessage } from "@/lib/api-client";
-import { randomAgentName } from "@/lib/agent-fields";
-import { templateById } from "@/lib/content";
-import { FIRST_RUN, type FirstRun } from "@/lib/first-run";
-import { agentFromTemplate, scopeFromTemplate } from "@/lib/hire-from-template";
+import { api, errorMessage } from "@/lib/shared/api-client";
+import { randomAgentName } from "@/lib/agents/agent-fields";
+import { templateById } from "@/lib/site/content";
+import { FIRST_RUN, type FirstRun } from "@/lib/agents/first-run";
+import { agentFromTemplate, scopeFromTemplate } from "@/lib/agents/hire-from-template";
 import { connectorById } from "@/lib/integrations/catalog";
 import { answeredCount, contextQuestions, type ContextAnswers } from "@/lib/work/context";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * The first thing a new space sees: one named workflow and what it produces,

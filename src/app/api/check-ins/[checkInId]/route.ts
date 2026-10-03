@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { projectsVisibleTo } from "@/lib/projects";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { projectsVisibleTo } from "@/lib/tenancy/projects";
+import { audit } from "@/lib/platform/audit";
 import { z } from "zod";
 import { checkInInclude, toCheckInDto } from "../serialize";
 import type { ProjectCheckInDto } from "@/lib/work/types";

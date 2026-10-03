@@ -33,9 +33,9 @@ import { useAgents } from "@/hooks/use-admin-data";
 import { ProjectContextPanel } from "@/components/builder/project-context-panel";
 import { SetupChecklist } from "@/components/help/setup-checklist";
 import { ActivityStrip } from "@/components/work/activity-strip";
-import { errorMessage } from "@/lib/api-client";
-import type { AgentSummaryDto } from "@/lib/serialize";
-import { formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { errorMessage } from "@/lib/shared/api-client";
+import type { AgentSummaryDto } from "@/lib/shared/serialize";
+import { formatDateTime, formatRelativeTime } from "@/lib/shared/utils";
 
 export function RosterView({ project }: { project: string }) {
   // "Open About you" from the setup checklist.

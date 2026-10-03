@@ -20,7 +20,7 @@ vi.mock("@/lib/work/integrations", async (original) => ({
 }));
 
 import { executePendingAction } from "@/lib/work/execute";
-import { optOutToken } from "@/lib/email-optout";
+import { optOutToken } from "@/lib/platform/email-optout";
 import { POST as unsubscribe } from "@/app/api/unsubscribe/[token]/route";
 
 const prisma = new PrismaClient();

@@ -8,11 +8,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { PrismaClient } from "@prisma/client";
 
 const sent = vi.hoisted(() => [] as { to: string; subject: string }[]);
-vi.mock("@/lib/app-email", () => ({
+vi.mock("@/lib/platform/app-email", () => ({
   sendAppEmailLater: (message: { to: string; subject: string }) => sent.push(message),
 }));
 
-import { noteDevice, signInBlocked, signInFailed, signInSucceeded } from "@/lib/login-guard";
+import { noteDevice, signInBlocked, signInFailed, signInSucceeded } from "@/lib/auth/login-guard";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);

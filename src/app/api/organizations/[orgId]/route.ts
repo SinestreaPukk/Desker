@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { membershipOf, requireRole } from "@/lib/organizations";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { membershipOf, requireRole } from "@/lib/tenancy/organizations";
+import { audit } from "@/lib/platform/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

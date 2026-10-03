@@ -6,9 +6,9 @@
  * app they answer in has the same context.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { messageUser } from "@/lib/messaging/send";
-import { addTeamMessage, teamOf } from "@/lib/team";
+import { addTeamMessage, teamOf } from "@/lib/agents/team";
 import { EVERYDAY_THREAD } from "./chat";
 import { readLife } from "./read";
 import { detectConflicts } from "./conflicts";

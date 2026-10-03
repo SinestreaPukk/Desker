@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Panel } from "@/components/ui/panel";
-import { GUIDES } from "@/lib/guides";
-import { pageMetadata } from "@/lib/content";
+import { GUIDES } from "@/lib/site/guides";
+import { pageMetadata } from "@/lib/site/content";
 
 export const metadata: Metadata = pageMetadata({
   title: "Guides",

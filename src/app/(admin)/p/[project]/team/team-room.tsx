@@ -14,9 +14,9 @@ import { ChatComposer } from "@/components/chat/chat-composer";
 import { TypingIndicator } from "@/components/chat/chat-thread";
 import { MessageText } from "@/components/chat/message-text";
 import { useAgents } from "@/hooks/use-admin-data";
-import { api, errorMessage } from "@/lib/api-client";
-import type { TeamMessageDto, TeamThreadDto } from "@/lib/team-dto";
-import { cn, formatRelativeTime, formatTime } from "@/lib/utils";
+import { api, errorMessage } from "@/lib/shared/api-client";
+import type { TeamMessageDto, TeamThreadDto } from "@/lib/agents/team-dto";
+import { cn, formatRelativeTime, formatTime } from "@/lib/shared/utils";
 
 /** How long a chat waits on a reply before it stops showing someone typing. */
 const REPLY_TIMEOUT_MS = 90_000;

@@ -1,7 +1,7 @@
-import { handle, parseJson, HttpError } from "@/lib/api";
-import { resetPassword } from "@/lib/password-reset";
-import { passwordProblem } from "@/lib/password-check";
-import { passwordResetSchema } from "@/lib/validation";
+import { handle, parseJson, HttpError } from "@/lib/platform/api";
+import { resetPassword } from "@/lib/auth/password-reset";
+import { passwordProblem } from "@/lib/auth/password-check";
+import { passwordResetSchema } from "@/lib/shared/validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

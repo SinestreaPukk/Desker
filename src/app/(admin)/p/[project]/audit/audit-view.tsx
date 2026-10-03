@@ -32,9 +32,9 @@ import {
 } from "@/components/ui/select";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { useAgents } from "@/hooks/use-admin-data";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage } from "@/lib/shared/api-client";
 import type { AuditEntryDto } from "@/app/api/audit/route";
-import { cn, formatDateTime } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/shared/utils";
 import {
   actorWords,
   dayHeading,
@@ -42,7 +42,7 @@ import {
   timeOfDay,
   type AuditIcon,
   type AuditTone,
-} from "@/lib/audit-copy";
+} from "@/lib/platform/audit-copy";
 
 function buildQuery(params: Record<string, string>): string {
   const search = new URLSearchParams(

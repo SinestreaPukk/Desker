@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FIRST_RUN } from "@/lib/first-run";
-import { templateById } from "@/lib/content";
+import { FIRST_RUN } from "@/lib/agents/first-run";
+import { templateById } from "@/lib/site/content";
 import { workflowById } from "@/lib/work/workflows";
 import { connectorById } from "@/lib/integrations/catalog";
 

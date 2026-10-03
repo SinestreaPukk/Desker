@@ -12,7 +12,7 @@
  *             a BM25 keyword score instead of relying on cosine alone.
  */
 import "server-only";
-import { env } from "@/lib/env";
+import { env } from "@/lib/platform/env";
 
 export const EMBEDDING_DIMENSIONS = 1536;
 

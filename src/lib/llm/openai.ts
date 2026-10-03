@@ -9,8 +9,8 @@
  */
 import "server-only";
 import OpenAI from "openai";
-import { env } from "@/lib/env";
-import { recordTokenUsage } from "@/lib/usage";
+import { env } from "@/lib/platform/env";
+import { recordTokenUsage } from "@/lib/platform/usage";
 import {
   DEFAULT_MAX_TOKENS,
   MAX_TOOL_ITERATIONS,

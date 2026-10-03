@@ -3,8 +3,8 @@
  * screen it) or an incoming text (we pass it on). Authenticated by Twilio's
  * signature over the stored Auth Token, not by a session.
  */
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
 import { messageOrganization } from "@/lib/messaging/send";
 import { phoneAccessById, screenTwiml, thanksTwiml, validSignature } from "@/lib/integrations/phone";
 import * as store from "@/lib/life/store";

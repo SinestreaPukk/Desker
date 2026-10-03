@@ -8,7 +8,7 @@
  * implementations that prove the seam is real.
  */
 import "server-only";
-import type { BillingContext } from "@/lib/usage";
+import type { BillingContext } from "@/lib/platform/usage";
 
 // --- conversation shape -----------------------------------------------------
 

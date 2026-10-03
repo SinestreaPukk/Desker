@@ -1,8 +1,8 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { agentsVisibleTo } from "@/lib/projects";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { agentsVisibleTo } from "@/lib/tenancy/projects";
+import { audit } from "@/lib/platform/audit";
 import { draftPatchSchema } from "@/lib/work/validation";
 import type { DraftDto } from "@/lib/work/serialize";
 

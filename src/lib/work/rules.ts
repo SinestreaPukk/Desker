@@ -5,9 +5,9 @@
  */
 import "server-only";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { audit } from "@/lib/audit";
-import { HttpError } from "@/lib/http-error";
+import { prisma } from "@/lib/platform/db";
+import { audit } from "@/lib/platform/audit";
+import { HttpError } from "@/lib/platform/http-error";
 
 /** Enough to shape an agent; few enough that each one is still read. */
 const MAX_RULES = 30;

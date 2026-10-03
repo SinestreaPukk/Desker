@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 
 const session = vi.hoisted(() => ({ user: { id: "", email: "" } }));
-vi.mock("@/lib/auth", () => ({ currentUser: vi.fn(async () => session.user) }));
+vi.mock("@/lib/auth/auth", () => ({ currentUser: vi.fn(async () => session.user) }));
 vi.mock("@/lib/jobs/client", () => ({ inngest: { send: vi.fn(async () => undefined) } }));
 
 import { POST as retry } from "@/app/api/action-items/[actionItemId]/retry/route";

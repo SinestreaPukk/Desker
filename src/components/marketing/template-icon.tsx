@@ -1,6 +1,6 @@
 import * as React from "react";
 import { AtSign, CalendarHeart, GraduationCap, Dumbbell, Plane, Rocket, Wallet } from "lucide-react";
-import type { TEMPLATE_ICONS } from "@/lib/content";
+import type { TEMPLATE_ICONS } from "@/lib/site/content";
 import { SparklesCuteIcon, ScratchCuteIcon } from "@/components/icons/role-icons";
 
 export {  ScratchCuteIcon };

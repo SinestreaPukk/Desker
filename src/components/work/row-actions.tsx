@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCancelRun, useRemove, type RemoveTarget } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 
 /**
  * Remove one item, or clear a whole list, after a confirmation - removal is

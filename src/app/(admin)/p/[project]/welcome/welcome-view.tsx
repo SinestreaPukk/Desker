@@ -8,7 +8,7 @@ import { Panel, PanelBody, PanelFooter } from "@/components/ui/panel";
 import { FormError, Skeleton } from "@/components/ui/states";
 import { ContextQuestions } from "@/components/builder/context-questions";
 import { useProjectContext, useSaveProjectContext } from "@/hooks/use-work-data";
-import { ApiError, errorMessage } from "@/lib/api-client";
+import { ApiError, errorMessage } from "@/lib/shared/api-client";
 import { answeredCount, contextQuestions, type ContextAnswers } from "@/lib/work/context";
 
 /**

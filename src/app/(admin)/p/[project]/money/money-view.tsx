@@ -4,7 +4,7 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ImagePlus } from "lucide-react";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage } from "@/lib/shared/api-client";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Panel, PanelBody, PanelDescription, PanelHeader, PanelTitle } from "@/components/ui/panel";

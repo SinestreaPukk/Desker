@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * A sticky note, for the app: a pale note colour under navy ink, square-ish

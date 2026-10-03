@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { currentUser } from "@/lib/auth";
-import { membershipOf, roleAtLeast } from "@/lib/organizations";
-import { audit } from "@/lib/audit";
+import { currentUser } from "@/lib/auth/auth";
+import { membershipOf, roleAtLeast } from "@/lib/tenancy/organizations";
+import { audit } from "@/lib/platform/audit";
 import { OAUTH_PROVIDERS, connectorById, type OAuthProvider } from "@/lib/integrations/catalog";
 import { exchangeCode, saveConnection, verifyState } from "@/lib/integrations/oauth";
 import { NONCE_COOKIE, PKCE_COOKIE, backTo, callbackUrl } from "@/lib/integrations/oauth-routes";

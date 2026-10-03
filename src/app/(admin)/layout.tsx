@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { currentUser } from "@/lib/auth";
+import { currentUser } from "@/lib/auth/auth";
 
 /**
  * The auth boundary for every admin surface. Route handlers repeat the check

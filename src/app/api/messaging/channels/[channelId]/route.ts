@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { handle, HttpError, parseJson, requireAdmin } from "@/lib/api";
-import { prisma } from "@/lib/db";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { handle, HttpError, parseJson, requireAdmin } from "@/lib/platform/api";
+import { prisma } from "@/lib/platform/db";
+import { checkRateLimit } from "@/lib/platform/rate-limit";
 import { sendToChannel } from "@/lib/messaging/send";
 import { alertSettings } from "@/lib/messaging/settings";
 

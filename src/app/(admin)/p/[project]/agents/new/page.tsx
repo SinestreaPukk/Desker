@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { currentUser } from "@/lib/auth";
-import { findProject } from "@/lib/projects";
+import { currentUser } from "@/lib/auth/auth";
+import { findProject } from "@/lib/tenancy/projects";
 import { hasCoreContext } from "@/lib/work/context";
 import { NewAgentWizard } from "./new-agent-wizard";
 

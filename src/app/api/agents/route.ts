@@ -1,10 +1,10 @@
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { agentInputSchema } from "@/lib/validation";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { agentInputSchema } from "@/lib/shared/validation";
 import { defaultPersonality } from "@/lib/work/agent-choices";
-import { templateById } from "@/lib/content";
-import { findProject, projectsVisibleTo } from "@/lib/projects";
-import { toAgentDetail, type AgentSummaryDto } from "@/lib/serialize";
+import { templateById } from "@/lib/site/content";
+import { findProject, projectsVisibleTo } from "@/lib/tenancy/projects";
+import { toAgentDetail, type AgentSummaryDto } from "@/lib/shared/serialize";
 import { runModeOf } from "@/lib/work/cadence";
 import { assertProjectGrounded } from "@/lib/work/project-context";
 import { agentStatusFacts } from "@/lib/work/agent-status-load";

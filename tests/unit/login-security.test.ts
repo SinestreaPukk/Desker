@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createHash } from "node:crypto";
-import { deviceLabel } from "@/lib/login-guard";
-import { isBreachedPassword, passwordProblem } from "@/lib/password-check";
+import { deviceLabel } from "@/lib/auth/login-guard";
+import { isBreachedPassword, passwordProblem } from "@/lib/auth/password-check";
 
 const sha1 = (text: string) => createHash("sha1").update(text).digest("hex").toUpperCase();
 

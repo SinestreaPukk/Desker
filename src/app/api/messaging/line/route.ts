@@ -1,5 +1,5 @@
 /** LINE Messaging API webhook: link codes, commands, slip photos, approval taps and chat. */
-import { afterResponse } from "@/lib/after-response";
+import { afterResponse } from "@/lib/platform/after-response";
 import { handleLineEvent, type LineEvent } from "@/lib/messaging/line-handler";
 import { hmacMatches } from "@/lib/messaging/verify";
 

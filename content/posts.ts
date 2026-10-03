@@ -1,4 +1,4 @@
-import type { SerializedPost } from "../src/lib/post-types";
+import type { SerializedPost } from "@/lib/site/post-types";
 
 import site from "./site.json";
 

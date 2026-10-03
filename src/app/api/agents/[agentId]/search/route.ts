@@ -1,5 +1,5 @@
-import { findAgentFor } from "@/lib/projects";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
+import { findAgentFor } from "@/lib/tenancy/projects";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
 import { activeEmbeddingBackend } from "@/lib/rag/embeddings";
 import { retrieveContext } from "@/lib/rag/retriever";
 

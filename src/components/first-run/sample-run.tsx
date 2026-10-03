@@ -5,8 +5,8 @@ import { ArrowRight, Check, Eye, FileText, Hand, History, PenLine, ShieldCheck, 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
-import { CONTROL_LABELS, type ControlKind, type FirstRun } from "@/lib/first-run";
-import { cn } from "@/lib/utils";
+import { CONTROL_LABELS, type ControlKind, type FirstRun } from "@/lib/agents/first-run";
+import { cn } from "@/lib/shared/utils";
 
 const CONTROL_ICON: Record<ControlKind, typeof Eye> = { sees: Eye, drafts: PenLine, approval: Hand, review: History };
 

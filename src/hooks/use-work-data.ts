@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { api, errorMessage, queryString } from "@/lib/api-client";
+import { api, errorMessage, queryString } from "@/lib/shared/api-client";
 import type { OAuthProvider } from "@/lib/integrations/catalog";
 import type { ScopeDto } from "@/lib/work/scope";
 import type { ScopeInputPayload, IntegrationInputPayload } from "@/lib/work/validation";

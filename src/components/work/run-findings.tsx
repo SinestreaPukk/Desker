@@ -5,7 +5,7 @@ import { ExternalLink, Globe, Search } from "lucide-react";
 import { Markdown } from "@/components/markdown";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { ActionItemDto } from "@/lib/work/serialize";
-import { safeHttpUrl } from "@/lib/utils";
+import { safeHttpUrl } from "@/lib/shared/utils";
 
 type Finding = ActionItemDto["findings"][number];
 

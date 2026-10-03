@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { looksAutomated, MIN_FILL_MS } from "@/lib/bot-check";
-import { scrubDeep, scrubText } from "@/lib/scrub";
+import { looksAutomated, MIN_FILL_MS } from "@/lib/auth/bot-check";
+import { scrubDeep, scrubText } from "@/lib/platform/scrub";
 
 describe("bot checks on the public forms", () => {
   const now = 1_800_000_000_000;

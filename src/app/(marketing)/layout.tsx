@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-logo";
-import { SITE } from "@/lib/content";
+import { SITE } from "@/lib/site/content";
 import { CTA_NAV } from "@/components/marketing/cta";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { NavCta, SiteMenu, SiteNav } from "@/components/marketing/site-nav";

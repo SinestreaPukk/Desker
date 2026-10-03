@@ -15,7 +15,7 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PrismaClient } from "@prisma/client";
-import { runAgentTurn, type RuntimeEvent } from "@/lib/agent-runtime";
+import { runAgentTurn, type RuntimeEvent } from "@/lib/agents/agent-runtime";
 import { chunkText } from "@/lib/rag/chunk";
 import { embedBatch } from "@/lib/rag/embeddings";
 

@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { findProject, agentsVisibleTo } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findProject, agentsVisibleTo } from "@/lib/tenancy/projects";
 import { GATED_TOOL_IDS } from "@/lib/work/types";
 
 export const runtime = "nodejs";

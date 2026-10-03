@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Pin } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Markdown } from "@/components/markdown";
-import { getPostBySlug, POST_CATEGORIES, type PostCategory } from "@/lib/posts";
-import { pageMetadata } from "@/lib/content";
+import { getPostBySlug, POST_CATEGORIES, type PostCategory } from "@/lib/site/posts";
+import { pageMetadata } from "@/lib/site/content";
 
 type Params = { params: Promise<{ slug: string }> };
 

@@ -12,18 +12,18 @@
  * in it produces no digest at all - silence is the correct update when nothing
  * happened, and an owner who gets an empty digest stops reading the real ones.
  */
-import { localIso, validTimeZone } from "@/lib/local-time";
+import { localIso, validTimeZone } from "@/lib/shared/local-time";
 import "server-only";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
-import { audit } from "@/lib/audit";
-import { publishAdminEvent } from "@/lib/events";
-import { notifyInBackground } from "@/lib/notify";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
+import { audit } from "@/lib/platform/audit";
+import { publishAdminEvent } from "@/lib/platform/events";
+import { notifyInBackground } from "@/lib/platform/notify";
 import { getProvider, type ChatMessage } from "@/lib/llm/provider";
 import { clamp, parseModelJson, stringField } from "./model-json";
 import { previousFire } from "./scope";
-import { optOutFor, splitOptedOut } from "@/lib/email-optout";
+import { optOutFor, splitOptedOut } from "@/lib/platform/email-optout";
 import { deliverEmail, parseRecipients, resolveEmail } from "./integrations";
 import {
   isDigestBulletKind,

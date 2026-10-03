@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { POST_CATEGORIES, type PostCategory } from "@/lib/post-types";
+import { POST_CATEGORIES, type PostCategory } from "@/lib/site/post-types";
 
 describe("post categories", () => {
   it("defines the required categories: blog, patch_notes, announcement, news", () => {

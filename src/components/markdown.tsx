@@ -1,7 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
-import { headingId } from "@/lib/guides";
-import { cn } from "@/lib/utils";
+import { headingId } from "@/lib/site/guides";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * The small subset of markdown the guides - and agents' reports - are written in.

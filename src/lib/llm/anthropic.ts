@@ -8,8 +8,8 @@
  */
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import { env } from "@/lib/env";
-import { recordTokenUsage } from "@/lib/usage";
+import { env } from "@/lib/platform/env";
+import { recordTokenUsage } from "@/lib/platform/usage";
 import {
   DEFAULT_MAX_TOKENS,
   MAX_TOOL_ITERATIONS,

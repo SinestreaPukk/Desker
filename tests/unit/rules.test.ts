@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSystemPrompt, correctionsSection } from "@/lib/agent-prompt";
+import { buildSystemPrompt, correctionsSection } from "@/lib/agents/agent-prompt";
 
 describe("saved corrections", () => {
   it("reach the agent as standing instructions, in the order they were saved", () => {

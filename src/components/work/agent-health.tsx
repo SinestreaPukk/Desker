@@ -7,9 +7,9 @@ import { CalendarClock, History, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useRetryRun } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 import type { AgentStatus, AgentStatusAction } from "@/lib/work/agent-status";
-import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { cn, formatDateTime, formatRelativeTime } from "@/lib/shared/utils";
 
 const DOT: Record<AgentStatus["tone"], string> = {
   positive: "bg-positive",

@@ -12,7 +12,7 @@
  * moment the agent writes them: they can see it in Gmail or Outlook while it
  * waits in Needs you. Approval sends that draft; rejection deletes it.
  */
-import { localIso } from "@/lib/local-time";
+import { localIso } from "@/lib/shared/local-time";
 import "server-only";
 import type { DeliveryResult } from "@/lib/work/integrations";
 import { connectorAccess } from "./oauth";

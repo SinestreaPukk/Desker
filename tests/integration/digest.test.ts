@@ -14,7 +14,7 @@ import { summarizeRun } from "@/lib/work/summary";
 import { generateDigest, runDueDigests } from "@/lib/work/digest";
 import { decideSuggestion } from "@/lib/work/suggestions";
 import { saveScope } from "@/lib/work/scope";
-import { toStringArray } from "@/lib/agent-fields";
+import { toStringArray } from "@/lib/agents/agent-fields";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);

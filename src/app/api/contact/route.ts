@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, HttpError } from "@/lib/api";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { requestLooksAutomated } from "@/lib/bot-check";
-import { notifyInBackground } from "@/lib/notify";
-import { SITE } from "@/lib/content";
-import { emailOwner } from "@/lib/app-email";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, HttpError } from "@/lib/platform/api";
+import { checkRateLimit } from "@/lib/platform/rate-limit";
+import { requestLooksAutomated } from "@/lib/auth/bot-check";
+import { notifyInBackground } from "@/lib/platform/notify";
+import { SITE } from "@/lib/site/content";
+import { emailOwner } from "@/lib/platform/app-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

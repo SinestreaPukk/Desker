@@ -1,6 +1,6 @@
 /** What the Alerts page shows: this person's settings, channels and spaces. */
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { CHANNEL_KINDS, readPrefs, type AlertPrefs, type ChannelKind } from "./prefs";
 import QRCode from "qrcode";
 import { appHandle, channelAvailable, linkUrl } from "./send";

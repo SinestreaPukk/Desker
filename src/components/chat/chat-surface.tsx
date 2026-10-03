@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ChatComposer } from "./chat-composer";
 import { ChatThread } from "./chat-thread";
 import { useChatStream, type ChatBubble } from "@/hooks/use-chat-stream";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 interface ChatSurfaceAgent {
   id: string;

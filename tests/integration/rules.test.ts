@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 
 const session = vi.hoisted(() => ({ user: { id: "", email: "" } }));
-vi.mock("@/lib/auth", () => ({ currentUser: vi.fn(async () => session.user) }));
+vi.mock("@/lib/auth/auth", () => ({ currentUser: vi.fn(async () => session.user) }));
 
 import { GET as listRules, POST as createRule } from "@/app/api/agents/[agentId]/rules/route";
 import { DELETE as removeRule, PATCH as updateRule } from "@/app/api/agents/[agentId]/rules/[ruleId]/route";

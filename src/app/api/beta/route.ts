@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, HttpError } from "@/lib/api";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { requestLooksAutomated } from "@/lib/bot-check";
-import { emailOwner } from "@/lib/app-email";
-import { FIRST_HIRES } from "@/lib/beta";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, HttpError } from "@/lib/platform/api";
+import { checkRateLimit } from "@/lib/platform/rate-limit";
+import { requestLooksAutomated } from "@/lib/auth/bot-check";
+import { emailOwner } from "@/lib/platform/app-email";
+import { FIRST_HIRES } from "@/lib/site/beta";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

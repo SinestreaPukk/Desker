@@ -1,11 +1,11 @@
 /** Project-wide daily or weekly owner check-ins. */
 import "server-only";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
-import { audit } from "@/lib/audit";
-import { publishAdminEvent } from "@/lib/events";
-import { notifyInBackground } from "@/lib/notify";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
+import { audit } from "@/lib/platform/audit";
+import { publishAdminEvent } from "@/lib/platform/events";
+import { notifyInBackground } from "@/lib/platform/notify";
 import { getProvider, type ChatMessage } from "@/lib/llm/provider";
 import { clamp, parseModelJson, stringField } from "./model-json";
 import { previousFire } from "./scope";
@@ -13,8 +13,8 @@ import { checkInSettings } from "./check-in-settings";
 import { agentStatusFacts } from "./agent-status-load";
 import { describeAgentStatus } from "./agent-status";
 import { deliverEmail, parseRecipients, resolveEmail } from "./integrations";
-import { optOutFor, splitOptedOut } from "@/lib/email-optout";
-import { localIso, validTimeZone } from "@/lib/local-time";
+import { optOutFor, splitOptedOut } from "@/lib/platform/email-optout";
+import { localIso, validTimeZone } from "@/lib/shared/local-time";
 import { isDigestBulletKind, type DigestBullet, type DigestCadence, type CheckInAgentHealth, type ProjectCheckInStats } from "./types";
 
 const MAX_BULLETS = 7;

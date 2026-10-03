@@ -7,9 +7,9 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 
 const sent = vi.hoisted(() => [] as { subject: string; text: string }[]);
-vi.mock("@/lib/app-email", () => ({ emailOwner: (message: { subject: string; text: string }) => sent.push(message) }));
+vi.mock("@/lib/platform/app-email", () => ({ emailOwner: (message: { subject: string; text: string }) => sent.push(message) }));
 // The sign-in library does not load under the test runner, and this route never asks who you are.
-vi.mock("@/lib/auth", () => ({}));
+vi.mock("@/lib/auth/auth", () => ({}));
 
 import { POST } from "@/app/api/beta/route";
 

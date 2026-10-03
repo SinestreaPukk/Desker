@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
-import { handle, parseJson, requireAdmin } from "@/lib/api";
-import { prisma } from "@/lib/db";
-import { validTimeZone } from "@/lib/local-time";
+import { handle, parseJson, requireAdmin } from "@/lib/platform/api";
+import { prisma } from "@/lib/platform/db";
+import { validTimeZone } from "@/lib/shared/local-time";
 import { prefsSchema } from "@/lib/messaging/prefs";
 import { alertSettings } from "@/lib/messaging/settings";
 

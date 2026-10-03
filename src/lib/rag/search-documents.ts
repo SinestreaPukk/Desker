@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { retrieveContext } from "./retriever";
 
 /**

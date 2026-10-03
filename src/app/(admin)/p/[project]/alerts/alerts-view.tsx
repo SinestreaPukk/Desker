@@ -4,7 +4,7 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Bell, Newspaper, Plus, Send, Sunrise, Trash2, X } from "lucide-react";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage } from "@/lib/shared/api-client";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

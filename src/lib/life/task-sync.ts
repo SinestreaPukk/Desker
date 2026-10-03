@@ -1,6 +1,6 @@
 /** The to-do half of two-way sync: the person's real to-do list read into LifeTask (see calendar-sync.ts). */
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { listTasks, tasksAccess } from "@/lib/integrations/tasks";
 
 const STALE_MS = 5 * 60_000;

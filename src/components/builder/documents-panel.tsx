@@ -26,9 +26,9 @@ import {
   useDocuments,
   useUploadDocument,
 } from "@/hooks/use-admin-data";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage } from "@/lib/shared/api-client";
 import { ACCEPTED_EXTENSIONS } from "@/lib/rag/extract-shared";
-import { cn, formatBytes } from "@/lib/utils";
+import { cn, formatBytes } from "@/lib/shared/utils";
 
 export function DocumentsPanel({ agentId }: { agentId: string }) {
   const { data: documents, isPending, error, refetch } = useDocuments(agentId);

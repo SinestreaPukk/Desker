@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin } from "@/lib/api";
-import { projectsVisibleTo } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin } from "@/lib/platform/api";
+import { projectsVisibleTo } from "@/lib/tenancy/projects";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

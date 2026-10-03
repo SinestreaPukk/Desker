@@ -4,10 +4,10 @@ import * as React from "react";
 import { Check, CheckCircle2, ChevronRight, Clock, ExternalLink, Minus, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TEMPLATES } from "@/lib/content";
+import { TEMPLATES } from "@/lib/site/content";
 import type { Connector, OAuthProvider } from "@/lib/integrations/catalog";
 import type { IntegrationDto } from "@/lib/work/serialize";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * One connector, as an owner decides about it: what it is for, exactly what

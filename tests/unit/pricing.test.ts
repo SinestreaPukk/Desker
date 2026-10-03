@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { costOf, priceFor } from "@/lib/pricing";
+import { costOf, priceFor } from "@/lib/platform/pricing";
 
 describe("pricing", () => {
   it("prices a known model per million tokens", () => {

@@ -6,7 +6,7 @@ import { AgentAvatar } from "@/components/ui/avatar";
 import { MessageText } from "./message-text";
 import { ToolTrace } from "./tool-trace";
 import type { ChatBubble } from "@/hooks/use-chat-stream";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 interface UserBubbleProps {
   content: string;

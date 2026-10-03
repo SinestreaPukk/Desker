@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NEEDS_YOU_KINDS, needsYouKind, waitingCount } from "@/lib/needs-you";
+import { NEEDS_YOU_KINDS, needsYouKind, waitingCount } from "@/lib/agents/needs-you";
 
 describe("Needs you", () => {
   it("sorts every raised issue into one of the queue's kinds", () => {

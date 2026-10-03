@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { findAgentFor } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findAgentFor } from "@/lib/tenancy/projects";
 import { createRule, ruleInputSchema, toRuleDto } from "@/lib/work/rules";
 
 export const runtime = "nodejs";

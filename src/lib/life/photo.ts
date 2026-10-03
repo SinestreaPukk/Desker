@@ -7,7 +7,7 @@
  * Slips and bills are handed on to the ledger instead.
  */
 import "server-only";
-import { env } from "@/lib/env";
+import { env } from "@/lib/platform/env";
 import { getProvider, type UserImage } from "@/lib/llm/provider";
 import { parseModelJson } from "@/lib/work/model-json";
 

@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/db";
-import { limitOrganization } from "@/lib/rate-limit";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { findAgentFor } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { limitOrganization } from "@/lib/platform/rate-limit";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findAgentFor } from "@/lib/tenancy/projects";
 import { contextQuestions } from "@/lib/work/context";
 import { NoDocuments, NoModel, draftContextFromDocuments } from "@/lib/work/context-draft";
 

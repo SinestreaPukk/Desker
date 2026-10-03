@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { projectsVisibleTo } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { projectsVisibleTo } from "@/lib/tenancy/projects";
 import { messageSelect, toMessageDto } from "../serialize";
 
 export const runtime = "nodejs";

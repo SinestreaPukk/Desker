@@ -1,8 +1,8 @@
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { env } from "@/lib/env";
-import { findProject } from "@/lib/projects";
-import { limitOrganization } from "@/lib/rate-limit";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { env } from "@/lib/platform/env";
+import { findProject } from "@/lib/tenancy/projects";
+import { limitOrganization } from "@/lib/platform/rate-limit";
 import { readLife } from "@/lib/life/read";
 import { importFiles } from "@/lib/life/slips";
 import { moneyInsights } from "@/lib/life/money-insights";

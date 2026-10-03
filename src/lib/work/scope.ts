@@ -3,17 +3,17 @@
  * its triggers. The cron scheduler and the webhook route both end up in
  * `startRun`, which is the only place an action item is born.
  */
-import { OrganizationRateLimited, limitOrganization } from "@/lib/rate-limit";
+import { OrganizationRateLimited, limitOrganization } from "@/lib/platform/rate-limit";
 import { scopeTools, type WorkToolId } from "./tools";
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { CronExpressionParser } from "cron-parser";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { audit } from "@/lib/platform/audit";
 import { inngest } from "@/lib/jobs/client";
-import { toStringArray } from "@/lib/agent-fields";
-import { afterResponse } from "@/lib/after-response";
+import { toStringArray } from "@/lib/agents/agent-fields";
+import { afterResponse } from "@/lib/platform/after-response";
 import { runActionItem, inlineSteps } from "./runner";
 import { isDigestCadence, type AutonomyMode, type DigestCadence, type ToolAutonomy, type TriggerType } from "./types";
 import {

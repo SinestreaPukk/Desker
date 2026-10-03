@@ -1,5 +1,5 @@
 import "server-only";
-import { env } from "@/lib/env";
+import { env } from "@/lib/platform/env";
 
 /** The nonce cookie that binds an OAuth round trip to the browser that started it. */
 export const NONCE_COOKIE = "desker_oauth_nonce";

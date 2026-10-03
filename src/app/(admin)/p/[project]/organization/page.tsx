@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { currentUser } from "@/lib/auth";
-import { findProject } from "@/lib/projects";
+import { currentUser } from "@/lib/auth/auth";
+import { findProject } from "@/lib/tenancy/projects";
 import { OrganizationView } from "./organization-view";
 
 export const metadata: Metadata = { title: "Organisation" };

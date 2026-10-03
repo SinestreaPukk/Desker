@@ -75,23 +75,23 @@ import { BoundariesCard } from "./boundaries-card";
 import { PromptPreviewDialog } from "./prompt-preview-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EscalationPicker, ResponsibilitiesPicker } from "./agent-setup";
-import { templateById } from "@/lib/content";
+import { templateById } from "@/lib/site/content";
 import { HelpLink } from "@/components/help/help-panel";
 import { DuplicateAgentDialog } from "./duplicate-agent-dialog";
 import { DocumentsPanel } from "./documents-panel";
 import { ProjectContextPanel } from "./project-context-panel";
 import { AgentHealth } from "@/components/work/agent-health";
 import { RulesPanel } from "./rules-panel";
-import { SPACE_COPY as copy } from "@/lib/space-copy";
+import { SPACE_COPY as copy } from "@/lib/tenancy/space-copy";
 import { useAgents, useDeleteAgent, useUpdateAgent } from "@/hooks/use-admin-data";
 import { useRunScope, useScope } from "@/hooks/use-work-data";
 import { describeCadence } from "@/lib/work/cadence";
-import { errorMessage, ApiError } from "@/lib/api-client";
-import { parseLines, randomAgentName } from "@/lib/agent-fields";
+import { errorMessage, ApiError } from "@/lib/shared/api-client";
+import { parseLines, randomAgentName } from "@/lib/agents/agent-fields";
 import { TOOL_IDS, TOOL_METADATA, type ToolId } from "@/lib/tools/registry";
-import type { AgentDetailDto } from "@/lib/serialize";
-import type { AgentInput } from "@/lib/validation";
-import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
+import type { AgentDetailDto } from "@/lib/shared/serialize";
+import type { AgentInput } from "@/lib/shared/validation";
+import { cn, formatDateTime, formatRelativeTime } from "@/lib/shared/utils";
 
 const TOOL_ICONS = {
   search: Search,

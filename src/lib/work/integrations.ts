@@ -14,8 +14,8 @@
 import "server-only";
 import { createHmac } from "node:crypto";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { open, seal } from "@/lib/vault";
+import { prisma } from "@/lib/platform/db";
+import { open, seal } from "@/lib/auth/vault";
 
 interface WebhookConfig {
   url: string;

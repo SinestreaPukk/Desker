@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { publishAdminEvent } from "@/lib/events";
-import { audit } from "@/lib/audit";
-import { agentsVisibleTo } from "@/lib/projects";
-import { issuePatchSchema } from "@/lib/validation";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { publishAdminEvent } from "@/lib/platform/events";
+import { audit } from "@/lib/platform/audit";
+import { agentsVisibleTo } from "@/lib/tenancy/projects";
+import { issuePatchSchema } from "@/lib/shared/validation";
 
 export const runtime = "nodejs";
 

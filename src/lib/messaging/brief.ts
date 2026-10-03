@@ -5,10 +5,10 @@
  * so it costs nothing and can't make things up.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
 import { calendarAccess, listEvents } from "@/lib/integrations/mail-calendar";
-import { localIso, offsetOf, validTimeZone } from "@/lib/local-time";
+import { localIso, offsetOf, validTimeZone } from "@/lib/shared/local-time";
 import { previousFire } from "@/lib/work/scope";
 import { briefCron, NEWS_EDITIONS, readPrefs, type AlertPrefs } from "./prefs";
 import { messageUser, type OutboundMessage } from "./send";

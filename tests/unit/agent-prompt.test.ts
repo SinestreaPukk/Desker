@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSystemPrompt } from "@/lib/agent-prompt";
+import { buildSystemPrompt } from "@/lib/agents/agent-prompt";
 
 const base = {
   name: "Penny",

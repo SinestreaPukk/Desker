@@ -1,4 +1,4 @@
-import { handle, requireAdmin } from "@/lib/api";
+import { handle, requireAdmin } from "@/lib/platform/api";
 import { OAUTH_PROVIDERS } from "@/lib/integrations/catalog";
 import { oauthConfigured } from "@/lib/integrations/oauth";
 

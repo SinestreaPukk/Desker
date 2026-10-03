@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { findProject, agentsVisibleTo } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findProject, agentsVisibleTo } from "@/lib/tenancy/projects";
 import { digestInclude, toDigestDto } from "./serialize";
 
 export const runtime = "nodejs";

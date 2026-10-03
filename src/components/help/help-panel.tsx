@@ -9,10 +9,10 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Input } from "@/components/ui/field";
 import { Markdown } from "@/components/markdown";
 import { EmptyState } from "@/components/ui/states";
-import { GUIDES, guideBySlug, helpTopic, searchGuides, type HelpTopic } from "@/lib/guides";
+import { GUIDES, guideBySlug, helpTopic, searchGuides, type HelpTopic } from "@/lib/site/guides";
 import { showChecklist } from "@/components/help/checklist-state";
 import { openTour } from "@/components/tour/tour";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 interface HelpTarget {
   slug: string;

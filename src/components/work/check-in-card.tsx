@@ -12,9 +12,9 @@ import { Note } from "@/components/ui/note";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/ui/states";
 import { useAgents } from "@/hooks/use-admin-data";
 import { useCheckIns, useDecideSuggestion, useRunScope, useSetCheckInRead } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 import type { ProjectCheckInDto } from "@/lib/work/types";
-import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/shared/utils";
 
 const BULLET = {
   heads_up: { icon: TriangleAlert, className: "text-warning", label: "Needs attention" },

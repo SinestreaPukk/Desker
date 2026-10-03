@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/ui/states";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage } from "@/lib/shared/api-client";
 import {
   ESCALATION_OPTIONS,
   composeChoices,
@@ -15,7 +15,7 @@ import {
   parseEscalation,
   type Choices,
 } from "@/lib/work/agent-choices";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * Setting an agent up by ticking rather than writing: its duties, when it

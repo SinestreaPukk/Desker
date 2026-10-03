@@ -38,7 +38,7 @@ afterAll(async () => {
 
 describe("roles", () => {
   it("ranks owner > admin > member and refuses below the bar", async () => {
-    const { requireRole, roleAtLeast, Forbidden } = await import("@/lib/organizations");
+    const { requireRole, roleAtLeast, Forbidden } = await import("@/lib/tenancy/organizations");
     expect(roleAtLeast("admin", "member")).toBe(true);
     expect(roleAtLeast("member", "admin")).toBe(false);
     expect(roleAtLeast(null, "member")).toBe(false);

@@ -6,7 +6,7 @@
  * are rare and the server side captures its own, so the trade is deliberate:
  * the SDK arrives on the `load` event, and anything before it is uncaught.
  */
-import { scrubDeep } from "@/lib/scrub";
+import { scrubDeep } from "@/lib/platform/scrub";
 
 type SentryModule = typeof import("@sentry/nextjs");
 

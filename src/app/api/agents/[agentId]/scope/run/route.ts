@@ -1,7 +1,7 @@
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { findAgentFor } from "@/lib/projects";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findAgentFor } from "@/lib/tenancy/projects";
 import { startRun, RunRefused } from "@/lib/work/scope";
-import { track } from "@/lib/product-events";
+import { track } from "@/lib/platform/product-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -5,7 +5,7 @@ import {
   defaultAvatar,
   parseBuiltIn,
 } from "@/components/agent-figure";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 const SIZES = {
   sm: "size-7",

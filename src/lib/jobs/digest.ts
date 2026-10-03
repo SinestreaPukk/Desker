@@ -9,7 +9,7 @@
  */
 import { inngest } from "./client";
 import { runDueCheckIns, generateCheckInForAgent } from "@/lib/work/check-in";
-import { captureError } from "@/lib/monitoring";
+import { captureError } from "@/lib/platform/monitoring";
 
 const DIGEST_CRON = "*/15 * * * *";
 

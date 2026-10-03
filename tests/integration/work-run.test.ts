@@ -224,7 +224,7 @@ const hasSearch = Boolean(process.env.TAVILY_API_KEY?.trim() || process.env.BRAV
     const { webSearch } = await import("@/lib/work/research");
     const again = await webSearch("pgvector Postgres extension");
     expect(again.cached).toBe(true);
-    const { usageForOrganization } = await import("@/lib/usage");
+    const { usageForOrganization } = await import("@/lib/platform/usage");
     const usage = await usageForOrganization(organizationId);
     expect(usage.searches).toBeGreaterThanOrEqual(1);
     expect(usage.pagesRead).toBeGreaterThan(0);

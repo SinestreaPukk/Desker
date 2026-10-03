@@ -1,8 +1,8 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { findProject } from "@/lib/projects";
-import { organizationsFor } from "@/lib/organizations";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findProject } from "@/lib/tenancy/projects";
+import { organizationsFor } from "@/lib/tenancy/organizations";
 import { threadOf, threadRoots } from "@/lib/work/thread";
 
 export const runtime = "nodejs";

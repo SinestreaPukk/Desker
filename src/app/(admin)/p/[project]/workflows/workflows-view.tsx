@@ -14,10 +14,10 @@ import { Field, Textarea } from "@/components/ui/field";
 import { Panel } from "@/components/ui/panel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState, ErrorState, FormError, LoadingRows } from "@/components/ui/states";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage } from "@/lib/shared/api-client";
 import type { WorkflowRunView } from "@/lib/work/workflow-run";
 import type { StepState } from "@/lib/work/workflows";
-import { cn, formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { cn, formatDateTime, formatRelativeTime } from "@/lib/shared/utils";
 
 interface WorkflowDef {
   id: string;

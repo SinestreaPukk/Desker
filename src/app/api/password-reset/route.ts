@@ -1,8 +1,8 @@
-import { handle, parseJson, HttpError } from "@/lib/api";
-import { env } from "@/lib/env";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { requestPasswordReset } from "@/lib/password-reset";
-import { passwordResetRequestSchema } from "@/lib/validation";
+import { handle, parseJson, HttpError } from "@/lib/platform/api";
+import { env } from "@/lib/platform/env";
+import { checkRateLimit } from "@/lib/platform/rate-limit";
+import { requestPasswordReset } from "@/lib/auth/password-reset";
+import { passwordResetRequestSchema } from "@/lib/shared/validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

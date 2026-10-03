@@ -7,11 +7,11 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 
 const sent = vi.hoisted(() => [] as { to: string; text: string }[]);
-vi.mock("@/lib/app-email", () => ({ sendAppEmailLater: (message: { to: string; text: string }) => sent.push(message) }));
+vi.mock("@/lib/platform/app-email", () => ({ sendAppEmailLater: (message: { to: string; text: string }) => sent.push(message) }));
 // The sign-in library does not load under the test runner; only hashing is needed.
-vi.mock("@/lib/auth", () => ({ hashPassword: async (password: string) => `test-hash:${password}` }));
+vi.mock("@/lib/auth/auth", () => ({ hashPassword: async (password: string) => `test-hash:${password}` }));
 
-import { requestPasswordReset, resetLinkUsable, resetPassword } from "@/lib/password-reset";
+import { requestPasswordReset, resetLinkUsable, resetPassword } from "@/lib/auth/password-reset";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);

@@ -12,21 +12,21 @@
  */
 import "server-only";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { audit } from "@/lib/platform/audit";
 import {
   ModelError,
   getProvider,
   type ChatMessage,
   type CompleteResult,
 } from "@/lib/llm/provider";
-import { toStringArray } from "@/lib/agent-fields";
+import { toStringArray } from "@/lib/agents/agent-fields";
 import { findIntegration, resolveEmail } from "./integrations";
-import { captureMessage } from "@/lib/monitoring";
-import { notifyInBackground } from "@/lib/notify";
+import { captureMessage } from "@/lib/platform/monitoring";
+import { notifyInBackground } from "@/lib/platform/notify";
 import { buildRunPrompt, kickoffMessage } from "./prompt";
 import { lifeText } from "@/lib/life/read";
-import { validTimeZone } from "@/lib/local-time";
+import { validTimeZone } from "@/lib/shared/local-time";
 
 /** Which networks each social connection reaches, in the words an agent sets on a draft. */
 const SOCIAL_CONNECTORS: [string, string[]][] = [
@@ -39,7 +39,7 @@ import { answersFor, contextQuestions, effectiveContext } from "./context";
 import { missingGrounding } from "./preflight";
 import { connectorChoice, connectorsForTool } from "@/lib/integrations/catalog";
 import { summarizeRun } from "./summary";
-import { postTaskResult } from "@/lib/team";
+import { postTaskResult } from "@/lib/agents/team";
 import { WORK_TOOL_IDS, scopeTools, workToolDefinitions } from "./tools";
 import { executeWorkTool, executePendingAction, recordEscalation, type RunContext } from "./execute";
 import {

@@ -5,8 +5,8 @@
  */
 import "server-only";
 import type { AutonomyMode } from "./types";
-import { localIso, timeNote, validTimeZone } from "@/lib/local-time";
-import { safetyRules } from "@/lib/safety-rules";
+import { localIso, timeNote, validTimeZone } from "@/lib/shared/local-time";
+import { safetyRules } from "@/lib/agents/safety-rules";
 
 interface RunPromptInput {
   agent: {

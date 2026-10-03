@@ -1,8 +1,8 @@
-import { prisma } from "@/lib/db";
-import { audit } from "@/lib/audit";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { requireRole } from "@/lib/organizations";
-import { findProject } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { audit } from "@/lib/platform/audit";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { requireRole } from "@/lib/tenancy/organizations";
+import { findProject } from "@/lib/tenancy/projects";
 import { projectCheckInSettingsSchema } from "@/lib/work/validation";
 import { validTimezone } from "@/lib/work/scope";
 import { checkInSettings } from "@/lib/work/check-in-settings";

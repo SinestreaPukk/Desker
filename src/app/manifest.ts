@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { BRAND, TOKEN_HEX } from "@/lib/brand";
-import { SITE } from "@/lib/content";
+import { BRAND, TOKEN_HEX } from "@/lib/site/brand";
+import { SITE } from "@/lib/site/content";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {

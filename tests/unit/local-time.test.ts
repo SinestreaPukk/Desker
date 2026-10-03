@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { localIso, offsetOf, timeNote, validTimeZone } from "@/lib/local-time";
+import { localIso, offsetOf, timeNote, validTimeZone } from "@/lib/shared/local-time";
 import { describeEvents } from "@/lib/integrations/mail-calendar";
 
 const at = new Date("2026-09-30T13:45:00Z");

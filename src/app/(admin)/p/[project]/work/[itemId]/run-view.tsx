@@ -8,9 +8,9 @@ import { ErrorState, LoadingRows } from "@/components/ui/states";
 import { CollabTag, RunBadge, RunDetail, runTitle } from "@/components/work/run-detail";
 import { CancelRunButton, RemoveButton } from "@/components/work/row-actions";
 import { useActionItem, useSuggestions } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 import { TRIGGER_LABELS } from "@/lib/work/types";
-import { formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime } from "@/lib/shared/utils";
 
 /** One run on its own page, so the Work list can stay a list. */
 export function RunView({ project, itemId }: { project: string; itemId: string }) {

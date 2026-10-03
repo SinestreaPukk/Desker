@@ -24,10 +24,10 @@ import {
   useSaveScope,
   useScope,
 } from "@/hooks/use-work-data";
-import { ApiError, errorMessage } from "@/lib/api-client";
+import { ApiError, errorMessage } from "@/lib/shared/api-client";
 import { describeCadence } from "@/lib/work/cadence";
 import type { ScopeDto } from "@/lib/work/scope";
-import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/shared/utils";
 import { ContextDraftButton, InheritedProjectContext } from "./context-questions";
 import { ScopeFlow } from "./scope-flow";
 import { HelpLink } from "@/components/help/help-panel";

@@ -17,10 +17,10 @@
  * where its account of itself should be.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
-import { audit } from "@/lib/audit";
-import { publishAdminEvent } from "@/lib/events";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
+import { audit } from "@/lib/platform/audit";
+import { publishAdminEvent } from "@/lib/platform/events";
 import { getProvider, type ChatMessage } from "@/lib/llm/provider";
 import { clamp, firstSentences, parseModelJson, stringField } from "./model-json";
 import type { WorkStep } from "./types";

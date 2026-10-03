@@ -13,7 +13,7 @@ vi.mock("@/lib/jobs/client", () => ({ inngest: { send: vi.fn(async () => undefin
 
 import { executePendingAction, executeWorkTool, type RunContext } from "@/lib/work/execute";
 import { saveConnection } from "@/lib/integrations/oauth";
-import { open } from "@/lib/vault";
+import { open } from "@/lib/auth/vault";
 import type { PendingAction } from "@/lib/work/types";
 
 const prisma = new PrismaClient();

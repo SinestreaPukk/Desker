@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ prisma: {} }));
+vi.mock("@/lib/platform/db", () => ({ prisma: {} }));
 vi.mock("@/lib/jobs/client", () => ({ inngest: { send: vi.fn() } }));
 import { parseReminderJson, REMIND, SHORT_WAIT_MS } from "@/lib/life/reminders";
 import { dueAlerts } from "@/lib/life/alerts";

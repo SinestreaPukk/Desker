@@ -32,7 +32,7 @@ import { useIntegrations } from "@/hooks/use-work-data";
 import { CONNECTORS, connectorsForTool } from "@/lib/integrations/catalog";
 import { GATED_TOOL_IDS } from "@/lib/work/types";
 import { ContextQuestions } from "./context-questions";
-import { looksLikeCron } from "@/lib/form-errors";
+import { looksLikeCron } from "@/lib/shared/form-errors";
 import { HelpLink } from "@/components/help/help-panel";
 import {
   shownAgentQuestions,
@@ -46,7 +46,7 @@ import {
   WORK_TOOL_RISK,
   type WorkToolId,
 } from "@/lib/work/tools";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /** What the form edits. Objectives are one per line until they are saved. */
 export interface ScopeFormState {

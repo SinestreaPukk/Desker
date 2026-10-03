@@ -1,11 +1,11 @@
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { agentInputSchema } from "@/lib/validation";
-import { toAgentDetail } from "@/lib/serialize";
-import { findAgentFor } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { agentInputSchema } from "@/lib/shared/validation";
+import { toAgentDetail } from "@/lib/shared/serialize";
+import { findAgentFor } from "@/lib/tenancy/projects";
 import { assertProjectGrounded } from "@/lib/work/project-context";
-import { track } from "@/lib/product-events";
-import { audit } from "@/lib/audit";
+import { track } from "@/lib/platform/product-events";
+import { audit } from "@/lib/platform/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

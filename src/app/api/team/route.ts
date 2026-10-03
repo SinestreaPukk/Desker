@@ -1,14 +1,14 @@
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { afterResponse } from "@/lib/after-response";
-import { findProject } from "@/lib/projects";
-import { limitOrganization } from "@/lib/rate-limit";
-import { addTeamMessage, teamOf } from "@/lib/team";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { afterResponse } from "@/lib/platform/after-response";
+import { findProject } from "@/lib/tenancy/projects";
+import { limitOrganization } from "@/lib/platform/rate-limit";
+import { addTeamMessage, teamOf } from "@/lib/agents/team";
 import { planChat } from "@/lib/life/router";
 import { runChat } from "@/lib/life/chat";
 import { clamp } from "@/lib/work/model-json";
-import type { TeamThreadDto } from "@/lib/team-dto";
+import type { TeamThreadDto } from "@/lib/agents/team-dto";
 import { messageSelect, toMessageDto } from "./serialize";
 
 export const runtime = "nodejs";

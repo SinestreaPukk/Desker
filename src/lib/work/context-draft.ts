@@ -12,8 +12,8 @@
  * what every run believes about the person.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
 import { getProvider, type ChatMessage } from "@/lib/llm/provider";
 import { clamp, parseModelJson, stringField } from "./model-json";
 import { MAX_CONTEXT_ANSWER, type ContextAnswers, type ContextQuestion } from "./context";

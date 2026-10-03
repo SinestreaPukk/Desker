@@ -1,10 +1,10 @@
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { previewRequestSchema } from "@/lib/validation";
-import { runAgentTurn } from "@/lib/agent-runtime";
-import { agentsVisibleTo, findAgentFor } from "@/lib/projects";
-import { limitOrganization } from "@/lib/rate-limit";
-import { sseResponse } from "@/lib/sse";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { previewRequestSchema } from "@/lib/shared/validation";
+import { runAgentTurn } from "@/lib/agents/agent-runtime";
+import { agentsVisibleTo, findAgentFor } from "@/lib/tenancy/projects";
+import { limitOrganization } from "@/lib/platform/rate-limit";
+import { sseResponse } from "@/lib/platform/sse";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

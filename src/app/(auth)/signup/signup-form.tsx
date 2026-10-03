@@ -10,7 +10,7 @@ import { Field, Input } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Panel, PanelBody } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
-import { api, ApiError } from "@/lib/api-client";
+import { api, ApiError } from "@/lib/shared/api-client";
 import { BrandLockup } from "@/components/brand-logo";
 
 export function SignupForm() {

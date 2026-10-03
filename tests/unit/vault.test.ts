@@ -11,7 +11,7 @@ describe("vault", () => {
   });
 
   it("seals and opens a value, and the ciphertext is not the plaintext", async () => {
-    const { seal, open, isSealed } = await import("@/lib/vault");
+    const { seal, open, isSealed } = await import("@/lib/auth/vault");
     const secret = { url: "https://hooks.example/abc", secret: "s3cret" };
     const sealed = seal(secret);
     expect(isSealed(sealed)).toBe(true);
@@ -23,7 +23,7 @@ describe("vault", () => {
   });
 
   it("refuses a tampered ciphertext", async () => {
-    const { seal, open } = await import("@/lib/vault");
+    const { seal, open } = await import("@/lib/auth/vault");
     const sealed = seal({ apiKey: "re_123" });
     const [v, iv, tag, ct] = sealed.split(".");
     const flipped = `${v}.${iv}.${tag}.${ct!.slice(0, -2)}AA`;
@@ -34,7 +34,7 @@ describe("vault", () => {
 describe("backfill seal format", () => {
   it("what the backfill script seals, the app can open", async () => {
     process.env.VAULT_KEY = randomBytes(32).toString("base64");
-    const { open } = await import("@/lib/vault");
+    const { open } = await import("@/lib/auth/vault");
     // The script is plain ESM with a local seal(); exercise the same algorithm here.
     const { createCipheriv } = await import("node:crypto");
     const key = Buffer.from(process.env.VAULT_KEY, "base64");

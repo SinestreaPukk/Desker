@@ -4,8 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, Pin, Search } from "lucide-react";
 import { Panel } from "@/components/ui/panel";
-import { POST_CATEGORIES, type PostCategory, type SerializedPost } from "@/lib/post-types";
-import { cn } from "@/lib/utils";
+import { POST_CATEGORIES, type PostCategory, type SerializedPost } from "@/lib/site/post-types";
+import { cn } from "@/lib/shared/utils";
 
 export type { SerializedPost };
 

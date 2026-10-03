@@ -5,7 +5,7 @@ import { TOOL_DEFINITIONS, TOOL_IDS, isToolId, toolDefinitionsFor } from "@/lib/
 // test is argument validation and permission enforcement, not Prisma.
 const retrievalLogs: Record<string, unknown>[] = [];
 
-vi.mock("@/lib/db", () => ({
+vi.mock("@/lib/platform/db", () => ({
   prisma: {
     retrievalLog: {
       create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {

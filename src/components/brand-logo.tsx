@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
-import { BRAND } from "@/lib/brand";
+import { cn } from "@/lib/shared/utils";
+import { BRAND } from "@/lib/site/brand";
 
 /**
  * The Desker mascot logo: friendly light-blue circular character with dark navy features.

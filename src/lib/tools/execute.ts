@@ -8,7 +8,7 @@
 import "server-only";
 import type { z } from "zod";
 import type { Prisma } from "@prisma/client";
-import { audit } from "@/lib/audit";
+import { audit } from "@/lib/platform/audit";
 import type { ToolCall } from "@/lib/llm/provider";
 import { searchDocuments } from "@/lib/rag/search-documents";
 import { SEARCH_DOCUMENTS, searchDocumentsInput } from "@/lib/rag/search-documents-tool";

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * The decision, stamped: a round ink stamp in the hand face, set at an angle.

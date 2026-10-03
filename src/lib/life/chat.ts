@@ -4,8 +4,8 @@
  * and the history lives in the same thread store.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { addTeamMessage, runMeetingTurn, teamOf, type TeamAgent } from "@/lib/team";
+import { prisma } from "@/lib/platform/db";
+import { addTeamMessage, runMeetingTurn, teamOf, type TeamAgent } from "@/lib/agents/team";
 import { clamp } from "@/lib/work/model-json";
 import { readLife } from "./read";
 import { negotiate } from "./negotiate";
@@ -14,7 +14,7 @@ import { renderLife } from "./context";
 import { planChat, type Plan } from "./router";
 import { createReminder, extractReminder } from "./reminders";
 import { readPrefs } from "@/lib/messaging/prefs";
-import { afterResponse } from "@/lib/after-response";
+import { afterResponse } from "@/lib/platform/after-response";
 
 export const EVERYDAY_THREAD = "Everyday chat";
 

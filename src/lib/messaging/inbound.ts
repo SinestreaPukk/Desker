@@ -5,8 +5,8 @@
  */
 import "server-only";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { seal } from "@/lib/vault";
+import { prisma } from "@/lib/platform/db";
+import { seal } from "@/lib/auth/vault";
 import { composeBrief, composeNews } from "./brief";
 import { LINK_CODE, parseCommand, readPrefs, CHANNELS, type ChannelKind } from "./prefs";
 import { plainText, senderKey } from "./send";

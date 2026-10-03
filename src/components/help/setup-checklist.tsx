@@ -21,7 +21,7 @@ import {
   isChecklistDismissed,
   subscribeChecklist,
 } from "@/components/help/checklist-state";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 interface Step {
   id: string;

@@ -2,7 +2,7 @@
 
 import { AlertCircle, CircleCheck, Loader2, Search, Sparkles, UserRoundCheck } from "lucide-react";
 import { toolLabel, type ToolActivity } from "@/hooks/use-chat-stream";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   search_documents: Search,

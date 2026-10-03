@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mayUsePlatform } from "@/lib/private-beta";
+import { mayUsePlatform } from "@/lib/site/private-beta";
 
 describe("mayUsePlatform", () => {
   it("lets in only the listed addresses, whatever their case or spacing", () => {

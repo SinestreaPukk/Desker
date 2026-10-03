@@ -20,16 +20,16 @@ import {
 import { Panel, PanelBody, PanelDescription, PanelFooter, PanelHeader, PanelTitle } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { useCreateAgent } from "@/hooks/use-admin-data";
-import { api, ApiError, errorMessage } from "@/lib/api-client";
-import { randomAgentName } from "@/lib/agent-fields";
+import { api, ApiError, errorMessage } from "@/lib/shared/api-client";
+import { randomAgentName } from "@/lib/agents/agent-fields";
 import type { ToolId } from "@/lib/tools/registry";
-import { templateById, TEMPLATES, type AgentTemplate } from "@/lib/content";
-import { SPACE_COPY as copy } from "@/lib/space-copy";
+import { templateById, TEMPLATES, type AgentTemplate } from "@/lib/site/content";
+import { SPACE_COPY as copy } from "@/lib/tenancy/space-copy";
 import { TemplateIcon, ScratchCuteIcon } from "@/components/marketing/template-icon";
 import { AGENT_CONTEXT_QUESTIONS } from "@/lib/work/context";
 import type { WorkToolId } from "@/lib/work/tools";
 import type { TriggerType } from "@/lib/work/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 /**

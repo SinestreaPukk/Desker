@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { currentUser } from "@/lib/auth";
-import { findProject } from "@/lib/projects";
-import { membershipOf, roleAtLeast } from "@/lib/organizations";
-import { vaultConfigured } from "@/lib/vault";
+import { currentUser } from "@/lib/auth/auth";
+import { findProject } from "@/lib/tenancy/projects";
+import { membershipOf, roleAtLeast } from "@/lib/tenancy/organizations";
+import { vaultConfigured } from "@/lib/auth/vault";
 import { connectorById } from "@/lib/integrations/catalog";
 import { authorizeUrl, oauthConfigured, pkcePair, signState, usesPkce } from "@/lib/integrations/oauth";
 import { NONCE_COOKIE, PKCE_COOKIE, backTo, callbackUrl } from "@/lib/integrations/oauth-routes";

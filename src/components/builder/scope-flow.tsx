@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { buildScopeFlow, type ScopeFlowNode } from "@/lib/work/flow";
 import { AGENT_CONTEXT_QUESTIONS, answeredCount } from "@/lib/work/context";
 import type { WorkToolId } from "@/lib/work/tools";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import {
   ContextSection,
   DigestSettings,

@@ -6,7 +6,7 @@
  * after every approved change and, at most every few minutes, before reads.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { calendarAccess, listEvents } from "@/lib/integrations/mail-calendar";
 
 const DAY = 86_400_000;

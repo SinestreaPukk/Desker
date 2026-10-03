@@ -1,9 +1,9 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { findAgentFor } from "@/lib/projects";
-import { audit } from "@/lib/audit";
-import { requireRole } from "@/lib/organizations";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findAgentFor } from "@/lib/tenancy/projects";
+import { audit } from "@/lib/platform/audit";
+import { requireRole } from "@/lib/tenancy/organizations";
 import { saveScope, toScopeDto, validCron, validTimezone } from "@/lib/work/scope";
 import { scopeInputSchema } from "@/lib/work/validation";
 

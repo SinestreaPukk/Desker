@@ -13,8 +13,8 @@
  */
 import "server-only";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { usesPgVector } from "@/lib/env";
+import { prisma } from "@/lib/platform/db";
+import { usesPgVector } from "@/lib/platform/env";
 import { bm25Rank, reciprocalRankFusion } from "./bm25";
 import { cosineSimilarity, embedOne } from "./embeddings";
 

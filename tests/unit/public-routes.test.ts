@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPublicPath } from "@/lib/public-routes";
+import { isPublicPath } from "@/lib/site/public-routes";
 
 describe("isPublicPath", () => {
   it("recognizes marketing landing pages as public routes", () => {

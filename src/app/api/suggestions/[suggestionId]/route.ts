@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { agentsVisibleTo } from "@/lib/projects";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { agentsVisibleTo } from "@/lib/tenancy/projects";
+import { audit } from "@/lib/platform/audit";
 import { decideSuggestion } from "@/lib/work/suggestions";
 import { suggestionPatchSchema } from "@/lib/work/validation";
 import { suggestionInclude, toSuggestionDto } from "../serialize";

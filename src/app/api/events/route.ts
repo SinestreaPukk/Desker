@@ -1,6 +1,6 @@
-import { requireAdmin } from "@/lib/api";
-import { subscribeAdminEvents, type AdminEvent } from "@/lib/events";
-import { sseHeaders } from "@/lib/sse";
+import { requireAdmin } from "@/lib/platform/api";
+import { subscribeAdminEvents, type AdminEvent } from "@/lib/platform/events";
+import { sseHeaders } from "@/lib/platform/sse";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

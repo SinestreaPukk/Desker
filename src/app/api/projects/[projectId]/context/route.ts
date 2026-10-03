@@ -1,5 +1,5 @@
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { findProject } from "@/lib/projects";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findProject } from "@/lib/tenancy/projects";
 import { readProjectContext, saveProjectContext } from "@/lib/work/project-context";
 import { projectContextSchema } from "@/lib/work/validation";
 

@@ -1,8 +1,8 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { findProject, projectsVisibleTo } from "@/lib/projects";
-import type { IssueDto } from "@/lib/serialize";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findProject, projectsVisibleTo } from "@/lib/tenancy/projects";
+import type { IssueDto } from "@/lib/shared/serialize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

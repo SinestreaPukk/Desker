@@ -4,7 +4,7 @@ import {
   randomAgentName,
   parseLines,
   toStringArray,
-} from "@/lib/agent-fields";
+} from "@/lib/agents/agent-fields";
 
 describe("agent-fields", () => {
   it("includes all 29 curated random agent names without duplicates", () => {

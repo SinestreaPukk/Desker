@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { CONNECTORS, connectorById } from "@/lib/integrations/catalog";
-import { TEMPLATES } from "@/lib/content";
+import { TEMPLATES } from "@/lib/site/content";
 import { WORK_TOOL_IDS } from "@/lib/work/tools";
 
 describe("the connector catalog", () => {

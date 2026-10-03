@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState, Skeleton } from "@/components/ui/states";
 import { usePromptPreview } from "@/hooks/use-admin-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 
 /**
  * Shows the system prompt exactly as the runtime assembles it from the saved

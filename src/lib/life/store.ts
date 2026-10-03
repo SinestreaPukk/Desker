@@ -5,8 +5,8 @@
  * product (a real calendar, an email) still goes through the approval path.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { audit } from "@/lib/platform/audit";
 
 export interface Actor {
   organizationId: string;

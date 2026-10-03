@@ -33,10 +33,10 @@ import { CancelRunButton, RemoveButton } from "@/components/work/row-actions";
 import { CheckInList } from "@/components/work/check-in-card";
 import { useAgents } from "@/hooks/use-admin-data";
 import { FINISHED, useActionItem, useActionItems, useRunScope, useScope, useSuggestions } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
 import { TRIGGER_LABELS } from "@/lib/work/types";
-import { cn, formatRelativeTime, formatTime } from "@/lib/utils";
+import { cn, formatRelativeTime, formatTime } from "@/lib/shared/utils";
 
 /** Wide enough for the list and the run beside it: the reading-pane layout. */
 function useSplitView(): boolean {

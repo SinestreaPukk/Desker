@@ -9,10 +9,10 @@
  */
 import { inngest } from "./client";
 import { claimDueScopes, fireScope, type DueScope } from "@/lib/work/scope";
-import { env } from "@/lib/env";
+import { env } from "@/lib/platform/env";
 import { executeApprovedAction, runActionItem, type StepRunner } from "@/lib/work/runner";
-import { prisma } from "@/lib/db";
-import { captureError, withCronMonitor } from "@/lib/monitoring";
+import { prisma } from "@/lib/platform/db";
+import { captureError, withCronMonitor } from "@/lib/platform/monitoring";
 import { checkAutonomousWork } from "@/lib/work/watchdog";
 import { transition } from "@/lib/work/runner";
 

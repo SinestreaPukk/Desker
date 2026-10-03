@@ -5,9 +5,9 @@
  * same ledger, and approvals go through the one approveItem/rejectItem.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
-import { agentsVisibleTo } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
+import { agentsVisibleTo } from "@/lib/tenancy/projects";
 import { approveItem, rejectItem } from "@/lib/work/decide";
 import { previewPending } from "@/lib/work/pending-preview";
 import type { PendingAction } from "@/lib/work/types";

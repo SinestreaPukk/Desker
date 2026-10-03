@@ -18,9 +18,9 @@
  */
 import "server-only";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { getProvider } from "@/lib/llm/provider";
-import { recordResearchUsage, type BillingContext } from "@/lib/usage";
+import { recordResearchUsage, type BillingContext } from "@/lib/platform/usage";
 
 interface SearchHit {
   title: string;

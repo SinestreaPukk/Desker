@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Caveat, Geist, Geist_Mono, Quicksand } from "next/font/google";
-import { BRAND, TOKEN_HEX } from "@/lib/brand";
-import { SITE } from "@/lib/content";
+import { BRAND, TOKEN_HEX } from "@/lib/site/brand";
+import { SITE } from "@/lib/site/content";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 

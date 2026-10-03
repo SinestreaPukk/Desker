@@ -6,8 +6,8 @@
  * ingestion failure surfaces in the UI instead of vanishing.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { storage } from "@/lib/storage";
+import { prisma } from "@/lib/platform/db";
+import { storage } from "@/lib/platform/storage";
 import { chunkText } from "./chunk";
 import { embedBatch } from "./embeddings";
 import { extractText } from "./extract";

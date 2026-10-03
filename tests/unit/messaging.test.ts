@@ -3,7 +3,7 @@ import { createHmac } from "node:crypto";
 import { briefCron, DEFAULT_PREFS, LINK_CODE, parseCommand, readPrefs, webhookAllowed } from "@/lib/messaging/prefs";
 import { hmacMatches } from "@/lib/messaging/verify";
 
-vi.mock("@/lib/db", () => ({ prisma: {} }));
+vi.mock("@/lib/platform/db", () => ({ prisma: {} }));
 const { parseNewsRss } = await import("@/lib/messaging/brief");
 const { plainText } = await import("@/lib/messaging/send");
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { audit } from "@/lib/audit";
-import { readOptOutToken, suppress } from "@/lib/email-optout";
+import { prisma } from "@/lib/platform/db";
+import { audit } from "@/lib/platform/audit";
+import { readOptOutToken, suppress } from "@/lib/platform/email-optout";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

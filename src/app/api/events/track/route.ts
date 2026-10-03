@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
-import { currentUser } from "@/lib/auth";
-import { findProject } from "@/lib/projects";
-import { track } from "@/lib/product-events";
+import { currentUser } from "@/lib/auth/auth";
+import { findProject } from "@/lib/tenancy/projects";
+import { track } from "@/lib/platform/product-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

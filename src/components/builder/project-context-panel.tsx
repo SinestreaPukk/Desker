@@ -12,8 +12,8 @@ import {
   useProjectContext,
   useSaveProjectContext,
 } from "@/hooks/use-work-data";
-import { ApiError, errorMessage } from "@/lib/api-client";
-import { cn } from "@/lib/utils";
+import { ApiError, errorMessage } from "@/lib/shared/api-client";
+import { cn } from "@/lib/shared/utils";
 import { answeredCount, contextQuestions, type ContextAnswers } from "@/lib/work/context";
 import type { ProjectContextDto } from "@/lib/work/project-context";
 import { ContextDraftButton, ContextQuestions } from "./context-questions";

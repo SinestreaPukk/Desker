@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { audit } from "@/lib/audit";
-import { requireRole } from "@/lib/organizations";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { audit } from "@/lib/platform/audit";
+import { requireRole } from "@/lib/tenancy/organizations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

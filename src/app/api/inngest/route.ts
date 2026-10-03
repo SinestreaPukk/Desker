@@ -1,6 +1,6 @@
 import { serve } from "inngest/next";
 import { functions, inngest } from "@/lib/jobs";
-import { env } from "@/lib/env";
+import { env } from "@/lib/platform/env";
 
 // Prisma needs Node; the Inngest dev server and Inngest Cloud both call this
 // route to discover functions (PUT) and to execute them (POST).

@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import { Callouts } from "./infographic";
 import { TOUR } from "./tour-content";
 

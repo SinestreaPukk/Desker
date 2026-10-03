@@ -1,8 +1,8 @@
-import { prisma } from "@/lib/db";
-import { agentsVisibleTo } from "@/lib/projects";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { toStringArray } from "@/lib/agent-fields";
-import { buildSystemPrompt } from "@/lib/agent-prompt";
+import { prisma } from "@/lib/platform/db";
+import { agentsVisibleTo } from "@/lib/tenancy/projects";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { toStringArray } from "@/lib/agents/agent-fields";
+import { buildSystemPrompt } from "@/lib/agents/agent-prompt";
 import { toolDefinitionsFor } from "@/lib/tools/registry";
 import { buildRunPrompt } from "@/lib/work/prompt";
 import { effectiveContext } from "@/lib/work/context";

@@ -9,8 +9,8 @@ import { Field, Input } from "@/components/ui/field";
 import { Panel, PanelBody, PanelDescription, PanelHeader, PanelTitle } from "@/components/ui/panel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ErrorState, LoadingRows } from "@/components/ui/states";
-import { api, errorMessage } from "@/lib/api-client";
-import { badRecipients } from "@/lib/form-errors";
+import { api, errorMessage } from "@/lib/shared/api-client";
+import { badRecipients } from "@/lib/shared/form-errors";
 import type { DigestCadence } from "@/lib/work/types";
 
 interface Settings {

@@ -9,11 +9,11 @@
  * follows still stops for approval in the work runner.
  */
 import "server-only";
-import { env } from "@/lib/env";
+import { env } from "@/lib/platform/env";
 import { getProvider } from "@/lib/llm/provider";
 import { parseModelJson, stringField } from "@/lib/work/model-json";
 import { REMIND } from "./reminders";
-import type { TeamAgent } from "@/lib/team";
+import type { TeamAgent } from "@/lib/agents/team";
 
 type Route = "engine" | "specialist" | "direct" | "research" | "reminder";
 

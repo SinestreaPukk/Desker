@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { fireDueScopes } from "@/lib/work/scope";
-import { currentUser } from "@/lib/auth";
+import { currentUser } from "@/lib/auth/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

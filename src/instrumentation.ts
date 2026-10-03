@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { scrubDeep } from "@/lib/scrub";
+import { scrubDeep } from "@/lib/platform/scrub";
 
 /** Server and edge runtimes: initialise Sentry once per runtime. */
 export async function register() {

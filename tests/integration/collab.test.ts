@@ -13,7 +13,7 @@ vi.mock("@/lib/jobs/client", () => ({ inngest: { send: vi.fn(async () => undefin
 import { executeWorkTool, type RunContext } from "@/lib/work/execute";
 import { actionItemInclude, toActionItemDto } from "@/app/api/action-items/serialize";
 import { threadOf, threadRoots } from "@/lib/work/thread";
-import { describeAuditEntry } from "@/lib/audit-copy";
+import { describeAuditEntry } from "@/lib/platform/audit-copy";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);

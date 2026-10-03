@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
-import { api } from "@/lib/api-client";
+import { api } from "@/lib/shared/api-client";
 import type { ActivityDto } from "@/app/api/activity/route";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * The week in the numbers that decide whether an owner trusts the staff:

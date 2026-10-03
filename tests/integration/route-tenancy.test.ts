@@ -9,7 +9,7 @@ import { PrismaClient } from "@prisma/client";
 
 // The session is the only thing faked: the route handlers and their checks are real.
 const session = vi.hoisted(() => ({ user: { id: "", email: "" } }));
-vi.mock("@/lib/auth", () => ({ currentUser: vi.fn(async () => session.user) }));
+vi.mock("@/lib/auth/auth", () => ({ currentUser: vi.fn(async () => session.user) }));
 vi.mock("@/lib/jobs/client", () => ({ inngest: { send: vi.fn(async () => undefined) } }));
 
 const prisma = new PrismaClient();

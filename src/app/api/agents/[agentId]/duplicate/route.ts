@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { storage } from "@/lib/storage";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { storage } from "@/lib/platform/storage";
 import { syncVectorColumn } from "@/lib/rag/retriever";
-import { toAgentDetail } from "@/lib/serialize";
-import { findProjectById, agentsVisibleTo } from "@/lib/projects";
+import { toAgentDetail } from "@/lib/shared/serialize";
+import { findProjectById, agentsVisibleTo } from "@/lib/tenancy/projects";
 
 export const runtime = "nodejs";
 

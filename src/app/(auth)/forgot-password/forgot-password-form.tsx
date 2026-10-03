@@ -7,7 +7,7 @@ import { Field, Input } from "@/components/ui/field";
 import { Panel, PanelBody } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { BrandLockup } from "@/components/brand-logo";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage } from "@/lib/shared/api-client";
 
 /**
  * Step one of a reset: the address. The answer is the same whether or not an

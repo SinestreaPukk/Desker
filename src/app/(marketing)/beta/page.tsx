@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/marketing/page-header";
 import { Check } from "lucide-react";
 import { StickyNote } from "@/components/marketing/desk-notes";
 import { AgentAvatar } from "@/components/ui/avatar";
-import { pageMetadata } from "@/lib/content";
+import { pageMetadata } from "@/lib/site/content";
 import { BetaForm } from "./beta-form";
 
 export const metadata: Metadata = pageMetadata({

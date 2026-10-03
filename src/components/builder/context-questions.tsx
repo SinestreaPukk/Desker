@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { useProjectContext } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 import type { ContextAnswers, ContextQuestion } from "@/lib/work/context";
 import { answeredCount } from "@/lib/work/context";
 

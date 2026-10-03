@@ -4,7 +4,7 @@
  * something internally. These pin the two layers that do the translating.
  */
 import { describe, expect, it } from "vitest";
-import { actorWords, dayHeading, describeAuditEntry, timeOfDay } from "@/lib/audit-copy";
+import { actorWords, dayHeading, describeAuditEntry, timeOfDay } from "@/lib/platform/audit-copy";
 import { WORK_TOOL_IDS } from "@/lib/work/tools";
 
 /** The words that mean the translation did not happen. */

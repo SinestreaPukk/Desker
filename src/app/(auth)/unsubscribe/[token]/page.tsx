@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/db";
-import { readOptOutToken } from "@/lib/email-optout";
+import { prisma } from "@/lib/platform/db";
+import { readOptOutToken } from "@/lib/platform/email-optout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { Panel, PanelBody } from "@/components/ui/panel";

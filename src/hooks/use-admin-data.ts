@@ -2,14 +2,14 @@
 
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, queryString } from "@/lib/api-client";
+import { api, queryString } from "@/lib/shared/api-client";
 import type {
   AgentDetailDto,
   AgentSummaryDto,
   DocumentDto,
   IssueDto,
-  } from "@/lib/serialize";
-import type { AgentInput } from "@/lib/validation";
+  } from "@/lib/shared/serialize";
+import type { AgentInput } from "@/lib/shared/validation";
 
 const keys = {
   agents: (project: string) => ["agents", project] as const,

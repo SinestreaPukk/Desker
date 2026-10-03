@@ -5,8 +5,8 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/ui/states";
-import { api, ApiError } from "@/lib/api-client";
-import { CONTACT } from "@/lib/content";
+import { api, ApiError } from "@/lib/shared/api-client";
+import { CONTACT } from "@/lib/site/content";
 
 export function ContactForm() {
   const { form } = CONTACT;

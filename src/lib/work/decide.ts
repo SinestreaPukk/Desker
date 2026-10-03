@@ -6,11 +6,11 @@
  * that `userId` may act on the item.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { HttpError } from "@/lib/http-error";
-import { audit } from "@/lib/audit";
-import { track } from "@/lib/product-events";
-import { afterResponse } from "@/lib/after-response";
+import { prisma } from "@/lib/platform/db";
+import { HttpError } from "@/lib/platform/http-error";
+import { audit } from "@/lib/platform/audit";
+import { track } from "@/lib/platform/product-events";
+import { afterResponse } from "@/lib/platform/after-response";
 import { inngest } from "@/lib/jobs/client";
 import { discardReplyDraft, mailAccess } from "@/lib/integrations/mail-calendar";
 import { transition, InvalidTransition, executeApprovedAction, inlineSteps } from "./runner";

@@ -1,11 +1,11 @@
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { findProject } from "@/lib/projects";
-import { primaryOrganizationFor, requireRole } from "@/lib/organizations";
-import { audit } from "@/lib/audit";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { findProject } from "@/lib/tenancy/projects";
+import { primaryOrganizationFor, requireRole } from "@/lib/tenancy/organizations";
+import { audit } from "@/lib/platform/audit";
 import { integrationInputSchema } from "@/lib/work/validation";
 import { splitIntegrationInput } from "@/lib/work/integrations";
-import { vaultConfigured } from "@/lib/vault";
+import { vaultConfigured } from "@/lib/auth/vault";
 import { healthForIntegrations } from "@/lib/work/integration-health";
 import { toIntegrationDto } from "./serialize";
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { BRAND } from "@/lib/brand";
+import { BRAND } from "@/lib/site/brand";
 import { BrandMark } from "@/components/brand-logo";
-import { SITE } from "@/lib/content";
+import { SITE } from "@/lib/site/content";
 import { AuthOrbit } from "@/components/auth-orbit";
 
 /**

@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/db";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { agentsVisibleTo } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { agentsVisibleTo } from "@/lib/tenancy/projects";
 import { approveItem } from "@/lib/work/decide";
 import { toActionItemDto, actionItemInclude } from "../../serialize";
 

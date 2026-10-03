@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
-import { currentUser } from "@/lib/auth";
-import { toAgentDetail } from "@/lib/serialize";
-import { findAgentFor } from "@/lib/projects";
+import { prisma } from "@/lib/platform/db";
+import { currentUser } from "@/lib/auth/auth";
+import { toAgentDetail } from "@/lib/shared/serialize";
+import { findAgentFor } from "@/lib/tenancy/projects";
 import { AgentBuilder, type EditorSection } from "@/components/builder/agent-builder";
 
 export const dynamic = "force-dynamic";

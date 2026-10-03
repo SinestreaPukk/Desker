@@ -11,9 +11,9 @@ import { Button } from "@/components/ui/button";
 import { RunFindings } from "@/components/work/run-findings";
 import { TeamChat } from "@/components/work/team-chat";
 import { useScope } from "@/hooks/use-work-data";
-import { humanDuration } from "@/lib/utils";
+import { humanDuration } from "@/lib/shared/utils";
 import type { ActionItemDto, SuggestionDto } from "@/lib/work/serialize";
-import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTime } from "@/lib/shared/utils";
 
 /** The line a run is known by, in a list and as its page title. */
 export function runTitle(item: ActionItemDto): string {

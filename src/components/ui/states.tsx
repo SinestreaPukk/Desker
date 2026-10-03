@@ -4,7 +4,7 @@ import * as React from "react";
 import { RefreshCw, TriangleAlert } from "lucide-react";
 import { Button } from "./button";
 import { Note } from "./note";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ prisma: {} }));
+vi.mock("@/lib/platform/db", () => ({ prisma: {} }));
 import { isE164, sayTwiml, screenTwiml, twilioSignature, validSignature } from "@/lib/integrations/phone";
 
 describe("phone", () => {

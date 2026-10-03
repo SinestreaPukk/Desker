@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Panel, PanelBody } from "@/components/ui/panel";
 import { BrandLockup } from "@/components/brand-logo";
-import { resetLinkUsable } from "@/lib/password-reset";
+import { resetLinkUsable } from "@/lib/auth/password-reset";
 import { ResetPasswordForm } from "./reset-password-form";
 
 export const dynamic = "force-dynamic";

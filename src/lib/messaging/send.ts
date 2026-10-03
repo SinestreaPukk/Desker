@@ -6,9 +6,9 @@
  */
 import "server-only";
 import { createHash } from "node:crypto";
-import { prisma } from "@/lib/db";
-import { deliverAppEmail } from "@/lib/app-email";
-import { open } from "@/lib/vault";
+import { prisma } from "@/lib/platform/db";
+import { deliverAppEmail } from "@/lib/platform/app-email";
+import { open } from "@/lib/auth/vault";
 import { approvalFlex, linePush, text as lineText } from "./line";
 import { CHANNELS, readPrefs, type ChannelKind, type EventKind } from "./prefs";
 

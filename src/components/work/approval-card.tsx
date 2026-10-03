@@ -20,10 +20,10 @@ import {
   useSaveRule,
   useUpdateDraft,
 } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 import type { ActionItemDto } from "@/lib/work/serialize";
 import { TRIGGER_LABELS, type GatedToolId } from "@/lib/work/types";
-import { formatDateTime, formatRelativeTime, safeHttpUrl } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, safeHttpUrl } from "@/lib/shared/utils";
 
 /**
  * What each outbound action is called on the card, its button and its toasts -

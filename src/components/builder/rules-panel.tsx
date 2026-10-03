@@ -9,9 +9,9 @@ import { Field, Textarea } from "@/components/ui/field";
 import { Panel, PanelBody, PanelDescription, PanelHeader, PanelTitle } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { useAgentRules, useRemoveRule, useSaveRule } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
+import { errorMessage } from "@/lib/shared/api-client";
 import type { AgentRuleDto } from "@/lib/work/rules";
-import { formatDateTime, formatRelativeTime } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime } from "@/lib/shared/utils";
 
 const FROM: Record<AgentRuleDto["source"], string> = {
   rejection: "From a draft you rejected",

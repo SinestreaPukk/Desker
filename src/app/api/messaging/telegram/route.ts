@@ -1,5 +1,5 @@
 /** Telegram bot webhook. Registered with a secret Telegram echoes back on every call. */
-import { afterResponse } from "@/lib/after-response";
+import { afterResponse } from "@/lib/platform/after-response";
 import { handleInbound } from "@/lib/messaging/inbound";
 import { telegramSend } from "@/lib/messaging/send";
 import { sameSecret } from "@/lib/messaging/verify";

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { liffUser } from "@/lib/messaging/liff";
 import { personalSpace } from "@/lib/life/chat";
 import { readLife } from "@/lib/life/read";

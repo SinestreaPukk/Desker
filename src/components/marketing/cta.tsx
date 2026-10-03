@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /**
  * The public site's calls to action, as pills: CTA_PRIMARY in the ink blue,

@@ -8,13 +8,13 @@
  * only one ever sends.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
 import { getProvider } from "@/lib/llm/provider";
 import { inngest } from "@/lib/jobs/client";
 import { messageUser } from "@/lib/messaging/send";
 import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
-import { addTeamMessage, teamOf } from "@/lib/team";
+import { addTeamMessage, teamOf } from "@/lib/agents/team";
 import * as store from "./store";
 
 export const REMIND = /\bremind me\b|เตือน/i;

@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { handle, parseJson, requireAdmin, HttpError } from "@/lib/api";
-import { env } from "@/lib/env";
-import { findProject } from "@/lib/projects";
-import { limitOrganization } from "@/lib/rate-limit";
+import { handle, parseJson, requireAdmin, HttpError } from "@/lib/platform/api";
+import { env } from "@/lib/platform/env";
+import { findProject } from "@/lib/tenancy/projects";
+import { limitOrganization } from "@/lib/platform/rate-limit";
 import { getProvider } from "@/lib/llm/provider";
 import { parseModelJson } from "@/lib/work/model-json";
 

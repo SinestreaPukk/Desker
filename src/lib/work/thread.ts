@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 
 /**
  * A hand-off thread: the run one agent started, and every run a colleague

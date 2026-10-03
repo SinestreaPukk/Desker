@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/db";
-import { agentsVisibleTo } from "@/lib/projects";
-import { handle, requireAdmin, HttpError } from "@/lib/api";
-import { storage } from "@/lib/storage";
+import { prisma } from "@/lib/platform/db";
+import { agentsVisibleTo } from "@/lib/tenancy/projects";
+import { handle, requireAdmin, HttpError } from "@/lib/platform/api";
+import { storage } from "@/lib/platform/storage";
 
 export const runtime = "nodejs";
 

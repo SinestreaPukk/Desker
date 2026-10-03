@@ -26,12 +26,12 @@ import { RemoveButton } from "@/components/work/row-actions";
 import { SuggestionRow } from "@/components/work/suggestion-row";
 import { useAgents, useIssues, useSetIssueStatus } from "@/hooks/use-admin-data";
 import { useActionItems, useSuggestions, type RemoveTarget } from "@/hooks/use-work-data";
-import { errorMessage } from "@/lib/api-client";
-import type { IssueDto } from "@/lib/serialize";
+import { errorMessage } from "@/lib/shared/api-client";
+import type { IssueDto } from "@/lib/shared/serialize";
 import type { ActionItemDto, SuggestionDto } from "@/lib/work/serialize";
-import { ISSUE_KINDS, issueKind } from "@/lib/issue-kinds";
-import { formatDateTime, formatRelativeTime } from "@/lib/utils";
-import { needsYouKind, NEEDS_YOU_KINDS, type NeedsYouKind } from "@/lib/needs-you";
+import { ISSUE_KINDS, issueKind } from "@/lib/agents/issue-kinds";
+import { formatDateTime, formatRelativeTime } from "@/lib/shared/utils";
+import { needsYouKind, NEEDS_YOU_KINDS, type NeedsYouKind } from "@/lib/agents/needs-you";
 
 type Entry =
   | { kind: "approval"; id: string; at: string; item: ActionItemDto }

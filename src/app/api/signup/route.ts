@@ -1,16 +1,16 @@
-import { prisma } from "@/lib/db";
-import { handle, parseJson, HttpError } from "@/lib/api";
-import { hashPassword } from "@/lib/auth";
-import { passwordProblem } from "@/lib/password-check";
-import { signupSchema } from "@/lib/validation";
-import { createSpaceFor } from "@/lib/projects";
-import { personalSpaceName } from "@/lib/space";
-import { audit } from "@/lib/audit";
-import { TERMS_VERSION } from "@/lib/legal";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { requestLooksAutomated } from "@/lib/bot-check";
-import { env } from "@/lib/env";
-import { mayUsePlatform, PRIVATE_BETA_MESSAGE } from "@/lib/private-beta";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, HttpError } from "@/lib/platform/api";
+import { hashPassword } from "@/lib/auth/auth";
+import { passwordProblem } from "@/lib/auth/password-check";
+import { signupSchema } from "@/lib/shared/validation";
+import { createSpaceFor } from "@/lib/tenancy/projects";
+import { personalSpaceName } from "@/lib/tenancy/space";
+import { audit } from "@/lib/platform/audit";
+import { TERMS_VERSION } from "@/lib/site/legal";
+import { checkRateLimit } from "@/lib/platform/rate-limit";
+import { requestLooksAutomated } from "@/lib/auth/bot-check";
+import { env } from "@/lib/platform/env";
+import { mayUsePlatform, PRIVATE_BETA_MESSAGE } from "@/lib/site/private-beta";
 
 export const runtime = "nodejs";
 

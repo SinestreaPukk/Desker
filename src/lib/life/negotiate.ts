@@ -9,7 +9,7 @@
  * plus drafts; real calendar or money changes still wait for approval.
  */
 import "server-only";
-import { env } from "@/lib/env";
+import { env } from "@/lib/platform/env";
 import { getProvider, type LlmProvider } from "@/lib/llm/provider";
 import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { detectConflicts, cleanWindows, type Conflict, type Domain, type Proposal } from "./conflicts";

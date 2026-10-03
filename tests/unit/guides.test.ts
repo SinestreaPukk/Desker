@@ -13,7 +13,7 @@ import {
   searchGuides,
   sectionById,
   splitSections,
-} from "@/lib/guides";
+} from "@/lib/site/guides";
 
 /** 400 words is about two minutes at a normal reading speed. */
 const TWO_MINUTES = 500;

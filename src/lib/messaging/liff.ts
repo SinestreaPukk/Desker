@@ -6,7 +6,7 @@
  * gets nothing.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { senderKey } from "./send";
 
 export async function liffUser(request: Request): Promise<string | null> {

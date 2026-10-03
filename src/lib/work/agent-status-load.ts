@@ -4,7 +4,7 @@
  * in agent-status.ts.
  */
 import "server-only";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/platform/db";
 import { CONNECTORS, connectorsForTool } from "@/lib/integrations/catalog";
 import { healthForIntegrations } from "./integration-health";
 import { resolveEmail } from "./integrations";

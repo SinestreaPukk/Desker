@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { handle, HttpError, parseJson, requireAdmin } from "@/lib/api";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { handle, HttpError, parseJson, requireAdmin } from "@/lib/platform/api";
+import { checkRateLimit } from "@/lib/platform/rate-limit";
 import { composeBrief, composeNews } from "@/lib/messaging/brief";
 import { messageUser } from "@/lib/messaging/send";
 

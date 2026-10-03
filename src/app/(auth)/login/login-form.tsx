@@ -9,7 +9,7 @@ import { Field, Input } from "@/components/ui/field";
 import { Panel, PanelBody } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { BrandLockup } from "@/components/brand-logo";
-import { PRIVATE_BETA_CODE, PRIVATE_BETA_MESSAGE } from "@/lib/private-beta";
+import { PRIVATE_BETA_CODE, PRIVATE_BETA_MESSAGE } from "@/lib/site/private-beta";
 
 export function LoginForm() {
   const router = useRouter();

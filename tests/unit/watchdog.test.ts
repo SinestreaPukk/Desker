@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/db", () => ({ prisma: {} }));
+vi.mock("@/lib/platform/db", () => ({ prisma: {} }));
 import { isSpike } from "@/lib/work/watchdog";
 
 describe("isSpike", () => {

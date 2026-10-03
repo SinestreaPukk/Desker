@@ -3,7 +3,7 @@
 import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import { ApiError } from "@/lib/api-client";
+import { ApiError } from "@/lib/shared/api-client";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = React.useState(

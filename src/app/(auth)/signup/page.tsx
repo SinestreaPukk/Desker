@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { currentUser } from "@/lib/auth";
+import { currentUser } from "@/lib/auth/auth";
 import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = { title: "Create an account" };

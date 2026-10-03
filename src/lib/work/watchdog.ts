@@ -17,12 +17,12 @@
  */
 import "server-only";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { env } from "@/lib/env";
+import { prisma } from "@/lib/platform/db";
+import { env } from "@/lib/platform/env";
 import { inngest } from "@/lib/jobs/client";
-import { captureMessage } from "@/lib/monitoring";
-import { notifyInBackground } from "@/lib/notify";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { captureMessage } from "@/lib/platform/monitoring";
+import { notifyInBackground } from "@/lib/platform/notify";
+import { checkRateLimit } from "@/lib/platform/rate-limit";
 import { transition } from "./runner";
 
 /** How long work may wait in the queue before it counts as a backlog. */

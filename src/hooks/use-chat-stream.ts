@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { readSseStream } from "@/lib/sse-client";
+import { readSseStream } from "@/lib/shared/sse-client";
 
 export interface ChatBubble {
   id: string;

@@ -6,7 +6,7 @@
  */
 import { afterAll, describe, expect, it } from "vitest";
 import { PrismaClient } from "@prisma/client";
-import { OrganizationRateLimited, checkRateLimit, limitOrganization } from "@/lib/rate-limit";
+import { OrganizationRateLimited, checkRateLimit, limitOrganization } from "@/lib/platform/rate-limit";
 
 const prisma = new PrismaClient();
 const stamp = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;

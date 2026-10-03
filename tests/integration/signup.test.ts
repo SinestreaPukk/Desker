@@ -5,7 +5,7 @@
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 // The sign-in library does not load under the test runner; only hashing is needed.
-vi.mock("@/lib/auth", () => ({ hashPassword: async (password: string) => `test-hash:${password.length}` }));
+vi.mock("@/lib/auth/auth", () => ({ hashPassword: async (password: string) => `test-hash:${password.length}` }));
 
 import { POST as signup } from "@/app/api/signup/route";
 

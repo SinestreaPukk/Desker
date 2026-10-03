@@ -9,11 +9,11 @@
  * when nothing is found, it says so and answers from general knowledge.
  */
 import "server-only";
-import { env } from "@/lib/env";
+import { env } from "@/lib/platform/env";
 import { getProvider } from "@/lib/llm/provider";
 import { clamp, parseModelJson } from "@/lib/work/model-json";
 import { researchTheWeb } from "@/lib/work/research";
-import { safetyRules } from "@/lib/safety-rules";
+import { safetyRules } from "@/lib/agents/safety-rules";
 
 const hasSearch = () => Boolean(process.env.BRAVE_SEARCH_API_KEY?.trim() || process.env.TAVILY_API_KEY?.trim());
 

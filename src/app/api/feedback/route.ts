@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { handle, parseJson, requireAdmin } from "@/lib/api";
-import { findProject } from "@/lib/projects";
-import { notifyInBackground } from "@/lib/notify";
-import { track } from "@/lib/product-events";
-import { emailOwner } from "@/lib/app-email";
+import { prisma } from "@/lib/platform/db";
+import { handle, parseJson, requireAdmin } from "@/lib/platform/api";
+import { findProject } from "@/lib/tenancy/projects";
+import { notifyInBackground } from "@/lib/platform/notify";
+import { track } from "@/lib/platform/product-events";
+import { emailOwner } from "@/lib/platform/app-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -12,8 +12,8 @@ import {
   builtInKey,
 } from "@/components/agent-figure";
 import { Button } from "@/components/ui/button";
-import { imageFileToAvatarDataUri } from "@/lib/avatars";
-import { cn } from "@/lib/utils";
+import { imageFileToAvatarDataUri } from "@/lib/shared/avatars";
+import { cn } from "@/lib/shared/utils";
 
 export function AvatarPicker({
   name,

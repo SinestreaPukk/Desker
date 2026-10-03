@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { LANDING, SITE } from "@/lib/content";
-import { TOKEN_HEX } from "@/lib/brand";
+import { LANDING, SITE } from "@/lib/site/content";
+import { TOKEN_HEX } from "@/lib/site/brand";
 
 export const alt = `${SITE.company.name} — ${LANDING.meta.title}`;
 export const size = { width: 1200, height: 630 };

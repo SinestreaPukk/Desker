@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ prisma: {} }));
+vi.mock("@/lib/platform/db", () => ({ prisma: {} }));
 import { approvalFlex, parsePostback, postbackData, richMenuDefinition } from "@/lib/messaging/line";
 import { parseLineCommand } from "@/lib/messaging/line-handler";
 import { previewPending } from "@/lib/work/pending-preview";

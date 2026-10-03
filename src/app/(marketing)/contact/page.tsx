@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Clock, Mail, MapPin } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Panel } from "@/components/ui/panel";
-import { CONTACT, SITE, pageMetadata } from "@/lib/content";
+import { CONTACT, SITE, pageMetadata } from "@/lib/site/content";
 import { ContactForm } from "./contact-form";
 
 export const metadata: Metadata = pageMetadata({

@@ -6,7 +6,7 @@
  */
 import * as React from "react";
 import { ArrowDown, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 /** A numbered mark: "press here". Its number matches a line in the callouts below the drawing. */
 export function Mark({ n, className }: { n: number; className?: string }) {

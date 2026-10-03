@@ -7,7 +7,7 @@ import { Field, Input } from "@/components/ui/field";
 import { Panel, PanelBody } from "@/components/ui/panel";
 import { FormError } from "@/components/ui/states";
 import { BrandLockup } from "@/components/brand-logo";
-import { api, errorMessage } from "@/lib/api-client";
+import { api, errorMessage } from "@/lib/shared/api-client";
 
 /** Step two: the new password, typed twice so a slip does not lock anyone out. */
 export function ResetPasswordForm({ token }: { token: string }) {
