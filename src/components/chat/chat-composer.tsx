@@ -52,7 +52,7 @@ export function ChatComposer({
     >
       <div
         className={cn(
-          "relative rounded-panel border border-line bg-surface p-4 shadow-sm",
+          "relative rounded-panel border border-note-lemon bg-[color-mix(in_oklch,var(--note-lemon)_45%,var(--surface))] p-4 shadow-sm",
           "transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15",
           disabled && "opacity-60",
         )}
@@ -78,7 +78,7 @@ export function ChatComposer({
           }}
           className={cn(
             "block min-h-[4.5rem] w-full resize-none bg-transparent pb-9 pr-12 text-base leading-relaxed text-ink",
-            "placeholder:text-ink-subtle focus:outline-none disabled:cursor-not-allowed",
+            "placeholder:text-ink-muted focus:outline-none disabled:cursor-not-allowed",
           )}
         />
 
