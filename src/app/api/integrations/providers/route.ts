@@ -1,7 +1,6 @@
 import { handle, requireAdmin } from "@/lib/api";
 import { OAUTH_PROVIDERS } from "@/lib/integrations/catalog";
 import { oauthConfigured } from "@/lib/integrations/oauth";
-import { plaidConfigured } from "@/lib/integrations/plaid";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +14,6 @@ export async function GET() {
         (typeof OAUTH_PROVIDERS)[number],
         boolean
       >),
-      plaid: plaidConfigured(),
     };
   });
 }

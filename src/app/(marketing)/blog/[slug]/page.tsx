@@ -1,20 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Edit, Pin } from "lucide-react";
+import { ArrowLeft, Pin } from "lucide-react";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Markdown } from "@/components/markdown";
-import { Button } from "@/components/ui/button";
-import { canManagePosts, getPostBySlug, POST_CATEGORIES, type PostCategory } from "@/lib/posts";
+import { getPostBySlug, POST_CATEGORIES, type PostCategory } from "@/lib/posts";
 import { pageMetadata } from "@/lib/content";
-
-export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlug(slug, { includeDrafts: true });
+  const post = getPostBySlug(slug);
   if (!post) return {};
 
   return pageMetadata({
@@ -26,8 +23,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Params) {
   const { slug } = await params;
-  const isOwner = await canManagePosts();
-  const post = await getPostBySlug(slug, { includeDrafts: isOwner });
+  const post = getPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -60,25 +56,6 @@ export default async function BlogPostPage({ params }: Params) {
               </span>
             </>
           ) : null}
-          {post.status === "draft" ? (
-            <>
-              <span>·</span>
-              <span className="rounded-sm bg-warning-soft px-2 py-0.5 text-xs font-semibold text-warning">
-                Draft (Private)
-              </span>
-            </>
-          ) : null}
-          {isOwner ? (
-            <>
-              <span>·</span>
-              <Button asChild size="sm" variant="secondary" className="h-7 text-xs">
-                <Link href={`/blog/${post.slug}/edit`}>
-                  <Edit className="mr-1.5 size-3" />
-                  Edit post
-                </Link>
-              </Button>
-            </>
-          ) : null}
         </div>
       </PageHeader>
 
@@ -97,7 +74,7 @@ export default async function BlogPostPage({ params }: Params) {
           <Markdown text={post.content} size="page" />
         </div>
 
-        <div className="mt-12 flex items-center justify-between border-t border-line pt-6">
+        <div className="mt-12 flex items-center border-t border-line pt-6">
           <Link
             href="/blog"
             className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
@@ -106,15 +83,6 @@ export default async function BlogPostPage({ params }: Params) {
             Back to all updates
           </Link>
 
-          {isOwner ? (
-            <Link
-              href={`/blog/${post.slug}/edit`}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink"
-            >
-              <Edit className="size-3.5" />
-              Edit this post
-            </Link>
-          ) : null}
         </div>
       </article>
     </>

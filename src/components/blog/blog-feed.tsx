@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRight, Edit, Pin, Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, Pin, Search } from "lucide-react";
 import { Panel } from "@/components/ui/panel";
 import { POST_CATEGORIES, type PostCategory, type SerializedPost } from "@/lib/post-types";
 import { cn } from "@/lib/utils";
@@ -12,10 +11,8 @@ export type { SerializedPost };
 
 export function BlogFeed({
   initialPosts,
-  isOwner,
 }: {
   initialPosts: SerializedPost[];
-  isOwner: boolean;
 }) {
   const [activeCategory, setActiveCategory] = React.useState<string>("all");
   const [searchQuery, setSearchQuery] = React.useState<string>("");
@@ -26,20 +23,11 @@ export function BlogFeed({
     { id: "patch_notes", label: "Patch Notes" },
     { id: "announcement", label: "Announcements" },
     { id: "news", label: "News" },
-    ...(isOwner ? [{ id: "drafts", label: "Drafts" }] : []),
   ];
 
   const filteredPosts = React.useMemo(() => {
     return initialPosts.filter((post) => {
-      // Category filter
-      if (activeCategory === "drafts") {
-        if (post.status !== "draft") return false;
-      } else if (activeCategory !== "all") {
-        if (post.category !== activeCategory) return false;
-        if (post.status === "draft" && !isOwner) return false;
-      } else {
-        if (post.status === "draft" && !isOwner) return false;
-      }
+      if (activeCategory !== "all" && post.category !== activeCategory) return false;
 
       // Search query filter
       if (searchQuery.trim()) {
@@ -52,35 +40,10 @@ export function BlogFeed({
 
       return true;
     });
-  }, [initialPosts, activeCategory, searchQuery, isOwner]);
-
-  const draftCount = initialPosts.filter((p) => p.status === "draft").length;
+  }, [initialPosts, activeCategory, searchQuery]);
 
   return (
     <div className="space-y-8">
-      {/* Owner controls banner */}
-      {isOwner ? (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-accent/20 bg-accent-soft/30 p-4">
-          <div className="flex items-center gap-3">
-            <span className="flex size-2.5 rounded-full bg-accent animate-pulse" />
-            <span className="text-sm font-medium text-ink">
-              Owner Mode: You can publish new blog posts, patch notes, announcements, and news.
-            </span>
-            {draftCount > 0 ? (
-              <span className="rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-semibold text-warning">
-                {draftCount} {draftCount === 1 ? "draft" : "drafts"}
-              </span>
-            ) : null}
-          </div>
-          <Button asChild size="sm">
-            <Link href="/blog/new">
-              <Plus className="size-4 mr-1.5" />
-              Write new post
-            </Link>
-          </Button>
-        </div>
-      ) : null}
-
       {/* Category selector & Search bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-1.5 rounded-lg border border-line bg-surface p-1">
@@ -126,13 +89,6 @@ export function BlogFeed({
               ? `No articles matching "${searchQuery}". Try clearing your search.`
               : "No posts published in this category yet."}
           </p>
-          {isOwner ? (
-            <div className="mt-6">
-              <Button asChild size="sm">
-                <Link href="/blog/new">Write the first update</Link>
-              </Button>
-            </div>
-          ) : null}
         </Panel>
       ) : (
         <div className="grid gap-6">
@@ -170,26 +126,12 @@ export function BlogFeed({
                           Pinned
                         </span>
                       ) : null}
-                      {post.status === "draft" ? (
-                        <span className="rounded-sm bg-warning-soft px-2 py-0.5 text-xs font-semibold text-warning">
-                          Draft
-                        </span>
-                      ) : null}
                     </div>
 
                     <div className="flex items-center gap-3">
                       <time className="text-xs text-ink-muted" dateTime={new Date(post.publishedAt).toISOString()}>
                         {published}
                       </time>
-                      {isOwner ? (
-                        <Link
-                          href={`/blog/${post.slug}/edit`}
-                          className="relative z-10 inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-medium text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
-                        >
-                          <Edit className="size-3" />
-                          Edit
-                        </Link>
-                      ) : null}
                     </div>
                   </div>
 

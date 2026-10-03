@@ -4,7 +4,6 @@ import * as React from "react";
 import { Check, CheckCircle2, ChevronRight, Clock, ExternalLink, Minus, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BankConnectButton } from "./bank-connect-button";
 import { TEMPLATES } from "@/lib/content";
 import type { Connector, OAuthProvider } from "@/lib/integrations/catalog";
 import type { IntegrationDto } from "@/lib/work/serialize";
@@ -152,17 +151,6 @@ function ConnectorAction({
         Coming soon
       </Badge>
     );
-  }
-  if (connector.auth === "link") {
-    if (!providers) return <Button size="sm" className="shrink-0" disabled>Connect bank</Button>;
-    if (!(providers as Record<string, boolean>).plaid) {
-      return (
-        <Badge tone="neutral" className="shrink-0" title="Whoever deploys Desker needs to add the Plaid keys.">
-          Not set up on this server
-        </Badge>
-      );
-    }
-    return <BankConnectButton project={project} />;
   }
   if (connection && connector.auth !== "webhook") {
     return connection.state === "connected" ? (

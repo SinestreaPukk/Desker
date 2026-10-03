@@ -54,7 +54,7 @@ export function LoginForm() {
         <BrandLockup />
         <h1 className="mt-5 text-xl font-semibold tracking-tight text-ink">Sign in</h1>
         <p className="mt-1.5 text-sm text-ink-muted">
-          Desker is still in testing and needs your feedback. Tell us what works and what doesn't.
+          Desker is still in testing and needs your feedback. Tell us what works and what doesn&apos;t.
         </p>
       </div>
 

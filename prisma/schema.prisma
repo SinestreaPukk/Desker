@@ -874,29 +874,6 @@ model TeamMessage {
   @@index([threadId, createdAt])
 }
 
-/// A blog post, announcement, patch note or news item published by the platform owner.
-model Post {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  title       String
-  /// blog | patch_notes | announcement | news
-  category    String   @default("blog")
-  summary     String?
-  content     String
-  /// published | draft
-  status      String   @default("published")
-  pinned      Boolean  @default(false)
-  tags        String?
-  authorName  String?
-  authorEmail String?
-  publishedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([status, publishedAt])
-  @@index([category, status])
-}
-
 // ---------------------------------------------------------------------------
 // Life context (lib/life/*): the one shared picture of a person's life that
 // every agent and the chat read from and write to. Every row is scoped to the

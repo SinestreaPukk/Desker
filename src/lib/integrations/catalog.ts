@@ -16,12 +16,11 @@ export const CONNECTOR_CATEGORIES = [
   { id: "code", label: "Code & issues" },
   { id: "social", label: "Social media" },
   { id: "publishing", label: "Publishing & email" },
-  { id: "money", label: "Money" },
 ] as const;
 type ConnectorCategory = (typeof CONNECTOR_CATEGORIES)[number]["id"];
 
 /** How an owner connects it. OAuth wherever the provider offers it. */
-type ConnectorAuth = "oauth" | "api_key" | "webhook" | "link";
+type ConnectorAuth = "oauth" | "api_key" | "webhook";
 
 /** The OAuth providers this server can talk to; each needs its client id and secret set. */
 export const OAUTH_PROVIDERS = ["google", "microsoft", "slack", "github", "linkedin", "meta", "x", "threads"] as const;
@@ -184,20 +183,6 @@ export const CONNECTORS: readonly Connector[] = [
     ],
     cannot: ["Read your mailbox or files", "Delete events or calendars"],
     tools: ["calendar_list_events", "calendar_create_event", "calendar_reschedule", "calendar_cancel_event"],
-  },
-
-  // --- money: the Money Manager's live numbers -----------------------------
-  {
-    id: "bank",
-    name: "Bank accounts",
-    category: "money",
-    roles: ["personal-assistant"],
-    auth: "link",
-    status: "available",
-    pitch: "Sandbox test version - connects Plaid's fake test banks only, not real accounts yet. Reads balances, transactions and interest rates, no CSV uploads.",
-    can: ["Read balances, recent transactions and card or loan interest rates", "Add up spending, subscriptions and bills exactly"],
-    cannot: ["Move money or make payments", "See full account numbers (only the last four digits)"],
-    tools: ["review_spending"],
   },
 
   // --- code & issues: for anyone who ships code ----------
