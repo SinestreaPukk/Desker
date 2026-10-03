@@ -13,7 +13,7 @@ import { env } from "@/lib/env";
 import { getProvider } from "@/lib/llm/provider";
 import { parseModelJson, stringField } from "@/lib/work/model-json";
 import { REMIND } from "./reminders";
-import { chooseResponders, mentioned, type TeamAgent } from "@/lib/team";
+import type { TeamAgent } from "@/lib/team";
 
 export type Route = "engine" | "specialist" | "direct" | "research" | "reminder";
 
@@ -32,12 +32,10 @@ const CLASSIFY = `Classify the person's message to their private AI team. Reply 
 - "direct": a vague statement, or chat that can be answered straight from their own context or stable general knowledge.
 - "research": an open question about the outside world that needs current or looked-up facts (news, prices, how something works, comparing products, a place, a rule or law) and is not a job for a specialist or about their own data.`;
 
-const frontDoor = (team: TeamAgent[]) => team.find((a) => a.templateId === "personal-assistant") ?? team[0]!;
+const frontDoor = (team: TeamAgent[]) => team[0]!;
 
-export async function planChat(input: { text: string; team: TeamAgent[]; threadId: string; organizationId: string }): Promise<Plan> {
-  const { text, team, threadId, organizationId } = input;
-  const named = mentioned(text, team);
-  if (named) return { route: "specialist", responders: named };
+export async function planChat(input: { text: string; team: TeamAgent[]; organizationId: string }): Promise<Plan> {
+  const { text, team, organizationId } = input;
   // A reminder is recognised by its words, with no model call, so it is never mistaken for a task to run.
   if (REMIND.test(text)) return { route: "reminder", responders: [frontDoor(team)] };
   let route: Route = CROSS_DOMAIN.test(text) ? "engine" : "specialist";
@@ -51,6 +49,5 @@ export async function planChat(input: { text: string; team: TeamAgent[]; threadI
       console.error("[life] routing failed", error);
     }
   }
-  if (route === "specialist") return { route, responders: await chooseResponders(threadId, organizationId, team, text) };
   return { route, responders: [frontDoor(team)] };
 }

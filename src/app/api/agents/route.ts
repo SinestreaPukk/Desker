@@ -96,6 +96,11 @@ export async function POST(request: Request) {
       throw new HttpError(400, "An agent has to belong to a project.");
     }
 
+    // One assistant per space; its page configures everything.
+    if ((await prisma.agent.count({ where: { projectId: project.id } })) > 0) {
+      throw new HttpError(409, "This space already has its assistant. Open it from the Roster to change its settings.");
+    }
+
     // Born published counts the same as published later.
     if (input.status === "published") {
       await assertProjectGrounded(project.id);

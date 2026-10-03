@@ -48,6 +48,9 @@ export async function POST(request: Request, { params }: Params) {
     if (!project) throw new HttpError(404, "That project no longer exists.");
 
     const sameProject = projectId === source.projectId;
+    if ((await prisma.agent.count({ where: { projectId } })) > 0) {
+      throw new HttpError(409, "A space has one assistant. Edit it instead of copying it.");
+    }
 
     const copy = await prisma.agent.create({
       data: {

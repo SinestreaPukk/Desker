@@ -8,7 +8,6 @@ import type { ScopeDto } from "@/lib/work/scope";
 import type { ScopeInputPayload, IntegrationInputPayload } from "@/lib/work/validation";
 import type {
   ActionItemDto,
-  DigestDto,
   IntegrationDto,
   SuggestionDto,
 } from "@/lib/work/serialize";
@@ -286,16 +285,6 @@ export function useDraftAgentContext(agentId: string) {
 
 // --- digests and suggestions ------------------------------------------------
 
-/** The Inbox's Updates tab. Polled as a backstop for the live feed. */
-export function useDigests(filters: Record<string, string>) {
-  return useQuery({
-    queryKey: workKeys.digests(filters),
-    queryFn: () => api<DigestDto[]>(`/api/digests${queryString(filters)}`),
-    enabled: Boolean(filters.project),
-    refetchInterval: 60_000,
-  });
-}
-
 export function useCheckIns(filters: Record<string, string>) {
   return useQuery({
     queryKey: ["check-ins", filters],
@@ -311,18 +300,6 @@ export function useSetCheckInRead() {
     mutationFn: ({ checkInId, read }: { checkInId: string; read: boolean }) =>
       api<ProjectCheckInDto>(`/api/check-ins/${checkInId}`, { method: "PATCH", body: JSON.stringify({ read }) }),
     onSuccess: () => void client.invalidateQueries({ queryKey: ["check-ins"] }),
-  });
-}
-
-export function useSetDigestRead() {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: ({ digestId, read }: { digestId: string; read: boolean }) =>
-      api<DigestDto>(`/api/digests/${digestId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ read }),
-      }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: ["digests"] }),
   });
 }
 

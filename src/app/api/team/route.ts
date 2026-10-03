@@ -75,11 +75,11 @@ export async function POST(request: Request) {
     });
     const message = await prisma.teamMessage.findUniqueOrThrow({ where: { id }, select: messageSelect });
 
-    // One front door: the router decides direct answer, one specialist, or the cross-domain engine.
-    const plan = team.length > 0 ? await planChat({ text: input.content, team, threadId: thread.id, organizationId: project.organizationId }) : null;
-    const responders = plan?.responders ?? [];
-    if (plan) {
+    // Respond now; the routing model call and the reply happen after the response.
+    const responders = team.slice(0, 1);
+    if (team.length > 0) {
       afterResponse(async () => {
+        const plan = await planChat({ text: input.content, team, organizationId: project.organizationId });
         const later = await runChat(plan, input.content, team, { projectId: project.id, threadId: thread.id, organizationId: project.organizationId, userId });
         await later?.();
       });

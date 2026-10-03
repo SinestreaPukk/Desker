@@ -18,11 +18,11 @@ import * as store from "./store";
 
 /** The specialist that speaks for each domain, matched to a hired agent by its template. */
 const LENS: Record<Domain, { template: string; role: string; cares: string }> = {
-  money: { template: "money-manager", role: "Money Manager", cares: "the monthly budget, upcoming bills and savings goals" },
+  money: { template: "personal-assistant", role: "Money Manager", cares: "the monthly budget, upcoming bills and savings goals" },
   calendar: { template: "personal-assistant", role: "Life Admin", cares: "the calendar, commitments and not double-booking the person" },
   tasks: { template: "personal-assistant", role: "Life Admin", cares: "deadlines and open tasks" },
-  fitness: { template: "fitness-coach", role: "Coach", cares: "training consistency, recovery and planned workouts" },
-  travel: { template: "travel-planner", role: "Travel Planner", cares: "the practicalities and best value of the trip" },
+  fitness: { template: "personal-assistant", role: "Coach", cares: "training consistency, recovery and planned workouts" },
+  travel: { template: "personal-assistant", role: "Travel Planner", cares: "the practicalities and best value of the trip" },
 };
 
 export interface Position {
@@ -122,7 +122,7 @@ export async function negotiate(input: {
       const next: Position[] = [];
       for (const domain of lenses) {
         const lens = LENS[domain];
-        const agent = team.find((a) => a.templateId === lens.template) ?? null;
+        const agent = team[0] ?? null;
         try {
           const out = await ask(
             provider,

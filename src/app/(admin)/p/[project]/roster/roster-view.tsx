@@ -68,14 +68,16 @@ export function RosterView({ project }: { project: string }) {
     <Page>
       <PageHeader
         title="Roster"
-        description="Your assistants. Switched on, they work on their schedule and answer you in Chat; off, they do nothing."
+        description="Your assistant. Switched on, it works on its schedule and answers you in Chat; off, it does nothing. Open it to change anything about it."
         actions={
+          agents?.length ? null : (
           <Button asChild>
             <Link href={`/p/${project}/agents/new`}>
               <UserRoundPlus aria-hidden />
-              New assistant
+              Set up your assistant
             </Link>
           </Button>
+          )
         }
       />
 

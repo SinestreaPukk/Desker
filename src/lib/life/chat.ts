@@ -64,7 +64,7 @@ export async function runChat(plan: Plan, text: string, team: TeamAgent[], ctx: 
     return;
   }
   if (plan.route !== "engine") {
-    await runMeetingTurn({ responders: plan.responders, team, ...ctx });
+    await runMeetingTurn({ responders: plan.responders, ...ctx });
     return;
   }
   const speaker = plan.responders[0]!;
@@ -113,7 +113,7 @@ export async function chatTurn(userId: string, text: string): Promise<{ said: Sa
   const ctx = { ...space, threadId: thread.id, userId };
   const since = new Date();
   await addTeamMessage({ projectId: space.projectId, threadId: thread.id, userId, authorName: "You", content: text });
-  const later = await runChat(await planChat({ text, team, threadId: thread.id, organizationId: space.organizationId }), text, team, ctx);
+  const later = await runChat(await planChat({ text, team, organizationId: space.organizationId }), text, team, ctx);
   const replies = await prisma.teamMessage.findMany({ where: { threadId: thread.id, agentId: { not: null }, createdAt: { gte: since } }, orderBy: { createdAt: "asc" }, select: { content: true, agent: { select: { name: true } } } });
   return { said: replies.length ? replies.map((r) => ({ agent: r.agent?.name ?? null, text: r.content })) : [{ agent: null, text: "I'm on it." }], later };
 }

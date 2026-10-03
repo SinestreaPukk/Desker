@@ -37,8 +37,8 @@ describe("a personal space", () => {
     expect(prompt).toContain("never move money");
   });
 
-  it("offers only personal roles, with no client-chat tools", () => {
-    expect(TEMPLATES.map((t) => t.id)).toContain("money-manager");
+  it("offers one personal assistant, with no client-chat tools", () => {
+    expect(TEMPLATES.map((t) => t.id)).toEqual(["personal-assistant"]);
     expect(TEMPLATES.every((t) => t.allowedTools.every((tool) => tool === "search_documents"))).toBe(true);
   });
 });

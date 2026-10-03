@@ -65,9 +65,9 @@ export function workflowById(id: string): Workflow | undefined {
   return WORKFLOWS.find((workflow) => workflow.id === id);
 }
 
-/** The agent to suggest for a step: the first published one whose job title fits. */
-export function suggestAgent<T extends { jobTitle: string; status: string }>(step: WorkflowStep, agents: T[]): T | null {
-  return agents.find((agent) => agent.status === "published" && step.match.test(agent.jobTitle)) ?? null;
+/** The agent to suggest for a step: the space's one assistant, when it is switched on. */
+export function suggestAgent<T extends { status: string }>(_step: WorkflowStep, agents: T[]): T | null {
+  return agents.find((agent) => agent.status === "published") ?? null;
 }
 
 /** What a workflow's runs carry in their payload, so progress can be read back. */
