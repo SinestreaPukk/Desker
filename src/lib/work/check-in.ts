@@ -220,7 +220,7 @@ async function emailCheckIn(input: { id: string; organizationId: string; project
   await prisma.projectCheckIn.update({ where: { id: input.id }, data: result.ok ? { emailedAt: new Date(), emailError: null } : { emailError: clamp(result.detail, 300) } });
 }
 
-export async function generateProjectCheckIn(projectId: string, options: { periodEnd?: Date; force?: boolean } = {}): Promise<{ id: string; headline: string } | null> {
+async function generateProjectCheckIn(projectId: string, options: { periodEnd?: Date; force?: boolean } = {}): Promise<{ id: string; headline: string } | null> {
   const [project, preferences] = await Promise.all([
     prisma.project.findUnique({ where: { id: projectId }, select: { id: true, organizationId: true, slug: true, name: true, createdAt: true, lastCheckInAt: true } }),
     checkInSettings(projectId),

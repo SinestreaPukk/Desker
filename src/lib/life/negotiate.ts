@@ -25,7 +25,7 @@ const LENS: Record<Domain, { template: string; role: string; cares: string }> = 
   travel: { template: "personal-assistant", role: "Travel Planner", cares: "the practicalities and best value of the trip" },
 };
 
-export interface Position {
+interface Position {
   role: string;
   agentId: string | null;
   stance: "ok" | "object" | "concede";
@@ -59,7 +59,7 @@ async function ask(provider: LlmProvider, organizationId: string, system: string
 }
 
 /** Pulls a dated proposal out of free text. Null when the message proposes nothing with dates. */
-export async function extractProposal(provider: LlmProvider, organizationId: string, text: string, now: Date, model: string | null): Promise<Proposal | null> {
+async function extractProposal(provider: LlmProvider, organizationId: string, text: string, now: Date, model: string | null): Promise<Proposal | null> {
   const parsed = await ask(
     provider,
     organizationId,

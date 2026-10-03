@@ -1,6 +1,3 @@
-import { AgentAvatar } from "@/components/ui/avatar";
-import { NoteNudge } from "@/components/marketing/note-nudge";
-import { BrandMark } from "@/components/brand-logo";
 import { cn } from "@/lib/utils";
 
 /**
@@ -53,79 +50,6 @@ export function StickyNote({
       }
     >
       {children}
-    </div>
-  );
-}
-
-const NOTES = [
-  {
-    tone: "lemon",
-    tilt: -6,
-    place: "-top-[8.25rem] left-24 w-52",
-    name: "Nova",
-    seed: "nova",
-    role: "Marketer",
-    text: "Monday's post is drafted. Can I publish it?",
-    scribble: "needs your yes",
-    stamp: true,
-  },
-  {
-    tone: "coral",
-    tilt: 5,
-    place: "-bottom-[8.75rem] right-8 w-56",
-    name: "Juno",
-    seed: "juno",
-    role: "Life admin",
-    text: "Sam's birthday is Thursday. Shall I block an hour for a gift?",
-    scribble: "Wednesday 18:00",
-  },
-] as const;
-
-/**
- * Two notes stuck to the product window's top and bottom edges, in front of
- * it but clear of its content - only their bottom (or top) edge touches the
- * frame - so every word on them reads. From lg up, where the hero is split;
- * phones get PhoneNote.
- */
-export function HeroNotes() {
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-10 hidden lg:block">
-      {NOTES.map((note) => (
-        <NoteNudge key={note.name} agent={note.name} className={cn("absolute", note.place)}>
-          <StickyNote
-            tone={note.tone}
-            tilt={note.tilt}
-            settle={false}
-            className="relative"
-          >
-            <p className="flex items-center gap-2 text-xs font-semibold">
-              <AgentAvatar name={note.name} seed={note.seed} size="sm" />
-              {note.name} · {note.role}
-            </p>
-            <p className="mt-2.5 text-sm leading-snug">{note.text}</p>
-            <p className="mt-1.5 font-hand text-xl leading-none">{note.scribble}</p>
-            {"stamp" in note && note.stamp ? (
-              // The Desker mark, tucked into the lead note like a rubber stamp.
-              <BrandMark className="absolute bottom-3 right-3 size-5 -rotate-12 opacity-40" />
-            ) : null}
-          </StickyNote>
-        </NoteNudge>
-      ))}
-    </div>
-  );
-}
-
-/** On a phone: one small note above the desk, waiting for you. */
-export function PhoneNote() {
-  return (
-    <div aria-hidden className="mb-5 flex justify-end pr-2 lg:hidden">
-      <StickyNote tone="lemon" tilt={-3} settle={false} className="relative w-56 px-3.5 py-3">
-        <p className="flex items-center gap-2 text-xs font-semibold">
-          <AgentAvatar name="Nova" seed="nova" size="sm" />
-          Nova · Marketer
-        </p>
-        <p className="mt-1.5 text-sm leading-snug">Monday&apos;s post is drafted. Can I publish it?</p>
-      </StickyNote>
     </div>
   );
 }

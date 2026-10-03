@@ -45,7 +45,7 @@ export function parseNewsRss(xml: string): Headline[] {
   });
 }
 
-export async function newsFor(topic: string, edition: string): Promise<Headline[]> {
+async function newsFor(topic: string, edition: string): Promise<Headline[]> {
   const [country, language] = (NEWS_EDITIONS.find((e) => e.id === edition)?.id ?? "US:en").split(":") as [string, string];
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(`${topic} when:1d`)}&hl=${language}&gl=${country}&ceid=${country}:${language}`;
   try {

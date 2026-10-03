@@ -30,7 +30,7 @@ const QUEUE_WAIT_BUDGET_MS = 10 * 60_000;
 /** A run this many budgets past its start is treated as dead, not slow. */
 const STUCK_MULTIPLIER = 4;
 /** How long an approval may wait before the owner is nudged, and how often after that. */
-export const APPROVAL_NUDGE_MS = 24 * 60 * 60_000;
+const APPROVAL_NUDGE_MS = 24 * 60 * 60_000;
 
 /**
  * Whether `current` is a spike against a baseline rate: well above normal and

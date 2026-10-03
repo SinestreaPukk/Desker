@@ -15,14 +15,14 @@ export const CONTROL_LABELS: Record<ControlKind, string> = {
   review: "Review and undo",
 };
 
-export interface SampleStep {
+interface SampleStep {
   title: string;
   /** What happens at this step, in one or two sentences. */
   body: string;
   control: { kind: ControlKind; text: string };
 }
 
-export interface SampleDecision {
+interface SampleDecision {
   /** Who or what it is about, e.g. "Reply to jo@example.com". */
   label: string;
   title: string;

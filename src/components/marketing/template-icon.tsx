@@ -3,7 +3,7 @@ import { AtSign, CalendarHeart, GraduationCap, Dumbbell, Plane, Rocket, Wallet }
 import type { TEMPLATE_ICONS } from "@/lib/content";
 import { SparklesCuteIcon, ScratchCuteIcon } from "@/components/icons/role-icons";
 
-export { SparklesCuteIcon, ScratchCuteIcon };
+export {  ScratchCuteIcon };
 
 const ICONS: Record<(typeof TEMPLATE_ICONS)[number], React.ComponentType<{ className?: string }>> = {
   wallet: Wallet,

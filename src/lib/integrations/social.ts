@@ -26,7 +26,7 @@ export const PLATFORM_NAMES: Record<SocialPlatform, string> = {
 };
 
 /** The connector each platform is reached through. */
-export const PLATFORM_CONNECTOR: Record<SocialPlatform, string> = {
+const PLATFORM_CONNECTOR: Record<SocialPlatform, string> = {
   linkedin: "linkedin",
   facebook: "meta",
   instagram: "meta",
@@ -526,7 +526,7 @@ export async function readSocial(
 export const WATCH_ACTIONS = ["competitor", "trending", "insights"] as const;
 export type WatchAction = (typeof WATCH_ACTIONS)[number];
 
-export interface WatchedPost {
+interface WatchedPost {
   caption: string;
   likes: number;
   comments: number;
@@ -535,7 +535,7 @@ export interface WatchedPost {
   type: string;
 }
 
-export interface WatchedAccount {
+interface WatchedAccount {
   username: string;
   name: string;
   followers: number;
@@ -555,7 +555,7 @@ const postOf = (m: Record<string, unknown>): WatchedPost => ({
 const line = (p: WatchedPost) => `- ${p.at.slice(0, 10)} ${p.type}: ${p.caption || "(no caption)"} (${p.likes} likes, ${p.comments} comments) ${p.url}`;
 
 /** What changed since the last look: followers, and posts that weren't there then. Pure, so a test holds it. */
-export function describeWatch(current: WatchedAccount, previous: WatchedAccount | null, previousAt: Date | null): string {
+function describeWatch(current: WatchedAccount, previous: WatchedAccount | null, previousAt: Date | null): string {
   const best = [...current.recent].sort((a, b) => b.likes + b.comments - (a.likes + a.comments))[0];
   const average = current.recent.length
     ? Math.round(current.recent.reduce((sum, p) => sum + p.likes + p.comments, 0) / current.recent.length)

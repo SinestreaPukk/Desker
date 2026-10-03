@@ -10,9 +10,9 @@ import { audit } from "@/lib/audit";
 import { HttpError } from "@/lib/http-error";
 
 /** Enough to shape an agent; few enough that each one is still read. */
-export const MAX_RULES = 30;
+const MAX_RULES = 30;
 
-export const RULE_SOURCES = ["rejection", "edit", "manual"] as const;
+const RULE_SOURCES = ["rejection", "edit", "manual"] as const;
 
 export const ruleInputSchema = z.object({
   text: z

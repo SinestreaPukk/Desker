@@ -1,6 +1,4 @@
 export type PostCategory = "blog" | "patch_notes" | "announcement" | "news";
-export type PostStatus = "published" | "draft";
-
 export interface CategoryInfo {
   id: PostCategory;
   label: string;

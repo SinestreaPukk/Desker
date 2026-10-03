@@ -129,7 +129,7 @@ Reply with one JSON object and nothing else:
  * for when there is one. Never throws: a failed turn becomes a short line in
  * the room so the owner is not left waiting on a silence.
  */
-export async function replyAs(input: {
+async function replyAs(input: {
   agent: TeamAgent;
   projectId: string;
   threadId: string;

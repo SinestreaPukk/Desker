@@ -11,7 +11,7 @@ import { Callouts } from "./infographic";
 import { TOUR } from "./tour-content";
 
 /** Fired to reopen the tour from anywhere (Help, the setup checklist). */
-export const TOUR_OPEN_EVENT = "desker:tour-open";
+const TOUR_OPEN_EVENT = "desker:tour-open";
 
 export function openTour() {
   window.dispatchEvent(new Event(TOUR_OPEN_EVENT));

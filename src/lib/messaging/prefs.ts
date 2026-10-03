@@ -19,7 +19,7 @@ export const CHANNELS: Record<ChannelKind, { name: string; how: "chat" | "webhoo
 };
 
 /** Where each kind of webhook may point. Anything else is refused, so nobody can aim our server at an arbitrary host. */
-export const WEBHOOK_HOSTS: Partial<Record<ChannelKind, RegExp>> = {
+const WEBHOOK_HOSTS: Partial<Record<ChannelKind, RegExp>> = {
   slack: /^hooks\.slack\.com$/,
   discord: /^(discord|discordapp)\.com$/,
   teams: /(\.logic\.azure\.com|\.api\.powerplatform\.com|\.webhook\.office\.com)$/,

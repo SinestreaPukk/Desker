@@ -131,7 +131,7 @@ export function billsFlex(bills: { id: string; payee: string; amountMinor: numbe
 }
 
 /** Rich menu: six tiles. "Add slip" opens the photo library, so a slip goes straight to the ledger. */
-export const RICH_MENU_AREAS = [
+const RICH_MENU_AREAS = [
   { label: "Ask", color: "#3558E6", action: { type: "message", text: "What should I focus on today?" } },
   { label: "Budget", color: "#2E7D5B", action: { type: "message", text: "budget" } },
   { label: "My week", color: "#6B4FB8", action: { type: "message", text: "week" } },

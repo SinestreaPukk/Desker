@@ -111,12 +111,6 @@ export function isDigestCadence(value: string): value is DigestCadence {
   return (DIGEST_CADENCES as readonly string[]).includes(value);
 }
 
-export const DIGEST_CADENCE_LABELS: Record<DigestCadence, string> = {
-  off: "Never - I'll check the Work page myself",
-  daily: "Every morning",
-  weekly: "Once a week, Monday morning",
-};
-
 /**
  * A digest line. `kind` is what the owner is being told, which is also the
  * order they are worth reading in: what needs a decision, then what is still

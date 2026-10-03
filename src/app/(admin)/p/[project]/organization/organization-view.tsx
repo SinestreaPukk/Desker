@@ -1,13 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Building, CreditCard, Download, ShieldCheck, Trash2 } from "lucide-react";
+import { Building, Download, ShieldCheck, Trash2 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { api } from "@/lib/api-client";
 import { Page, PageBody, PageHeader } from "@/components/page-header";
 import { ProjectContextPanel } from "@/components/builder/project-context-panel";
 import { CheckInSettingsPanel } from "@/components/work/check-in-settings-panel";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import {
@@ -18,13 +17,12 @@ import {
   PanelHeader,
   PanelTitle,
 } from "@/components/ui/panel";
-import { EmptyState, ErrorState, FormError, LoadingRows } from "@/components/ui/states";
+import { FormError } from "@/components/ui/states";
 import {
   useOrganization,
   useUpdateOrganization,
 } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/api-client";
-import { formatDateTime } from "@/lib/utils";
 
 export function OrganizationView({
   project,

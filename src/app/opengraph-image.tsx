@@ -38,7 +38,6 @@ export default function OpenGraphImage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           {logoDataUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={logoDataUrl}
               alt=""

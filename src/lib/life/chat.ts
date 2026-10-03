@@ -119,7 +119,7 @@ export async function chatTurn(userId: string, text: string): Promise<{ said: Sa
 }
 
 /** The same turn as one string, for apps that take a single message. */
-export async function chatOnce(userId: string, text: string, _channel: string): Promise<string> {
+export async function chatOnce(userId: string, text: string): Promise<string> {
   const { said, later } = await chatTurn(userId, text);
   if (later) afterResponse(later);
   return said.map((s) => (s.agent && said.length > 1 ? `${s.agent}: ${s.text}` : s.text)).join("\n\n");

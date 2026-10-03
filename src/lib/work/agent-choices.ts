@@ -58,7 +58,7 @@ export function parseEscalation(rule: string | null | undefined): Choices {
 
 export const STAKEHOLDER_OPTIONS: readonly string[] = ["Just me", "My partner", "My family", "Friends", "My landlord or flatmates", "My employer or clients"];
 
-export const SUCCESS_OPTIONS: readonly string[] = [
+const SUCCESS_OPTIONS: readonly string[] = [
     "A plan I don't have to redo",
     "Nothing I have to chase",
     "Exact numbers, not guesses",

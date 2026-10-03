@@ -18,7 +18,7 @@ import type { DeliveryResult } from "@/lib/work/integrations";
 import { connectorAccess } from "./oauth";
 import { call, failure } from "./providers";
 
-export type MailCalendarProvider = "google" | "microsoft";
+type MailCalendarProvider = "google" | "microsoft";
 
 export interface Access {
   provider: MailCalendarProvider;

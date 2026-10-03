@@ -73,7 +73,7 @@ export const PROJECT_CONTEXT_QUESTIONS: readonly ContextQuestion[] = [
 ] as const;
 
 /** More about the person, all optional. Sharpens the work; the four above are the bar. */
-export const PROJECT_CONTEXT_EXTRA_QUESTIONS: readonly ContextQuestion[] = [
+const PROJECT_CONTEXT_EXTRA_QUESTIONS: readonly ContextQuestion[] = [
   {
     id: "week",
     label: "What does your week look like?",
@@ -118,7 +118,7 @@ export const PROJECT_CONTEXT_EXTRA_QUESTIONS: readonly ContextQuestion[] = [
 ] as const;
 
 /** Every project question, core first: what is saved, composed and drafted. */
-export const ALL_PROJECT_CONTEXT_QUESTIONS: readonly ContextQuestion[] = [
+const ALL_PROJECT_CONTEXT_QUESTIONS: readonly ContextQuestion[] = [
   ...PROJECT_CONTEXT_QUESTIONS,
   ...PROJECT_CONTEXT_EXTRA_QUESTIONS,
 ];

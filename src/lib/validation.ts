@@ -52,7 +52,7 @@ export const agentInputSchema = z.object({
 export type AgentInput = z.infer<typeof agentInputSchema>;
 
 /** One rule for every password Desker sets: sign-up and reset. */
-export const passwordRule = z.string().min(8, "Use at least 8 characters.").max(200, "That password is too long.");
+const passwordRule = z.string().min(8, "Use at least 8 characters.").max(200, "That password is too long.");
 
 export const passwordResetRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address."),
@@ -63,7 +63,7 @@ export const passwordResetSchema = z.object({
   password: passwordRule,
 });
 
-export const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,29}$/;
+const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,29}$/;
 
 export const signupSchema = z
   .object({

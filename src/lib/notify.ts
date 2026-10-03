@@ -102,7 +102,7 @@ async function approvalOf(notification: Notification) {
   return { actionItemId: notification.actionItemId, agent: notification.agentName, ...previewPending(pending, draft) };
 }
 
-export async function notify(notification: Notification): Promise<void> {
+async function notify(notification: Notification): Promise<void> {
   const approval = await approvalOf(notification).catch(() => undefined);
   await Promise.all([
     notification.peopleOnly ? null : notifyOperators(notification),

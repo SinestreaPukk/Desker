@@ -11,7 +11,7 @@ import type {
   } from "@/lib/serialize";
 import type { AgentInput } from "@/lib/validation";
 
-export const keys = {
+const keys = {
   agents: (project: string) => ["agents", project] as const,
   agent: (id: string) => ["agents", id] as const,
   documents: (agentId: string) => ["agents", agentId, "documents"] as const,

@@ -18,7 +18,7 @@ import { maskNumbers, parseStatement } from "@/lib/money/statement";
 import { storage } from "@/lib/storage";
 import * as store from "./store";
 
-export const CATEGORIES = ["food", "transport", "shopping", "bills", "home", "health", "fitness", "travel", "entertainment", "income", "transfer", "other"] as const;
+const CATEGORIES = ["food", "transport", "shopping", "bills", "home", "health", "fitness", "travel", "entertainment", "income", "transfer", "other"] as const;
 
 type EntryIn = Parameters<typeof store.addEntry>[1];
 

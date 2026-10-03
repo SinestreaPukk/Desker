@@ -15,8 +15,6 @@ export function isToolId(value: string): value is ToolId {
   return (TOOL_IDS as readonly string[]).includes(value);
 }
 
-export const SEVERITIES = ["low", "medium", "high", "critical"] as const;
-
 /** UI-facing copy for the builder's permission checkboxes. */
 export const TOOL_METADATA: Record<
   ToolId,

@@ -106,31 +106,3 @@ export interface IssueDto {
   createdAt: string;
   agent?: { id: string; name: string; avatarUrl: string | null };
 }
-
-export interface MessageDto {
-  id: string;
-  role: string;
-  content: string;
-  /** Set on a `human` turn: the colleague who wrote it. */
-  authorName?: string | null;
-  /** The client's rating, if they gave one. */
-  rating?: number | null;
-  createdAt: string;
-}
-
-export interface ConversationSummaryDto {
-  id: string;
-  agent: { id: string; name: string; jobTitle: string; avatarUrl: string | null };
-  status: string;
-  /** agent: the AI answers. human: a colleague has taken over. */
-  mode: string;
-  takenOverBy: string | null;
-  /** Rolling summary, so the list is scannable without opening each one. */
-  summary: string | null;
-  messageCount: number;
-  issueCount: number;
-  openIssueCount: number;
-  preview: string;
-  createdAt: string;
-  lastMessageAt: string;
-}

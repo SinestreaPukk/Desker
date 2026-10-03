@@ -30,7 +30,7 @@ export interface ParsedStatement {
 // --- CSV --------------------------------------------------------------------
 
 /** RFC 4180-ish: quoted fields, doubled quotes, commas or semicolons. */
-export function parseCsv(text: string): string[][] {
+function parseCsv(text: string): string[][] {
   const firstLine = text.split(/\r?\n/, 1)[0] ?? "";
   const delimiter = (firstLine.match(/;/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? ";" : ",";
   const rows: string[][] = [];
@@ -181,7 +181,7 @@ const CATEGORY_RULES: [string, RegExp][] = [
   ["Fees", /fee|charge|interest|penalty|ค่าธรรมเนียม/i],
 ];
 
-export function categorize(description: string, amount: number): string {
+function categorize(description: string, amount: number): string {
   for (const [category, pattern] of CATEGORY_RULES) {
     if (pattern.test(description)) {
       // "Refund" on a card is money back, not income; salary is only income when it comes in.
@@ -248,7 +248,7 @@ export function parseStatement(text: string): ParsedStatement {
 
 // --- summary ----------------------------------------------------------------
 
-export interface Recurring {
+interface Recurring {
   merchant: string;
   /** Typical charge. */
   amount: number;
@@ -273,7 +273,7 @@ export interface SpendingSummary {
 }
 
 /** "NETFLIX.COM 866-579 BANGKOK" and "Netflix.com" are one merchant. */
-export function merchantKey(description: string): string {
+function merchantKey(description: string): string {
   return description
     .toLowerCase()
     .replace(/••••\d{4}/g, "")

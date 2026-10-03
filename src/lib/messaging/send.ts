@@ -82,14 +82,6 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
   }
 }
 
-export function lineReply(replyToken: string, text: string): Promise<Result> {
-  return post(
-    "https://api.line.me/v2/bot/message/reply",
-    { replyToken, messages: [{ type: "text", text: text.slice(0, 4900) }] },
-    { authorization: `Bearer ${env("LINE_CHANNEL_ACCESS_TOKEN")}` },
-  );
-}
-
 export function telegramSend(chatId: string, text: string): Promise<Result> {
   return post(`https://api.telegram.org/bot${env("TELEGRAM_BOT_TOKEN")}/sendMessage`, {
     chat_id: chatId,

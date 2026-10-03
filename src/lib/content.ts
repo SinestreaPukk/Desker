@@ -8,7 +8,6 @@
 import { z } from "zod";
 import site from "../../content/site.json";
 import landing from "../../content/landing.json";
-import showcase from "../../content/showcase.json";
 import contact from "../../content/contact.json";
 import templates from "../../content/templates.json";
 import { TOOL_IDS } from "@/lib/tools/registry";
@@ -47,14 +46,6 @@ const landingSchema = z.object({
   meta,
   hero: z.object({ headline: z.string().min(1).max(60) }),
   cta: z.object({ heading: z.string(), body: z.string(), button: link }),
-});
-
-const showcaseSchema = z.object({
-  meta,
-  heading: z.string(),
-  intro: z.string(),
-  exampleLabel: z.string(),
-  cta: link,
 });
 
 const contactSchema = z.object({
@@ -136,7 +127,6 @@ function load<T>(name: string, schema: z.ZodType<T>, data: unknown): T {
 
 export const SITE = load("site.json", siteSchema, site);
 export const LANDING = load("landing.json", landingSchema, landing);
-export const SHOWCASE = load("showcase.json", showcaseSchema, showcase);
 export const CONTACT = load("contact.json", contactSchema, contact);
 export const TEMPLATES = load("templates.json", templatesSchema, templates).templates;
 

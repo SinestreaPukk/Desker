@@ -17,7 +17,7 @@ import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 import { createOrganizationFor, primaryOrganizationFor } from "@/lib/organizations";
 
-export { slugify };
+;
 
 /** Appends a counter until the slug is free. */
 export async function uniqueSlug(
@@ -56,14 +56,6 @@ export async function findProject(handle: string, userId: string) {
 export async function findProjectById(projectId: string, userId: string) {
   return prisma.project.findFirst({
     where: { AND: [projectsVisibleTo(userId), { id: projectId }] },
-  });
-}
-
-/** Every project the user can see, oldest first. */
-export async function projectsFor(userId: string) {
-  return prisma.project.findMany({
-    where: projectsVisibleTo(userId),
-    orderBy: { createdAt: "asc" },
   });
 }
 

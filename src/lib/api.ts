@@ -52,7 +52,7 @@ async function refuseCrossSite() {
   }
 }
 
-export function jsonError(status: number, error: string, details?: unknown) {
+function jsonError(status: number, error: string, details?: unknown) {
   return NextResponse.json({ error, ...(details ? { details } : {}) }, { status });
 }
 

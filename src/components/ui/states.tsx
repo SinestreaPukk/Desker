@@ -147,29 +147,3 @@ export function LoadingCards({ count = 6 }: { count?: number }) {
     </ul>
   );
 }
-
-/** A KPI row placeholder: one lead number beside a 2x2 of secondary stats. */
-export function LoadingKpis() {
-  return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]" aria-busy>
-      <span className="sr-only">Loading…</span>
-      <div className="flex flex-col rounded-panel border border-line bg-surface p-5">
-        <Skeleton className="h-3 w-1/3" />
-        <div className="mt-auto pt-6">
-          <Skeleton className="h-10 w-1/2" />
-          <Skeleton className="mt-2 h-3 w-2/3" />
-        </div>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="flex flex-col rounded-panel border border-line bg-surface p-5">
-            <Skeleton className="h-3 w-1/2" />
-            <Skeleton className="mt-3 h-6 w-1/3" />
-            <Skeleton className="mt-2.5 h-1 w-full" />
-            <Skeleton className="mt-auto pt-3 h-3 w-1/2" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}

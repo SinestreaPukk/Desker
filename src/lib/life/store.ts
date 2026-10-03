@@ -33,9 +33,6 @@ type EventIn = { title: string; startsAt: Date; endsAt?: Date; allDay?: boolean;
 export const addEvent = (a: Actor, d: EventIn) =>
   logged(a, "life.event.added", "LifeEvent", prisma.lifeEvent.create({ data: { ...d, projectId: a.projectId, source: a.source } }));
 
-export const updateEvent = (a: Actor, id: string, d: Partial<EventIn> & { status?: string }) =>
-  logged(a, "life.event.updated", "LifeEvent", prisma.lifeEvent.update({ where: { id, projectId: a.projectId }, data: d }));
-
 type EntryIn = {
   kind: "expense" | "income" | "bill";
   payee: string;
@@ -66,9 +63,6 @@ type TaskIn = { title: string; kind?: string; dueAt?: Date; externalId?: string 
 export const addTask = (a: Actor, d: TaskIn) =>
   logged(a, "life.task.added", "LifeTask", prisma.lifeTask.create({ data: { ...d, projectId: a.projectId, source: a.source } }));
 
-export const setTaskStatus = (a: Actor, id: string, status: "open" | "done" | "dropped") =>
-  logged(a, "life.task.updated", "LifeTask", prisma.lifeTask.update({ where: { id, projectId: a.projectId }, data: { status } }));
-
 type GoalIn = { title: string; domain?: string; target?: string; deadline?: Date };
 export const addGoal = (a: Actor, d: GoalIn) =>
   logged(a, "life.goal.added", "LifeGoal", prisma.lifeGoal.create({ data: { ...d, projectId: a.projectId } }));
@@ -76,9 +70,6 @@ export const addGoal = (a: Actor, d: GoalIn) =>
 type WorkoutIn = { title: string; scheduledAt: Date; durationMin?: number; notes?: string };
 export const addWorkout = (a: Actor, d: WorkoutIn) =>
   logged(a, "life.workout.added", "LifeWorkout", prisma.lifeWorkout.create({ data: { ...d, projectId: a.projectId, source: a.source } }));
-
-export const setWorkoutStatus = (a: Actor, id: string, status: "planned" | "done" | "skipped") =>
-  logged(a, "life.workout.updated", "LifeWorkout", prisma.lifeWorkout.update({ where: { id, projectId: a.projectId }, data: { status } }));
 
 export const setPreference = (a: Actor, key: string, value: string) =>
   logged(

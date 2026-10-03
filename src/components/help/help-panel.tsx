@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/field";
 import { Markdown } from "@/components/markdown";
 import { EmptyState } from "@/components/ui/states";
 import { GUIDES, guideBySlug, helpTopic, searchGuides, type HelpTopic } from "@/lib/guides";
-import { CHECKLIST_REOPEN_EVENT, showChecklist } from "@/components/help/checklist-state";
+import { showChecklist } from "@/components/help/checklist-state";
 import { openTour } from "@/components/tour/tour";
 import { cn } from "@/lib/utils";
 
@@ -357,4 +357,4 @@ export function HelpLink({
   );
 }
 
-export { CHECKLIST_REOPEN_EVENT };
+;

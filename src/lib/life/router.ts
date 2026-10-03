@@ -15,7 +15,7 @@ import { parseModelJson, stringField } from "@/lib/work/model-json";
 import { REMIND } from "./reminders";
 import type { TeamAgent } from "@/lib/team";
 
-export type Route = "engine" | "specialist" | "direct" | "research" | "reminder";
+type Route = "engine" | "specialist" | "direct" | "research" | "reminder";
 
 export interface Plan {
   route: Route;

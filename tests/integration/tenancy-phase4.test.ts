@@ -7,13 +7,11 @@ import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 
 process.env.VAULT_KEY ??= randomBytes(32).toString("base64");
-process.env.ENFORCE_PLAN_LIMITS = "true";
 
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);
 let ownerId: string;
 let organizationId: string;
-let projectId: string;
 
 beforeAll(async () => {
   const owner = await prisma.user.create({
@@ -30,7 +28,6 @@ beforeAll(async () => {
     include: { projects: true },
   });
   organizationId = org.id;
-  projectId = org.projects[0]!.id;
 });
 
 afterAll(async () => {

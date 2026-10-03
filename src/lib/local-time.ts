@@ -53,7 +53,7 @@ export function localIso(value: Date | string, timeZone: string): string {
 }
 
 /** "Tuesday 30 September 2026, 20:45" in the zone. */
-export function localLong(date: Date, timeZone: string): string {
+function localLong(date: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone,
     weekday: "long",

@@ -71,10 +71,6 @@ export function subscribeChecklist(listener: () => void): () => void {
   };
 }
 
-export function hasSeenFlowView(): boolean {
-  return read(FLOW_SEEN) === "1";
-}
-
 export function markFlowViewSeen(): void {
   if (read(FLOW_SEEN) === "1") return;
   write(FLOW_SEEN, "1");
