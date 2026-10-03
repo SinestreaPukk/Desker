@@ -41,6 +41,8 @@ export interface ProjectContextDto {
   total: number;
   /** Ready documents across the project, which is what a draft can read. */
   documentCount: number;
+  /** When the assistant last changed each answer from something said in chat (ISO), by question id. */
+  learnedAt: Record<string, string>;
 }
 
 export async function readProjectContext(project: ProjectRow): Promise<ProjectContextDto> {
@@ -49,6 +51,20 @@ export async function readProjectContext(project: ProjectRow): Promise<ProjectCo
   const documentCount = await prisma.document.count({
     where: { status: "ready", agent: { projectId: project.id } },
   });
+  // What the assistant has picked up from chat, newest change per answer.
+  const learnedAt: Record<string, string> = {};
+  const learned = await prisma.auditLog.findMany({
+    where: { action: "project.context_learned", targetType: "project", targetId: project.id },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    select: { createdAt: true, metadata: true },
+  });
+  for (const entry of learned) {
+    const fields = (entry.metadata as { fields?: unknown } | null)?.fields;
+    for (const field of Array.isArray(fields) ? fields : []) {
+      if (typeof field === "string" && !(field in learnedAt)) learnedAt[field] = entry.createdAt.toISOString();
+    }
+  }
   return {
     projectId: project.id,
     slug: project.slug,
@@ -58,6 +74,7 @@ export async function readProjectContext(project: ProjectRow): Promise<ProjectCo
     answered: answeredCount(answers, questions.core),
     total: questions.core.length,
     documentCount,
+    learnedAt,
   };
 }
 

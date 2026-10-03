@@ -145,8 +145,10 @@ export function kickoffMessage(input: {
 }): string {
   const when = localIso(input.startedAt, validTimeZone(input.timeZone));
   switch (input.trigger) {
-    case "schedule":
-      return `Trigger: scheduled run at ${when}.\n\nCarry out your standing objectives now.`;
+    case "schedule": {
+      const task = String(input.payload.instruction ?? "").trim();
+      return `Trigger: scheduled run at ${when}.\n\n${task ? `Your task for this run:\n${task}` : "Carry out your standing objectives now."}`;
+    }
     case "webhook": {
       const body = JSON.stringify(input.payload.body ?? {}, null, 2).slice(0, 6000);
       return (

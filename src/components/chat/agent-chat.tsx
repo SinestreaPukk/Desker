@@ -10,14 +10,16 @@ import { TypingIndicator } from "@/components/chat/chat-thread";
 import { MessageText } from "@/components/chat/message-text";
 import { api, errorMessage } from "@/lib/shared/api-client";
 import { EVERYDAY_THREAD, type TeamMessageDto, type TeamThreadDto } from "@/lib/agents/team-dto";
-import { formatTime } from "@/lib/shared/utils";
 
 /** How long the chat waits on a reply before it stops showing the assistant typing. */
 const REPLY_TIMEOUT_MS = 90_000;
 
+const STARTERS = ["Plan my week", "What can you do for me?", "Remind me to call mum tomorrow at 6"];
+
 /**
  * The conversation with the assistant: one thread, the same one LINE, Telegram
  * and the other apps write to, so a chat started on the phone continues here.
+ * Laid out like any chat app: replies on the page, yours as a note, the box pinned below.
  */
 export function AgentChat({ project, agent, live }: { project: string; agent: { id: string; name: string }; live: boolean }) {
   const client = useQueryClient();
@@ -72,41 +74,58 @@ export function AgentChat({ project, agent, live }: { project: string; agent: { 
   if (threads.isPending) return <LoadingRows count={4} />;
   if (threads.error) return <ErrorState message={errorMessage(threads.error)} onRetry={() => void threads.refetch()} />;
 
+  const empty = list.length === 0 && !messages.isLoading;
+
   return (
-    <div className="flex h-[calc(100dvh-19rem)] min-h-[26rem] flex-col rounded-lg border border-line bg-surface shadow-xs">
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+    <div className="flex h-full min-h-0 flex-col">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
         {!live ? (
-          <p className="mb-4 rounded-md px-3 py-2 text-sm text-ink" style={{ background: "var(--note-lemon)" }}>
+          <p className="mb-4 rounded-md px-4 py-3 text-base text-ink" style={{ background: "var(--note-lemon)" }}>
             {agent.name} is off. Add a few lines about you in Profile, then switch it on.
           </p>
         ) : null}
-        {list.length === 0 && !messages.isLoading ? (
-          <div className="flex h-full flex-col items-center justify-center py-10 text-center">
-            <h2 className="font-hand text-xl text-ink">Say hello to {agent.name}</h2>
-            <p className="mt-2 max-w-sm text-ink-muted">Ask for anything. Tell it about yourself and it remembers.</p>
+
+        {empty ? (
+          <div className="flex h-full flex-col items-center justify-center gap-6 pb-10 text-center">
+            <h2 className="font-hand text-large-title text-ink">How can I help?</h2>
+            {live ? (
+              <div className="flex flex-wrap justify-center gap-2">
+                {STARTERS.map((starter) => (
+                  <button
+                    key={starter}
+                    type="button"
+                    disabled={send.isPending}
+                    onClick={() => send.mutate(starter)}
+                    className="rounded-full border border-line bg-surface px-4 py-2 text-base text-ink transition-colors hover:border-accent-line hover:bg-accent-soft/40"
+                  >
+                    {starter}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : (
-          <ol className="space-y-5" aria-label="Messages" aria-live="polite">
+          <ol className="space-y-7 pb-4 pt-2" aria-label="Messages" aria-live="polite">
             {list.map((message) => (
               <Line key={message.id} message={message} />
             ))}
+            {typing ? (
+              <li className="flex items-center gap-3">
+                <AgentAvatar name={agent.name} seed={agent.id} size="sm" />
+                <TypingIndicator agentName={agent.name} />
+              </li>
+            ) : null}
           </ol>
         )}
-        {typing ? (
-          <div className="mt-5 flex items-center gap-2.5">
-            <AgentAvatar name={agent.name} seed={agent.id} size="sm" />
-            <TypingIndicator agentName={agent.name} />
-          </div>
-        ) : null}
       </div>
-      <div className="border-t border-line p-3 sm:p-4">
+
+      <div className="pb-4 pt-2">
         <ChatComposer
           onSend={(text) => send.mutate(text)}
           sending={send.isPending}
           disabled={!live}
           placeholder={live ? `Message ${agent.name}` : `${agent.name} is off`}
           autoFocus
-          className="border-t-0 bg-transparent p-0"
         />
       </div>
     </div>
@@ -116,9 +135,11 @@ export function AgentChat({ project, agent, live }: { project: string; agent: { 
 function Line({ message }: { message: TeamMessageDto }) {
   if (!message.agent) {
     return (
-      <li className="flex flex-col items-end">
-        <p className="mb-1 text-xs text-ink-muted">{formatTime(message.createdAt)}</p>
-        <div className="max-w-[85%] rounded-panel rounded-br-sm bg-accent px-4 py-2.5 text-sm leading-relaxed text-accent-fg">
+      <li className="flex justify-end">
+        <div
+          className="max-w-[85%] rounded-panel rounded-br-md px-5 py-3 text-lg leading-relaxed text-ink shadow-xs"
+          style={{ background: "var(--note-sky)" }}
+        >
           <div className="space-y-2">
             <MessageText content={message.content} />
           </div>
@@ -127,17 +148,10 @@ function Line({ message }: { message: TeamMessageDto }) {
     );
   }
   return (
-    <li className="flex gap-2.5">
-      <AgentAvatar name={message.agent.name} src={message.agent.avatarUrl} seed={message.agent.id} size="sm" className="mt-5 ring-1 ring-line/50" />
-      <div className="min-w-0 max-w-[85%]">
-        <p className="mb-1 text-xs text-ink-muted">
-          <span className="font-medium text-ink">{message.agent.name}</span> · {formatTime(message.createdAt)}
-        </p>
-        <div className="rounded-panel rounded-tl-sm border border-line bg-surface px-4 py-2.5 text-sm leading-relaxed text-ink">
-          <div className="space-y-2">
-            <MessageText content={message.content} />
-          </div>
-        </div>
+    <li className="flex gap-3">
+      <AgentAvatar name={message.agent.name} src={message.agent.avatarUrl} seed={message.agent.id} size="sm" className="mt-1 shrink-0" />
+      <div className="min-w-0 flex-1 space-y-3 text-lg leading-relaxed text-ink">
+        <MessageText content={message.content} />
       </div>
     </li>
   );

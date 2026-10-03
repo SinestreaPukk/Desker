@@ -8,18 +8,7 @@ import { ErrorState, Skeleton } from "@/components/ui/states";
 import { useUpdateAgent } from "@/hooks/use-admin-data";
 import { useProjectContext, useSaveProjectContext } from "@/hooks/use-work-data";
 import { errorMessage } from "@/lib/shared/api-client";
-
-/** What the assistant picks up from chat, in the owner's words. Shown only once it has something. */
-const NOTICED: [id: string, label: string][] = [
-  ["goals", "What you want help with"],
-  ["tone", "How to talk to you"],
-  ["never", "What never to do"],
-  ["week", "Your week"],
-  ["money", "Money"],
-  ["people", "People who matter"],
-  ["preferences", "Likes and dislikes"],
-  ["voice", "How you write online"],
-];
+import { formatRelativeTime } from "@/lib/shared/utils";
 
 export function ProfileTab({ agent, project }: { agent: { id: string; name: string }; project: string }) {
   const context = useProjectContext(project);
@@ -37,7 +26,6 @@ export function ProfileTab({ agent, project }: { agent: { id: string; name: stri
   const nameValue = name ?? agent.name;
   const dirty = Object.keys(edits).length > 0 || (name !== null && name.trim() !== agent.name);
   const set = (id: string, text: string) => setEdits((current) => ({ ...current, [id]: text }));
-  const noticed = NOTICED.filter(([id]) => (answers[id] ?? "").trim() || id in edits);
 
   async function save() {
     try {
@@ -57,7 +45,7 @@ export function ProfileTab({ agent, project }: { agent: { id: string; name: stri
         <Input value={nameValue} onChange={(event) => setName(event.target.value)} maxLength={60} />
       </Field>
 
-      <Field label="About you" htmlFor="about" hint="Who you are, where you are, what matters. It adds to this as you chat.">
+      <Field label="About you" htmlFor="about" hint={context.data.learnedAt.about ? `Updated from your chat ${formatRelativeTime(context.data.learnedAt.about)}.` : "Who you are, where you are, what matters. It adds to this as you chat."}>
         <Textarea
           value={value("about")}
           onChange={(event) => set("about", event.target.value)}
@@ -65,22 +53,6 @@ export function ProfileTab({ agent, project }: { agent: { id: string; name: stri
           placeholder="I'm Maya, a designer in Bangkok. I live with Sam and I'm saving for a flat."
         />
       </Field>
-
-      {noticed.length > 0 ? (
-        <section aria-labelledby="noticed" className="space-y-4 rounded-lg border border-line bg-surface p-4">
-          <div>
-            <h2 id="noticed" className="text-sm font-semibold text-ink">
-              Noticed from your chats
-            </h2>
-            <p className="text-sm text-ink-muted">Fix anything that is wrong.</p>
-          </div>
-          {noticed.map(([id, label]) => (
-            <Field key={id} label={label} htmlFor={`noticed-${id}`}>
-              <Textarea value={value(id)} onChange={(event) => set(id, event.target.value)} rows={2} className="min-h-16" />
-            </Field>
-          ))}
-        </section>
-      ) : null}
 
       {dirty ? (
         <div className="sticky bottom-4 flex justify-end">

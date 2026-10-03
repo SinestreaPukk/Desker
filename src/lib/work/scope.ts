@@ -345,6 +345,9 @@ export interface DueScope {
   organizationId: string;
   /** ISO time of the tick being fired. */
   due: string;
+  /** Set when the tick belongs to one of the agent's routines rather than its single schedule. */
+  routineId?: string;
+  instruction?: string;
 }
 
 /**
@@ -389,6 +392,39 @@ export async function claimDueScopes(now = new Date()): Promise<DueScope[]> {
       due: due.toISOString(),
     });
   }
+
+  // Routines: the same claim, one per scheduled job.
+  const routines = await prisma.routine.findMany({
+    where: { enabled: true, agent: { status: "published" } },
+    select: {
+      id: true,
+      agentId: true,
+      cron: true,
+      timezone: true,
+      instruction: true,
+      lastFiredAt: true,
+      createdAt: true,
+      agent: { select: { project: { select: { organizationId: true } } } },
+    },
+  });
+  for (const routine of routines) {
+    const due = previousFire(routine.cron, routine.timezone, now);
+    if (!due) continue;
+    if (due <= (routine.lastFiredAt ?? routine.createdAt)) continue;
+    const won = await prisma.routine.updateMany({
+      where: { id: routine.id, OR: [{ lastFiredAt: null }, { lastFiredAt: { lt: due } }] },
+      data: { lastFiredAt: due },
+    });
+    if (won.count === 0) continue;
+    claimed.push({
+      scopeId: routine.id,
+      routineId: routine.id,
+      instruction: routine.instruction,
+      agentId: routine.agentId,
+      organizationId: routine.agent.project.organizationId,
+      due: due.toISOString(),
+    });
+  }
   return claimed;
 }
 
@@ -402,8 +438,8 @@ export async function fireScope(tick: DueScope): Promise<string | null> {
     const item = await startRun({
       agentId: tick.agentId,
       trigger: "schedule",
-      payload: { firedAt: tick.due },
-      dedupeKey: `${tick.scopeId}:${tick.due}`,
+      payload: { firedAt: tick.due, ...(tick.instruction ? { instruction: tick.instruction } : {}) },
+      dedupeKey: `${tick.routineId ?? tick.scopeId}:${tick.due}`,
       actor: { type: "schedule" },
     });
     return item?.id ?? null;

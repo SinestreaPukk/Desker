@@ -10,7 +10,7 @@ import { scopeInputSchema } from "@/lib/work/validation";
 export const dynamic = "force-dynamic";
 
 /** The one agent's settings. Opens its editor, creating the agent from the template on first visit. */
-export default async function AgentEntryPage({ params }: { params: Promise<{ project: string }> }) {
+export default async function AgentEntryPage({ params, searchParams }: { params: Promise<{ project: string }>; searchParams: Promise<{ section?: string }> }) {
   const user = await currentUser();
   if (!user) redirect("/login");
   const { project: handle } = await params;
@@ -24,5 +24,6 @@ export default async function AgentEntryPage({ params }: { params: Promise<{ pro
     // Manual until the owner picks a schedule: a cron in the wrong time zone is worse than none.
     await saveScope(agent.id, scopeInputSchema.parse({ ...scopeFromTemplate(template, "UTC"), triggerType: "manual", cron: null }));
   }
-  redirect(`/p/${handle}/agents/${agent.id}`);
+  const { section } = await searchParams;
+  redirect(`/p/${handle}/agents/${agent.id}${section ? `?section=${encodeURIComponent(section)}` : ""}`);
 }

@@ -286,9 +286,29 @@ model Agent {
   suggestions         Suggestion[]
   teamMessages        TeamMessage[]
   rules               AgentRule[]
+  routines            Routine[]
 
   @@index([status])
   @@index([projectId])
+}
+
+/// One scheduled job: "every Monday at 8, plan my week". An agent has any number.
+model Routine {
+  id          String    @id @default(cuid())
+  agentId     String
+  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  /// Five-field cron expression, evaluated in `timezone`.
+  cron        String
+  timezone    String    @default("UTC")
+  /// What to do each time, as an instruction to the agent.
+  instruction String
+  enabled     Boolean   @default(true)
+  lastFiredAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([agentId])
+  @@index([enabled])
 }
 
 /// A correction the owner chose to keep: saved from a rejected or edited

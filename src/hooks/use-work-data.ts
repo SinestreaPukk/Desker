@@ -15,6 +15,7 @@ import type { ProjectCheckInDto, SuggestionStatus } from "@/lib/work/types";
 import type { ContextAnswers } from "@/lib/work/context";
 import type { ProjectContextDto } from "@/lib/work/project-context";
 import type { AgentRuleDto } from "@/lib/work/rules";
+import type { RoutineDto } from "@/lib/work/routines";
 
 const workKeys = {
   scope: (agentId: string) => ["scope", agentId] as const,
@@ -42,6 +43,23 @@ export function useSaveScope(agentId: string) {
     mutationFn: (input: ScopeInputPayload) =>
       api<ScopeDto>(`/api/agents/${agentId}/scope`, { method: "PUT", body: JSON.stringify(input) }),
     onSuccess: (scope) => client.setQueryData(workKeys.scope(agentId), scope),
+  });
+}
+
+export function useRoutines(agentId: string) {
+  return useQuery({
+    queryKey: ["routines", agentId],
+    queryFn: () => api<RoutineDto[]>(`/api/agents/${agentId}/routines`),
+    enabled: Boolean(agentId),
+  });
+}
+
+export function useSaveRoutines(agentId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (routines: (Omit<RoutineDto, "id"> & { id?: string })[]) =>
+      api<RoutineDto[]>(`/api/agents/${agentId}/routines`, { method: "PUT", body: JSON.stringify({ routines }) }),
+    onSuccess: (list) => client.setQueryData(["routines", agentId], list),
   });
 }
 

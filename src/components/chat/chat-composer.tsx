@@ -30,7 +30,7 @@ export function ChatComposer({
     const element = textareaRef.current;
     if (!element) return;
     element.style.height = "auto";
-    element.style.height = `${Math.min(element.scrollHeight, 160)}px`;
+    element.style.height = `${Math.min(element.scrollHeight, 240)}px`;
   }, []);
 
   React.useEffect(resize, [value, resize]);
@@ -44,7 +44,7 @@ export function ChatComposer({
 
   return (
     <form
-      className={cn("border-t border-line bg-surface p-3", className)}
+      className={cn("bg-transparent", className)}
       onSubmit={(event) => {
         event.preventDefault();
         submit();
@@ -52,7 +52,7 @@ export function ChatComposer({
     >
       <div
         className={cn(
-          "flex items-end gap-2 rounded-lg border border-line bg-surface px-3.5 py-2 shadow-xs",
+          "flex items-end gap-3 rounded-panel border border-line bg-surface px-5 py-3.5 shadow-sm",
           "transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15",
           disabled && "opacity-60",
         )}
@@ -77,7 +77,7 @@ export function ChatComposer({
             }
           }}
           className={cn(
-            "flex-1 resize-none bg-transparent py-1.5 text-sm leading-relaxed text-ink",
+            "min-h-8 flex-1 resize-none bg-transparent py-1 text-lg leading-relaxed text-ink",
             "placeholder:text-ink-subtle focus:outline-none disabled:cursor-not-allowed",
           )}
         />
@@ -96,20 +96,16 @@ export function ChatComposer({
         ) : (
           <Button
             type="submit"
-            size="icon-sm"
+            size="icon"
             disabled={!value.trim() || sending || disabled}
             aria-label="Send message"
-            className="mb-0.5 rounded-lg"
+            className="mb-0.5 size-10"
           >
             <ArrowUp aria-hidden />
           </Button>
         )}
       </div>
-      {/* Said wherever someone talks to an agent: its answers are generated and can be wrong. */}
-      <p className="mt-1.5 flex flex-wrap justify-between gap-x-3 px-1 text-xs text-ink-muted">
-        <span>AI can make mistakes. Check important information.</span>
-        <span className="hidden sm:inline">Enter to send · Shift + Enter for a new line</span>
-      </p>
+      <p className="mt-2 text-center text-xs text-ink-muted">AI can make mistakes. Check important information.</p>
     </form>
   );
 }
