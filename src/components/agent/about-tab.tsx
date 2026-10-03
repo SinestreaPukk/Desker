@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { ErrorState, Skeleton } from "@/components/ui/states";
+import { DetailsSection } from "@/components/agent/details-section";
 import { Files, Rules } from "@/components/agent/files-rules";
 import { useUpdateAgent } from "@/hooks/use-admin-data";
 import { useProjectContext, useSaveProjectContext } from "@/hooks/use-work-data";
@@ -59,6 +60,8 @@ export function AboutTab({ agent, project }: { agent: { id: string; name: string
           />
         </Field>
       </section>
+
+      <DetailsSection project={project} />
 
       <Files agentId={agent.id} />
       <Rules agentId={agent.id} />

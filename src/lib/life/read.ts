@@ -22,7 +22,8 @@ export async function readLife(projectId: string, now = new Date()): Promise<Lif
     prisma.lifeTask.findMany({ where: { ...where, status: "open" }, take: 200 }),
     prisma.lifeGoal.findMany({ where: { ...where, status: "active" }, take: 50 }),
     prisma.lifeWorkout.findMany({ where: { ...where, status: "planned" }, take: 100 }),
-    prisma.lifePreference.findMany({ where }),
+    // Sealed details and logins live under these prefixes; they are never part of the picture agents read.
+    prisma.lifePreference.findMany({ where: { ...where, NOT: [{ key: { startsWith: "detail:" } }, { key: { startsWith: "login:" } }] } }),
     prisma.lifeNote.findMany({ where, orderBy: { createdAt: "desc" }, take: 8 }),
   ]);
   return buildLife({ events, entries, tasks, goals, workouts, prefs, notes }, now);

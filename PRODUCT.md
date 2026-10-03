@@ -26,7 +26,8 @@ Everything else (roster, approvals page, work log, audit, money, workflows, orga
 
 - Next.js 16 (App Router), React 19, Tailwind 4, Radix primitives, Prisma on Postgres, Inngest for background work. Deployed at https://personal.desker.dev.
 - The assistant keeps the About-you text current from what the person says in chat; the person can edit it.
-- Nothing leaves without approval; approvals arrive in the connected chat app.
+- Nothing leaves without approval; approvals arrive in the connected chat app and as Approve / Decline buttons in the web chat.
+- Browser (2026-10-03): it drives a hosted cloud browser (Browserbase) with Claude computer use to search flights and prices, fill in forms and sign up. It prepares first and stops before any final step; the person chooses to approve each final step or the whole job once. It never pays or books. Saved details and created logins are stored encrypted. Option 2 (their own computer) is promised for later.
 - Ask the person only what is necessary: a name, a few lines about them, and which abilities to allow. Everything else has a default.
 
 ## Brand Commitments

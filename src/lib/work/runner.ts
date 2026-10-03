@@ -10,6 +10,7 @@
  *
  * Nothing here knows about Inngest. Tests pass an identity StepRunner.
  */
+import { browserConfigured } from "@/lib/browser/session";
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/platform/db";
@@ -179,6 +180,8 @@ async function loadRun(actionItemId: string): Promise<LoadedRun | null> {
       tools: (tools ?? [...WORK_TOOL_IDS]).filter(
         (tool) =>
           (documents.length > 0 || tool !== "search_documents") &&
+          // The browser tools only exist where a browser does.
+          ((tool !== "browse_web" && tool !== "browse_commit") || browserConfigured()) &&
           (tool !== "review_spending" || documents.some((d) => d.filename.toLowerCase().endsWith(".csv"))),
       ),
       documentIds,

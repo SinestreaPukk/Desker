@@ -25,6 +25,8 @@ import { inngest } from "@/lib/jobs/client";
 import { afterResponse } from "@/lib/platform/after-response";
 import { notifyInBackground } from "@/lib/platform/notify";
 import { connectorAccess } from "@/lib/integrations/oauth";
+import { browserConfigured } from "@/lib/browser/session";
+import { runBrowserAction } from "@/lib/browser/run";
 import { splitOptedOut } from "@/lib/platform/email-optout";
 import {
   calendarAccess,
@@ -597,6 +599,26 @@ async function sendEmail(input: unknown, ctx: RunContext): Promise<WorkToolOutco
     draftId,
     note: parsed.data.note,
   });
+}
+
+const browseWebSchema = z.object({ goal: z.string().trim().min(5, "Describe the job.").max(1500), note: z.string().trim().max(300).optional() });
+const browseCommitSchema = z.object({ plan: z.string().trim().min(5, "Pass the plan from browse_web.").max(3000), note: z.string().trim().max(300).optional() });
+const NO_BROWSER = "The browser is not set up on this server yet, so this cannot be done. Say so in your report.";
+
+async function browseWeb(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = browseWebSchema.safeParse(input);
+  if (!parsed.success) return invalid("browse_web", parsed.error);
+  if (!browserConfigured()) return { content: NO_BROWSER, isError: true };
+  // Approve-once mode: the whole job is approved up front, so it may submit what it prepared.
+  const upfront = effectiveAutonomy(ctx.autonomy, ctx.toolAutonomy, "browse_web") === "draft_only";
+  return gateOrDeliver(ctx, { tool: "browse_web", input: { goal: parsed.data.goal, allow_commit: upfront }, note: parsed.data.note });
+}
+
+async function browseCommit(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
+  const parsed = browseCommitSchema.safeParse(input);
+  if (!parsed.success) return invalid("browse_commit", parsed.error);
+  if (!browserConfigured()) return { content: NO_BROWSER, isError: true };
+  return gateOrDeliver(ctx, { tool: "browse_commit", input: { plan: parsed.data.plan }, note: parsed.data.note });
 }
 
 async function scheduleFollowup(input: unknown, ctx: RunContext): Promise<WorkToolOutcome> {
@@ -1226,6 +1248,12 @@ export async function executeWorkTool(call: ToolCall, ctx: RunContext): Promise<
         case "social_manage":
           outcome = await socialManage(call.input, ctx);
           break;
+        case "browse_web":
+          outcome = await browseWeb(call.input, ctx);
+          break;
+        case "browse_commit":
+          outcome = await browseCommit(call.input, ctx);
+          break;
       }
     } catch (error) {
       outcome = {
@@ -1383,6 +1411,8 @@ export async function executePendingAction(
     const access = await connectorAccess(organizationId, "github");
     if (!access) return { ok: false, status: 0, detail: "GitHub is not connected." };
     delivery = await writeGithub(access.accessToken, action.input as unknown as GithubWrite);
+  } else if (action.tool === "browse_web" || action.tool === "browse_commit") {
+    delivery = await runBrowserAction(actionItemId, organizationId, action);
   } else if (action.tool === "slack_post_message") {
     const access = await connectorAccess(organizationId, "slack");
     if (!access) return { ok: false, status: 0, detail: "Slack is not connected." };

@@ -38,6 +38,19 @@ export function AbilitiesTab({ agentId, project }: { agentId: string; project: s
     }
   }
 
+  // Your choice for the browser: stop before each final step, or approve the whole job once.
+  const browseMode = scope.data.toolAutonomy?.browse_web === "auto" ? "each" : "once";
+  async function chooseMode(next: "each" | "once") {
+    try {
+      await save.mutateAsync({
+        ...scopeToInput(scope.data!),
+        toolAutonomy: { ...(scope.data!.toolAutonomy ?? {}), browse_web: next === "each" ? "auto" : "draft_only", browse_commit: next === "each" ? "draft_only" : "auto" },
+      });
+    } catch (caught) {
+      toast.error(errorMessage(caught));
+    }
+  }
+
   const works = ABILITIES.filter((ability) => !ability.needs);
   const needs = ABILITIES.filter((ability) => ability.needs);
 
@@ -51,7 +64,36 @@ export function AbilitiesTab({ agentId, project }: { agentId: string; project: s
         </h2>
         <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
           {works.map((ability) => (
-            <Row key={ability.id} ability={ability}>
+            <Row
+              key={ability.id}
+              ability={ability}
+              below={
+                ability.id === "browser" && on.has("browser") ? (
+                  <fieldset className="mt-3">
+                    <legend className="mb-1.5 text-sm font-medium text-ink">When it needs your yes</legend>
+                    <div className="inline-flex flex-wrap gap-1 rounded-full bg-ink/[0.06] p-0.5" role="radiogroup">
+                      {(
+                        [
+                          ["each", "Before each final step"],
+                          ["once", "Once for the whole job"],
+                        ] as const
+                      ).map(([id, label]) => (
+                        <button
+                          key={id}
+                          type="button"
+                          role="radio"
+                          aria-checked={browseMode === id}
+                          onClick={() => void chooseMode(id)}
+                          className={`rounded-full px-3.5 py-1 text-sm font-medium transition-colors pointer-coarse:min-h-11 ${browseMode === id ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                ) : null
+              }
+            >
               <Switch id={`ability-${ability.id}`} checked={on.has(ability.id)} onCheckedChange={(checked) => void toggle(ability.id, checked)} />
             </Row>
           ))}
@@ -80,16 +122,19 @@ export function AbilitiesTab({ agentId, project }: { agentId: string; project: s
   );
 }
 
-function Row({ ability, children }: { ability: Ability; children: React.ReactNode }) {
+function Row({ ability, children, below }: { ability: Ability; children: React.ReactNode; below?: React.ReactNode }) {
   return (
-    <li className="flex items-center gap-4 px-4 py-3.5">
-      <div className="min-w-0 flex-1">
-        <label htmlFor={`ability-${ability.id}`} className="block font-medium text-ink">
-          {ability.label}
-        </label>
-        <p className="text-sm text-ink-muted">{ability.hint}</p>
+    <li className="px-4 py-3.5">
+      <div className="flex items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <label htmlFor={`ability-${ability.id}`} className="block font-medium text-ink">
+            {ability.label}
+          </label>
+          <p className="text-sm text-ink-muted">{ability.hint}</p>
+        </div>
+        {children}
       </div>
-      {children}
+      {below}
     </li>
   );
 }

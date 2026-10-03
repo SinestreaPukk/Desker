@@ -205,6 +205,16 @@ function describeToolCall(meta: Record<string, unknown>): AuditDescription {
       return gated
         ? { title: "Drafted a reply for your approval", detail: "It sits as a draft in the thread, in your own mailbox. It waits in Needs you; nothing has been sent.", tone: "warning", icon: "approval" }
         : { title: "Replied to an email", detail: null, tone: "positive", icon: "send" };
+    case "browse_web":
+      if (!ok) return failed("Tried to use the browser");
+      return gated
+        ? { title: "Queued a browser job for your approval", detail: "Nothing has been opened or submitted.", tone: "warning", icon: "approval" }
+        : { title: "Searched and prepared in a browser", detail: null, tone: "positive", icon: "documents" };
+    case "browse_commit":
+      if (!ok) return failed("Tried to submit in the browser");
+      return gated
+        ? { title: "Prepared a browser step for your approval", detail: "Nothing has been submitted.", tone: "warning", icon: "approval" }
+        : { title: "Submitted in the browser", detail: null, tone: "positive", icon: "send" };
     case "slack_post_message":
       if (!ok) return failed("Tried to post to Slack");
       return gated
@@ -292,6 +302,8 @@ const FAILED_DELIVERY: Record<string, string> = {
   phone_send: "A text or call could not be sent",
   inbox_reply: "An email reply could not be sent",
   slack_post_message: "A Slack message could not be posted",
+  browse_web: "A browser job could not be done",
+  browse_commit: "A browser step could not be submitted",
   github_write: "A GitHub change could not be made",
   social_manage: "A social post could not be changed",
 };
@@ -388,6 +400,10 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
       return { title: "Moved an approved calendar event", detail: text(meta.detail), tone: "positive", icon: "schedule" };
     case "inbox_reply.delivered":
       return { title: "Sent an approved email reply", detail: text(meta.detail), tone: "positive", icon: "send" };
+    case "browse_web.delivered":
+      return { title: "Finished an approved browser job", detail: text(meta.detail), tone: "positive", icon: "documents" };
+    case "browse_commit.delivered":
+      return { title: "Submitted an approved step in the browser", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "slack_post_message.delivered":
       return { title: "Posted an approved message to Slack", detail: text(meta.detail), tone: "positive", icon: "send" };
     case "social_manage.delivered":
@@ -402,6 +418,8 @@ export function describeAuditEntry(entry: AuditLike): AuditDescription {
     case "calendar_cancel_event.failed":
     case "calendar_reschedule.failed":
     case "inbox_reply.failed":
+    case "browse_web.failed":
+    case "browse_commit.failed":
     case "slack_post_message.failed":
     case "github_write.failed":
     case "social_manage.failed":

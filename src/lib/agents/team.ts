@@ -9,6 +9,7 @@
 import "server-only";
 import { prisma } from "@/lib/platform/db";
 import { env } from "@/lib/platform/env";
+import { browserConfigured } from "@/lib/browser/session";
 import { toStringArray } from "@/lib/agents/agent-fields";
 import { buildSystemPrompt } from "@/lib/agents/agent-prompt";
 import { getProvider } from "@/lib/llm/provider";
@@ -165,7 +166,7 @@ async function replyAs(input: {
           rules,
         }),
         abilitiesSection(
-          toStringArray(scope?.tools),
+          toStringArray(scope?.tools).filter((tool) => browserConfigured() || !tool.startsWith("browse_")),
           documents.map((document) => document.filename),
         ),
         roomSection(),

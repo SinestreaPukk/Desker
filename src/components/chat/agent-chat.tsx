@@ -9,6 +9,7 @@ import { AgentAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ErrorState, LoadingRows } from "@/components/ui/states";
+import { ApprovalCard } from "@/components/chat/approval-card";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { TypingIndicator } from "@/components/chat/chat-thread";
 import { MessageText } from "@/components/chat/message-text";
@@ -284,6 +285,7 @@ function Line({ message }: { message: TeamMessageDto }) {
       <AgentAvatar name={message.agent.name} src={message.agent.avatarUrl} seed={message.agent.id} size="sm" className="mt-0.5 shrink-0" />
       <div className="min-w-0 max-w-[70ch] flex-1 space-y-3 text-base leading-relaxed text-ink">
         <MessageText content={message.content} />
+        {message.actionItemId ? <ApprovalCard actionItemId={message.actionItemId} /> : null}
       </div>
     </li>
   );

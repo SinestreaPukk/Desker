@@ -38,6 +38,8 @@ const REACHES_OUT: Record<GatedToolId, string> = {
   phone_send: "Text or call people",
   inbox_reply: "Reply to emails",
   slack_post_message: "Post to Slack",
+  browse_web: "Start a browser job",
+  browse_commit: "Submit a sign-up or form in the browser",
   github_write: "Change GitHub: commits, pull requests and issues",
   social_manage: "Edit or delete your social posts",
 };

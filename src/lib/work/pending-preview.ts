@@ -31,6 +31,10 @@ export function previewPending(pending: PendingAction, draft?: { title?: string 
       return { verb: i.kind === "call" ? "Place a call" : "Send a text", lines: [`To: ${s(i.to)}`, clip(s(i.message), 300)] };
     case "slack_post_message":
       return { verb: "Post to Slack", lines: [`${s(i.channel)}: ${clip(s(i.text), 300)}`] };
+    case "browse_web":
+      return { verb: "Do this in a browser", lines: [clip(s(i.goal), 400), "It may sign you up or fill in forms. It never pays or books."] };
+    case "browse_commit":
+      return { verb: "Submit in the browser", lines: [clip(s(i.plan), 500), "It never pays or books."] };
     default:
       return { verb: "Make a change", lines: [pending.note ?? ""].filter(Boolean) };
   }

@@ -37,6 +37,8 @@ export const WORK_TOOL_IDS = [
   "github_write",
   "social_read",
   "social_manage",
+  "browse_web",
+  "browse_commit",
   "schedule_followup",
   "delegate_to_colleague",
   "suggest_opportunity",
@@ -88,6 +90,8 @@ export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
   inbox_read: "read",
   inbox_reply: "external",
   slack_post_message: "external",
+  browse_web: "internal",
+  browse_commit: "external",
 };
 
 /** The tools a person can move to auto mode independently of the agent. */
@@ -150,6 +154,14 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   inbox_reply: {
     label: "Reply in email threads",
     blurb: "Draft a reply in the real thread in your mailbox; it sends when you approve. Needs Gmail or Outlook connected.",
+  },
+  browse_web: {
+    label: "Browse the web for you",
+    blurb: "Use a real browser to search flights and prices, read pages and fill in forms. It never submits anything final, never pays and never books.",
+  },
+  browse_commit: {
+    label: "Finish what it prepared in the browser",
+    blurb: "Carry out the plan it prepared: submit a sign-up or a form. You approve first, and it still never pays or books.",
   },
   slack_post_message: {
     label: "Post to Slack",
@@ -434,6 +446,34 @@ const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinitio
         note: { type: "string", description: "One line for the approver: what this answers." },
       },
       required: ["thread_id", "body"],
+      additionalProperties: false,
+    },
+  },
+  browse_web: {
+    name: "browse_web",
+    description:
+      "Do a job in a real web browser: search flights, hotels and prices, read pages, and fill in forms with the person's saved details. It prepares and never finishes: it stops before any sign-up, form submission or booking and returns a plan. It never pays and never books. Give the whole job in one clear sentence, with dates, places and preferences. Returns what it found, or the plan for the final step (then call browse_commit with that plan).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        goal: { type: "string", description: "The whole job, with every detail the browser needs (dates, places, names, budget)." },
+        note: { type: "string", description: "One line for the approver: what and why." },
+      },
+      required: ["goal"],
+      additionalProperties: false,
+    },
+  },
+  browse_commit: {
+    name: "browse_commit",
+    description:
+      "Carry out a plan that browse_web prepared: submit the sign-up or form it filled in. Pass the plan exactly as browse_web returned it. Queues for the person's approval. It never pays and never books.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        plan: { type: "string", description: "The plan from browse_web: the site, the fields and values, and the exact final button." },
+        note: { type: "string", description: "One line for the approver: what will be submitted and where." },
+      },
+      required: ["plan"],
       additionalProperties: false,
     },
   },

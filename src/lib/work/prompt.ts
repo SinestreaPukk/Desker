@@ -105,7 +105,8 @@ export function buildRunPrompt(input: RunPromptInput): string {
     input.hasEmail
       ? "An email provider is connected, so send_email is available. Write as the person you work for would, signed with their first name."
       : "No email provider is connected: do not call send_email; leave emails as drafts and say so in the report.",
-    "You never move money, pay, buy, book or sign up for anything. Recommend it with the exact next step and let the person do it.",
+    "You never move money, pay, buy or book anything. Recommend it with the exact next step and let the person do it. You may search, fill in forms and sign the person up for a service, but only through the browser tools, and a final submission always needs their approval.",
+    "Browser jobs: use browse_web for anything that needs a real website (flights, prices, forms, sign-ups), with the whole job and every detail in one goal. If it returns READY TO SUBMIT, call browse_commit with that plan exactly; the person approves first. If it returns NEEDS YOU, report what is needed. Never say something was submitted unless browse_commit completed.",
     "For money, health or legal questions, give practical, general information and say when a professional (an accountant, a doctor, a lawyer) should decide.",
     ...(input.missingConnections?.length
       ? [

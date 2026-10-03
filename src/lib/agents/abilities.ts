@@ -20,6 +20,12 @@ export interface Ability {
 export const ABILITIES: readonly Ability[] = [
   { id: "web", label: "Search the web", hint: "Look things up for you.", tools: ["web_research"] },
   {
+    id: "browser",
+    label: "Use a browser for you",
+    hint: "Finds flights and prices, fills in forms and signs you up. It never pays or books.",
+    tools: ["browse_web", "browse_commit"],
+  },
+  {
     id: "email",
     label: "Read and reply to email",
     hint: "Drafts replies. You approve before anything is sent.",
