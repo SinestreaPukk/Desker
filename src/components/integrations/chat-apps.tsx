@@ -38,7 +38,7 @@ export function ChatApps() {
     onSuccess: (next) => client.setQueryData(KEY, next),
   });
 
-  if (settings.isPending) return <Skeleton className="h-48" />;
+  if (settings.isPending) return <Skeleton className="h-48" aria-busy aria-label="Loading" />;
   if (settings.error) return <ErrorState message={errorMessage(settings.error)} onRetry={() => void settings.refetch()} />;
   const data = settings.data;
 

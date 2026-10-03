@@ -4,6 +4,7 @@ import { currentUser } from "@/lib/auth/auth";
 import { findProject } from "@/lib/tenancy/projects";
 import { templateById } from "@/lib/site/content";
 import { agentFromTemplate, scopeFromTemplate } from "@/lib/agents/hire-from-template";
+import { defaultAbilities, toolsFor } from "@/lib/agents/abilities";
 import { saveScope } from "@/lib/work/scope";
 import { scopeInputSchema } from "@/lib/work/validation";
 
@@ -22,7 +23,7 @@ export default async function AgentEntryPage({ params, searchParams }: { params:
     const template = templateById("personal-assistant")!;
     agent = await prisma.agent.create({ data: { projectId: project.id, ...agentFromTemplate(template, template.name) }, select: { id: true } });
     // Manual until the owner picks a schedule: a cron in the wrong time zone is worse than none.
-    await saveScope(agent.id, scopeInputSchema.parse({ ...scopeFromTemplate(template, "UTC"), triggerType: "manual", cron: null }));
+    await saveScope(agent.id, scopeInputSchema.parse({ ...scopeFromTemplate(template, "UTC"), triggerType: "manual", cron: null, tools: toolsFor(defaultAbilities()) }));
   }
   const { section } = await searchParams;
   redirect(`/p/${handle}/agents/${agent.id}${section ? `?section=${encodeURIComponent(section)}` : ""}`);

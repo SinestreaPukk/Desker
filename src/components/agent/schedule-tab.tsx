@@ -4,6 +4,7 @@ import * as React from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Note } from "@/components/ui/note";
 import { Textarea } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -37,7 +38,7 @@ export function ScheduleTab({ agentId }: { agentId: string }) {
   const save = useSaveRoutines(agentId);
   const [draft, setDraft] = React.useState<Row[] | null>(null);
 
-  if (routines.isPending) return <Skeleton className="h-56" />;
+  if (routines.isPending) return <Skeleton className="h-56" aria-busy aria-label="Loading" />;
   if (routines.error || !routines.data) return <ErrorState message={errorMessage(routines.error)} onRetry={() => void routines.refetch()} />;
 
   const rows: Row[] = draft ?? routines.data.map((routine) => ({ ...routine, key: routine.id }));
@@ -63,7 +64,10 @@ export function ScheduleTab({ agentId }: { agentId: string }) {
       <p className="text-ink-muted">Jobs it does on its own, at the time you pick.</p>
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-sm text-ink-muted">No routines yet.</p>
+        <Note tone="mint" className="px-5 py-8 text-center">
+          <p className="font-hand text-xl text-note-ink">Nothing scheduled</p>
+          <p className="mt-1 text-sm">Try: every weekday at 8, tell me about my day.</p>
+        </Note>
       ) : (
         <ul className="space-y-3">
           {rows.map((row) => {

@@ -94,6 +94,11 @@ export const CORE_TOOLS: readonly WorkToolId[] = [
   "delegate_to_colleague",
 ];
 
+/** What a new assistant starts with: only the abilities that need no connected app. */
+export function defaultAbilities(): Set<string> {
+  return new Set(ABILITIES.filter((ability) => !ability.needs).map((ability) => ability.id));
+}
+
 /** The abilities a stored tool list switches on. Null (every tool) means all of them. */
 export function enabledAbilities(tools: readonly string[] | null): Set<string> {
   if (!tools) return new Set(ABILITIES.map((ability) => ability.id));

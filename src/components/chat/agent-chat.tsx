@@ -2,16 +2,17 @@
 
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, X } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AgentAvatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ErrorState, LoadingRows } from "@/components/ui/states";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { TypingIndicator } from "@/components/chat/chat-thread";
 import { MessageText } from "@/components/chat/message-text";
 import { api, errorMessage } from "@/lib/shared/api-client";
 import { EVERYDAY_THREAD, type TeamMessageDto, type TeamThreadDto } from "@/lib/agents/team-dto";
-import { cn } from "@/lib/shared/utils";
 
 /** How long the chat waits on a reply before it stops showing the assistant typing. */
 const REPLY_TIMEOUT_MS = 90_000;
@@ -19,17 +20,23 @@ const REPLY_TIMEOUT_MS = 90_000;
 const STARTERS = ["Plan my week", "What can you do for me?", "Remind me to call mum tomorrow at 6"];
 const NEW = "new";
 
+/** A chat's name for a tab or menu: the everyday chat by its short name, others from their first line. */
+function titleOf(title: string): string {
+  if (title === EVERYDAY_THREAD) return "Everyday";
+  const clean = title.replace(/^(@\w+\s*)+/, "").trim() || title;
+  return clean.length > 40 ? `${clean.slice(0, 40).trimEnd()}…` : clean;
+}
+
 /**
  * Chats as tabs, like a chat app: the everyday chat (the one LINE, Telegram and
  * the other apps share) first, then any you start here. Replies sit on the page,
  * yours is a note, and the box is big; on an empty chat it sits in the middle.
  */
-export function AgentChat({ project, agent, live }: { project: string; agent: { id: string; name: string }; live: boolean }) {
+export function AgentChat({ project, agent, live, onNeedAbout }: { project: string; agent: { id: string; name: string }; live: boolean; onNeedAbout: () => void }) {
   const client = useQueryClient();
   const [chosen, setChosen] = React.useState<string | null>(null);
   const [typing, setTyping] = React.useState<{ threadId: string; since: string } | null>(null);
-  const [confirming, setConfirming] = React.useState(false);
-  const threadsKey = ["team-threads", project];
+    const threadsKey = ["team-threads", project];
 
   const threads = useQuery({
     queryKey: threadsKey,
@@ -82,7 +89,6 @@ export function AgentChat({ project, agent, live }: { project: string; agent: { 
       await api(`/api/team/${id}`, { method: "DELETE" });
       client.setQueryData<TeamThreadDto[]>(threadsKey, (old) => (old ?? []).filter((chat) => chat.id !== id));
       setChosen(null);
-      setConfirming(false);
     } catch (caught) {
       toast.error(errorMessage(caught));
     }
@@ -111,64 +117,48 @@ export function AgentChat({ project, agent, live }: { project: string; agent: { 
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="mb-2 flex items-center gap-1 overflow-x-auto" role="tablist" aria-label="Chats">
-        {chats.map((chat) => {
-          const active = chat.id === current && !isNew;
-          return (
-            <span key={chat.id} className={cn("flex shrink-0 items-center rounded-md", active ? "bg-ink/[0.07]" : "hover:bg-ink/[0.04]")}>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => {
-                  setChosen(chat.id);
-                  setConfirming(false);
-                }}
-                className={cn("max-w-44 truncate rounded-md px-3 py-1.5 text-sm", active ? "font-semibold text-ink" : "text-ink-muted hover:text-ink")}
-              >
-                {chat.title === EVERYDAY_THREAD ? "Everyday" : chat.title}
-              </button>
-              {active && chat.id !== everyday?.id ? (
-                confirming ? (
-                  <button type="button" onClick={() => void remove(chat.id)} className="mr-1 rounded-md px-2 py-1 text-xs font-semibold text-danger hover:bg-danger-soft">
-                    Delete?
-                  </button>
-                ) : (
-                  <button type="button" aria-label="Delete this chat" onClick={() => setConfirming(true)} className="mr-1 rounded-md p-1 text-ink-subtle hover:text-ink">
-                    <X className="size-3.5" aria-hidden />
-                  </button>
-                )
-              ) : null}
-            </span>
-          );
-        })}
-        {isNew && chats.length > 0 ? (
-          <span role="tab" aria-selected className="shrink-0 rounded-md bg-ink/[0.07] px-3 py-1.5 text-sm font-semibold text-ink">
-            New chat
-          </span>
-        ) : null}
-        <button
-          type="button"
-          aria-label="New chat"
-          title="New chat"
-          disabled={isNew}
-          onClick={() => {
-            setChosen(NEW);
-            setConfirming(false);
-          }}
-          className="ml-1 flex size-8 shrink-0 items-center justify-center rounded-md text-ink-muted hover:bg-ink/[0.05] hover:text-ink disabled:opacity-40"
-        >
-          <Plus className="size-4" aria-hidden />
-        </button>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="max-w-[70%] pointer-coarse:min-h-11" aria-label="Choose a chat">
+              <span className="truncate">{isNew ? "New chat" : titleOf(chats.find((chat) => chat.id === current)?.title ?? "")}</span>
+              <ChevronDown aria-hidden />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-72">
+            {chats.map((chat) => (
+              <DropdownMenuItem key={chat.id} onSelect={() => setChosen(chat.id)} className={chat.id === current && !isNew ? "font-semibold" : undefined}>
+                <span className="truncate">{titleOf(chat.title)}</span>
+              </DropdownMenuItem>
+            ))}
+            {!isNew && current !== everyday?.id ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => void remove(current)} className="text-danger">
+                  <Trash2 aria-hidden />
+                  Delete this chat
+                </DropdownMenuItem>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button variant="secondary" size="sm" disabled={isNew} onClick={() => setChosen(NEW)}>
+          <Plus aria-hidden />
+          New chat
+        </Button>
       </div>
 
+      {!live ? (
+        <p className="mb-3 rounded-md px-4 py-2.5 text-sm text-ink" style={{ background: "var(--note-lemon)" }}>
+          {agent.name} is off.{" "}
+          <button type="button" onClick={onNeedAbout} className="font-semibold underline underline-offset-2">
+            Add a few lines about you
+          </button>
+          , then switch it on.
+        </p>
+      ) : null}
       {/* One white panel around the whole conversation. */}
       <div className="flex min-h-0 flex-1 flex-col rounded-panel border border-line bg-surface p-4 shadow-xs sm:p-5">
-        {!live ? (
-          <p className="mb-3 rounded-md px-4 py-2.5 text-sm text-ink" style={{ background: "var(--note-lemon)" }}>
-            {agent.name} is off. Add a few lines about you in Profile, then switch it on.
-          </p>
-        ) : null}
 
         {empty ? (
           <div className="flex min-h-0 flex-1 flex-col justify-center gap-6 pb-16">
@@ -228,7 +218,7 @@ function Line({ message }: { message: TeamMessageDto }) {
   return (
     <li className="flex gap-3">
       <AgentAvatar name={message.agent.name} src={message.agent.avatarUrl} seed={message.agent.id} size="sm" className="mt-0.5 shrink-0" />
-      <div className="min-w-0 flex-1 space-y-3 text-base leading-relaxed text-ink">
+      <div className="min-w-0 max-w-[70ch] flex-1 space-y-3 text-base leading-relaxed text-ink">
         <MessageText content={message.content} />
       </div>
     </li>

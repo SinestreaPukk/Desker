@@ -6,9 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgentChat } from "@/components/chat/agent-chat";
 import { AbilitiesTab } from "@/components/agent/abilities-tab";
-import { KnowledgeTab } from "@/components/agent/knowledge-tab";
-import { MemoryTab } from "@/components/agent/memory-tab";
-import { ProfileTab } from "@/components/agent/profile-tab";
+import { AboutTab } from "@/components/agent/about-tab";
 import { ScheduleTab } from "@/components/agent/schedule-tab";
 import { useUpdateAgent } from "@/hooks/use-admin-data";
 import { errorMessage } from "@/lib/shared/api-client";
@@ -17,10 +15,8 @@ import type { AgentDetailDto } from "@/lib/shared/serialize";
 
 const TABS = [
   { id: "chat", label: "Chat" },
-  { id: "profile", label: "Profile" },
-  { id: "memory", label: "Memory" },
+  { id: "about", label: "About you" },
   { id: "abilities", label: "Abilities" },
-  { id: "knowledge", label: "Knowledge" },
   { id: "schedule", label: "Schedule" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
@@ -37,7 +33,7 @@ export function AgentScreen({ agent, project, initialTab }: { agent: AgentDetail
     } catch (caught) {
       toast.error(errorMessage(caught));
       // Switching on needs a few lines about the person: send them to where they write them.
-      if (next) setTab("profile");
+      if (next) setTab("about");
     }
   }
 
@@ -72,19 +68,13 @@ export function AgentScreen({ agent, project, initialTab }: { agent: AgentDetail
           </TabsList>
         </div>
         <TabsContent value="chat" className="min-h-0 flex-1">
-          <AgentChat project={project} agent={{ id: agent.id, name: agent.name }} live={live} />
+          <AgentChat project={project} agent={{ id: agent.id, name: agent.name }} live={live} onNeedAbout={() => setTab("about")} />
         </TabsContent>
-        <TabsContent value="profile">
-          <ProfileTab agent={{ id: agent.id, name: agent.name }} project={project} />
-        </TabsContent>
-        <TabsContent value="memory">
-          <MemoryTab project={project} />
+        <TabsContent value="about">
+          <AboutTab agent={{ id: agent.id, name: agent.name }} project={project} />
         </TabsContent>
         <TabsContent value="abilities">
           <AbilitiesTab agentId={agent.id} project={project} />
-        </TabsContent>
-        <TabsContent value="knowledge">
-          <KnowledgeTab agentId={agent.id} />
         </TabsContent>
         <TabsContent value="schedule">
           <ScheduleTab agentId={agent.id} />

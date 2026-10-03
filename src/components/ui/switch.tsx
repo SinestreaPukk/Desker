@@ -10,7 +10,8 @@ export function Switch({
   return (
     <SwitchPrimitive.Root
       className={cn(
-        "peer inline-flex h-6 w-10 shrink-0 items-center rounded-full border border-transparent",
+        "peer relative inline-flex h-6 w-10 shrink-0 items-center rounded-full border border-transparent",
+        "pointer-coarse:after:absolute pointer-coarse:after:-inset-2.5 pointer-coarse:after:content-['']",
         "transition-colors bg-line-strong data-[state=checked]:bg-accent",
         "disabled:cursor-not-allowed disabled:opacity-50",
         className,

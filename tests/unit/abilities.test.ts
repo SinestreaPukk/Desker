@@ -14,3 +14,13 @@ describe("abilities", () => {
     expect(enabledAbilities(null).size).toBeGreaterThan(5);
   });
 });
+
+describe("defaults", () => {
+  it("start with only what needs no connected app", async () => {
+    const { defaultAbilities, ABILITIES } = await import("@/lib/agents/abilities");
+    const on = defaultAbilities();
+    expect(on.has("web")).toBe(true);
+    expect(on.has("email")).toBe(false);
+    expect([...on].every((id) => !ABILITIES.find((a) => a.id === id)!.needs)).toBe(true);
+  });
+});

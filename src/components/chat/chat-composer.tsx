@@ -77,7 +77,7 @@ export function ChatComposer({
           }}
           className={cn(
             "block min-h-[4.5rem] w-full resize-none bg-transparent pb-9 pr-12 text-base leading-relaxed text-ink",
-            "placeholder:text-ink-subtle focus:outline-none disabled:cursor-not-allowed",
+            "placeholder:text-ink-muted focus:outline-none disabled:cursor-not-allowed",
           )}
         />
 

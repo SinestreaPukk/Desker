@@ -30,7 +30,7 @@ export function TabsTrigger({
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-medium",
+        "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-medium pointer-coarse:min-h-11",
         "text-ink-muted transition-colors duration-150 hover:text-ink",
         "data-[state=active]:bg-surface data-[state=active]:text-ink data-[state=active]:shadow-sm",
         className,

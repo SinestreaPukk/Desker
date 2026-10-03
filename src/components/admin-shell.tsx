@@ -63,7 +63,7 @@ export function AdminShell({
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "rounded-md px-3 py-1.5 text-sm font-semibold text-ink transition-[background-color,transform] duration-150 ease-out",
+                    "rounded-md px-3 py-1.5 text-sm font-semibold text-ink transition-[background-color,transform] duration-150 ease-out pointer-coarse:py-3",
                     active ? "shadow-xs" : "text-ink-muted hover:bg-ink/[0.05] hover:text-ink",
                   )}
                   style={active ? { background: `var(--note-${item.tone})`, rotate: "-1deg" } : undefined}
@@ -78,7 +78,7 @@ export function AdminShell({
             <DropdownMenuTrigger asChild>
               <button
                 aria-label="Account"
-                className="flex size-9 shrink-0 items-center justify-center rounded-full border border-line bg-surface-3 text-xs font-semibold text-ink transition-colors hover:border-line-strong"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full pointer-coarse:size-11 border border-line bg-surface-3 text-xs font-semibold text-ink transition-colors hover:border-line-strong"
               >
                 {initialsOf(name || email) || "?"}
               </button>

@@ -4,6 +4,7 @@ import * as React from "react";
 import { FileText, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Note } from "@/components/ui/note";
 import { Input } from "@/components/ui/field";
 import { ErrorState, Skeleton } from "@/components/ui/states";
 import { useDeleteDocument, useDocuments, useUploadDocument } from "@/hooks/use-admin-data";
@@ -13,17 +14,7 @@ import { ACCEPTED_EXTENSIONS } from "@/lib/rag/extract-shared";
 
 const ACCEPT = ACCEPTED_EXTENSIONS.join(",");
 
-/** Files it can read, and rules it keeps. */
-export function KnowledgeTab({ agentId }: { agentId: string }) {
-  return (
-    <div className="space-y-10">
-      <Files agentId={agentId} />
-      <Rules agentId={agentId} />
-    </div>
-  );
-}
-
-function Files({ agentId }: { agentId: string }) {
+export function Files({ agentId }: { agentId: string }) {
   const documents = useDocuments(agentId);
   const upload = useUploadDocument(agentId);
   const remove = useDeleteDocument(agentId);
@@ -57,11 +48,14 @@ function Files({ agentId }: { agentId: string }) {
       </div>
 
       {documents.isPending ? (
-        <Skeleton className="h-16" />
+        <Skeleton className="h-16" aria-busy aria-label="Loading" />
       ) : documents.error ? (
         <ErrorState message={errorMessage(documents.error)} onRetry={() => void documents.refetch()} />
       ) : documents.data.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-line px-4 py-6 text-center text-sm text-ink-muted">No files yet.</p>
+        <Note tone="sky" className="px-5 py-6 text-center">
+          <p className="font-hand text-xl text-note-ink">No files yet</p>
+          <p className="mt-1 text-sm">Add a statement, a plan or a CV and it can read it.</p>
+        </Note>
       ) : (
         <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
           {documents.data.map((document) => (
@@ -91,7 +85,7 @@ function Files({ agentId }: { agentId: string }) {
   );
 }
 
-function Rules({ agentId }: { agentId: string }) {
+export function Rules({ agentId }: { agentId: string }) {
   const rules = useAgentRules(agentId);
   const save = useSaveRule(agentId);
   const remove = useRemoveRule(agentId);
@@ -130,7 +124,7 @@ function Rules({ agentId }: { agentId: string }) {
       </form>
 
       {rules.isPending ? (
-        <Skeleton className="h-16" />
+        <Skeleton className="h-16" aria-busy aria-label="Loading" />
       ) : rules.error ? (
         <ErrorState message={errorMessage(rules.error)} onRetry={() => void rules.refetch()} />
       ) : rules.data.length === 0 ? null : (

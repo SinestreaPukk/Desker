@@ -16,7 +16,7 @@ Desker Personal is a single AI assistant that knows its owner, works for them an
 
 ## Screens (bare minimum, decided 2026-10-03)
 
-1. **Agent**: Chat (default tab), Profile (name, About you), Abilities (what it can do), Knowledge (documents and learned rules), Schedule. No model picker.
+1. **Agent**: Chat (default tab), About you (name, About you, what it has learned, files, rules), Abilities (what it can do; apps-gated ones stay off until connected), Schedule (any number of routines). No model picker.
 2. **Integrations**: connect LINE, Telegram, Gmail, Calendar, Slack, GitHub and social accounts; choose what reaches you there.
 3. **Productivity**: intentionally blank for now.
 
