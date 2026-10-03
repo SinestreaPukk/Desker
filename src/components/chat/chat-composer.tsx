@@ -52,7 +52,7 @@ export function ChatComposer({
     >
       <div
         className={cn(
-          "relative rounded-panel border border-line bg-surface p-4 shadow-sm",
+          "relative rounded-panel border border-line-strong/40 bg-surface p-4 shadow-sm",
           "transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15",
         )}
       >

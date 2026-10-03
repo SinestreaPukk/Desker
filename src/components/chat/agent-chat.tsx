@@ -162,13 +162,10 @@ export function AgentChat({ project, agent, live }: { project: string; agent: { 
         </button>
       </div>
 
-      {/* One tinted note behind the whole conversation, so the white message box stands out from it. */}
-      <div
-        className="flex min-h-0 flex-1 flex-col rounded-panel border border-line p-4 sm:p-5"
-        style={{ background: "color-mix(in oklch, var(--note-lemon) 38%, var(--surface))" }}
-      >
+      {/* One white panel around the whole conversation. */}
+      <div className="flex min-h-0 flex-1 flex-col rounded-panel border border-line bg-surface p-4 shadow-xs sm:p-5">
         {!live ? (
-          <p className="mb-3 rounded-md bg-surface px-4 py-2.5 text-sm text-ink shadow-xs">
+          <p className="mb-3 rounded-md px-4 py-2.5 text-sm text-ink" style={{ background: "var(--note-lemon)" }}>
             {agent.name} is off. Add a few lines about you in Profile, then switch it on.
           </p>
         ) : null}
