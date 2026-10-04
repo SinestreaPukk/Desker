@@ -14,11 +14,12 @@ One person, one private space, one assistant. They reach it in a chat app (LINE,
 
 Desker Personal is a single AI assistant that knows its owner, works for them and asks before anything goes out. The web app exists to configure that assistant, talk to it, and connect the apps it works through. Success: a person sets it up in two minutes, connects one app, and rarely needs to come back.
 
-## Screens (bare minimum, decided 2026-10-03)
+## Screens (bare minimum, decided 2026-10-03; sidebar layout from 2026-10-04)
 
-1. **Agent**: Chat (default tab), About you (name, About you, files, rules), Memory (what it has learned: a searchable list, edit or forget each fact), Abilities (what it can do; apps-gated ones stay off until connected), Schedule (any number of routines). No model picker.
-2. **Integrations**: connect LINE, Telegram, Gmail, Calendar, Slack, GitHub and social accounts; choose what reaches you there.
-3. **Productivity**: intentionally blank for now.
+1. **Chat**: the conversation, full page (the landing screen).
+2. **Agent**: settings. About you (name, About you, files, rules), Memory (what it has learned: a searchable list, edit or forget each fact), Abilities (what it can do; apps-gated ones stay off until connected), Schedule (any number of routines). No model picker.
+3. **Integrations**: connect LINE, Telegram, Gmail, Calendar, Slack, GitHub and social accounts; choose what reaches you there.
+4. **Productivity**: intentionally blank for now.
 
 Everything else (roster, approvals page, work log, audit, money, workflows, organisation) is gone from the UI.
 

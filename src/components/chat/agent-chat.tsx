@@ -186,10 +186,12 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
             ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button variant="secondary" size="sm" disabled={isNew} onClick={() => setChosen(NEW)}>
-          <Plus aria-hidden />
-          New chat
-        </Button>
+        {isNew ? null : (
+          <Button variant="secondary" size="sm" onClick={() => setChosen(NEW)}>
+            <Plus aria-hidden />
+            New chat
+          </Button>
+        )}
       </div>
 
       {!live ? (
