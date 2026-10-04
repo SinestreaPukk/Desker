@@ -30,7 +30,7 @@ describe("a personal space", () => {
       personality: "Calm and precise.",
       responsibilities: [],
       allowedTools: [],
-      companyContext: "About me: Maya",
+      aboutPerson: "About me: Maya",
     });
     expect(prompt).toContain("working privately for one person");
     expect(prompt).toContain("## About the person you work for");

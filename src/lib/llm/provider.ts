@@ -91,6 +91,8 @@ export interface StreamChatRequest {
    */
   billing: BillingContext;
   systemPrompt: string;
+  /** What changes every call (the date, live figures). Kept apart so `systemPrompt` can be cached. */
+  volatilePrompt?: string;
   messages: ChatMessage[];
   tools: ToolDefinition[];
   /**
@@ -113,6 +115,8 @@ export interface StreamChatRequest {
 export interface CompleteRequest {
   billing: BillingContext;
   systemPrompt: string;
+  /** What changes every call; kept apart so `systemPrompt` can be cached. */
+  volatilePrompt?: string;
   messages: ChatMessage[];
   tools: ToolDefinition[];
   model?: string | null;

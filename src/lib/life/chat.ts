@@ -24,6 +24,8 @@ interface ChatCtx {
   organizationId: string;
   threadId: string;
   userId: string;
+  /** Where the reply is read; messaging apps do not render markdown. */
+  channel?: "app" | "messaging";
 }
 
 /** Work to do after the reply has gone out (a short wait before a reminder fires). */
@@ -70,7 +72,7 @@ async function respond(plan: Plan, text: string, team: TeamAgent[], ctx: ChatCtx
   if (plan.route === "research") {
     const speaker = plan.responders[0]!;
     try {
-      const answer = await answerGeneral({ question: text, life: renderLife(await readLife(ctx.projectId)), organizationId: ctx.organizationId, agent: speaker });
+      const answer = await answerGeneral({ question: text, life: renderLife(await readLife(ctx.projectId)), organizationId: ctx.organizationId, agent: speaker, channel: ctx.channel });
       await addTeamMessage({ projectId: ctx.projectId, threadId: ctx.threadId, agentId: speaker.id, content: answer.reply });
     } catch (error) {
       console.error("[life] research answer failed", error);
@@ -119,13 +121,13 @@ export async function chatTurn(userId: string, text: string): Promise<{ said: Sa
   const space = await personalSpace(userId);
   if (!space) return { said: [{ agent: null, text: "Your space isn't set up yet. Open Desker Personal once to finish setup." }] };
   const team = await teamOf(space.projectId);
-  if (team.length === 0) return { said: [{ agent: null, text: "No assistant is switched on yet. Open Desker Personal and hire one from the Roster." }] };
+  if (team.length === 0) return { said: [{ agent: null, text: "Your assistant isn't switched on yet. Open Desker Personal, go to Agent and switch it on." }] };
   // One shared thread for every messaging app, so LINE, Telegram and the alerts the system sends are one conversation, visible in the web chat too.
   const title = EVERYDAY_THREAD;
   const thread =
     (await prisma.teamThread.findFirst({ where: { projectId: space.projectId, title }, select: { id: true } })) ??
     (await prisma.teamThread.create({ data: { projectId: space.projectId, title }, select: { id: true } }));
-  const ctx = { ...space, threadId: thread.id, userId };
+  const ctx = { ...space, threadId: thread.id, userId, channel: "messaging" as const };
   const since = new Date();
   await addTeamMessage({ projectId: space.projectId, threadId: thread.id, userId, authorName: "You", content: text });
   const later = await runChat(await planChat({ text, team, organizationId: space.organizationId }), text, team, ctx);

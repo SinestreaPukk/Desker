@@ -10,7 +10,7 @@ import "server-only";
 import { prisma } from "@/lib/platform/db";
 import { publishAdminEvent } from "@/lib/platform/events";
 import { toStringArray } from "@/lib/agents/agent-fields";
-import { buildSystemPrompt } from "@/lib/agents/agent-prompt";
+import { buildPrompt } from "@/lib/agents/agent-prompt";
 import { effectiveContext } from "@/lib/work/context";
 import { rulesFor } from "@/lib/work/rules";
 import {
@@ -148,21 +148,19 @@ export async function* runAgentTurn(
     agentContext: scope?.context,
   });
 
-  const systemPrompt =
-    buildSystemPrompt({
-      name: agent.name,
-      jobTitle: agent.jobTitle,
-      department: agent.department,
-      personality: agent.personality,
-      responsibilities,
-      allowedTools: offeredTools,
-      documentNames: documents.map((document) => document.filename),
-      companyContext,
-      rules,
-    }) +
-    `\n\n${timeNote(new Date(), scope?.timezone)}` +
-    (calendarInChat ? `\n\n${CALENDAR_CHAT_NOTE}` : "") +
-    `\n\n${WEB_CHAT_NOTE}`;
+  const { stable: systemPrompt, volatile: volatilePrompt } = buildPrompt({
+    name: agent.name,
+    jobTitle: agent.jobTitle,
+    personality: agent.personality,
+    responsibilities,
+    allowedTools: offeredTools,
+    documentNames: documents.map((document) => document.filename),
+    aboutPerson: companyContext,
+    rules,
+    // This chat can search the web (and read the calendar), so the generic "no tools" text must not say otherwise.
+    abilities: `## What you can do\n${WEB_CHAT_NOTE.replace(/^## .*\n/, "")}${calendarInChat ? `\n\n${CALENDAR_CHAT_NOTE.replace(/^## .*\n/, "")}` : ""}${offeredTools.includes("search_documents") ? "\nYou can also search the owner's uploaded documents." : ""}`,
+    volatile: [timeNote(new Date(), scope?.timezone)],
+  });
 
   const history = messagesFromRows(historyRows);
   const messages: ChatMessage[] = [...history, { role: "user", content: userMessage }];
@@ -234,6 +232,7 @@ export async function* runAgentTurn(
     stream = provider.streamChat({
       billing: { organizationId: project.organizationId, agentId: agent.id },
       systemPrompt,
+      volatilePrompt,
       messages,
       tools: [...toolDefinitionsFor(offeredTools), ...(calendarInChat ? [CHECK_CALENDAR] : []), WEB_SEARCH],
       executeTool,

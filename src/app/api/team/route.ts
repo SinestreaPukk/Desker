@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     if (team.length > 0) {
       afterResponse(async () => {
         const plan = await planChat({ text: input.content, team, organizationId: project.organizationId });
-        const later = await runChat(plan, input.content, team, { projectId: project.id, threadId: thread.id, organizationId: project.organizationId, userId });
+        const later = await runChat(plan, input.content, team, { projectId: project.id, threadId: thread.id, organizationId: project.organizationId, userId, channel: "app" });
         await later?.();
       });
     }

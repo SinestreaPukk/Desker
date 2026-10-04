@@ -139,6 +139,18 @@ function describeError(error: unknown): { message: string; retryable: boolean } 
   };
 }
 
+/**
+ * The system prompt as blocks: the stable part carries a cache breakpoint (tools and
+ * system before it are cached together), the volatile part follows uncached. Prompts
+ * under the model's minimum cacheable size simply aren't cached; nothing breaks.
+ */
+function systemBlocks(stable: string, volatile?: string) {
+  return [
+    { type: "text" as const, text: stable, cache_control: { type: "ephemeral" as const } },
+    ...(volatile?.trim() ? [{ type: "text" as const, text: volatile }] : []),
+  ];
+}
+
 async function* streamChat(request: StreamChatRequest): AsyncIterable<ChatEvent> {
   const {
     billing,
@@ -161,7 +173,7 @@ async function* streamChat(request: StreamChatRequest): AsyncIterable<ChatEvent>
         {
           model: resolvedModel,
           max_tokens: maxTokens,
-          system: systemPrompt,
+          system: systemBlocks(systemPrompt, request.volatilePrompt),
           messages,
           ...(anthropicTools.length > 0 ? { tools: anthropicTools } : {}),
         },
@@ -292,7 +304,7 @@ async function complete(request: CompleteRequest): Promise<CompleteResult> {
     final = await getClient().messages.create({
       model: resolvedModel,
       max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
-      system: request.systemPrompt,
+      system: systemBlocks(request.systemPrompt, request.volatilePrompt),
       messages: toAnthropicMessages(request.messages),
       ...(anthropicTools.length > 0 ? { tools: anthropicTools } : {}),
     });

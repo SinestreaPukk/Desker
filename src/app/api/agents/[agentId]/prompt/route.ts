@@ -54,12 +54,11 @@ export async function GET(_request: Request, { params }: Params) {
     const prompt = buildSystemPrompt({
       name: agent.name,
       jobTitle: agent.jobTitle,
-      department: agent.department,
       personality: agent.personality,
       responsibilities: toStringArray(agent.responsibilities),
       allowedTools,
       documentNames: documents.map((document) => document.filename),
-      companyContext,
+      aboutPerson: companyContext,
       rules: agent.rules.map((rule) => rule.text),
     });
 

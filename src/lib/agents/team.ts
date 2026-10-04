@@ -11,7 +11,7 @@ import { prisma } from "@/lib/platform/db";
 import { env } from "@/lib/platform/env";
 import { browserConfigured } from "@/lib/browser/session";
 import { toStringArray } from "@/lib/agents/agent-fields";
-import { buildSystemPrompt } from "@/lib/agents/agent-prompt";
+import { buildPrompt } from "@/lib/agents/agent-prompt";
 import { getProvider } from "@/lib/llm/provider";
 import { effectiveContext } from "@/lib/work/context";
 import { rulesFor } from "@/lib/work/rules";
@@ -20,7 +20,6 @@ import { RunRefused, startRun } from "@/lib/work/scope";
 import { WORK_TOOL_METADATA, type WorkToolId } from "@/lib/work/tools";
 import { timeNote } from "@/lib/shared/local-time";
 import { lifeText } from "@/lib/life/read";
-import { safetyRules } from "@/lib/agents/safety-rules";
 
 const HISTORY = 30;
 
@@ -93,21 +92,28 @@ async function transcript(threadId: string): Promise<string> {
 }
 
 /**
- * What the agent can really do, so it neither claims tools it lacks nor
- * complains about ones it has: the chat itself has none, a task has the
- * agent's full set.
+ * What the assistant can really do in the chat, so it neither claims tools it
+ * lacks nor complains about ones it has. The chat itself answers from what it
+ * knows; anything with tools (browser, web, calendar, email...) runs as a task
+ * started from here. This replaces the generic abilities section in the prompt.
  */
 function abilitiesSection(tools: string[], documents: string[]): string {
   const labels = tools
     .filter((tool): tool is WorkToolId => tool in WORK_TOOL_METADATA)
     .map((tool) => `- ${WORK_TOOL_METADATA[tool].label}: ${WORK_TOOL_METADATA[tool].blurb}`);
+  const browser = tools.includes("browse_web")
+    ? '- You can open websites in a real browser and send the owner screenshots of what it sees, in this chat and in LINE. When they ask to see a site, search flights or prices, or fill something in, start a task with the whole job (include "and show me a screenshot" if they want to see it). Never say you cannot take screenshots or use a browser.'
+    : browserConfigured()
+      ? '- Using a browser (flights, prices, screenshots, forms) is switched off for you. If the owner asks for it, tell them to turn on "Use a browser for you" in Agent, Abilities.'
+      : "";
   return `## What you can do
-In this chat you answer from what you know; you cannot look anything up here. A task can: it runs with your tools.
+In this chat you answer from what you know and what the owner told you; you cannot look anything up in the middle of a reply. A task can: it runs in the background with your tools, then reports back here.
 ${labels.length > 0 ? `In a task you can:\n${labels.join("\n")}` : "No tools are switched on for your tasks yet."}
-${documents.length > 0 ? `Documents uploaded to you: ${documents.join(", ")}.` : "No documents are uploaded to you yet."}
+${documents.length > 0 ? `Files they gave you: ${documents.join(", ")}.` : "They have not given you any files yet."}
 
-${tools.includes("browse_web") ? '- You can open websites in a real browser and send the owner screenshots of what it sees, in this chat and in LINE. When they ask to see a site, search flights or prices, or fill something in, start a task with the whole job (include "and show me a screenshot" if they want to see it). Never say you cannot take screenshots or use a browser.\n' : browserConfigured() ? '- Using a browser (flights, prices, screenshots, forms) is switched off for you. If the owner asks for it, tell them to turn on "Use a browser for you" in Agent, Abilities.\n' : ""}- If an answer needs fresh facts or your tools, offer to start a task. Do not say you cannot do something your tasks can do.
-- If something you need is truly missing - a document, a tool, a connection - say exactly what the owner should add and where. Documents: Roster, open your page, Knowledge tab. Tools: Roster, your page, Work & schedule. Apps and accounts: Integrations. Never say "here": this chat cannot take files.`;
+${browser ? `${browser}\n` : ""}- If an answer needs fresh facts or your tools, offer to start a task. Do not say you cannot do something your tasks can do.
+- Never say you did, sent, saved or booked something unless a task result in this chat confirms it.
+- If something you need is truly missing, say exactly what the owner should add and where. A file: send it in this chat. A tool or ability: Agent, then Abilities. An app or account (Gmail, Calendar, Slack, LINE): Integrations. What you should know about them: Agent, then About you.`;
 }
 
 function roomSection(): string {
@@ -136,8 +142,9 @@ async function replyAs(input: {
   threadId: string;
   organizationId: string;
   userId: string;
+  channel?: "app" | "messaging";
 }): Promise<void> {
-  const { agent, projectId, threadId, organizationId, userId } = input;
+  const { agent, projectId, threadId, organizationId, userId, channel } = input;
   let reply = "";
   let task = "";
   try {
@@ -154,30 +161,31 @@ async function replyAs(input: {
         rulesFor(agent.id),
         transcript(threadId),
       ]);
-      const systemPrompt = [
-        buildSystemPrompt({
-          name: agent.name,
-          jobTitle: agent.jobTitle,
-          department: agent.department,
-          personality: agent.personality,
-          responsibilities: toStringArray(agent.responsibilities),
-          allowedTools: [],
-          companyContext: effectiveContext({ projectContext: project?.context, agentContext: scope?.context }),
-          rules,
-        }),
-        abilitiesSection(
+      // Stable part first (cached by the provider); the date and live figures after it.
+      const { stable, volatile } = buildPrompt({
+        name: agent.name,
+        jobTitle: agent.jobTitle,
+        personality: agent.personality,
+        responsibilities: toStringArray(agent.responsibilities),
+        allowedTools: [],
+        aboutPerson: effectiveContext({ projectContext: project?.context, agentContext: scope?.context }),
+        rules,
+        abilities: abilitiesSection(
           toStringArray(scope?.tools).filter((tool) => browserConfigured() || !tool.startsWith("browse_")),
           documents.map((document) => document.filename),
         ),
-        roomSection(),
-        `## Their life right now (figures are computed, never recompute them)\n${await lifeText(projectId, scope?.timezone ?? undefined)}`,
-        timeNote(new Date(), scope?.timezone),
-        safetyRules(),
-      ].join("\n\n");
+        situation: [roomSection()],
+        volatile: [
+          `## Their life right now (figures are computed, never recompute them)\n${await lifeText(projectId, scope?.timezone ?? undefined)}`,
+          timeNote(new Date(), scope?.timezone),
+        ],
+        channel,
+      });
       const provider = await getProvider(agent.modelProvider);
       const turn = await provider.complete({
         billing: { organizationId, agentId: agent.id },
-        systemPrompt,
+        systemPrompt: stable,
+        volatilePrompt: volatile,
         messages: [{ role: "user", content: `The meeting so far:\n\n${history}\n\nYour turn, ${agent.name}.` }],
         tools: [],
         model: agent.model,
@@ -212,7 +220,7 @@ async function replyAs(input: {
 }
 
 /** The assistant answers the chat. */
-export const runMeetingTurn = (input: { responders: TeamAgent[]; projectId: string; threadId: string; organizationId: string; userId: string }) =>
+export const runMeetingTurn = (input: { responders: TeamAgent[]; projectId: string; threadId: string; organizationId: string; userId: string; channel?: "app" | "messaging" }) =>
   replyAs({ ...input, agent: input.responders[0]! });
 
 /**

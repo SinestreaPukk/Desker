@@ -6,7 +6,7 @@ const agent = { name: "Sam", jobTitle: "Support", department: null, personality:
 
 describe("safety rules every agent follows", () => {
   it("are in a chat: crisis lines, hand-off, and never claiming to be human", () => {
-    const prompt = buildSystemPrompt({ ...agent, responsibilities: [], allowedTools: ["escalate_to_human"], companyContext: "" });
+    const prompt = buildSystemPrompt({ ...agent, responsibilities: [], allowedTools: ["escalate_to_human"], aboutPerson: "" });
     expect(prompt).toContain("988");
     expect(prompt).toContain("findahelpline.com");
     expect(prompt).toContain("escalate_to_human");

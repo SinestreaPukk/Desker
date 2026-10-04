@@ -34,8 +34,9 @@ function getClient(): OpenAI {
 
 type ChatParam = OpenAI.Chat.Completions.ChatCompletionMessageParam;
 
-function toOpenAiMessages(systemPrompt: string, messages: ChatMessage[]): ChatParam[] {
-  const out: ChatParam[] = [{ role: "system", content: systemPrompt }];
+function toOpenAiMessages(systemPrompt: string, messages: ChatMessage[], volatilePrompt?: string): ChatParam[] {
+  // OpenAI caches the longest unchanged prefix by itself, so the volatile part simply goes last.
+  const out: ChatParam[] = [{ role: "system", content: volatilePrompt?.trim() ? `${systemPrompt}\n\n${volatilePrompt}` : systemPrompt }];
 
   for (const message of messages) {
     if (message.role === "user") {
@@ -147,7 +148,7 @@ async function* streamChat(request: StreamChatRequest): AsyncIterable<ChatEvent>
   const { billing } = request;
   const resolvedModel = model || env.openaiDefaultModel;
 
-  const messages = toOpenAiMessages(systemPrompt, request.messages);
+  const messages = toOpenAiMessages(systemPrompt, request.messages, request.volatilePrompt);
   const openAiTools = toOpenAiTools(tools);
   const usage = { inputTokens: 0, outputTokens: 0 };
 
@@ -293,7 +294,7 @@ async function complete(request: CompleteRequest): Promise<CompleteResult> {
     completion = await getClient().chat.completions.create({
       model: resolvedModel,
       max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
-      messages: toOpenAiMessages(request.systemPrompt, request.messages),
+      messages: toOpenAiMessages(request.systemPrompt, request.messages, request.volatilePrompt),
       ...(openAiTools.length > 0 ? { tools: openAiTools } : {}),
     });
   } catch (error) {

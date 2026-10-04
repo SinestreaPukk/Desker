@@ -49,9 +49,42 @@ describe("buildSystemPrompt", () => {
   });
 
   it("includes what the person told it, marked private", () => {
-    const prompt = buildSystemPrompt({ ...base, companyContext: "About me: Maya, a designer in Bangkok." });
+    const prompt = buildSystemPrompt({ ...base, aboutPerson: "About me: Maya, a designer in Bangkok." });
     expect(prompt).toContain("## About the person you work for");
     expect(prompt).toContain("Maya, a designer in Bangkok");
     expect(prompt).not.toContain("Company context");
+  });
+});
+
+import { buildPrompt } from "@/lib/agents/agent-prompt";
+
+describe("buildPrompt (cache-friendly split)", () => {
+  const now = new Date("2026-10-04T03:00:00Z");
+
+  it("keeps the date, live figures and channel out of the stable part", () => {
+    const a = buildPrompt({ ...base, now, timezone: "Asia/Bangkok", channel: "messaging", volatile: ["## Life\nSpent 10"] });
+    const b = buildPrompt({ ...base, now: new Date("2026-10-05T09:00:00Z"), timezone: "Asia/Bangkok", channel: "app", volatile: ["## Life\nSpent 20"] });
+    expect(a.stable).toBe(b.stable);
+    expect(a.volatile).toContain("Spent 10");
+    expect(a.volatile).toContain("plain text");
+    expect(b.volatile).not.toBe(a.volatile);
+    expect(a.stable).not.toMatch(/2026/);
+  });
+
+  it("lets a caller replace the generic abilities text so the two never contradict", () => {
+    const prompt = buildPrompt({ ...base, allowedTools: [], abilities: "## What you can do\nStart tasks that use a browser." }).stable;
+    expect(prompt).toContain("Start tasks that use a browser.");
+    expect(prompt).not.toContain("You have no tools in this conversation");
+  });
+
+  it("states the priority order and uses no company wording", () => {
+    const { stable } = buildPrompt(base);
+    expect(stable).toContain("follow this order: the safety rules");
+    expect(stable.toLowerCase()).not.toContain("company");
+  });
+
+  it("buildSystemPrompt is the two parts joined", () => {
+    const parts = buildPrompt({ ...base, now });
+    expect(buildSystemPrompt({ ...base, now })).toBe(`${parts.stable}\n\n${parts.volatile}`);
   });
 });
