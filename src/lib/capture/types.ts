@@ -24,6 +24,26 @@ export interface TaskExtractionData {
   dueAt?: string;
 }
 
+export interface CapturedItemDto {
+  id: string;
+  projectId: string;
+  inputType: CaptureInputType;
+  classification: CaptureClassification;
+  confidence: number;
+  headline: string;
+  rawContent?: string | null;
+  extractedData?: unknown;
+  uncertainFields: string[];
+  status: CaptureStatus;
+  targetType?: string | null;
+  targetId?: string | null;
+  sourceRef?: string | null;
+  sourceChannel: "line" | "app";
+  altClassification?: CaptureClassification | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IntakeResult {
   capturedItem: {
     id: string;
@@ -52,3 +72,4 @@ export interface IntakeResult {
     switchOptions?: Array<{ label: string; classification: string }>;
   };
 }
+

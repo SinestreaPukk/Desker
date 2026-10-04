@@ -7,6 +7,7 @@ vi.mock("@/lib/platform/db", () => ({
     commitment: { findMany: vi.fn(), update: vi.fn() },
     triggerRule: { findFirst: vi.fn(), update: vi.fn(), upsert: vi.fn() },
     triggerExecutionLog: { findFirst: vi.fn(), findMany: vi.fn() },
+    capturedItem: { findFirst: vi.fn() },
   },
 }));
 
@@ -30,11 +31,17 @@ vi.mock("@/lib/triggers/engine", () => ({
   whyDidntYouMessage: vi.fn(),
 }));
 
+vi.mock("@/lib/capture/pipeline", () => ({
+  switchClassification: vi.fn(),
+}));
+
+import { prisma } from "@/lib/platform/db";
 import { handleAssistantCommand } from "@/lib/life/assistant-commands";
 import { addTeamMessage } from "@/lib/agents/team";
 import { listMemories, recallMemories, forgetMemory } from "@/lib/memory/store";
 import { listCommitments } from "@/lib/commitments/store";
 import { updateTriggerRule, whyDidYouMessage, whyDidntYouMessage } from "@/lib/triggers/engine";
+import { switchClassification } from "@/lib/capture/pipeline";
 
 const mockSpeaker = {
   id: "agent-1",
@@ -108,6 +115,48 @@ describe("Assistant Core Commands", () => {
       expect(addTeamMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           content: 'Forgotten: "No meetings before 10 AM"',
+        }),
+      );
+    });
+  });
+
+  describe("Capture commands", () => {
+    it("handles 'make it a note instead'", async () => {
+      vi.mocked(prisma.capturedItem.findFirst).mockResolvedValue({
+        id: "cap-1",
+        projectId: "proj-1",
+        headline: "Friday dinner with Nok",
+      } as never);
+      vi.mocked(switchClassification).mockResolvedValue({
+        ok: true,
+        message: "Switched to note.",
+      });
+
+      const handled = await handleAssistantCommand("make it a note instead", mockCtx, mockSpeaker);
+      expect(handled).toBe(true);
+      expect(switchClassification).toHaveBeenCalledWith("cap-1", "note");
+      expect(addTeamMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.stringContaining("Switched to note"),
+        }),
+      );
+    });
+
+    it("handles 'where did this come from'", async () => {
+      vi.mocked(prisma.capturedItem.findFirst).mockResolvedValue({
+        id: "cap-1",
+        projectId: "proj-1",
+        classification: "bill",
+        sourceChannel: "line",
+        sourceRef: "line:user123:msg456",
+        rawContent: "Electricity bill 1240 baht",
+      } as never);
+
+      const handled = await handleAssistantCommand("where did this come from?", mockCtx, mockSpeaker);
+      expect(handled).toBe(true);
+      expect(addTeamMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.stringContaining("captured as a bill from LINE"),
         }),
       );
     });

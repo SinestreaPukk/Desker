@@ -1,8 +1,11 @@
 import "server-only";
+import { prisma } from "@/lib/platform/db";
 import { addTeamMessage, type TeamAgent } from "@/lib/agents/team";
 import { listMemories, recallMemories, forgetMemory } from "@/lib/memory/store";
 import { listCommitments } from "@/lib/commitments/store";
 import { updateTriggerRule, whyDidYouMessage, whyDidntYouMessage } from "@/lib/triggers/engine";
+import { switchClassification } from "@/lib/capture/pipeline";
+import type { CaptureClassification } from "@/lib/capture/types";
 
 interface CommandCtx {
   projectId: string;
@@ -94,7 +97,45 @@ export async function handleAssistantCommand(
     return true;
   }
 
-  // 6. "What am I waiting on?" / "open loops"
+  // 6. "Make it a [target] instead" / "switch to [target]"
+  const switchMatch = lower.match(/^(?:make it|switch to|change to)(?: a)? (note|event|task|bill)(?: instead)?$/i);
+  if (switchMatch) {
+    const targetKind = switchMatch[1]!.toLowerCase() as CaptureClassification;
+    const latestCaptured = await prisma.capturedItem.findFirst({
+      where: { projectId: ctx.projectId },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!latestCaptured) {
+      await say("There are no recent captured items to switch.");
+      return true;
+    }
+    const res = await switchClassification(latestCaptured.id, targetKind);
+    if (res.ok) {
+      await say(`Switched to ${targetKind}: "${latestCaptured.headline}".`);
+    } else {
+      await say(`Couldn't switch: ${res.message}`);
+    }
+    return true;
+  }
+
+  // 7. "Where did this come from" / "where did that come from"
+  if (/^where did (?:this|that|it|the bill|the task|the event) come from\??$/i.test(lower)) {
+    const latestCaptured = await prisma.capturedItem.findFirst({
+      where: { projectId: ctx.projectId },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!latestCaptured) {
+      await say("I don't have a record of where this came from.");
+      return true;
+    }
+    const channel = latestCaptured.sourceChannel === "line" ? "LINE" : "the app";
+    const ref = latestCaptured.sourceRef ? ` (${latestCaptured.sourceRef})` : "";
+    const raw = latestCaptured.rawContent ? ` "${latestCaptured.rawContent}"` : "";
+    await say(`This was captured as a ${latestCaptured.classification} from ${channel}${ref}${raw ? ` from message:${raw}` : ""}.`);
+    return true;
+  }
+
+  // 8. "What am I waiting on?" / "open loops"
   if (
     /^(?:what am i waiting on|what are my open loops|open loops|what am i promised|list my commitments)\??$/i.test(lower)
   ) {
