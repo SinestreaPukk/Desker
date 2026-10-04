@@ -13,3 +13,9 @@ it("renders headings, bold and sources as links, never raw html or javascript: l
   expect(html).not.toContain('href="javascript');
   expect(html).not.toContain("<script");
 });
+
+import { clampText } from "@/lib/work/model-json";
+
+it("clampText keeps line breaks", () => {
+  expect(clampText("## A\n\n\n\n- b\n- c  \n", 100)).toBe("## A\n\n- b\n- c");
+});

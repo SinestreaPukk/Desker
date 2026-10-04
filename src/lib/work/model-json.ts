@@ -71,6 +71,13 @@ export function clamp(text: string, max: number): string {
   return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\s]+$/, "")}…`;
 }
 
+/** Like clamp, but keeps line breaks, so a reply's headings, lists and Sources survive. */
+export function clampText(text: string, max: number): string {
+  const clean = text.replace(/\r/g, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  if (clean.length <= max) return clean;
+  return `${clean.slice(0, max).replace(/[,;:.\s]+$/, "")}…`;
+}
+
 /** The first `count` sentences of a block of prose, for a deterministic fallback. */
 export function firstSentences(text: string, count: number): string {
   const sentences = text

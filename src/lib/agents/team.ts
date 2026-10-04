@@ -15,7 +15,7 @@ import { buildSystemPrompt } from "@/lib/agents/agent-prompt";
 import { getProvider } from "@/lib/llm/provider";
 import { effectiveContext } from "@/lib/work/context";
 import { rulesFor } from "@/lib/work/rules";
-import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
+import { clamp, clampText, parseModelJson, stringField } from "@/lib/work/model-json";
 import { RunRefused, startRun } from "@/lib/work/scope";
 import { WORK_TOOL_METADATA, type WorkToolId } from "@/lib/work/tools";
 import { timeNote } from "@/lib/shared/local-time";
@@ -208,7 +208,7 @@ async function replyAs(input: {
     }
   }
 
-  await addTeamMessage({ projectId, threadId, agentId: agent.id, content: clamp(reply || "…", 4000), actionItemId });
+  await addTeamMessage({ projectId, threadId, agentId: agent.id, content: clampText(reply || "…", 4000), actionItemId });
 }
 
 /** The assistant answers the chat. */

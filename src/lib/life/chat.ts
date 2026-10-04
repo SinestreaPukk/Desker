@@ -6,7 +6,7 @@
 import "server-only";
 import { prisma } from "@/lib/platform/db";
 import { addTeamMessage, runMeetingTurn, teamOf, type TeamAgent } from "@/lib/agents/team";
-import { clamp } from "@/lib/work/model-json";
+import { clampText } from "@/lib/work/model-json";
 import { readLife } from "./read";
 import { negotiate } from "./negotiate";
 import { answerGeneral } from "./research";
@@ -87,7 +87,7 @@ async function respond(plan: Plan, text: string, team: TeamAgent[], ctx: ChatCtx
     const result = await negotiate({ life: await readLife(ctx.projectId), organizationId: ctx.organizationId, projectId: ctx.projectId, text, team });
     const who = result.positions.filter((p) => p.stance !== "ok").map((p) => p.role);
     const body = who.length ? `${result.reply}\n\n(Weighed by: ${who.join(", ")})` : result.reply;
-    await addTeamMessage({ projectId: ctx.projectId, threadId: ctx.threadId, agentId: speaker.id, content: clamp(body, 4000) });
+    await addTeamMessage({ projectId: ctx.projectId, threadId: ctx.threadId, agentId: speaker.id, content: clampText(body, 4000) });
   } catch (error) {
     console.error("[life] negotiation failed", error);
     await addTeamMessage({ projectId: ctx.projectId, threadId: ctx.threadId, agentId: speaker.id, content: "Sorry, I couldn't work that through just now. Please try again." });
