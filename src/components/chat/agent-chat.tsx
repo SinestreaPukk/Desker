@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/shared/utils";
 import { AgentAvatar } from "@/components/ui/avatar";
@@ -14,21 +15,14 @@ import { ChatComposer } from "@/components/chat/chat-composer";
 import { TypingIndicator } from "@/components/chat/chat-thread";
 import { MessageText } from "@/components/chat/message-text";
 import { api, errorMessage } from "@/lib/shared/api-client";
-import { EVERYDAY_THREAD, type TeamMessageDto, type TeamThreadDto } from "@/lib/agents/team-dto";
+import { EVERYDAY_THREAD, NEW_CHAT, chatTitle, type TeamMessageDto, type TeamThreadDto } from "@/lib/agents/team-dto";
 import { ATTACHMENT_ACCEPT } from "@/lib/life/attachments-shared";
 
 /** How long the chat waits on a reply before it stops showing the assistant typing. */
 const REPLY_TIMEOUT_MS = 90_000;
 
 const STARTERS = ["Plan my week", "What can you do for me?", "Remind me to call mum tomorrow at 6"];
-const NEW = "new";
-
-/** A chat's name for a tab or menu: the everyday chat by its short name, others from their first line. */
-function titleOf(title: string): string {
-  if (title === EVERYDAY_THREAD) return "Everyday";
-  const clean = title.replace(/^(@\w+\s*)+/, "").trim() || title;
-  return clean.length > 40 ? `${clean.slice(0, 40).trimEnd()}…` : clean;
-}
+const NEW = NEW_CHAT;
 
 /**
  * Chats as tabs, like a chat app: the everyday chat (the one LINE, Telegram and
@@ -37,7 +31,14 @@ function titleOf(title: string): string {
  */
 export function AgentChat({ project, agent, live, onNeedAbout }: { project: string; agent: { id: string; name: string }; live: boolean; onNeedAbout: () => void }) {
   const client = useQueryClient();
-  const [chosen, setChosen] = React.useState<string | null>(null);
+  // Which chat is open lives in the address (?c=), so the sidebar's history and this page agree.
+  const router = useRouter();
+  const pathname = usePathname();
+  const chosen = useSearchParams().get("c");
+  const setChosen = React.useCallback(
+    (id: string | null) => router.replace(id ? `${pathname}?c=${id}` : pathname, { scroll: false }),
+    [router, pathname],
+  );
   const [typing, setTyping] = React.useState<{ threadId: string; since: string } | null>(null);
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [dragging, setDragging] = React.useState(false);
@@ -161,18 +162,19 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="mb-2 flex items-center justify-between gap-2">
+      {/* On a computer the sidebar lists the chats; this is the phone's way to switch. */}
+      <div className="mb-2 flex items-center justify-between gap-2 lg:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="max-w-[70%] pointer-coarse:min-h-11" aria-label="Choose a chat">
-              <span className="truncate">{isNew ? "New chat" : titleOf(chats.find((chat) => chat.id === current)?.title ?? "")}</span>
+              <span className="truncate">{isNew ? "New chat" : chatTitle(chats.find((chat) => chat.id === current)?.title ?? "")}</span>
               <ChevronDown aria-hidden />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-72">
             {chats.map((chat) => (
               <DropdownMenuItem key={chat.id} onSelect={() => setChosen(chat.id)} className={chat.id === current && !isNew ? "font-semibold" : undefined}>
-                <span className="truncate">{titleOf(chat.title)}</span>
+                <span className="truncate">{chatTitle(chat.title)}</span>
               </DropdownMenuItem>
             ))}
             {!isNew && current !== everyday?.id ? (

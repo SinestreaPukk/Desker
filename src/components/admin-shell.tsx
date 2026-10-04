@@ -1,11 +1,13 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Blocks, Bot, ChevronsUpDown, LogOut, MessageCircle, Rocket } from "lucide-react";
 import { BRAND } from "@/lib/site/brand";
 import { BrandMark } from "@/components/brand-logo";
+import { ChatHistory } from "@/components/chat/chat-history";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,7 +105,7 @@ export function AdminShell({
       </header>
 
       {/* Computer: the sidebar stays put while the page scrolls. */}
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col overflow-y-auto border-r border-line/70 bg-rail px-3 py-4 lg:flex">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-line/70 bg-rail px-3 py-4 lg:flex">
         <Link href={`${base}/chat`} className="mb-6 flex items-center gap-2.5 px-3 text-base font-semibold tracking-tight text-ink">
           <BrandMark className="size-5" />
           {BRAND.name}
@@ -129,7 +131,10 @@ export function AdminShell({
             );
           })}
         </nav>
-        <div className="mt-auto pt-3">{account}</div>
+        <React.Suspense fallback={<div className="flex-1" />}>
+          <ChatHistory project={project.slug} />
+        </React.Suspense>
+        <div className="pt-3">{account}</div>
       </aside>
 
       <main id="main" className="min-w-0 flex-1 pb-16 lg:pb-0">
