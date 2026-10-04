@@ -88,3 +88,24 @@ describe("buildPrompt (cache-friendly split)", () => {
     expect(buildSystemPrompt({ ...base, now })).toBe(`${parts.stable}\n\n${parts.volatile}`);
   });
 });
+
+describe("prompt budget and order", () => {
+  const full = {
+    ...base,
+    aboutPerson: "About me: ".padEnd(2000, "x"),
+    rules: Array.from({ length: 60 }, (_, i) => `Rule ${i}`),
+    documentNames: Array.from({ length: 150 }, (_, i) => `file-${i}.pdf`),
+  };
+
+  it("stays inside a size budget however much memory there is (token cost and latency)", () => {
+    expect(buildPrompt(full).stable.length).toBeLessThan(14_000);
+  });
+
+  it("puts rules and safety after everything configurable, and nothing volatile before them", () => {
+    const { stable } = buildPrompt(full);
+    const at = (title: string) => stable.indexOf(title);
+    expect(at("## About the person")).toBeLessThan(at("## Corrections"));
+    expect(at("## Corrections")).toBeLessThan(at("## Rules you always follow"));
+    expect(at("## Rules you always follow")).toBeLessThan(at("## Safety"));
+  });
+});

@@ -21,6 +21,8 @@ jobs:
         env:
           DATABASE_PROVIDER: postgresql
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+      - run: npm run check:dupes
+      - run: npm run check:docs
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run check:contrast

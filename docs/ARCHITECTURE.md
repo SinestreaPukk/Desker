@@ -27,6 +27,12 @@ Decisions below were settled with Tiger on 2026-10-02.
 | Frontend, onboarding, marketing site | **Forked / personal-only** | `src/app/*`, `content/*` |
 | Space model (`Organization.kind`, `User.useType`, business roles, support inbox, widget, public chat) | **Removed** | schema, `src/lib/tenancy/space.ts` |
 | Life-context layer | **New** (Phase 1) | `src/lib/life/*`, `Life*` models |
+| Model providers (Anthropic, OpenAI) behind one interface; prompt caching, token metering | **Shared** | `src/lib/llm/*` |
+| System prompts: stable part (cached) and volatile part (date, live figures), one abilities text per surface | **Shared**, see `docs/PROMPTS.md` | `src/lib/agents/agent-prompt.ts`, `src/lib/agents/team.ts` |
+| Browser agent (cloud browser, screenshots, approve-before-final-step) | **New** | `src/lib/browser/*` |
+| Money manager (statement parsing, exact figures) | **Personal-only** | `src/lib/money/*` |
+| Registered chat tools (document search) | **Shared** | `src/lib/tools/*` |
+| Shared pure helpers (api client, time, validation, utils) | **Shared** | `src/lib/shared/*` |
 | Chat routing (reminder / research / engine / direct), reasoning engine, digest | **New** (Phases 2-3) | `src/lib/life/router.ts`, `src/lib/life/negotiate.ts` |
 
 Internally the tenancy rows (Organization/Project) stay as an invisible container so the shared runtime keeps working; nothing user-facing names them.
