@@ -23,6 +23,7 @@ vi.mock("@/lib/memory/store", () => ({
 
 vi.mock("@/lib/commitments/store", () => ({
   listCommitments: vi.fn(),
+  closeCommitment: vi.fn(),
 }));
 
 vi.mock("@/lib/triggers/engine", () => ({
@@ -39,7 +40,7 @@ import { prisma } from "@/lib/platform/db";
 import { handleAssistantCommand } from "@/lib/life/assistant-commands";
 import { addTeamMessage } from "@/lib/agents/team";
 import { listMemories, recallMemories, forgetMemory } from "@/lib/memory/store";
-import { listCommitments } from "@/lib/commitments/store";
+import { listCommitments, closeCommitment } from "@/lib/commitments/store";
 import { updateTriggerRule, whyDidYouMessage, whyDidntYouMessage } from "@/lib/triggers/engine";
 import { switchClassification } from "@/lib/capture/pipeline";
 
@@ -182,6 +183,58 @@ describe("Assistant Core Commands", () => {
       expect(addTeamMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           content: expect.stringContaining("waiting on Nok"),
+        }),
+      );
+    });
+
+    it("handles 'mark Nok contract done'", async () => {
+      vi.mocked(listCommitments).mockResolvedValue([
+        {
+          id: "c1",
+          projectId: "proj-1",
+          outcome: "send contract review",
+          ownerName: "Nok",
+          status: "open",
+        } as never,
+      ]);
+      vi.mocked(closeCommitment).mockResolvedValue({
+        id: "c1",
+        status: "done",
+        outcome: "send contract review",
+      } as never);
+
+      const handled = await handleAssistantCommand("mark Nok contract done", mockCtx, mockSpeaker);
+      expect(handled).toBe(true);
+      expect(closeCommitment).toHaveBeenCalledWith("c1", "proj-1", "done", expect.any(String));
+      expect(addTeamMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.stringContaining('Done: "send contract review". Closed.'),
+        }),
+      );
+    });
+
+    it("handles 'drop Nok contract'", async () => {
+      vi.mocked(listCommitments).mockResolvedValue([
+        {
+          id: "c1",
+          projectId: "proj-1",
+          outcome: "send contract review",
+          ownerName: "Nok",
+          status: "open",
+        } as never,
+      ]);
+      vi.mocked(closeCommitment).mockResolvedValue({
+        id: "c1",
+        status: "dropped",
+        outcome: "send contract review",
+      } as never);
+
+      const handled = await handleAssistantCommand("drop Nok contract", mockCtx, mockSpeaker);
+      expect(handled).toBe(true);
+      expect(closeCommitment).toHaveBeenCalledWith("c1", "proj-1", "dropped", expect.any(String));
+      expect(addTeamMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.stringContaining('Dropped: "send contract review".'),
         }),
       );
     });

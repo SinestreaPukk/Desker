@@ -207,6 +207,28 @@ export async function verifyAndCloseSignals(projectId: string): Promise<Commitme
         const c = await closeCommitment(item.id, projectId, "done", "Verified: event has taken place.");
         closed.push(c);
       }
+    } else if (signal.startsWith("reply_arrived:")) {
+      const threadOrChannelId = signal.slice(14);
+      const reply = await prisma.teamMessage.findFirst({
+        where: {
+          threadId: threadOrChannelId,
+          createdAt: { gt: item.createdAt },
+        },
+      });
+      if (reply) {
+        const c = await closeCommitment(item.id, projectId, "done", "Verified: reply arrived.");
+        closed.push(c);
+      }
+    } else if (signal.startsWith("action_completed:")) {
+      const actionId = signal.slice(17);
+      const action = await prisma.actionItem.findUnique({
+        where: { id: actionId },
+        select: { status: true },
+      });
+      if (action && (action.status === "completed" || action.status === "approved")) {
+        const c = await closeCommitment(item.id, projectId, "done", "Verified: action completed.");
+        closed.push(c);
+      }
     }
   }
 

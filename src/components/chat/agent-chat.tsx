@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ErrorState, LoadingRows } from "@/components/ui/states";
 import { ApprovalCard } from "@/components/chat/approval-card";
+import { OpenLoopsThreadCard } from "@/components/commitments/open-loops-card";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { TypingIndicator } from "@/components/chat/chat-thread";
 import { MessageText } from "@/components/chat/message-text";
@@ -251,7 +252,7 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
             <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
               <ol className="space-y-6 pb-4 pt-2" aria-label="Messages" aria-live="polite">
                 {list.map((message) => (
-                  <Line key={message.id} message={message} />
+                  <Line key={message.id} message={message} project={project} />
                 ))}
                 {answering || upload.isPending ? (
                   <li className="flex items-center gap-3">
@@ -272,7 +273,7 @@ export function AgentChat({ project, agent, live, onNeedAbout }: { project: stri
   );
 }
 
-function Line({ message }: { message: TeamMessageDto }) {
+function Line({ message, project }: { message: TeamMessageDto; project?: string }) {
   if (!message.agent) {
     return (
       <li className="flex justify-end">
@@ -284,11 +285,17 @@ function Line({ message }: { message: TeamMessageDto }) {
       </li>
     );
   }
+  const isOpenLoops = message.content.includes("<!-- open_loops -->") || message.content.includes("[open_loops]");
   return (
     <li className="flex gap-3">
       <AgentAvatar name={message.agent.name} src={message.agent.avatarUrl} seed={message.agent.id} size="sm" className="mt-0.5 shrink-0" />
       <div className="min-w-0 max-w-[70ch] flex-1 space-y-3 text-base leading-relaxed text-ink">
         <MessageText content={message.content} />
+        {isOpenLoops && project ? (
+          <div className="mt-2">
+            <OpenLoopsThreadCard project={project} />
+          </div>
+        ) : null}
         {message.actionItemId ? <ApprovalCard actionItemId={message.actionItemId} /> : null}
       </div>
     </li>

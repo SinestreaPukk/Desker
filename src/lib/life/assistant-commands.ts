@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/platform/db";
 import { addTeamMessage, type TeamAgent } from "@/lib/agents/team";
 import { listMemories, recallMemories, forgetMemory } from "@/lib/memory/store";
-import { listCommitments } from "@/lib/commitments/store";
+import { listCommitments, closeCommitment } from "@/lib/commitments/store";
 import { updateTriggerRule, whyDidYouMessage, whyDidntYouMessage } from "@/lib/triggers/engine";
 import { switchClassification } from "@/lib/capture/pipeline";
 import type { CaptureClassification } from "@/lib/capture/types";
@@ -150,7 +150,59 @@ export async function handleAssistantCommand(
       const due = c.dueAt ? `, due ${c.dueAt.slice(0, 10)}` : "";
       return `- [${c.type}] ${c.outcome} (${who}${due})`;
     });
-    await say(`Here are your open commitments and loops:\n${lines.join("\n")}\n\nTo close an item, tell me to mark it done or drop it.`);
+    await say(`<!-- open_loops -->\nHere are your open commitments and loops:\n${lines.join("\n")}\n\nTo close an item, tell me to mark it done or drop it.`);
+    return true;
+  }
+
+  // 9. Close commitment: "mark [X] done", "mark done: [X]", "mark that done"
+  const markDoneMatch = lower.match(/^(?:mark|set) (.+?) (?:as )?done$/i)
+    || lower.match(/^(?:mark|set)(?: as)? done(?::|\s+)?(.+)?$/i)
+    || lower.match(/^done with (.+)$/i);
+  if (markDoneMatch) {
+    const query = markDoneMatch[1]?.trim();
+    const commitments = await listCommitments(ctx.projectId, { status: "active" });
+    if (!commitments.length) {
+      await say("You don't have any open commitments to mark done.");
+      return true;
+    }
+    const target = query && query !== "that" && query !== "it"
+      ? commitments.find((c) => {
+          const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+          const combined = `${c.outcome} ${c.ownerName || ""}`.toLowerCase();
+          return words.every((w) => combined.includes(w));
+        })
+      : commitments[0];
+    if (!target) {
+      await say(`I couldn't find an open commitment matching "${query}".`);
+      return true;
+    }
+    await closeCommitment(target.id, ctx.projectId, "done", "Marked done by user in chat");
+    await say(`Done: "${target.outcome}". Closed.`);
+    return true;
+  }
+
+  // 10. Drop commitment: "drop [X]", "drop that"
+  const dropMatch = lower.match(/^drop (?:commitment |loop )?(.+)$/i);
+  if (dropMatch && !lower.startsWith("drop to") && !lower.startsWith("drop off")) {
+    const query = dropMatch[1]!.trim();
+    const commitments = await listCommitments(ctx.projectId, { status: "active" });
+    if (!commitments.length) {
+      await say("You don't have any open commitments to drop.");
+      return true;
+    }
+    const target = query !== "that" && query !== "it"
+      ? commitments.find((c) => {
+          const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+          const combined = `${c.outcome} ${c.ownerName || ""}`.toLowerCase();
+          return words.every((w) => combined.includes(w));
+        })
+      : commitments[0];
+    if (!target) {
+      await say(`I couldn't find an open commitment matching "${query}".`);
+      return true;
+    }
+    await closeCommitment(target.id, ctx.projectId, "dropped", "Dropped by user in chat");
+    await say(`Dropped: "${target.outcome}".`);
     return true;
   }
 
