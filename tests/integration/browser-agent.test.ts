@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Prisma, PrismaClient } from "@prisma/client";
 
 /** Runs a real model against a real (local) browser: opt in with BROWSER_E2E=1 BROWSER_LOCAL=1. */
-const run = process.env.BROWSER_E2E === "1" && process.env.BROWSER_LOCAL === "1";
+const run = process.env.BROWSER_E2E === "1" && (process.env.BROWSER_LOCAL === "1" || Boolean(process.env.BROWSERBASE_API_KEY));
 const prisma = new PrismaClient();
 const stamp = Date.now().toString(36);
 let organizationId = "";
