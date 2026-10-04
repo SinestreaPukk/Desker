@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Blocks, Bot, ChevronsUpDown, LogOut, MessageCircle, Rocket } from "lucide-react";
+import { Blocks, Bot, ChevronsUpDown, FileText, LogOut, MessageCircle, Rocket, Shield, UserRound } from "lucide-react";
 import { BRAND } from "@/lib/site/brand";
 import { BrandMark } from "@/components/brand-logo";
 import { ChatHistory } from "@/components/chat/chat-history";
@@ -63,6 +63,25 @@ export function AdminShell({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuLabel className="normal-case tracking-normal">{email}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href={`${base}/account`}>
+            <UserRound aria-hidden />
+            Account
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/privacy" target="_blank">
+            <Shield aria-hidden />
+            Privacy policy
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/terms" target="_blank">
+            <FileText aria-hidden />
+            Terms of use
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void signOut({ callbackUrl: "/login" })}>
           <LogOut aria-hidden />
