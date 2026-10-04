@@ -21,7 +21,15 @@ export async function PATCH(request: Request) {
     const { userId } = await requireAdmin();
     const prefs = await parseJson(request, prefsSchema);
     const clean = { ...prefs, timeZone: validTimeZone(prefs.timeZone), brief: { ...prefs.brief, days: [...new Set(prefs.brief.days)] } };
-    await prisma.user.update({ where: { id: userId }, data: { alertPrefs: clean as Prisma.InputJsonValue } });
+    const memberships = await prisma.membership.findMany({ where: { userId }, select: { organizationId: true } });
+    const projects = await prisma.project.findMany({ where: { organizationId: { in: memberships.map((membership) => membership.organizationId) } }, select: { id: true } });
+    const agents = await prisma.agent.findMany({ where: { projectId: { in: projects.map((project) => project.id) } }, select: { id: true } });
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: userId }, data: { alertPrefs: clean as Prisma.InputJsonValue } }),
+      prisma.scopeOfWork.updateMany({ where: { agentId: { in: agents.map((agent) => agent.id) } }, data: { timezone: clean.timeZone } }),
+      prisma.routine.updateMany({ where: { agentId: { in: agents.map((agent) => agent.id) } }, data: { timezone: clean.timeZone } }),
+      prisma.project.updateMany({ where: { id: { in: projects.map((project) => project.id) } }, data: { checkInTimezone: clean.timeZone } }),
+    ]);
     return alertSettings(userId);
   });
 }

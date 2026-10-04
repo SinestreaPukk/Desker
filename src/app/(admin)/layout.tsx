@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth/auth";
+import { TimeZoneBootstrap } from "@/components/time-zone-bootstrap";
 
 /**
  * The auth boundary for every admin surface. Route handlers repeat the check
@@ -13,5 +14,5 @@ export default async function AdminLayout({
 }) {
   const user = await currentUser();
   if (!user) redirect("/login");
-  return <>{children}</>;
+  return <><TimeZoneBootstrap />{children}</>;
 }

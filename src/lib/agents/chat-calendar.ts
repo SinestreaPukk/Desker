@@ -8,6 +8,7 @@ import "server-only";
 import { z } from "zod";
 import type { ToolDefinition } from "@/lib/llm/provider";
 import { calendarAccess, describeEvents, listEvents } from "@/lib/integrations/mail-calendar";
+import { localTimeZone } from "@/lib/shared/local-time";
 
 export const CHECK_CALENDAR: ToolDefinition = {
   name: "check_calendar",
@@ -32,7 +33,7 @@ You can read the owner's calendar here with check_calendar - use it whenever the
 export async function checkCalendar(
   organizationId: string,
   input: unknown,
-  timeZone = "UTC",
+  timeZone = localTimeZone(),
 ): Promise<{ content: string; isError?: boolean }> {
   const parsed = inputSchema.safeParse(input ?? {});
   if (!parsed.success) return { content: "from and to must be ISO 8601 date-times.", isError: true };

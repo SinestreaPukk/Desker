@@ -3,6 +3,7 @@
  * settings page, the API and the senders read the same lists.
  */
 import { z } from "zod";
+import { localTimeZone } from "@/lib/shared/local-time";
 
 export const CHANNEL_KINDS = ["line", "whatsapp", "telegram", "email", "slack", "discord", "teams"] as const;
 export type ChannelKind = (typeof CHANNEL_KINDS)[number];
@@ -95,7 +96,7 @@ export type AlertPrefs = z.infer<typeof prefsSchema>;
 
 export const DEFAULT_PREFS: AlertPrefs = {
   paused: false,
-  timeZone: "UTC",
+  timeZone: localTimeZone(),
   events: { approval: true, escalation: true, failure: true, issue: true, digest: true, done: false, phone: true, life: true },
   mutedSpaces: [],
   brief: { on: true, time: "07:30", days: [0, 1, 2, 3, 4, 5, 6], calendar: true, waiting: true, recap: true, news: true },

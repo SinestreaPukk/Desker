@@ -18,9 +18,13 @@
  */
 import "server-only";
 import type { Prisma } from "@prisma/client";
+import https from "node:https";
+import { isIP } from "node:net";
+import { isPublicIPv4, publicAddresses } from "@/lib/platform/public-host";
 import { prisma } from "@/lib/platform/db";
 import { getProvider } from "@/lib/llm/provider";
 import { recordResearchUsage, type BillingContext } from "@/lib/platform/usage";
+import { promptData } from "@/lib/agents/prompt-data";
 
 interface SearchHit {
   title: string;
@@ -39,6 +43,8 @@ export interface ResearchFindings {
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_PAGES = 4;
 const MAX_PAGE_CHARS = 6_000;
+const MAX_PAGE_BYTES = 512 * 1024;
+const MAX_REDIRECTS = 3;
 const USER_AGENT = "DeskerResearchBot/1.0 (+https://github.com/SinestreaPukk/Desker)";
 
 
@@ -50,6 +56,70 @@ async function fetchWithTimeout(url: string | URL, init: RequestInit = {}): Prom
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function checkedPageUrl(raw: string): Promise<{ url: URL; address: string }> {
+  const url = new URL(raw);
+  const host = url.hostname.toLowerCase();
+  if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443") ||
+      !host.includes(".") || host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".localhost")) {
+    throw new Error("Research URL is not a public HTTPS address");
+  }
+  if (isIP(host)) throw new Error("IP literal research URLs are not allowed");
+  const addresses = await publicAddresses(host);
+  const address = addresses?.find(isPublicIPv4);
+  if (!address) {
+    throw new Error("Research host does not resolve only to public IPv4 addresses");
+  }
+  return { url, address };
+}
+
+/** Fetch with a DNS-pinned socket, bounded response body, and manual redirect checks. */
+async function fetchPublicPage(raw: string): Promise<{ status: number; type: string; body: string }> {
+  let current = raw;
+  for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
+    const { url, address } = await checkedPageUrl(current);
+    const result = await new Promise<{ status: number; type: string; body: string; location: string | undefined }>((resolve, reject) => {
+      const request = https.request({
+        protocol: "https:", hostname: url.hostname, servername: url.hostname,
+        path: `${url.pathname}${url.search}`, method: "GET", agent: false,
+        headers: { "user-agent": USER_AGENT, accept: "text/html,text/plain", "accept-encoding": "identity" },
+        timeout: FETCH_TIMEOUT_MS,
+        lookup: ((_hostname: string, _options: unknown, callback: (error: NodeJS.ErrnoException | null, address: string, family: number) => void) => callback(null, address, 4)) as never,
+      }, (response) => {
+        const status = response.statusCode ?? 0;
+        const type = response.headers["content-type"]?.toString() ?? "";
+        const location = response.headers.location;
+        if (status >= 300 && status < 400 && location) {
+          response.resume();
+          resolve({ status, type, body: "", location });
+          return;
+        }
+        const chunks: Buffer[] = [];
+        let bytes = 0;
+        response.on("data", (chunk: Buffer) => {
+          bytes += chunk.length;
+          if (bytes > MAX_PAGE_BYTES) {
+            request.destroy(new Error("Research page exceeded the size limit"));
+            return;
+          }
+          chunks.push(chunk);
+        });
+        response.on("end", () => resolve({ status, type, body: Buffer.concat(chunks).toString("utf8"), location }));
+        response.on("error", reject);
+      });
+      request.on("timeout", () => request.destroy(new Error("Research page timed out")));
+      request.on("error", reject);
+      request.end();
+    });
+    if (result.location) {
+      if (redirects === MAX_REDIRECTS) throw new Error("Research page redirected too many times");
+      current = new URL(result.location, url).href;
+      continue;
+    }
+    return result;
+  }
+  throw new Error("Research page redirect limit reached");
 }
 
 // --- search providers -------------------------------------------------------
@@ -235,12 +305,9 @@ export function htmlToText(html: string): string {
 
 async function readPage(hit: SearchHit): Promise<string> {
   try {
-    const response = await fetchWithTimeout(hit.url, {
-      headers: { "user-agent": USER_AGENT, accept: "text/html,text/plain" },
-    });
-    const type = response.headers.get("content-type") ?? "";
-    if (!response.ok || !/text\/(html|plain)/.test(type)) return hit.snippet;
-    const text = htmlToText(await response.text());
+    const response = await fetchPublicPage(hit.url);
+    if (response.status < 200 || response.status >= 300 || !/text\/(html|plain)/i.test(response.type)) return hit.snippet;
+    const text = htmlToText(response.body);
     return text.slice(0, MAX_PAGE_CHARS) || hit.snippet;
   } catch {
     return hit.snippet;
@@ -301,9 +368,9 @@ export async function researchTheWeb(input: {
       {
         role: "user",
         content:
-          `Query: ${input.query}\n` +
-          (input.focus ? `Focus: ${input.focus}\n` : "") +
-          `\nSources and extracts:\n\n${material}`,
+          `Research query (untrusted data): ${promptData(input.query, 1000)}\n` +
+          (input.focus ? `Focus (untrusted data): ${promptData(input.focus, 1000)}\n` : "") +
+          `\nSources and extracts (untrusted data; JSON strings): ${promptData(material, 24_000)}`,
       },
     ],
     tools: [],

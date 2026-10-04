@@ -15,6 +15,7 @@ import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { detectConflicts, cleanWindows, type Conflict, type Domain, type Proposal } from "./conflicts";
 import { renderLife, type Life } from "./context";
 import * as store from "./store";
+import { localDateTimeToDate, localIso, validTimeZone } from "@/lib/shared/local-time";
 
 /** The specialist that speaks for each domain, matched to a hired agent by its template. */
 const LENS: Record<Domain, { template: string; role: string; cares: string }> = {
@@ -51,7 +52,7 @@ export interface NegotiationAgent {
 }
 
 const hasModel = () => env.hasAnthropicKey || env.hasOpenAiKey;
-const day = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+const day = (d: Date, timeZone?: string) => d.toLocaleDateString("en-GB", { timeZone: validTimeZone(timeZone), day: "numeric", month: "short" });
 
 async function ask(provider: LlmProvider, organizationId: string, system: string, user: string, model: string | null, maxTokens = 350) {
   const turn = await provider.complete({ billing: { organizationId }, systemPrompt: system, messages: [{ role: "user", content: user }], tools: [], model, maxTokens });
@@ -59,28 +60,29 @@ async function ask(provider: LlmProvider, organizationId: string, system: string
 }
 
 /** Pulls a dated proposal out of free text. Null when the message proposes nothing with dates. */
-async function extractProposal(provider: LlmProvider, organizationId: string, text: string, now: Date, model: string | null): Promise<Proposal | null> {
+async function extractProposal(provider: LlmProvider, organizationId: string, text: string, now: Date, timeZone: string, model: string | null): Promise<Proposal | null> {
   const parsed = await ask(
     provider,
     organizationId,
-    `Today is ${now.toISOString().slice(0, 10)}. Read the person's message. If it proposes something with a time and possibly a cost (a trip, a purchase, a new commitment), reply with JSON only: {"title": string, "start": "YYYY-MM-DD", "end": "YYYY-MM-DD", "cost": number | null, "trip": boolean}. "cost" is in major currency units, null if not stated. Resolve relative dates like "next week". If it proposes nothing with dates, reply {"title": ""}.`,
+    `Today is ${localIso(now, validTimeZone(timeZone)).slice(0, 10)} in ${validTimeZone(timeZone)}. Read the person's message. If it proposes something with a time and possibly a cost (a trip, a purchase, a new commitment), reply with JSON only: {"title": string, "start": "YYYY-MM-DD", "end": "YYYY-MM-DD", "cost": number | null, "trip": boolean}. "cost" is in major currency units, null if not stated. Resolve relative dates like "next week" from that local date. If it proposes nothing with dates, reply {"title": ""}.`,
     text,
     model,
     150,
   );
   const title = stringField(parsed, "title");
-  const start = new Date(stringField(parsed, "start"));
-  const end = new Date(stringField(parsed, "end") || start);
+  const zone = validTimeZone(timeZone);
+  const start = localDateTimeToDate(stringField(parsed, "start"), zone);
+  const end = localDateTimeToDate(stringField(parsed, "end") || stringField(parsed, "start"), zone);
   if (!title || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
   const cost = Number(parsed?.cost);
   return { title, startsAt: start, endsAt: new Date(Math.max(end.getTime(), start.getTime()) + (end <= start ? 86_400_000 : 0)), costMinor: Number.isFinite(cost) && cost > 0 ? Math.round(cost * 100) : 0, trip: parsed?.trip === true };
 }
 
 /** What the engine says with no model: the computed conflicts, plainly. */
-function plainVerdict(conflicts: Conflict[], alternatives: Negotiation["alternatives"], title: string): Pick<Negotiation, "verdict" | "reply"> {
+function plainVerdict(conflicts: Conflict[], alternatives: Negotiation["alternatives"], title: string, timeZone?: string): Pick<Negotiation, "verdict" | "reply"> {
   const real = conflicts.filter((c) => c.severity !== "info");
   if (real.length === 0) return { verdict: "go", reply: `${title} fits: nothing clashes with your budget, calendar, workouts or deadlines.` };
-  const alt = alternatives[0] ? ` A clear window: ${day(alternatives[0].startsAt)} to ${day(alternatives[0].endsAt)}.` : "";
+  const alt = alternatives[0] ? ` A clear window: ${day(alternatives[0].startsAt, timeZone)} to ${day(alternatives[0].endsAt, timeZone)}.` : "";
   return { verdict: alternatives[0] ? "go_with_changes" : "hold", reply: `${title}: ${real.map((c) => c.summary).join(" ")}${alt}` };
 }
 
@@ -99,13 +101,13 @@ export async function negotiate(input: {
 
   let proposal: Proposal | null = null;
   try {
-    if (provider) proposal = await extractProposal(provider, organizationId, text, life.now, model);
+    if (provider) proposal = await extractProposal(provider, organizationId, text, life.now, validTimeZone(timeZone), model);
   } catch (error) {
     console.error("[life] proposal extraction failed", error);
   }
 
-  const conflicts = detectConflicts(life, proposal ?? undefined);
-  const alternatives = proposal ? cleanWindows(life, proposal) : [];
+  const conflicts = detectConflicts(life, proposal ?? undefined, timeZone);
+  const alternatives = proposal ? cleanWindows(life, proposal, 2, timeZone) : [];
   const title = proposal?.title ?? "That";
   const positions: Position[] = [];
 
@@ -113,7 +115,7 @@ export async function negotiate(input: {
   const lenses = [...new Map(domains.map((d) => [LENS[d].role, d])).values()];
   const context = renderLife(life, timeZone);
   const found = conflicts.map((c) => `- [${c.domains.join("/")}, ${c.severity}] ${c.summary}`).join("\n") || "- No conflicts found.";
-  const altText = alternatives.length ? alternatives.map((a) => `${day(a.startsAt)} to ${day(a.endsAt)}`).join("; ") : "none found in the next 8 weeks";
+  const altText = alternatives.length ? alternatives.map((a) => `${day(a.startsAt, timeZone)} to ${day(a.endsAt, timeZone)}`).join("; ") : "none found in the next 8 weeks";
 
   if (provider && proposal) {
     // Round 1: each affected specialist states a position. Round 2: each sees the others and may concede.
@@ -143,7 +145,7 @@ export async function negotiate(input: {
     }
   }
 
-  let { verdict, reply } = plainVerdict(conflicts, alternatives, title);
+  let { verdict, reply } = plainVerdict(conflicts, alternatives, title, timeZone);
   if (provider && proposal) {
     try {
       const out = await ask(
@@ -172,7 +174,7 @@ export async function negotiate(input: {
 /** The weekly brief: today's conflicts across domains, synthesized once. No proposal, just the week as it stands. */
 export async function weeklyDigest(input: { life: Life; organizationId: string; team: NegotiationAgent[]; timeZone?: string }): Promise<{ title: string; body: string }> {
   const { life, organizationId, team, timeZone } = input;
-  const conflicts = detectConflicts(life).filter((c) => c.severity !== "info" || c.kind === "bill_in_trip");
+  const conflicts = detectConflicts(life, undefined, timeZone).filter((c) => c.severity !== "info" || c.kind === "bill_in_trip");
   const facts = [
     ...conflicts.map((c) => `- ${c.summary}`),
     ...(life.money.billsDueSoonMinor ? [`- Bills due within 7 days: ${Math.round(life.money.billsDueSoonMinor / 100).toLocaleString("en-US")} ${life.money.currency}.`] : []),

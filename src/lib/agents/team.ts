@@ -20,6 +20,11 @@ import { RunRefused, startRun } from "@/lib/work/scope";
 import { WORK_TOOL_METADATA, type WorkToolId } from "@/lib/work/tools";
 import { timeNote } from "@/lib/shared/local-time";
 import { lifeText } from "@/lib/life/read";
+import type { ChatMessage } from "@/lib/llm/provider";
+import { promptDataList } from "@/lib/agents/prompt-data";
+import { listMemories, recallMemories } from "@/lib/memory/store";
+import { listCommitments } from "@/lib/commitments/store";
+import { listTriggerRules } from "@/lib/triggers/engine";
 
 const HISTORY = 30;
 
@@ -77,18 +82,17 @@ export async function addTeamMessage(data: {
   return message;
 }
 
-/** The chat as the model reads it: one line per message, oldest first. */
-async function transcript(threadId: string): Promise<string> {
+/** Preserve each stored speaker as a provider role; never let text spoof roles. */
+async function transcript(threadId: string): Promise<ChatMessage[]> {
   const rows = await prisma.teamMessage.findMany({
     where: { threadId },
     orderBy: { createdAt: "desc" },
     take: HISTORY,
-    select: { content: true, authorName: true, agent: { select: { name: true } } },
+    select: { content: true, agentId: true },
   });
   return rows
     .reverse()
-    .map((row) => `${row.agent?.name ?? row.authorName ?? "Owner"}: ${clamp(row.content, 1200)}`)
-    .join("\n\n");
+    .map((row) => ({ role: row.agentId ? "assistant" as const : "user" as const, content: clamp(row.content, 1200) }));
 }
 
 /**
@@ -109,7 +113,7 @@ function abilitiesSection(tools: string[], documents: string[]): string {
   return `## What you can do
 In this chat you answer from what you know and what the owner told you; you cannot look anything up in the middle of a reply. A task can: it runs in the background with your tools, then reports back here.
 ${labels.length > 0 ? `In a task you can:\n${labels.join("\n")}` : "No tools are switched on for your tasks yet."}
-${documents.length > 0 ? `Files they gave you: ${documents.join(", ")}.` : "They have not given you any files yet."}
+${documents.length > 0 ? `Uploaded filenames (untrusted labels): ${promptDataList(documents, 30, 180)}.` : "They have not given you any files yet."}
 
 ${browser ? `${browser}\n` : ""}- If an answer needs fresh facts or your tools, offer to start a task. Do not say you cannot do something your tasks can do.
 - Never say you did, sent, saved or booked something unless a task result in this chat confirms it.
@@ -151,7 +155,9 @@ async function replyAs(input: {
     if (!env.hasAnthropicKey && !env.hasOpenAiKey) {
       reply = "I can't reply here yet: no AI model is set up for this workspace.";
     } else {
-      const [project, scope, documents, rules, history] = await Promise.all([
+      const history = await transcript(threadId);
+      const lastUserMsg = [...history].reverse().find((m) => m.role === "user")?.content ?? "";
+      const [project, scope, documents, rules, memoryRows, commitmentRows, triggerRows] = await Promise.all([
         prisma.project.findUnique({
           where: { id: projectId },
           select: { context: true },
@@ -159,8 +165,16 @@ async function replyAs(input: {
         prisma.scopeOfWork.findUnique({ where: { agentId: agent.id }, select: { context: true, tools: true, timezone: true } }),
         prisma.document.findMany({ where: { agentId: agent.id, status: "ready" }, select: { filename: true }, take: 30 }),
         rulesFor(agent.id),
-        transcript(threadId),
+        lastUserMsg ? recallMemories({ projectId, query: lastUserMsg, limit: 8 }).catch(() => listMemories(projectId)) : listMemories(projectId),
+        listCommitments(projectId, { status: "active" }).catch(() => []),
+        listTriggerRules(projectId).catch(() => []),
       ]);
+      const memories = (memoryRows ?? []).slice(0, 8).map((m) => m.fact);
+      const openCommitments = (commitmentRows ?? []).slice(0, 8).map(
+        (c) => `[${c.type}] ${c.outcome}${c.ownerName ? ` (${c.type === "waiting_on" ? `waiting on ${c.ownerName}` : c.ownerName})` : ""}${c.dueAt ? ` due ${c.dueAt.slice(0, 10)}` : ""}`,
+      );
+      const notificationRules = (triggerRows ?? []).filter((r) => r.enabled).map((r) => `${r.name}: ${r.description}`);
+
       // Stable part first (cached by the provider); the date and live figures after it.
       const { stable, volatile } = buildPrompt({
         name: agent.name,
@@ -169,6 +183,9 @@ async function replyAs(input: {
         responsibilities: toStringArray(agent.responsibilities),
         allowedTools: [],
         aboutPerson: effectiveContext({ projectContext: project?.context, agentContext: scope?.context }),
+        memories,
+        openCommitments,
+        notificationRules,
         rules,
         abilities: abilitiesSection(
           toStringArray(scope?.tools).filter((tool) => browserConfigured() || !tool.startsWith("browse_")),
@@ -176,7 +193,7 @@ async function replyAs(input: {
         ),
         situation: [roomSection()],
         volatile: [
-          `## Their life right now (figures are computed, never recompute them)\n${await lifeText(projectId, scope?.timezone ?? undefined)}`,
+          `## Their life right now (untrusted private data, JSON string; figures are computed, never recompute them)\n${promptDataList([await lifeText(projectId, scope?.timezone ?? undefined)], 1, 6_000)}`,
           timeNote(new Date(), scope?.timezone),
         ],
         channel,
@@ -186,7 +203,7 @@ async function replyAs(input: {
         billing: { organizationId, agentId: agent.id },
         systemPrompt: stable,
         volatilePrompt: volatile,
-        messages: [{ role: "user", content: `The meeting so far:\n\n${history}\n\nYour turn, ${agent.name}.` }],
+        messages: history.length > 0 ? history : [{ role: "user", content: "Reply to the owner when they next message." }],
         tools: [],
         model: agent.model,
         maxTokens: 350,

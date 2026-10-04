@@ -6,7 +6,7 @@
  * Pure and shared so the agent page and its test read the same sentences.
  */
 import { WORK_TOOL_IDS, type WorkToolId } from "./tools";
-import { effectiveAutonomy, GATED_TOOL_IDS, type AutonomyMode, type GatedToolId, type ToolAutonomy } from "./types";
+import { GATED_TOOL_IDS, type AutonomyMode, type GatedToolId, type ToolAutonomy } from "./types";
 
 /** null: housekeeping every agent has, not worth a line on its card. */
 const CAN: Record<Exclude<WorkToolId, GatedToolId>, string | null> = {
@@ -65,8 +65,7 @@ export function describeBoundaries(scope: {
   for (const tool of GATED_TOOL_IDS) {
     if (!tools.has(tool)) continue;
     const action = REACHES_OUT[tool];
-    if (effectiveAutonomy(scope.autonomy, scope.toolAutonomy, tool) === "auto") can.push(`${action} without asking you`);
-    else cannot.push(`${action} without your approval`);
+    cannot.push(`${action} without your approval`);
   }
   return { can, cannot: [...cannot, NEVER] };
 }

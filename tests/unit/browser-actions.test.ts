@@ -12,7 +12,12 @@ describe("browser actions", () => {
   it("only lets the browser go to ordinary public web addresses", () => {
     expect(allowedUrl("skyscanner.com")?.href).toBe("https://skyscanner.com/");
     expect(allowedUrl("https://www.google.com/travel/flights")).not.toBeNull();
-    for (const bad of ["file:///etc/passwd", "chrome://settings", "javascript:alert(1)", "http://localhost:3000", "http://127.0.0.1", "http://192.168.1.1/admin", "http://169.254.169.254/latest", "intranet"]) {
+    for (const bad of [
+      "file:///etc/passwd", "chrome://settings", "javascript:alert(1)",
+      "http://localhost:3000", "http://127.0.0.1", "http://192.168.1.1/admin", "http://169.254.169.254/latest",
+      "https://127.0.0.1", "https://2130706433", "https://0x7f000001", "https://[::1]",
+      "https://user:pass@example.com", "https://example.com:8443", "https://intranet.local", "intranet",
+    ]) {
       expect(allowedUrl(bad)).toBeNull();
     }
   });

@@ -8,7 +8,7 @@ Decisions below were settled with Tiger on 2026-10-02.
 | Question | Decision | Trade-off |
 |---|---|---|
 | Name | **Desker Personal** (`BRAND` in `src/lib/site/brand.ts`) | Keeps the family tie to Desker; revisit if it must stand fully alone. |
-| Shared vs duplicated backend | **One repo, one backend.** Share the runtime; fork only frontend, onboarding and personal-life schema. | Cheapest, no drift in the trust layer. Cost: the business app can no longer ship from this branch, so it lives on `main`, and shared fixes are cherry-picked either way. |
+| Product scope | **One codebase and backend for Desker Personal.** The runtime, trust layer, frontend, onboarding and personal-life schema belong to this product. | One product boundary and one set of trust rules to maintain. |
 | Agents | **One assistant per space** (`Desker`), configured entirely by its owner on its page: persona, responsibilities, tools, model, schedule, knowledge, rules. | One mental model and one prompt to maintain. The cross-domain engine still weighs money, calendar, training and travel as lenses of the same assistant. (2026-10-03) |
 | Telephone | **All of it:** voice calls, SMS, call screening. Shipped in that order of risk: SMS, then screening, then outbound voice. | Each is its own connector with its own consent/approval rules; outbound voice and SMS are `external` risk and always wait for a yes. |
 | "Meowjot format" | KBTG money app: scans the photo gallery for bank slips and books them as accounting entries. Bills/invoices/slips become structured ledger entries (payee, amount, date, category, source image) with visual summaries. | Needs gallery/photo upload plus slip OCR; a user-selected folder/upload, never silent background scanning. |
@@ -27,6 +27,10 @@ Decisions below were settled with Tiger on 2026-10-02.
 | Frontend, onboarding, marketing site | **Forked / personal-only** | `src/app/*`, `content/*` |
 | Space model (`Organization.kind`, `User.useType`, business roles, support inbox, widget, public chat) | **Removed** | schema, `src/lib/tenancy/space.ts` |
 | Life-context layer | **New** (Phase 1) | `src/lib/life/*`, `Life*` models |
+| Memory store & hygiene (facts, preferences, routines, people) | **New** (Core Phase 1) | `src/lib/memory/*` |
+| Capture intake pipeline (LINE & app, OCR, voice STT, bill extraction) | **New** (Core Phase 2) | `src/lib/capture/*` |
+| Commitment tracker (open loops, checkable signals, gentle follow-up) | **New** (Core Phase 3) | `src/lib/commitments/*` |
+| Proactive trigger engine (scheduled briefs, conflict alerts, notification discipline) | **New** (Core Phase 4) | `src/lib/triggers/*` |
 | Model providers (Anthropic, OpenAI) behind one interface; prompt caching, token metering | **Shared** | `src/lib/llm/*` |
 | System prompts: stable part (cached) and volatile part (date, live figures), one abilities text per surface | **Shared**, see `docs/PROMPTS.md` | `src/lib/agents/agent-prompt.ts`, `src/lib/agents/team.ts` |
 | Browser agent (cloud browser, screenshots, approve-before-final-step) | **New** | `src/lib/browser/*` |

@@ -17,7 +17,7 @@
  */
 import { describeCadence } from "./cadence";
 import { GATED_TOOLS, WORK_TOOL_IDS, WORK_TOOL_METADATA, type WorkToolId } from "./tools";
-import { effectiveAutonomy, type AutonomyMode, type ToolAutonomy, type TriggerType } from "./types";
+import { type AutonomyMode, type ToolAutonomy, type TriggerType } from "./types";
 
 /** Which focused control a node opens when it is clicked. */
 type ScopeFlowSection = "trigger" | "context" | "objectives" | "tools" | "trust" | "digest";
@@ -107,19 +107,8 @@ function agentDetail(input: ScopeFlowInput): string {
 /** Which of the outward tools stop for a person, in the owner's words. */
 export function approvalDetail(input: ScopeFlowInput): string {
   const gated = GATED_TOOLS.filter((tool) => input.tools.includes(tool));
-  const waiting = gated.filter(
-    (tool) => effectiveAutonomy(input.autonomy, input.toolAutonomy, tool) === "draft_only",
-  );
   const noun = (tool: WorkToolId) => (tool === "publish_post" ? "Posts" : "Emails");
-
-  if (waiting.length === gated.length) {
-    return `${gated.map(noun).join(" and ")} wait here until you approve them. Nothing goes out on its own.`;
-  }
-  if (waiting.length === 0) {
-    return `${gated.map(noun).join(" and ")} go straight out. Nothing stops here.`;
-  }
-  const auto = gated.filter((tool) => !waiting.includes(tool));
-  return `${waiting.map(noun).join(" and ")} wait for you; ${auto.map(noun).join(" and ").toLowerCase()} go straight out.`;
+  return `${gated.map(noun).join(" and ")} wait here until you approve them. Nothing goes out on its own.`;
 }
 
 function outputDetail(input: ScopeFlowInput): string {

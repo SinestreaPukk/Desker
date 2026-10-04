@@ -63,11 +63,16 @@ export type GatedToolId = (typeof GATED_TOOL_IDS)[number];
 export type ToolAutonomy = Partial<Record<GatedToolId, AutonomyMode>>;
 
 export function effectiveAutonomy(
-  agentMode: AutonomyMode,
-  overrides: ToolAutonomy | null | undefined,
-  tool: GatedToolId,
+  _agentMode: AutonomyMode,
+  _overrides: ToolAutonomy | null | undefined,
+  _tool: GatedToolId,
 ): AutonomyMode {
-  return overrides?.[tool] ?? agentMode;
+  void _agentMode;
+  void _overrides;
+  void _tool;
+  // Legacy settings remain readable, but never grant permission to perform an
+  // external action without a fresh, explicit approval.
+  return "draft_only";
 }
 
 export const DRAFT_KINDS = ["blog_post", "social_caption", "email"] as const;

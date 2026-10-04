@@ -16,6 +16,7 @@ import { messageUser } from "@/lib/messaging/send";
 import { clamp, parseModelJson, stringField } from "@/lib/work/model-json";
 import { addTeamMessage, teamOf } from "@/lib/agents/team";
 import * as store from "./store";
+import { localIso } from "@/lib/shared/local-time";
 
 export const REMIND = /\bremind me\b|เตือน/i;
 /** In-process waits stay under this: the invocation has minutes, not hours. */
@@ -43,7 +44,7 @@ export async function extractReminder(input: { text: string; now: Date; timeZone
   const local = new Intl.DateTimeFormat("en-GB", { timeZone, dateStyle: "full", timeStyle: "medium" }).format(now);
   const turn = await provider.complete({
     billing: { organizationId },
-    systemPrompt: `The person asked to be reminded of something. Right now it is ${now.toISOString()} UTC; their local time is ${local} (${timeZone}). Reply with JSON only: {"what": "short reminder text, e.g. 'Work'", "at": "exact ISO 8601 time in UTC"}. Resolve relative times ("in 30 seconds", "tomorrow at 9") from now in their time zone. If they gave no time, reply {"what": "", "at": ""}.`,
+    systemPrompt: `The person asked to be reminded of something. Their local time is ${local} (${timeZone}); the exact local time with offset is ${localIso(now, timeZone)}. Reply with JSON only: {"what": "short reminder text, e.g. 'Work'", "at": "ISO 8601 local date and time with its UTC offset"}. Resolve relative times ("in 30 seconds", "tomorrow at 9") from now in their time zone. If they gave no time, reply {"what": "", "at": ""}.`,
     messages: [{ role: "user", content: text }],
     tools: [],
     model: agent.model,

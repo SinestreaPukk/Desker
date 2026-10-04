@@ -8,6 +8,7 @@ import { Blocks, Bot, ChevronsUpDown, FileText, LogOut, MessageCircle, Rocket, S
 import { BRAND } from "@/lib/site/brand";
 import { BrandMark } from "@/components/brand-logo";
 import { ChatHistory } from "@/components/chat/chat-history";
+import { OpenLoopsRailCard } from "@/components/commitments/open-loops-card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -151,6 +152,7 @@ export function AdminShell({
           })}
         </nav>
         <React.Suspense fallback={<div className="flex-1" />}>
+          <OpenLoopsRailCard project={project.slug} />
           <ChatHistory project={project.slug} />
         </React.Suspense>
         <div className="pt-3">{account}</div>

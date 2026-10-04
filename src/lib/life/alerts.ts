@@ -13,6 +13,8 @@ import { EVERYDAY_THREAD } from "@/lib/agents/team-dto";
 import { readLife } from "./read";
 import { detectConflicts } from "./conflicts";
 import type { Life } from "./context";
+import { readPrefs } from "@/lib/messaging/prefs";
+import { localTimeZone, validTimeZone } from "@/lib/shared/local-time";
 
 const HOUR = 3_600_000;
 export interface Alert {
@@ -22,19 +24,19 @@ export interface Alert {
 }
 
 const money = (minor: number, cur: string) => `${Math.round(minor / 100).toLocaleString("en-US")} ${cur}`;
-const day = (d: Date) => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
-const time = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+const day = (d: Date, timeZone: string) => d.toLocaleDateString("en-GB", { timeZone, weekday: "short", day: "numeric", month: "short" });
+const time = (d: Date, timeZone: string) => d.toLocaleTimeString("en-GB", { timeZone, hour: "2-digit", minute: "2-digit" });
 
-export function dueAlerts(life: Life, now = new Date()): Alert[] {
+export function dueAlerts(life: Life, now = new Date(), timeZone = localTimeZone()): Alert[] {
   const out: Alert[] = [];
   for (const b of life.money.unpaidBills) {
     const left = b.occurredAt.getTime() - now.getTime();
-    if (left < 0) out.push({ key: `bill-overdue:${b.id}`, title: "Bill overdue", body: `${b.payee} (${money(b.amountMinor, b.currency)}) was due ${day(b.occurredAt)}.` });
-    else if (left <= 48 * HOUR) out.push({ key: `bill:${b.id}`, title: "Bill due soon", body: `${b.payee}, ${money(b.amountMinor, b.currency)}, is due ${day(b.occurredAt)}.` });
+    if (left < 0) out.push({ key: `bill-overdue:${b.id}`, title: "Bill overdue", body: `${b.payee} (${money(b.amountMinor, b.currency)}) was due ${day(b.occurredAt, timeZone)}.` });
+    else if (left <= 48 * HOUR) out.push({ key: `bill:${b.id}`, title: "Bill due soon", body: `${b.payee}, ${money(b.amountMinor, b.currency)}, is due ${day(b.occurredAt, timeZone)}.` });
   }
   for (const w of life.workouts) {
     const left = w.scheduledAt.getTime() - now.getTime();
-    if (left > 0 && left <= 2 * HOUR) out.push({ key: `workout:${w.id}`, title: "Workout soon", body: `${w.title} at ${time(w.scheduledAt)}.` });
+    if (left > 0 && left <= 2 * HOUR) out.push({ key: `workout:${w.id}`, title: "Workout soon", body: `${w.title} at ${time(w.scheduledAt, timeZone)}.` });
   }
   for (const t of life.openTasks) {
     const left = t.dueAt ? t.dueAt.getTime() - now.getTime() : Infinity;
@@ -43,19 +45,21 @@ export function dueAlerts(life: Life, now = new Date()): Alert[] {
       if (left <= 0) out.push({ key: `reminder:${t.id}`, title: "Reminder", body: t.title });
       continue;
     }
-    if (left > 0 && left <= 24 * HOUR) out.push({ key: `task:${t.id}`, title: "Due within a day", body: `${t.title} is due ${day(t.dueAt!)}.` });
+    if (left > 0 && left <= 24 * HOUR) out.push({ key: `task:${t.id}`, title: "Due within a day", body: `${t.title} is due ${day(t.dueAt!, timeZone)}.` });
   }
   // A clash is worth a nudge once: key it by what clashes, not by when we noticed.
-  for (const c of detectConflicts(life).filter((c) => c.severity === "high" || c.kind === "workout_clash")) out.push({ key: `conflict:${c.summary}`, title: "Schedule clash", body: c.summary });
+  for (const c of detectConflicts(life, undefined, timeZone).filter((c) => c.severity === "high" || c.kind === "workout_clash")) out.push({ key: `conflict:${c.summary}`, title: "Schedule clash", body: c.summary });
   return out;
 }
 
 export async function runLifeAlerts(now = new Date()): Promise<number> {
-  const projects = await prisma.project.findMany({ where: { agents: { some: { status: "published" } } }, select: { id: true, organizationId: true, organization: { select: { memberships: { select: { userId: true } } } } } });
+  const projects = await prisma.project.findMany({ where: { agents: { some: { status: "published" } } }, select: { id: true, organizationId: true, organization: { select: { memberships: { select: { role: true, userId: true, user: { select: { alertPrefs: true } } } } } } } });
   let sent = 0;
   for (const project of projects) {
     try {
-      const alerts = dueAlerts(await readLife(project.id, now), now);
+      const owner = project.organization.memberships.find((member) => member.role === "owner") ?? project.organization.memberships[0];
+      const timeZone = validTimeZone(readPrefs(owner?.user.alertPrefs).timeZone);
+      const alerts = dueAlerts(await readLife(project.id, now), now, timeZone);
       for (const alert of alerts) {
         // Claimed first: the unique key means two overlapping ticks cannot both send it.
         const claimed = await prisma.lifeAlertSent.create({ data: { projectId: project.id, key: alert.key.slice(0, 300) } }).then(() => true, () => false);

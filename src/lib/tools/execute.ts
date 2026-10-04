@@ -8,15 +8,28 @@
 import "server-only";
 import type { z } from "zod";
 import type { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/platform/db";
 import { audit } from "@/lib/platform/audit";
 import type { ToolCall } from "@/lib/llm/provider";
 import { searchDocuments } from "@/lib/rag/search-documents";
 import { SEARCH_DOCUMENTS, searchDocumentsInput } from "@/lib/rag/search-documents-tool";
+import { saveMemory, forgetMemory, recallMemories } from "@/lib/memory/store";
+import type { MemoryKind } from "@/lib/memory/types";
+import {
+  createCommitment,
+  updateCommitment,
+  listCommitments,
+  closeCommitment,
+} from "@/lib/commitments/store";
+import type { CommitmentType, CommitmentStatus, CommitmentOwnerRole } from "@/lib/commitments/types";
+import { processIntake } from "@/lib/capture/pipeline";
+import { listTriggerRules, updateTriggerRule } from "@/lib/triggers/engine";
 import { isToolId } from "./registry";
 
-interface ToolContext {
+export interface ToolContext {
   /** The agent currently answering - the one whose tools these are. */
   agentId: string;
+  projectId?: string;
   /** The tenant the audit row belongs to. Omitted only in unit tests. */
   organizationId?: string;
   conversationId: string;
@@ -37,6 +50,16 @@ function invalidInput(toolName: string, error: z.ZodError): ToolOutcome {
     content: `Invalid arguments for ${toolName} (${detail}). Fix the arguments and call the tool again.`,
     isError: true,
   };
+}
+
+async function getProjectId(context: ToolContext): Promise<string> {
+  if (context.projectId) return context.projectId;
+  const agent = await prisma.agent.findUnique({
+    where: { id: context.agentId },
+    select: { projectId: true },
+  });
+  if (!agent) throw new Error("Agent project not found.");
+  return agent.projectId;
 }
 
 async function searchDocumentsTool(input: unknown, context: ToolContext): Promise<ToolOutcome> {
@@ -104,7 +127,117 @@ async function dispatch(
   }
 
   try {
-    return await searchDocumentsTool(call.input, context);
+    switch (call.name) {
+      case "search_documents":
+        return await searchDocumentsTool(call.input, context);
+
+      case "remember": {
+        const projectId = await getProjectId(context);
+        const fact = String(call.input.fact ?? "").trim();
+        const kind = call.input.kind as MemoryKind | undefined;
+        const personName = call.input.personName as string | undefined;
+        const inferred = Boolean(call.input.inferred);
+        const res = await saveMemory({ projectId, fact, kind, personName, inferred });
+        return { content: res.message };
+      }
+
+      case "forget": {
+        const projectId = await getProjectId(context);
+        const query = call.input.query as string | undefined;
+        const memoryId = call.input.memoryId as string | undefined;
+        const res = await forgetMemory({ projectId, query, id: memoryId });
+        return { content: res.message };
+      }
+
+      case "recall": {
+        const projectId = await getProjectId(context);
+        const query = String(call.input.query ?? "").trim();
+        const kind = call.input.kind as string | undefined;
+        const personName = call.input.personName as string | undefined;
+        const memories = await recallMemories({ projectId, query, kind, personName });
+        if (memories.length === 0) return { content: "No relevant memories found." };
+        const lines = memories.map((m) => `- ${m.fact}${m.personName ? ` (about ${m.personName})` : ""}`);
+        return { content: `Recalled memories:\n${lines.join("\n")}` };
+      }
+
+      case "create_commitment": {
+        const projectId = await getProjectId(context);
+        const outcome = String(call.input.outcome ?? "").trim();
+        const type = (call.input.type as CommitmentType) || "to_do";
+        const dueAt = call.input.dueAt as string | undefined;
+        const ownerRole = call.input.ownerRole as CommitmentOwnerRole | undefined;
+        const ownerName = call.input.ownerName as string | undefined;
+        const sourceRef = call.input.sourceRef as string | undefined;
+        const c = await createCommitment({ projectId, type, outcome, dueAt, ownerRole, ownerName, sourceRef });
+        return { content: `Commitment created: "${c.outcome}" (status: ${c.status}${c.dueAt ? `, due: ${c.dueAt}` : ""}).` };
+      }
+
+      case "update_commitment": {
+        const projectId = await getProjectId(context);
+        const id = String(call.input.id ?? "");
+        const outcome = call.input.outcome as string | undefined;
+        const dueAt = call.input.dueAt as string | undefined;
+        const status = call.input.status as CommitmentStatus | undefined;
+        const snoozedUntil = call.input.snoozedUntil as string | undefined;
+        const note = call.input.note as string | undefined;
+        const c = await updateCommitment({ id, projectId, outcome, dueAt, status, snoozedUntil, note });
+        return { content: `Commitment updated: "${c.outcome}" (status: ${c.status}).` };
+      }
+
+      case "list_commitments": {
+        const projectId = await getProjectId(context);
+        const status = call.input.status as string | undefined;
+        const type = call.input.type as CommitmentType | undefined;
+        const ownerName = call.input.ownerName as string | undefined;
+        const list = await listCommitments(projectId, { status, type, ownerName });
+        if (list.length === 0) return { content: "No commitments match." };
+        const lines = list.map((c) => `- [${c.type}] ${c.outcome} (${c.status}${c.ownerName ? `, waiting on: ${c.ownerName}` : ""}${c.dueAt ? `, due: ${c.dueAt}` : ""})`);
+        return { content: `Commitments:\n${lines.join("\n")}` };
+      }
+
+      case "close_commitment": {
+        const projectId = await getProjectId(context);
+        const id = String(call.input.id ?? "");
+        const status = (call.input.status as "done" | "dropped") || "done";
+        const reason = call.input.reason as string | undefined;
+        const c = await closeCommitment(id, projectId, status, reason);
+        return { content: `Commitment closed as ${status}: "${c.outcome}".` };
+      }
+
+      case "capture_item": {
+        const projectId = await getProjectId(context);
+        const content = String(call.input.content ?? "");
+        const res = await processIntake({
+          projectId,
+          organizationId: context.organizationId || "",
+          inputType: "text",
+          text: content,
+        });
+        return { content: res.confirmationText };
+      }
+
+      case "update_trigger_rule": {
+        const projectId = await getProjectId(context);
+        const ruleName = String(call.input.ruleName ?? "");
+        const enabled = typeof call.input.enabled === "boolean" ? call.input.enabled : undefined;
+        const time = call.input.time as string | undefined;
+        const quietHoursStart = call.input.quietHoursStart as string | undefined;
+        const quietHoursEnd = call.input.quietHoursEnd as string | undefined;
+        const description = call.input.description as string | undefined;
+        const updated = await updateTriggerRule(projectId, { ruleName, enabled, time, quietHoursStart, quietHoursEnd, description });
+        return { content: `Rule "${updated.name}" updated: ${updated.enabled ? "enabled" : "disabled"}${updated.config.time ? ` at ${updated.config.time}` : ""}.` };
+      }
+
+      case "list_trigger_rules": {
+        const projectId = await getProjectId(context);
+        const rules = await listTriggerRules(projectId);
+        const lines = rules.map((r) => `- ${r.name} (${r.enabled ? "on" : "off"}): ${r.description}${r.config.time ? ` [time: ${r.config.time}]` : ""}`);
+        return { content: `Proactive trigger rules:\n${lines.join("\n")}` };
+      }
+
+      default:
+        return { content: `Unhandled tool "${call.name}".`, isError: true };
+    }
   } catch (error) {
     return {
       content: `${call.name} failed: ${

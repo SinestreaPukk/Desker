@@ -95,11 +95,11 @@ function toPayload(notification: Notification) {
 
 async function approvalOf(notification: Notification) {
   if (notification.kind !== "approval_waiting" || !notification.actionItemId) return undefined;
-  const item = await prisma.actionItem.findUnique({ where: { id: notification.actionItemId }, select: { pendingAction: true, status: true } });
+  const item = await prisma.actionItem.findUnique({ where: { id: notification.actionItemId }, select: { pendingAction: true, status: true, agent: { select: { scopeOfWork: { select: { timezone: true } } } } } });
   const pending = item?.status === "needs_approval" ? (item.pendingAction as PendingAction | null) : null;
   if (!pending) return undefined;
   const draft = pending.draftId ? await prisma.draft.findUnique({ where: { id: pending.draftId }, select: { title: true, body: true } }) : null;
-  return { actionItemId: notification.actionItemId, agent: notification.agentName, ...previewPending(pending, draft) };
+  return { actionItemId: notification.actionItemId, agent: notification.agentName, ...previewPending(pending, draft, item?.agent.scopeOfWork?.timezone) };
 }
 
 async function notify(notification: Notification): Promise<void> {

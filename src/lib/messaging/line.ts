@@ -5,6 +5,7 @@
  */
 import "server-only";
 import { signedShotUrl } from "@/lib/browser/shot-url";
+import { localTimeZone } from "@/lib/shared/local-time";
 
 export const LINE_API = "https://api.line.me/v2/bot";
 const token = () => process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim() ?? "";
@@ -122,7 +123,7 @@ export function budgetFlex(d: { currency: string; spendMinor: number; budgetMino
 }
 
 /** Unpaid bills, each with a "Paid" button (it only marks the list; nothing is paid from here). */
-export function billsFlex(bills: { id: string; payee: string; amountMinor: number; currency: string; dueAt: Date; risk: string }[]): LineMessage {
+export function billsFlex(bills: { id: string; payee: string; amountMinor: number; currency: string; dueAt: Date; risk: string }[], timeZone = localTimeZone()): LineMessage {
   return {
     type: "flex",
     altText: `${bills.length} unpaid bill${bills.length === 1 ? "" : "s"}`,
@@ -138,7 +139,7 @@ export function billsFlex(bills: { id: string; payee: string; amountMinor: numbe
             { type: "box", layout: "horizontal", contents: [
               { type: "box", layout: "vertical", flex: 3, contents: [
                 { type: "text", text: b.payee, size: "sm", wrap: true },
-                { type: "text", text: `${b.risk === "overdue" ? "Overdue · " : "Due "}${b.dueAt.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · ${money(b.amountMinor, b.currency)}`, size: "xs", color: b.risk === "overdue" ? "#C2342B" : "#56627A" },
+                { type: "text", text: `${b.risk === "overdue" ? "Overdue · " : "Due "}${b.dueAt.toLocaleDateString("en-GB", { timeZone, day: "numeric", month: "short" })} · ${money(b.amountMinor, b.currency)}`, size: "xs", color: b.risk === "overdue" ? "#C2342B" : "#56627A" },
               ] },
               { type: "button", flex: 2, height: "sm", action: { type: "postback", label: "Paid", data: postbackData("paid", b.id), displayText: `Paid: ${b.payee}` } },
             ] },

@@ -149,9 +149,10 @@ export function allowedUrl(raw: string): URL | null {
   } catch {
     return null;
   }
-  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) return null;
   const host = url.hostname.toLowerCase();
-  if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal") || !host.includes(".")) return null;
-  if (/^(10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.)/.test(host) || host === "[::1]") return null;
+  // Reject IP literals entirely (URL canonicalization catches decimal, octal,
+  // and hexadecimal IPv4 spellings before this check).
+  if (!host.includes(".") || host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".localhost") || host.startsWith("[") || /^\d+(?:\.\d+){0,3}$/.test(host)) return null;
   return url;
 }

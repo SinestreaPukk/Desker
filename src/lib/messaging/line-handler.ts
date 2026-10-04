@@ -17,8 +17,10 @@ import { readLife } from "@/lib/life/read";
 import { moneyInsights } from "@/lib/life/money-insights";
 import { composeLifeDigest } from "@/lib/life/digest";
 import * as store from "@/lib/life/store";
+import { processIntake } from "@/lib/capture/pipeline";
 import { handleInbound } from "./inbound";
-import { parseCommand } from "./prefs";
+import { parseCommand, readPrefs } from "./prefs";
+import { validTimeZone } from "@/lib/shared/local-time";
 import { senderKey } from "./send";
 import { approvalFlex, billsFlex, budgetFlex, lineContent, lineLoading, linePush, lineReplyMessages, parsePostback, replyMessages, text, withQuickReplies, type LineMessage } from "./line";
 
@@ -50,18 +52,19 @@ async function budgetCard(projectId: string): Promise<LineMessage> {
 }
 
 async function pendingApprovals(userId: string): Promise<LineMessage[]> {
-  const items = await prisma.actionItem.findMany({
+  const [items, user] = await Promise.all([prisma.actionItem.findMany({
     where: { status: "needs_approval", agent: agentsVisibleTo(userId) },
     orderBy: { awaitingSince: "asc" },
     take: 4,
     select: { id: true, pendingAction: true, agent: { select: { name: true } } },
-  });
+  }), prisma.user.findUnique({ where: { id: userId }, select: { alertPrefs: true } })]);
+  const timeZone = validTimeZone(readPrefs(user?.alertPrefs).timeZone);
   const out: LineMessage[] = [];
   for (const item of items) {
     const pending = item.pendingAction as PendingAction | null;
     if (!pending) continue;
     const draft = pending.draftId ? await prisma.draft.findUnique({ where: { id: pending.draftId }, select: { title: true, body: true } }) : null;
-    out.push(approvalFlex({ actionItemId: item.id, agent: item.agent.name, ...previewPending(pending, draft) }));
+    out.push(approvalFlex({ actionItemId: item.id, agent: item.agent.name, ...previewPending(pending, draft, timeZone) }));
   }
   return out.length ? out : [text("Nothing is waiting on you.")];
 }
@@ -129,8 +132,34 @@ export async function handleLineEvent(event: LineEvent): Promise<void> {
     if (event.type === "message" && (event.message?.type === "image" || event.message?.type === "file") && event.message.id) {
       return void (await reply(await attachment(userId, event.message.id, event.message.type === "file" ? (event.message.fileName ?? "file") : "photo.jpg", event.message.type === "image")));
     }
-    if (event.type === "message" && (event.message?.type === "audio" || event.message?.type === "video")) {
-      return void (await reply([text("I can't listen to voice messages or watch videos yet. Type it or send a photo.")]));
+    if (event.type === "message" && event.message?.type === "audio" && event.message.id) {
+      const space = await personalSpace(userId);
+      if (!space) return void (await reply([text("Your space isn't set up yet.")]));
+      const file = await lineContent(event.message.id);
+      if (!file) return void (await reply([text("I couldn't download that audio message. Please try sending it again.")]));
+      await lineLoading(chatId);
+      const intake = await processIntake({
+        projectId: space.projectId,
+        organizationId: space.organizationId,
+        inputType: "voice",
+        file: {
+          name: "voice.m4a",
+          type: file.type || "audio/m4a",
+          data: file.data,
+        },
+        sourceRef: `line:${chatId}:${event.message.id}`,
+        sourceChannel: "line",
+      });
+      if (intake.confirmationText) {
+        if (intake.quickReplies && intake.quickReplies.length > 0) {
+          return void (await reply([withQuickReplies(text(intake.confirmationText), intake.quickReplies)]));
+        }
+        return void (await reply([text(intake.confirmationText)]));
+      }
+      return void (await reply([text("I received your voice note, but couldn't detect any actionable items.")]));
+    }
+    if (event.type === "message" && event.message?.type === "video") {
+      return void (await reply([text("I can't watch videos yet. Type it, send a voice note or send a photo.")]));
     }
 
     if (raw === null) return;
@@ -139,9 +168,13 @@ export async function handleLineEvent(event: LineEvent): Promise<void> {
       case "budget":
         return void (await reply(space ? [await budgetCard(space.projectId)] : [text("Your space isn't set up yet.")]));
       case "bills": {
-        const rows = space ? await prisma.lifeEntry.findMany({ where: { projectId: space.projectId, kind: "bill", status: { not: "paid" } }, orderBy: { occurredAt: "asc" }, take: 6 }) : [];
+        const [rows, user] = await Promise.all([
+          space ? prisma.lifeEntry.findMany({ where: { projectId: space.projectId, kind: "bill", status: { not: "paid" } }, orderBy: { occurredAt: "asc" }, take: 6 }) : Promise.resolve([]),
+          prisma.user.findUnique({ where: { id: userId }, select: { alertPrefs: true } }),
+        ]);
+        const timeZone = validTimeZone(readPrefs(user?.alertPrefs).timeZone);
         const now = Date.now();
-        return void (await reply(rows.length ? [billsFlex(rows.map((b) => ({ id: b.id, payee: b.payee, amountMinor: b.amountMinor, currency: b.currency, dueAt: b.occurredAt, risk: b.occurredAt.getTime() < now ? "overdue" : "later" })))] : [text("No unpaid bills.")]));
+        return void (await reply(rows.length ? [billsFlex(rows.map((b) => ({ id: b.id, payee: b.payee, amountMinor: b.amountMinor, currency: b.currency, dueAt: b.occurredAt, risk: b.occurredAt.getTime() < now ? "overdue" : "later" })), timeZone)] : [text("No unpaid bills.")]));
       }
       case "approvals":
         return void (await reply(await pendingApprovals(userId)));

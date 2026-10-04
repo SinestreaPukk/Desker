@@ -3,6 +3,7 @@ import { ACTION_STATUSES, TRANSITIONS, canTransition, effectiveAutonomy } from "
 import { cadenceToCron, cronToCadence, describeCadence } from "@/lib/work/cadence";
 import { WORK_TOOL_IDS, WORK_TOOL_RISK, workToolDefinitions } from "@/lib/work/tools";
 import { htmlToText } from "@/lib/work/research";
+import { isPublicAddress, isPublicIPv4 } from "@/lib/platform/public-host";
 
 describe("action item state machine", () => {
   it("follows the documented path and nothing else", () => {
@@ -40,11 +41,12 @@ describe("action item state machine", () => {
 });
 
 describe("trust settings", () => {
-  it("a per-tool override wins over the agent mode", () => {
+  it("legacy autonomy settings never bypass approval", () => {
     expect(effectiveAutonomy("draft_only", null, "publish_post")).toBe("draft_only");
-    expect(effectiveAutonomy("draft_only", { publish_post: "auto" }, "publish_post")).toBe("auto");
+    expect(effectiveAutonomy("draft_only", { publish_post: "auto" }, "publish_post")).toBe("draft_only");
     expect(effectiveAutonomy("draft_only", { publish_post: "auto" }, "send_email")).toBe("draft_only");
     expect(effectiveAutonomy("auto", { send_email: "draft_only" }, "send_email")).toBe("draft_only");
+    expect(effectiveAutonomy("auto", null, "send_email")).toBe("draft_only");
   });
 });
 
@@ -96,5 +98,21 @@ describe("htmlToText", () => {
       "<html><head><style>p{}</style><script>alert(1)</script></head><body><h1>Hi&amp;bye</h1><p>One</p><p>Two</p></body></html>",
     );
     expect(text).toBe("Hi&bye\nOne\nTwo");
+  });
+});
+
+describe("public address filter", () => {
+  it("rejects private, loopback, link-local, and reserved IPv4 ranges", () => {
+    for (const address of ["0.0.0.0", "10.0.0.1", "100.64.0.1", "127.0.0.1", "169.254.169.254", "172.16.0.1", "192.168.1.1", "198.18.0.1", "203.0.113.1", "224.0.0.1"]) {
+      expect(isPublicIPv4(address)).toBe(false);
+    }
+    expect(isPublicIPv4("8.8.8.8")).toBe(true);
+  });
+
+  it("allows global IPv6 while rejecting local and transition addresses", () => {
+    expect(isPublicAddress("2606:4700:4700::1111")).toBe(true);
+    for (const address of ["::1", "fc00::1", "fe80::1", "2001:db8::1", "2002::1", "::ffff:127.0.0.1"]) {
+      expect(isPublicAddress(address)).toBe(false);
+    }
   });
 });

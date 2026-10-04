@@ -81,15 +81,14 @@ describe("the approval gate", () => {
     expect(approvalDetail(both)).toContain("Posts and Emails wait here");
 
     const auto = input({ tools: ["publish_post", "send_email"], autonomy: "auto" });
-    expect(approvalDetail(auto)).toContain("go straight out");
+    expect(approvalDetail(auto)).toContain("wait here");
 
     const mixed = input({
       tools: ["publish_post", "send_email"],
       autonomy: "auto",
       toolAutonomy: { send_email: "draft_only" },
     });
-    expect(approvalDetail(mixed)).toContain("Emails wait for you");
-    expect(approvalDetail(mixed)).toContain("posts go straight out");
+    expect(approvalDetail(mixed)).toContain("Posts and Emails wait here");
   });
 });
 

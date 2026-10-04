@@ -7,14 +7,19 @@
  * Pure: no server imports, so prompts, tools and tests share it.
  */
 
-/** The zone if the platform knows it, else UTC. */
+/** The current runtime's zone; in a browser this is the signed-in user's local zone. */
+export function localTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "Etc/UTC";
+}
+
+/** The requested zone if valid, else the local zone. */
 export function validTimeZone(timeZone: string | null | undefined): string {
-  if (!timeZone) return "UTC";
+  if (!timeZone) return localTimeZone();
   try {
     new Intl.DateTimeFormat("en-GB", { timeZone }).format(0);
     return timeZone;
   } catch {
-    return "UTC";
+    return localTimeZone();
   }
 }
 
@@ -52,6 +57,23 @@ export function localIso(value: Date | string, timeZone: string): string {
   return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}${offsetOf(date, timeZone)}`;
 }
 
+/** Convert a local wall-clock date-time to its exact instant without using the server's zone. */
+export function localDateTimeToDate(value: string, timeZone: string): Date {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/);
+  if (!match) return new Date(value);
+  const [, y, m, d, h = "00", min = "00"] = match;
+  const desired = Date.UTC(Number(y), Number(m) - 1, Number(d), Number(h), Number(min));
+  let instant = desired;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const p = parts(new Date(instant), timeZone);
+    const represented = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour), Number(p.minute));
+    const correction = desired - represented;
+    if (correction === 0) break;
+    instant += correction;
+  }
+  return new Date(instant);
+}
+
 /** "Tuesday 30 September 2026, 20:45" in the zone. */
 function localLong(date: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -73,5 +95,5 @@ export function timeNote(now: Date, zone: string | null | undefined): string {
   const timeZone = validTimeZone(zone);
   const offset = offsetOf(now, timeZone);
   return `## Time
-It is now ${localLong(now, timeZone)} where the owner is (${timeZone}, UTC${offset}). Say every date and time in that zone - "Monday 09:00", never UTC - and work out "today", "this week" and "next week" from it. When you give a time to a tool, write it in ISO 8601 with that offset, e.g. ${localIso(now, timeZone)}.`;
+It is now ${localLong(now, timeZone)} where the owner is (${timeZone}, offset ${offset}). Say every date and time in that zone - "Monday 09:00" - and work out "today", "this week" and "next week" from it. When you give a time to a tool, write it in ISO 8601 with that local offset, e.g. ${localIso(now, timeZone)}.`;
 }

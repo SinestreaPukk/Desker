@@ -13,6 +13,7 @@ import "server-only";
 import { prisma } from "@/lib/platform/db";
 import { connectorAccess, META_GRAPH, THREADS_GRAPH } from "./oauth";
 import type { DeliveryResult } from "@/lib/work/integrations";
+import { localDateTimeToDate, localIso, localTimeZone, validTimeZone } from "@/lib/shared/local-time";
 
 export const SOCIAL_PLATFORMS = ["linkedin", "facebook", "instagram", "x", "threads"] as const;
 export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
@@ -555,7 +556,7 @@ const postOf = (m: Record<string, unknown>): WatchedPost => ({
 const line = (p: WatchedPost) => `- ${p.at.slice(0, 10)} ${p.type}: ${p.caption || "(no caption)"} (${p.likes} likes, ${p.comments} comments) ${p.url}`;
 
 /** What changed since the last look: followers, and posts that weren't there then. Pure, so a test holds it. */
-function describeWatch(current: WatchedAccount, previous: WatchedAccount | null, previousAt: Date | null): string {
+function describeWatch(current: WatchedAccount, previous: WatchedAccount | null, previousAt: Date | null, timeZone: string): string {
   const best = [...current.recent].sort((a, b) => b.likes + b.comments - (a.likes + a.comments))[0];
   const average = current.recent.length
     ? Math.round(current.recent.reduce((sum, p) => sum + p.likes + p.comments, 0) / current.recent.length)
@@ -566,7 +567,7 @@ function describeWatch(current: WatchedAccount, previous: WatchedAccount | null,
     const fresh = current.recent.filter((p) => !seen.has(p.url));
     const change = current.followers - previous.followers;
     parts.push(
-      `Since ${previousAt.toISOString().slice(0, 16).replace("T", " ")} UTC: ${change >= 0 ? "+" : ""}${change.toLocaleString("en")} followers, ${fresh.length} new post${fresh.length === 1 ? "" : "s"}.`,
+      `Since ${previousAt.toLocaleString("en-GB", { timeZone, dateStyle: "medium", timeStyle: "short" })}: ${change >= 0 ? "+" : ""}${change.toLocaleString("en")} followers, ${fresh.length} new post${fresh.length === 1 ? "" : "s"}.`,
     );
     if (fresh.length) parts.push(`New posts:\n${fresh.map(line).join("\n")}`);
   } else {
@@ -585,7 +586,9 @@ function describeWatch(current: WatchedAccount, previous: WatchedAccount | null,
 export async function watchInstagram(
   organizationId: string,
   input: { action: WatchAction; handle?: string; tag?: string; account?: string },
+  timeZone = localTimeZone(),
 ): Promise<string> {
+  timeZone = validTimeZone(timeZone);
   const conn = await access(organizationId, "instagram");
   if (!conn) throw new Error("Instagram is not connected. The owner can connect Facebook & Instagram under Integrations.");
   const page = metaPage(conn.extra, "instagram", input.account);
@@ -629,7 +632,7 @@ export async function watchInstagram(
       await prisma.socialSnapshot.deleteMany({ where: { organizationId, key, takenAt: { lt: new Date(Date.now() - 60 * 86_400_000) } } });
     }
     const ads = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&search_type=keyword_unordered&q=${encodeURIComponent(current.name || current.username)}`;
-    return `${describeWatch(current, previous ? (previous.data as unknown as WatchedAccount) : null, previous?.takenAt ?? null)}\nTheir running ads (Meta Ad Library, open it to look): ${ads}`;
+    return `${describeWatch(current, previous ? (previous.data as unknown as WatchedAccount) : null, previous?.takenAt ?? null, timeZone)}\nTheir running ads (Meta Ad Library, open it to look): ${ads}`;
   }
 
   if (input.action === "trending") {
@@ -653,9 +656,13 @@ export async function watchInstagram(
   }
 
   // Your own account, yesterday: a day's reach, views and interactions, and followers today.
-  const end = new Date();
-  end.setUTCHours(0, 0, 0, 0);
-  const start = new Date(end.getTime() - 86_400_000);
+  const now = new Date();
+  const today = localIso(now, timeZone).slice(0, 10);
+  const end = localDateTimeToDate(`${today}T00:00`, timeZone);
+  const previousDay = new Date(`${today}T00:00:00Z`);
+  previousDay.setUTCDate(previousDay.getUTCDate() - 1);
+  const previousDate = previousDay.toISOString().slice(0, 10);
+  const start = localDateTimeToDate(`${previousDate}T00:00`, timeZone);
   const [account, stats] = await Promise.all([
     request(`${META_GRAPH}/${me}?${new URLSearchParams({ fields: "username,followers_count,media_count", access_token: token })}`),
     request(
@@ -677,5 +684,5 @@ export async function watchInstagram(
   const numbers = ((stats.data.data as Array<{ name?: string; total_value?: { value?: number } }> | undefined) ?? [])
     .map((m) => `${String(m.name).replace(/_/g, " ")} ${Number(m.total_value?.value ?? 0).toLocaleString("en")}`)
     .join(", ");
-  return `${head}\nYesterday (${start.toISOString().slice(0, 10)}, UTC day): ${numbers || "no activity"}.`;
+  return `${head}\nYesterday (${previousDate}, ${timeZone}): ${numbers || "no activity"}.`;
 }

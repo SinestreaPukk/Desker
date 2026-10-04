@@ -19,6 +19,8 @@ import { prisma } from "@/lib/platform/db";
 import { env } from "@/lib/platform/env";
 import { checkRateLimit } from "@/lib/platform/rate-limit";
 import { sendAppEmailLater } from "@/lib/platform/app-email";
+import { readPrefs } from "@/lib/messaging/prefs";
+import { validTimeZone } from "@/lib/shared/local-time";
 
 const WINDOW_MS = 15 * 60_000;
 const PER_ADDRESS = 30;
@@ -133,6 +135,8 @@ export async function noteDevice(
 
   if (!isNew || known.length === 0) return;
   const place = placeOf(request);
+  const preferences = await prisma.user.findUnique({ where: { id: user.id }, select: { alertPrefs: true } });
+  const timeZone = validTimeZone(readPrefs(preferences?.alertPrefs).timeZone);
   sendAppEmailLater({
     to: user.email,
     subject: `New sign-in to Desker: ${label}`,
@@ -143,7 +147,7 @@ export async function noteDevice(
       "",
       `  ${label}`,
       ...(place ? [`  Near ${place}`] : []),
-      `  ${now.toUTCString()}`,
+      `  ${now.toLocaleString("en-GB", { timeZone, dateStyle: "medium", timeStyle: "short" })} (${timeZone})`,
       "",
       "If this was you, there's nothing to do.",
       "",

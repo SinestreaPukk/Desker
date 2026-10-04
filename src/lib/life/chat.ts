@@ -17,6 +17,7 @@ import { readPrefs } from "@/lib/messaging/prefs";
 import { EVERYDAY_THREAD } from "@/lib/agents/team-dto";
 import { learnFromChat } from "@/lib/agents/learn";
 import { afterResponse } from "@/lib/platform/after-response";
+import { handleAssistantCommand } from "./assistant-commands";
 
 
 interface ChatCtx {
@@ -47,8 +48,14 @@ export async function runChat(plan: Plan, text: string, team: TeamAgent[], ctx: 
 }
 
 async function respond(plan: Plan, text: string, team: TeamAgent[], ctx: ChatCtx): Promise<Later | undefined> {
+  const speaker = plan.responders[0] ?? team[0];
+  if (speaker) {
+    const handled = await handleAssistantCommand(text, ctx, speaker);
+    if (handled) return;
+  }
+
   if (plan.route === "reminder") {
-    const speaker = plan.responders[0]!;
+    if (!speaker) return;
     const say = (content: string) => addTeamMessage({ projectId: ctx.projectId, threadId: ctx.threadId, agentId: speaker.id, content });
     try {
       const user = await prisma.user.findUnique({ where: { id: ctx.userId }, select: { alertPrefs: true } });
@@ -70,7 +77,7 @@ async function respond(plan: Plan, text: string, team: TeamAgent[], ctx: ChatCtx
     return;
   }
   if (plan.route === "research") {
-    const speaker = plan.responders[0]!;
+    if (!speaker) return;
     try {
       const answer = await answerGeneral({ question: text, life: renderLife(await readLife(ctx.projectId)), organizationId: ctx.organizationId, agent: speaker, channel: ctx.channel });
       await addTeamMessage({ projectId: ctx.projectId, threadId: ctx.threadId, agentId: speaker.id, content: answer.reply });
@@ -84,7 +91,7 @@ async function respond(plan: Plan, text: string, team: TeamAgent[], ctx: ChatCtx
     await runMeetingTurn({ responders: plan.responders, ...ctx });
     return;
   }
-  const speaker = plan.responders[0]!;
+  if (!speaker) return;
   try {
     const result = await negotiate({ life: await readLife(ctx.projectId), organizationId: ctx.organizationId, projectId: ctx.projectId, text, team });
     const who = result.positions.filter((p) => p.stance !== "ok").map((p) => p.role);

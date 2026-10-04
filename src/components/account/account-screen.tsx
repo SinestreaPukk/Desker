@@ -151,8 +151,9 @@ function Notifications() {
     onError: (caught) => toast.error(errorMessage(caught)),
   });
   const prefs = settings.data?.prefs;
+  const detectedZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Etc/UTC";
   // Until saved once, show the browser's own time zone, as the alerts do.
-  const zone = prefs ? (settings.data?.saved ? prefs.timeZone : Intl.DateTimeFormat().resolvedOptions().timeZone) : "";
+  const zone = prefs ? (settings.data?.saved ? prefs.timeZone : detectedZone) : "";
   const update = (patch: (p: AlertSettingsDto["prefs"]) => AlertSettingsDto["prefs"]) => {
     if (prefs) save.mutate(patch({ ...prefs, timeZone: zone }));
   };
@@ -178,7 +179,7 @@ function Notifications() {
               />
             </Field>
           ) : null}
-          <Field label="Time zone" htmlFor="tz" hint="Reminders and the brief use it.">
+          <Field label="Time zone" htmlFor="tz" hint="Dates, schedules, reminders and messages use it.">
             <Input
               defaultValue={zone}
               key={zone}

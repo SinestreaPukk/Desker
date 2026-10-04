@@ -5,12 +5,13 @@
  * is not an approval, so each tool states its real payload.
  */
 import type { PendingAction } from "./types";
+import { localTimeZone } from "@/lib/shared/local-time";
 
 const s = (v: unknown) => (typeof v === "string" ? v : "");
-const when = (v: unknown) => (s(v) ? new Date(s(v)).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "");
+const when = (v: unknown, timeZone: string) => (s(v) ? new Date(s(v)).toLocaleString("en-GB", { timeZone, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "");
 const clip = (t: string, n: number) => (t.length > n ? `${t.slice(0, n - 1)}…` : t);
 
-export function previewPending(pending: PendingAction, draft?: { title?: string | null; body?: string | null } | null): { verb: string; lines: string[] } {
+export function previewPending(pending: PendingAction, draft?: { title?: string | null; body?: string | null } | null, timeZone = localTimeZone()): { verb: string; lines: string[] } {
   const i = pending.input;
   switch (pending.tool) {
     case "send_email":
@@ -20,13 +21,13 @@ export function previewPending(pending: PendingAction, draft?: { title?: string 
     case "publish_post":
       return { verb: "Publish a post", lines: [clip(draft?.body ?? draft?.title ?? "", 400)] };
     case "calendar_create_event":
-      return { verb: "Add to your calendar", lines: [s(i.summary), `${when(i.start)} – ${when(i.end)}`] };
+      return { verb: "Add to your calendar", lines: [s(i.summary), `${when(i.start, timeZone)} – ${when(i.end, timeZone)}`] };
     case "calendar_reschedule":
-      return { verb: "Move a calendar event", lines: [`New time: ${when(i.start)} – ${when(i.end)}`] };
+      return { verb: "Move a calendar event", lines: [`New time: ${when(i.start, timeZone)} – ${when(i.end, timeZone)}`] };
     case "calendar_cancel_event":
       return { verb: "Cancel a calendar event", lines: [s(i.title), "Attendees are told."] };
     case "tasks_write":
-      return { verb: i.action === "complete" ? "Mark a task done" : "Add a reminder", lines: [s(i.title), s(i.due) ? `Due ${when(i.due)}` : ""].filter(Boolean) };
+      return { verb: i.action === "complete" ? "Mark a task done" : "Add a reminder", lines: [s(i.title), s(i.due) ? `Due ${when(i.due, timeZone)}` : ""].filter(Boolean) };
     case "phone_send":
       return { verb: i.kind === "call" ? "Place a call" : "Send a text", lines: [`To: ${s(i.to)}`, clip(s(i.message), 300)] };
     case "slack_post_message":

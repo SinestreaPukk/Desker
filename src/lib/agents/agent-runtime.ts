@@ -27,6 +27,9 @@ import { timeNote, validTimeZone } from "@/lib/shared/local-time";
 import { audit } from "@/lib/platform/audit";
 import { WORK_TOOL_IDS, scopeTools } from "@/lib/work/tools";
 import { executeToolCall, type ToolOutcome } from "@/lib/tools/execute";
+import { listMemories, recallMemories } from "@/lib/memory/store";
+import { listCommitments } from "@/lib/commitments/store";
+import { listTriggerRules } from "@/lib/triggers/engine";
 
 /** What the transport layer forwards to the browser. */
 export type RuntimeEvent =
@@ -108,7 +111,7 @@ export async function* runAgentTurn(
   const allowedTools = Array.from(new Set([...toStringArray(agent.allowedTools), "search_documents"]));
   const responsibilities = toStringArray(agent.responsibilities);
 
-  const [project, historyRows, documents, scope, rules] = await Promise.all([
+  const [project, historyRows, documents, scope, rules, memoryRows, commitmentRows, triggerRows] = await Promise.all([
     // The tenant to bill this turn to. An agent whose project is gone cannot
     // answer, so a missing project is an error rather than a free turn.
     prisma.project.findUniqueOrThrow({
@@ -131,7 +134,18 @@ export async function* runAgentTurn(
       select: { context: true, tools: true, timezone: true },
     }),
     rulesFor(agent.id),
+    userMessage
+      ? recallMemories({ projectId: agent.projectId, query: userMessage, limit: 8 }).catch(() => listMemories(agent.projectId))
+      : listMemories(agent.projectId),
+    listCommitments(agent.projectId, { status: "active" }).catch(() => []),
+    listTriggerRules(agent.projectId).catch(() => []),
   ]);
+
+  const memories = (memoryRows ?? []).slice(0, 8).map((m) => m.fact);
+  const openCommitments = (commitmentRows ?? []).slice(0, 8).map(
+    (c) => `[${c.type}] ${c.outcome}${c.ownerName ? ` (${c.type === "waiting_on" ? `waiting on ${c.ownerName}` : c.ownerName})` : ""}${c.dueAt ? ` due ${c.dueAt.slice(0, 10)}` : ""}`,
+  );
+  const notificationRules = (triggerRows ?? []).filter((r) => r.enabled).map((r) => `${r.name}: ${r.description}`);
 
   // Nothing uploaded means nothing to search: offering the tool anyway only
   // buys empty lookups for context that is already in the system prompt.
@@ -156,6 +170,9 @@ export async function* runAgentTurn(
     allowedTools: offeredTools,
     documentNames: documents.map((document) => document.filename),
     aboutPerson: companyContext,
+    memories,
+    openCommitments,
+    notificationRules,
     rules,
     // This chat can search the web (and read the calendar), so the generic "no tools" text must not say otherwise.
     abilities: `## What you can do\n${WEB_CHAT_NOTE.replace(/^## .*\n/, "")}${calendarInChat ? `\n\n${CALENDAR_CHAT_NOTE.replace(/^## .*\n/, "")}` : ""}${offeredTools.includes("search_documents") ? "\nYou can also search the owner's uploaded documents." : ""}`,

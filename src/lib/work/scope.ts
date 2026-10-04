@@ -23,6 +23,7 @@ import {
   toContextAnswers,
   type ContextAnswers,
 } from "./context";
+import { localTimeZone } from "@/lib/shared/local-time";
 
 export class RunRefused extends Error {
   constructor(
@@ -62,7 +63,7 @@ export interface ScopeDto {
   lastDigestAt: string | null;
 }
 
-export function validCron(cron: string, timezone = "UTC"): boolean {
+export function validCron(cron: string, timezone = localTimeZone()): boolean {
   try {
     CronExpressionParser.parse(cron, { tz: timezone });
     return true;
@@ -130,7 +131,7 @@ export function toScopeDto(
       documentIds: [],
       triggerType: "manual",
       cron: null,
-      timezone: "UTC",
+      timezone: localTimeZone(),
       webhookToken: null,
       enabled: true,
       autonomy: "draft_only",

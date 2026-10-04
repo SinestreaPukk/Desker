@@ -4,7 +4,7 @@
  * `buildLife` is pure (rows in, picture out) so the numbers are tested; the
  * model is only ever shown figures computed here, never asked to add them up.
  */
-import type { LifeEvent, LifeEntry, LifeTask, LifeGoal, LifeWorkout, LifePreference, LifeNote } from "@prisma/client";
+import type { LifeEvent, LifeEntry, LifeTask, LifeGoal, LifeWorkout, LifePreference, LifeNote, Commitment } from "@prisma/client";
 
 const DAY = 86_400_000;
 
@@ -16,6 +16,7 @@ export interface LifeRows {
   workouts: LifeWorkout[];
   prefs: LifePreference[];
   notes: LifeNote[];
+  commitments?: Commitment[];
 }
 
 export interface Life {
@@ -26,6 +27,7 @@ export interface Life {
   workouts: LifeWorkout[]; // planned, next 30 days
   prefs: Record<string, string>;
   notes: LifeNote[];
+  commitments: Commitment[];
   money: {
     currency: string;
     monthSpendMinor: number;
@@ -64,6 +66,7 @@ export function buildLife(rows: LifeRows, now = new Date()): Life {
       .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime()),
     prefs,
     notes: rows.notes,
+    commitments: (rows.commitments ?? []).filter((c) => c.status === "open" || c.status === "waiting" || c.status === "snoozed"),
     money: {
       currency: rows.entries[0]?.currency ?? "THB",
       monthSpendMinor: spend.reduce((s, e) => s + e.amountMinor, 0),
@@ -94,6 +97,18 @@ export function renderLife(life: Life, tz?: string): string {
     lines.push(`Unpaid bills (${fmt(m.billsDueSoonMinor, m.currency)} due within 7 days or overdue):\n${m.unpaidBills.slice(0, 8).map((b) => `- ${b.payee} ${fmt(b.amountMinor, b.currency)} due ${day(b.occurredAt, tz)}`).join("\n")}`);
   if (life.events.length) lines.push(`Calendar, next 30 days:\n${life.events.slice(0, 15).map((e) => `- ${day(e.startsAt, tz)}${e.endsAt ? ` to ${day(e.endsAt, tz)}` : ""} ${e.title}${e.status === "tentative" ? " (tentative)" : ""}`).join("\n")}`);
   if (life.openTasks.length) lines.push(`Open tasks and reminders:\n${life.openTasks.slice(0, 12).map((t) => `- ${t.title}${t.dueAt ? ` (due ${day(t.dueAt, tz)})` : ""}`).join("\n")}`);
+  if (life.commitments?.length)
+    lines.push(
+      `Open commitments and loops:\n${life.commitments
+        .slice(0, 10)
+        .map(
+          (c) =>
+            `- [${c.type}] ${c.outcome}${
+              c.ownerName ? ` (${c.ownerRole === "waiting_on" ? `waiting on ${c.ownerName}` : c.ownerName})` : ""
+            }${c.dueAt ? ` (due ${day(c.dueAt, tz)})` : ""}`,
+        )
+        .join("\n")}`,
+    );
   if (life.workouts.length) lines.push(`Planned workouts:\n${life.workouts.slice(0, 10).map((w) => `- ${day(w.scheduledAt, tz)} ${w.title}`).join("\n")}`);
   if (life.goals.length) lines.push(`Goals:\n${life.goals.map((g) => `- [${g.domain}] ${g.title}${g.target ? ` (target ${g.target})` : ""}${g.deadline ? ` by ${day(g.deadline, tz)}` : ""}`).join("\n")}`);
   const prefs = Object.entries(life.prefs);

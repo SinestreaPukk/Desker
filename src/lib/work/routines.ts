@@ -6,6 +6,7 @@
 import "server-only";
 import { z } from "zod";
 import { prisma } from "@/lib/platform/db";
+import { localTimeZone } from "@/lib/shared/local-time";
 import { HttpError } from "@/lib/platform/http-error";
 import { toStringArray } from "@/lib/agents/agent-fields";
 import { validCron, validTimezone } from "./scope";
@@ -26,7 +27,7 @@ export const routinesInputSchema = z.object({
       z.object({
         id: z.string().min(1).optional(),
         cron: z.string().trim().min(1).max(100),
-        timezone: z.string().trim().min(1).max(64).default("UTC"),
+        timezone: z.string().trim().min(1).max(64).default(localTimeZone()),
         instruction: z.string().trim().min(1, "Say what it should do.").max(500, "Keep it under 500 characters."),
         enabled: z.boolean().default(true),
       }),

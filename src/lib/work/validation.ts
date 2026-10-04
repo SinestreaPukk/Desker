@@ -10,6 +10,7 @@ import {
 } from "./types";
 import { WORK_TOOL_IDS } from "./tools";
 import { MAX_CONTEXT_ANSWER } from "./context";
+import { localTimeZone } from "@/lib/shared/local-time";
 
 /**
  * The guided context answers: { questionId: answer }. Unknown ids are dropped
@@ -36,7 +37,7 @@ export const scopeInputSchema = z.object({
     .trim()
     .min(1, "Pick a time zone so the schedule runs when you expect.")
     .max(64, "That is not a time zone name we recognise.")
-    .default("UTC"),
+    .default(localTimeZone()),
   enabled: z.boolean().default(true),
   autonomy: z.enum(AUTONOMY_MODES).default("draft_only"),
   toolAutonomy: z

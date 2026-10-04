@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/platform/db";
 import { isDigestCadence, type DigestCadence } from "./types";
+import { localTimeZone } from "@/lib/shared/local-time";
 
 export interface CheckInSettings {
   id: string;
@@ -43,7 +44,7 @@ export async function checkInSettings(projectId: string): Promise<CheckInSetting
     id: project.id,
     name: project.name,
     cadence,
-    timezone: project.checkInTimezone ?? scopes[0]?.timezone ?? "UTC",
+    timezone: project.checkInTimezone ?? scopes[0]?.timezone ?? localTimeZone(),
     email: project.checkInEmail ?? mailScopes.length > 0,
     recipients: project.checkInRecipients ?? (allExplicit ? explicit.join(", ") : ""),
   };

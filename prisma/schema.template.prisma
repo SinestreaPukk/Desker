@@ -244,6 +244,12 @@ model Project {
   lifePrefs    LifePreference[]
   lifeNotes    LifeNote[]
   lifeAlerts   LifeAlertSent[]
+  personRecords PersonRecord[]
+  memoryRecords MemoryRecord[]
+  capturedItems CapturedItem[]
+  commitments   Commitment[]
+  triggerRules  TriggerRule[]
+  triggerLogs   TriggerExecutionLog[]
 
   @@index([organizationId])
 }
@@ -1057,3 +1063,148 @@ model LifeAlertSent {
 
   @@unique([projectId, key])
 }
+
+// ---------------------------------------------------------------------------
+// Assistant Core (Memory, Capture, Commitments, Triggers)
+// ---------------------------------------------------------------------------
+
+/// A person the user knows or mentions in their life.
+model PersonRecord {
+  id           String         @id @default(cuid())
+  projectId    String
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// Canonical name or handle, e.g. "Mom", "Nok", "Sarah".
+  name         String
+  /// Relationship or role, e.g. "mother", "colleague", "accountant".
+  relationship String?
+  notes        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  memories     MemoryRecord[]
+
+  @@unique([projectId, name])
+  @@index([projectId])
+}
+
+/// One fact the assistant remembers about the user, their preferences, or the people in their life.
+model MemoryRecord {
+  id         String        @id @default(cuid())
+  projectId  String
+  project    Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// The fact in one sentence.
+  fact       String
+  /// preference | person | routine | standing_instruction | fact
+  kind       String        @default("fact")
+  /// user | inferred | capture
+  source     String        @default("user")
+  /// confirmed | pending_confirmation | rejected
+  status     String        @default("confirmed")
+  confidence Float?
+  /// Optional link to a person record.
+  personId   String?
+  person     PersonRecord? @relation(fields: [personId], references: [id], onDelete: SetNull)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  lastUsedAt DateTime?
+
+  @@index([projectId, kind])
+  @@index([projectId, status])
+}
+
+/// An item captured from LINE or the app composer: parsed and classified.
+model CapturedItem {
+  id                String   @id @default(cuid())
+  projectId         String
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// text | photo | voice | file | link | forwarded
+  inputType         String
+  /// task | event | bill | note | question | vault_file
+  classification    String
+  confidence        Float    @default(1.0)
+  headline          String
+  rawContent        String?
+  extractedData     Json?
+  uncertainFields   Json?
+  /// created | needs_confirmation | confirmed | rejected | switched
+  status            String   @default("created")
+  targetType        String?
+  targetId          String?
+  sourceRef         String?
+  sourceChannel     String   @default("line") // line | app
+  altClassification String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([projectId, classification])
+  @@index([projectId, createdAt])
+}
+
+/// An open loop or commitment: outcome, due date, owner, and closing signal.
+model Commitment {
+  id            String    @id @default(cuid())
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// to_do | waiting_on | recurring
+  type          String    @default("to_do")
+  /// user | other
+  ownerRole     String    @default("user")
+  ownerName     String?
+  outcome       String
+  dueAt         DateTime?
+  /// open | waiting | snoozed | done | dropped
+  status        String    @default("open")
+  snoozedUntil  DateTime?
+  sourceRef     String?
+  checkSignal   String?
+  activityLog   Json?
+  nudgeCount    Int       @default(0)
+  lastNudgeAt   DateTime?
+  followUpDraft String?
+  closedAt      DateTime?
+  closedReason  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([projectId, status, dueAt])
+  @@index([projectId, type])
+}
+
+/// A user-controlled or system trigger rule for proactive outreach.
+model TriggerRule {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  description String
+  /// time | event | condition
+  kind        String
+  config      Json
+  enabled     Boolean  @default(true)
+  feedback    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, name])
+  @@index([projectId, enabled])
+}
+
+/// Execution log of every trigger firing and suppression decision.
+model TriggerExecutionLog {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ruleName    String
+  /// fired | suppressed
+  decision    String
+  reason      String
+  urgency     String? // now | today | digest
+  channel     String? // line | app
+  messageSent String?
+  dedupeKey   String?  @unique
+  createdAt   DateTime @default(now())
+
+  @@index([projectId, ruleName, createdAt])
+  @@index([projectId, decision, createdAt])
+}
+

@@ -5,9 +5,8 @@
  * reach the outside world, a way to queue its own next task, and the
  * documents it was given. No code execution, no arbitrary HTTP.
  *
- * Every tool declares a risk level, and that level - not the tool's name - is
- * what the runner gates on. `external` tools stop for a human unless the
- * agent has been moved to auto mode.
+ * Every tool declares a risk level. External effects always require a human
+ * approval in the runner, regardless of legacy autonomy settings.
  */
 import type { ToolDefinition } from "@/lib/llm/provider";
 import { SEARCH_DOCUMENTS_TOOL } from "@/lib/rag/search-documents-tool";
@@ -94,7 +93,7 @@ export const WORK_TOOL_RISK: Record<WorkToolId, RiskLevel> = {
   browse_commit: "external",
 };
 
-/** The tools a person can move to auto mode independently of the agent. */
+/** The tools that require a person to approve the exact pending action. */
 export const GATED_TOOLS = GATED_TOOL_IDS satisfies readonly WorkToolId[];
 
 export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: string }> = {

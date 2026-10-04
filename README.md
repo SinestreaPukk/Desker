@@ -7,8 +7,8 @@ across all of it. Nothing consequential happens without your explicit yes.
 
 Personal-only: one person, one private space, one assistant that you configure
 (persona, tools, model, schedule, knowledge). There are no teams, invitations,
-public chat links, business roles or billing. Architecture and the decisions behind it:
-[`docs/ARCHITECTURE.md`](docs/personal/ARCHITECTURE.md).
+public chat links, business roles or billing. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+for the architecture and product decisions.
 
 ## The interface
 
@@ -61,16 +61,6 @@ Everything is an environment variable; `.env.example` lists them with comments. 
 ## LINE
 
 Webhook URL `https://<your-domain>/api/messaging/line`. Link your account from **Alerts**. `npm run line:richmenu` installs the rich menu. Photos you send are read; bank slips and bills go to Money.
-
-## Deploying
-
-Production is **https://personal.desker.dev**: the Vercel project `desker-personal`, backed by Postgres. The build applies the schema (`scripts/db/db-deploy.mjs`), which refuses a change that drops data unless `ALLOW_DESTRUCTIVE_MIGRATION=1`. Deploy with the project pinned explicitly so a checkout linked to another Vercel project can never receive it:
-
-```bash
-VERCEL_ORG_ID=team_tmC80nKy3Ah3nyykYtRaGJrn VERCEL_PROJECT_ID=prj_KWGM4f5uRe9IE8WXpCT9ZysJDhvR npx vercel --prod
-```
-
-Copy secrets from `.env.local` to the project with `node scripts/ops/push-env.mjs NAME ...`; values are never printed.
 
 ## Layout
 
