@@ -36,18 +36,13 @@ export const MessageText = React.memo(function MessageText({ content }: { conten
             </h3>
           );
         }
-        // Sources sit at the bottom, one per line, each a blue link.
+        // Sources sit at the bottom, apart from the reply, as small link buttons.
         if (/^\**Sources:?\**\s*\n/i.test(block)) {
           return (
-            <div key={blockIndex} className="space-y-1 border-t border-line pt-3 text-sm">
-              <p className="font-semibold text-ink">Sources</p>
-              <ul className="space-y-1">
-                {lines.slice(1).filter((line) => line.trim()).map((line, lineIndex) => (
-                  <li key={lineIndex}>
-                    <Source line={line} />
-                  </li>
-                ))}
-              </ul>
+            <div key={blockIndex} className="flex flex-wrap gap-1.5 border-t border-line pt-3">
+              {lines.slice(1).map((line, lineIndex) => (
+                <SourceChip key={lineIndex} line={line} fallback={lineIndex + 1} />
+              ))}
             </div>
           );
         }
@@ -134,14 +129,19 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
   );
 }
 
-/** "[1] Title - https://…" becomes "[1] Title" with the title as the link; anything else falls back to inline. */
-function Source({ line }: { line: string }) {
-  const match = /^\s*(?:[-*•]\s+)?(\[?\d+[\].)]?)\s*(.*?)\s+[-–—]\s+(https?:\/\/\S+)\s*$/.exec(line);
-  if (!match) return <Inline text={line.replace(/^\s*[-*•]\s+/, "")} />;
+/** "[1] Title - https://…" becomes a small "Source 1" button; the title shows on hover. Lines without a link are skipped. */
+function SourceChip({ line, fallback }: { line: string; fallback: number }) {
+  const match = /^\s*(?:[-*•]\s+)?(?:\[?(\d+)[\].)]?)?\s*(.*?)\s*[-–—:]?\s*(https?:\/\/\S+)\s*$/.exec(line);
+  if (!match) return null;
   return (
-    <>
-      <span className="text-ink-muted">{match[1]} </span>
-      <ExternalLink href={match[3]!}>{match[2] || match[3]}</ExternalLink>
-    </>
+    <a
+      href={match[3]}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={match[2] || match[3]}
+      className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs text-accent transition-colors hover:border-accent-line hover:bg-accent-soft/40"
+    >
+      Source {match[1] ?? fallback}
+    </a>
   );
 }

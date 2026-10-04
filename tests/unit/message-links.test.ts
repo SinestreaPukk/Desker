@@ -8,6 +8,7 @@ it("renders headings, bold and sources as links, never raw html or javascript: l
   const html = renderToStaticMarkup(createElement(MessageText, { content }));
   expect(html).toContain("<h3");
   expect(html).toContain("<strong");
+  expect(html).toContain("Source 1");
   expect(html).toContain('href="https://www.accuweather.com/a"');
   expect(html).not.toContain('href="javascript');
   expect(html).not.toContain("<script");
