@@ -12,6 +12,7 @@ import "server-only";
 import { env } from "@/lib/platform/env";
 import { getProvider } from "@/lib/llm/provider";
 import { parseModelJson, stringField } from "@/lib/work/model-json";
+import { browserConfigured } from "@/lib/browser/session";
 import { REMIND } from "./reminders";
 import type { TeamAgent } from "@/lib/agents/team";
 
@@ -32,12 +33,17 @@ const CLASSIFY = `Classify the person's message to their private AI team. Reply 
 - "direct": a vague statement, or chat that can be answered straight from their own context or stable general knowledge.
 - "research": an open question about the outside world that needs current or looked-up facts (news, prices, how something works, comparing products, a place, a rule or law) and is not a job for a specialist or about their own data.`;
 
+/** Words that need a real browser (see a page, search flights, sign up): never a plain web-search answer, which cannot show or do any of it. */
+const BROWSE = /\b(screenshots?|screen ?caps?|browser|open (the )?(site|website|page|link)|go to \S+\.\S+|flights?|sign (me )?up|fill (in|out)|log ?in to|book(ing)? (a |the )?(flight|hotel|table))\b|https?:\/\//i;
+
 const frontDoor = (team: TeamAgent[]) => team[0]!;
 
 export async function planChat(input: { text: string; team: TeamAgent[]; organizationId: string }): Promise<Plan> {
   const { text, team, organizationId } = input;
   // A reminder is recognised by its words, with no model call, so it is never mistaken for a task to run.
   if (REMIND.test(text)) return { route: "reminder", responders: [frontDoor(team)] };
+  // The specialist turn is the one that can start a browser task, so these never go to research or the engine.
+  if (BROWSE.test(text) && browserConfigured()) return { route: "specialist", responders: [frontDoor(team)] };
   let route: Route = CROSS_DOMAIN.test(text) ? "engine" : "specialist";
   if ((env.hasAnthropicKey || env.hasOpenAiKey) && team.length > 0) {
     try {
