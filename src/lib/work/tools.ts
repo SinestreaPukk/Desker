@@ -157,7 +157,7 @@ export const WORK_TOOL_METADATA: Record<WorkToolId, { label: string; blurb: stri
   },
   browse_web: {
     label: "Browse the web for you",
-    blurb: "Use a real browser to search flights and prices, read pages and fill in forms. It never submits anything final, never pays and never books.",
+    blurb: "Use a real browser to search flights and prices, read pages, fill in forms and send you screenshots of what it sees. It never submits anything final, never pays and never books.",
   },
   browse_commit: {
     label: "Finish what it prepared in the browser",
@@ -452,7 +452,7 @@ const WORK_TOOLS: Record<Exclude<WorkToolId, "escalate_to_human">, ToolDefinitio
   browse_web: {
     name: "browse_web",
     description:
-      "Do a job in a real web browser: search flights, hotels and prices, read pages, and fill in forms with the person's saved details. It prepares and never finishes: it stops before any sign-up, form submission or booking and returns a plan. It never pays and never books. Give the whole job in one clear sentence, with dates, places and preferences. Returns what it found, or the plan for the final step (then call browse_commit with that plan).",
+      "Do a job in a real web browser: search flights, hotels and prices, read pages, and fill in forms with the person's saved details. It prepares and never finishes: it stops before any sign-up, form submission or booking and returns a plan. It never pays and never books. Give the whole job in one clear sentence, with dates, places and preferences. The person is shown screenshots of the page in their chat (and LINE) automatically; if they asked to see a page, say so in the goal. Returns what it found, or the plan for the final step (then call browse_commit with that plan).",
     inputSchema: {
       type: "object",
       properties: {

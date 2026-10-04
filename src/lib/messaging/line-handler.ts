@@ -20,7 +20,7 @@ import * as store from "@/lib/life/store";
 import { handleInbound } from "./inbound";
 import { parseCommand } from "./prefs";
 import { senderKey } from "./send";
-import { approvalFlex, billsFlex, budgetFlex, lineContent, lineLoading, linePush, lineReplyMessages, parsePostback, text, withQuickReplies, type LineMessage } from "./line";
+import { approvalFlex, billsFlex, budgetFlex, lineContent, lineLoading, linePush, lineReplyMessages, parsePostback, replyMessages, text, withQuickReplies, type LineMessage } from "./line";
 
 export interface LineEvent {
   type: string;
@@ -156,7 +156,7 @@ export async function handleLineEvent(event: LineEvent): Promise<void> {
     await lineLoading(chatId);
     const { said, later } = await chatTurn(userId, raw.trim());
     // One bubble per agent, named, so it is clear who is answering.
-    await linePush(chatId, said.map((s) => text(s.agent && said.length > 1 ? `${s.agent}\n${s.text}` : s.text)));
+    await linePush(chatId, said.flatMap((s) => replyMessages(s.agent && said.length > 1 ? `${s.agent}\n${s.text}` : s.text)));
     // A reminder that is seconds away waits here, after the confirmation has been sent.
     await later?.();
   } catch (error) {

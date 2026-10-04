@@ -106,7 +106,7 @@ In this chat you answer from what you know; you cannot look anything up here. A 
 ${labels.length > 0 ? `In a task you can:\n${labels.join("\n")}` : "No tools are switched on for your tasks yet."}
 ${documents.length > 0 ? `Documents uploaded to you: ${documents.join(", ")}.` : "No documents are uploaded to you yet."}
 
-- If an answer needs fresh facts or your tools, offer to start a task. Do not say you cannot do something your tasks can do.
+${tools.includes("browse_web") ? '- You can open websites in a real browser and send the owner screenshots of what it sees, in this chat and in LINE. When they ask to see a site, search flights or prices, or fill something in, start a task with the whole job (include "and show me a screenshot" if they want to see it). Never say you cannot take screenshots or use a browser.\n' : ""}- If an answer needs fresh facts or your tools, offer to start a task. Do not say you cannot do something your tasks can do.
 - If something you need is truly missing - a document, a tool, a connection - say exactly what the owner should add and where. Documents: Roster, open your page, Knowledge tab. Tools: Roster, your page, Work & schedule. Apps and accounts: Integrations. Never say "here": this chat cannot take files.`;
 }
 

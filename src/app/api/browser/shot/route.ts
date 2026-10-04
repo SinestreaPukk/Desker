@@ -13,9 +13,9 @@ export async function GET(request: Request) {
     const [root, projectId, file, ...rest] = key.split("/");
     if (root !== "browser" || !projectId || !file || rest.length > 0 || file.includes("..")) throw new HttpError(404, "Not found.");
     if (!(await findProjectById(projectId, userId))) throw new HttpError(404, "Not found.");
-    const png = await storage.get(key).catch(() => null);
-    if (!png) throw new HttpError(404, "Not found.");
-    return new Response(new Uint8Array(png), { headers: { "content-type": "image/png", "cache-control": "private, max-age=86400" } });
+    const image = await storage.get(key).catch(() => null);
+    if (!image) throw new HttpError(404, "Not found.");
+    return new Response(new Uint8Array(image), { headers: { "content-type": file.endsWith(".png") ? "image/png" : "image/jpeg", "cache-control": "private, max-age=86400" } });
   } catch (error) {
     return handle(async () => {
       throw error;

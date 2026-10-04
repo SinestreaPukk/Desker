@@ -9,6 +9,8 @@ import { listDetails } from "@/lib/life/details";
 import { answersFor, contextQuestions } from "@/lib/work/context";
 import type { PendingAction } from "@/lib/work/types";
 import { addTeamMessage } from "@/lib/agents/team";
+import { EVERYDAY_THREAD } from "@/lib/agents/team-dto";
+import { messageUser } from "@/lib/messaging/send";
 import { runBrowserTask, type Shot } from "./agent";
 
 interface Delivery {
@@ -43,12 +45,14 @@ export async function runBrowserAction(actionItemId: string, organizationId: str
   // Asked for in a chat: show what the browser found and saw right there, pictures included.
   const threadId = (item.payload as Record<string, unknown> | null)?.teamThreadId;
   if (typeof threadId === "string" && outcome.status !== "commit_ready") {
-    await addTeamMessage({
-      projectId,
-      threadId,
-      agentId: item.agentId,
-      content: chatText(outcome.summary, outcome.shots ?? []),
-    }).catch((error: unknown) => console.error("[browser] chat message not posted", error));
+    const content = chatText(outcome.summary, outcome.shots ?? []);
+    await addTeamMessage({ projectId, threadId, agentId: item.agentId, content }).catch((error: unknown) => console.error("[browser] chat message not posted", error));
+    // The everyday chat is the one LINE shares: send the findings and pictures there too.
+    const startedBy = (item.payload as Record<string, unknown>).startedBy;
+    const thread = await prisma.teamThread.findUnique({ where: { id: threadId }, select: { title: true } });
+    if (typeof startedBy === "string" && thread?.title === EVERYDAY_THREAD) {
+      await messageUser(startedBy, { title: "Browser", body: outcome.summary, markdown: content }).catch((error: unknown) => console.error("[browser] LINE message not sent", error));
+    }
   }
   switch (outcome.status) {
     case "done":

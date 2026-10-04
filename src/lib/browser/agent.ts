@@ -137,8 +137,8 @@ export async function runBrowserTask(input: BrowserTaskInput): Promise<BrowserOu
   const snap = async (caption: string) => {
     if (shots.length >= MAX_SHOTS) return;
     try {
-      const png = await page.screenshot({ type: "png" });
-      const stored = await storage.put(`browser/${input.projectId}`, "shot.png", png);
+      const jpg = await page.screenshot({ type: "jpeg", quality: 80 });
+      const stored = await storage.put(`browser/${input.projectId}`, "shot.jpg", jpg);
       shots.push({ key: stored.storageKey, caption: caption.slice(0, 120) });
     } catch (error) {
       console.error("[browser] screenshot not kept", error);

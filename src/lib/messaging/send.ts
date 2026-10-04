@@ -9,7 +9,7 @@ import { createHash } from "node:crypto";
 import { prisma } from "@/lib/platform/db";
 import { deliverAppEmail } from "@/lib/platform/app-email";
 import { open } from "@/lib/auth/vault";
-import { approvalFlex, linePush, text as lineText } from "./line";
+import { approvalFlex, linePush, replyMessages, text as lineText } from "./line";
 import { CHANNELS, readPrefs, type ChannelKind, type EventKind } from "./prefs";
 
 export interface OutboundMessage {
@@ -17,6 +17,8 @@ export interface OutboundMessage {
   body: string;
   url?: string | null;
   /** A consequential action waiting for a yes: LINE shows exactly what it will do, with Approve / Not now buttons. */
+  /** The reply as the chat shows it, screenshots included: LINE sends the pictures too, other apps get title and body. */
+  markdown?: string;
   approval?: { actionItemId: string; verb: string; lines: string[]; agent: string };
 }
 
@@ -120,7 +122,7 @@ async function deliver(kind: ChannelKind, target: string, message: OutboundMessa
   switch (kind) {
     case "line": {
       const a = message.approval;
-      return linePush(target, a ? [approvalFlex({ ...a, actionItemId: a.actionItemId, url: message.url })] : [lineText(text)]);
+      return linePush(target, a ? [approvalFlex({ ...a, actionItemId: a.actionItemId, url: message.url })] : message.markdown ? replyMessages(message.markdown) : [lineText(text)]);
     }
     case "telegram":
       return telegramSend(target, text);

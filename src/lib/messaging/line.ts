@@ -4,6 +4,7 @@
  * small senders at the bottom touch the network.
  */
 import "server-only";
+import { signedShotUrl } from "@/lib/browser/shot-url";
 
 export const LINE_API = "https://api.line.me/v2/bot";
 const token = () => process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim() ?? "";
@@ -12,6 +13,24 @@ const token = () => process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim() ?? "";
 
 export type LineMessage = Record<string, unknown>;
 export const text = (t: string): LineMessage => ({ type: "text", text: t.slice(0, 4900) });
+
+/** A picture LINE fetches itself: it must be a public https JPEG/PNG link. */
+export const image = (url: string): LineMessage => ({ type: "image", originalContentUrl: url, previewImageUrl: url });
+
+const SHOT = /^!\[[^\]]*\]\(\/api\/browser\/shot\?key=([A-Za-z0-9%._-]+)\)$/;
+
+/** A reply as LINE messages: the words in one bubble, then each screenshot (markdown image lines) as a real picture. */
+export function replyMessages(content: string): LineMessage[] {
+  const words: string[] = [];
+  const pictures: LineMessage[] = [];
+  for (const line of content.split("\n")) {
+    const key = SHOT.exec(line.trim())?.[1];
+    if (key) pictures.push(image(signedShotUrl(decodeURIComponent(key))));
+    else words.push(line);
+  }
+  const body = words.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return [...(body ? [text(body)] : []), ...pictures].slice(0, 5);
+}
 
 /** One-tap replies under a message. The label is what gets sent when tapped. */
 export const withQuickReplies = (message: LineMessage, labels: string[]): LineMessage => ({
