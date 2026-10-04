@@ -16,6 +16,8 @@ import * as React from "react";
  * code spans are: split the string, wrap the piece in an element, and keep the
  * text a text child. Nothing here ever becomes markup from the string itself.
  */
+const SHOT = /^!\[([^\]]*)\]\((\/api\/browser\/shot\?key=[A-Za-z0-9%._-]+)\)$/;
+
 export const MessageText = React.memo(function MessageText({ content }: { content: string }) {
   const blocks = React.useMemo(
     // A heading line is its own block, so "## Title\ntext" renders as a title then text.
@@ -34,6 +36,23 @@ export const MessageText = React.memo(function MessageText({ content }: { conten
             <h3 key={blockIndex} className={`${size} mt-2 font-semibold leading-snug text-ink`}>
               <Inline text={heading[2]!} />
             </h3>
+          );
+        }
+        // Screenshots the browser assistant kept: our own route only, never an outside image.
+        if (lines.every((line) => SHOT.test(line.trim()))) {
+          return (
+            <div key={blockIndex} className="flex flex-col gap-2">
+              {lines.map((line, lineIndex) => {
+                const [, caption, src] = SHOT.exec(line.trim())!;
+                return (
+                  <a key={lineIndex} href={src} target="_blank" rel="noopener noreferrer" className="block">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- a private, authenticated screenshot */}
+                    <img src={src} alt={caption} loading="lazy" className="w-full max-w-xl rounded-md border border-line" />
+                    {caption ? <span className="mt-1 block text-xs text-ink-muted">{caption}</span> : null}
+                  </a>
+                );
+              })}
+            </div>
           );
         }
         // Sources sit at the bottom, apart from the reply, as small link buttons.

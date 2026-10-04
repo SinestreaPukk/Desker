@@ -12,6 +12,9 @@ it("renders headings, bold and sources as links, never raw html or javascript: l
   expect(html).toContain('href="https://www.accuweather.com/a"');
   expect(html).not.toContain('href="javascript');
   expect(html).not.toContain("<script");
+  const shot = renderToStaticMarkup(createElement(MessageText, { content: "Found it.\n\n![Prices](/api/browser/shot?key=browser%2Fp1%2Fa-shot.png)\n\n![x](https://evil.test/a.png)" }));
+  expect(shot).toContain("<img");
+  expect(shot).not.toContain('<img src="https');
 });
 
 import { clampText } from "@/lib/work/model-json";
