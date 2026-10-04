@@ -13,6 +13,7 @@
  */
 import "server-only";
 import type { Prisma } from "@prisma/client";
+import { cache } from "react";
 import { prisma } from "@/lib/platform/db";
 import { slugify } from "@/lib/shared/slug";
 import { createOrganizationFor, primaryOrganizationFor } from "@/lib/tenancy/organizations";
@@ -46,11 +47,12 @@ export function projectsVisibleTo(userId: string): Prisma.ProjectWhereInput {
  * so a renamed project's old links still work if someone kept the id.
  * Null when it does not exist or the user cannot see it.
  */
-export async function findProject(handle: string, userId: string) {
-  return prisma.project.findFirst({
+/** Cached per request: the layout and the page both ask for the same project. */
+export const findProject = cache(async (handle: string, userId: string) =>
+  prisma.project.findFirst({
     where: { AND: [projectsVisibleTo(userId), { OR: [{ slug: handle }, { id: handle }] }] },
-  });
-}
+  }),
+);
 
 /** Like findProject, but by id only - for routes that carry the id. */
 export async function findProjectById(projectId: string, userId: string) {

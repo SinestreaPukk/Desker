@@ -16,7 +16,7 @@ async function visibleThread(threadId: string, userId: string) {
   });
 }
 
-/** One chat's messages, oldest first. */
+/** One chat's latest messages, oldest first. */
 export async function GET(_request: Request, { params }: Params) {
   return handle(async () => {
     const { userId } = await requireAdmin();
@@ -24,11 +24,12 @@ export async function GET(_request: Request, { params }: Params) {
     if (!(await visibleThread(threadId, userId))) throw new HttpError(404, "That chat no longer exists.");
     const rows = await prisma.teamMessage.findMany({
       where: { threadId },
-      orderBy: { createdAt: "asc" },
-      take: 500,
+      // The newest 200: the chat polls this, so a long history must not be re-sent whole every few seconds.
+      orderBy: { createdAt: "desc" },
+      take: 200,
       select: messageSelect,
     });
-    return rows.map(toMessageDto);
+    return rows.reverse().map(toMessageDto);
   });
 }
 

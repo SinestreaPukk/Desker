@@ -9,6 +9,7 @@
  * the Node runtime where Prisma is available and cannot be bypassed by a route
  * the matcher forgot.
  */
+import { cache } from "react";
 import NextAuth, { type DefaultSession } from "next-auth";
 import { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -54,7 +55,7 @@ export async function hashPassword(password: string): Promise<string> {
  * starts from the user row - so a session with no user behind it is treated as
  * signed out rather than as a crash further down.
  */
-export async function currentUser() {
+export const currentUser = cache(async function currentUser() {
   const session = await auth();
   const id = session?.user?.id;
   if (!id) return null;
@@ -70,7 +71,7 @@ export async function currentUser() {
     return null;
   }
   return { id: row.id, email: row.email, name: row.name };
-}
+});
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 30 },
