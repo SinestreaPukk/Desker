@@ -68,7 +68,7 @@ export function AgentScreen({ agent, project, initialTab }: { agent: AgentDetail
           <AbilitiesTab agentId={agent.id} project={project} />
         </TabsContent>
         <TabsContent value="schedule">
-          <ScheduleTab agentId={agent.id} />
+          <ScheduleTab agentId={agent.id} project={project} />
         </TabsContent>
       </Tabs>
     </Screen>
